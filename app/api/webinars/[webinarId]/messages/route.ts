@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server'
-import { requireAuth } from '@/lib/auth/guards'
 import { createAdminSupabase } from '@/lib/supabase/admin'
 
 export const runtime = 'nodejs'
@@ -34,7 +33,19 @@ export async function GET(
       }
     }
     
-    const { user } = await requireAuth()
+    // 인증 확인 (Route Handler에서는 redirect 대신 에러 반환)
+    const { createServerSupabase } = await import('@/lib/supabase/server')
+    const supabase = await createServerSupabase()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    
+    if (authError || !user) {
+      console.error('메시지 조회 API 인증 실패:', authError)
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized' },
+        { status: 401 }
+      )
+    }
+    
     const admin = createAdminSupabase()
     
     // 웨비나 존재 확인 (agency_id, client_id도 함께 조회)
@@ -69,9 +80,10 @@ export async function GET(
           role: 'attendee',
         })
       
-      // 이미 등록된 경우 무시 (에러는 로깅하지 않음)
-      if (regError && !regError.message.includes('duplicate')) {
-        console.warn('웨비나 자동 등록 실패:', regError)
+      // 중복 키 에러(23505)는 무시 (동시 요청 시 발생 가능)
+      if (regError && regError.code !== '23505') {
+        console.error('웨비나 자동 등록 실패:', regError)
+        // 등록 실패해도 메시지는 조회 가능하도록 계속 진행
       }
     }
     
@@ -281,8 +293,13 @@ export async function GET(
       hasMore,
     })
   } catch (error: any) {
+    console.error('메시지 조회 API 에러:', error)
     return NextResponse.json(
-      { success: false, error: error.message || 'Internal server error' },
+      { 
+        success: false, 
+        error: error.message || 'Internal server error',
+        details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      },
       { status: 500 }
     )
   }

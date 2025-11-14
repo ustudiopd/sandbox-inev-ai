@@ -64,8 +64,10 @@ export async function GET(
       query = query.neq('status', 'hidden')
     }
     
+    // 성능 최적화: 인덱스 활용을 위해 created_at DESC로 정렬
     const { data: questions, error: questionsError } = await query
       .order('created_at', { ascending: false })
+      .limit(100) // 최대 100개로 제한 (성능 향상)
     
     if (questionsError) {
       return NextResponse.json(
@@ -74,11 +76,12 @@ export async function GET(
       )
     }
     
-    // 프로필 정보를 별도로 조회 (RLS 우회)
+    // 프로필 정보를 별도로 일괄 조회 (RLS 우회, 성능 최적화)
     const userIds = [...new Set((questions || []).map((q: any) => q.user_id))]
     const profilesMap = new Map()
     
     if (userIds.length > 0) {
+      // 일괄 조회로 N+1 문제 방지
       const { data: profiles } = await admin
         .from('profiles')
         .select('id, display_name, email')

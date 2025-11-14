@@ -30,10 +30,11 @@ export default function WebinarEditModal({
 
   useEffect(() => {
     if (webinar && isOpen) {
-      // datetime-local 형식으로 변환
+      // UTC 시간을 로컬 시간으로 변환하여 datetime-local 형식으로 표시
       const formatDateTime = (dateString: string | null) => {
         if (!dateString) return ''
         const date = new Date(dateString)
+        // 로컬 시간대로 변환
         const year = date.getFullYear()
         const month = String(date.getMonth() + 1).padStart(2, '0')
         const day = String(date.getDate()).padStart(2, '0')
@@ -61,12 +62,22 @@ export default function WebinarEditModal({
     setLoading(true)
 
     try {
+      // datetime-local 입력값을 UTC ISO 문자열로 변환
+      const convertToUTC = (localDateTime: string) => {
+        if (!localDateTime) return null
+        // datetime-local 형식 (YYYY-MM-DDTHH:mm)을 Date 객체로 변환
+        // 이때 브라우저는 로컬 시간대로 해석함
+        const localDate = new Date(localDateTime)
+        // UTC ISO 문자열로 변환
+        return localDate.toISOString()
+      }
+
       const requestBody = {
         title: formData.title,
         description: formData.description || null,
         youtubeUrl: formData.youtubeUrl,
-        startTime: formData.startTime || null,
-        endTime: formData.endTime || null,
+        startTime: convertToUTC(formData.startTime),
+        endTime: convertToUTC(formData.endTime),
         maxParticipants: formData.maxParticipants ? parseInt(formData.maxParticipants) : null,
         isPublic: formData.isPublic,
         accessPolicy: formData.accessPolicy,

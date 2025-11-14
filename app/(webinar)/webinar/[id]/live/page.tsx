@@ -44,6 +44,21 @@ export default async function WebinarLivePage({
     isAdminMode = true
   }
   
+  // 사용자가 있으면 해당 웨비나에 등록되어 있는지 확인 (모든 모드에서 필수)
+  if (user) {
+    const { data: registration } = await admin
+      .from('registrations')
+      .select('webinar_id, user_id')
+      .eq('webinar_id', id)
+      .eq('user_id', user.id)
+      .maybeSingle()
+    
+    // 등록되어 있지 않으면 입장 페이지로 리다이렉트 (웨비나별 독립 등록 필수)
+    if (!registration) {
+      redirect(`/webinar/${id}`)
+    }
+  }
+  
   // 관리자 모드인 경우 권한 확인
   if (isAdminMode) {
     if (!user) {

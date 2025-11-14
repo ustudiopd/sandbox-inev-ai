@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
+import { useRouter } from 'next/navigation'
 import { createClientSupabase } from '@/lib/supabase/client'
 import YouTubePlayer from '@/components/webinar/YouTubePlayer'
 import Chat from '@/components/webinar/Chat'
@@ -40,6 +41,7 @@ export default function WebinarView({ webinar, isAdminMode = false }: WebinarVie
   const [mounted, setMounted] = useState(false)
   const fullscreenRef = useRef<HTMLDivElement>(null)
   const supabase = createClientSupabase()
+  const router = useRouter()
   
   useEffect(() => {
     setMounted(true)
@@ -221,7 +223,13 @@ export default function WebinarView({ webinar, isAdminMode = false }: WebinarVie
         <div className="w-full max-w-[1600px] mx-auto px-2 sm:px-3 lg:px-4 py-2 sm:py-3 lg:py-4">
           <div className="flex items-center justify-between w-full">
             <div className="flex-1 min-w-0">
-              <h1 className="text-base sm:text-lg lg:text-2xl font-bold text-gray-900 truncate">{webinar.title}</h1>
+              <h1 
+                onClick={() => router.push(`/webinar/${webinar.id}`)}
+                className="text-base sm:text-lg lg:text-2xl font-bold text-gray-900 truncate cursor-pointer hover:text-blue-600 transition-colors"
+                title="웨비나 입장 페이지로 이동"
+              >
+                {webinar.title}
+              </h1>
               {webinar.description && (
                 <p className="text-xs lg:text-sm text-gray-600 mt-0.5 sm:mt-1 line-clamp-1">{webinar.description}</p>
               )}

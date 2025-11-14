@@ -70,7 +70,20 @@ export async function POST(req: Request) {
       )
     }
     
-    return NextResponse.json({ success: true, question })
+    // 프로필 정보 조회 (응답 속도 향상을 위해)
+    const { data: profile } = await admin
+      .from('profiles')
+      .select('id, display_name, email')
+      .eq('id', user.id)
+      .single()
+    
+    // 질문과 프로필 정보 결합
+    const questionWithProfile = {
+      ...question,
+      user: profile || null,
+    }
+    
+    return NextResponse.json({ success: true, question: questionWithProfile })
   } catch (error: any) {
     return NextResponse.json(
       { error: error.message || 'Internal server error' },

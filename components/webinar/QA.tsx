@@ -64,6 +64,7 @@ export default function QA({
   const [editContent, setEditContent] = useState('')
   const [editing, setEditing] = useState(false)
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
+  const [currentUserProfile, setCurrentUserProfile] = useState<{ display_name?: string; email?: string } | null>(null)
   const supabase = createClientSupabase()
   
   const loadQuestions = useCallback(async () => {
@@ -105,13 +106,29 @@ export default function QA({
     }
   }, [webinarId, showOnlyMine, filter, isAdminMode])
   
-  // 현재 사용자 ID 로드
+  // 현재 사용자 ID 및 프로필 정보 로드
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
+    const loadCurrentUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
       if (user) {
         setCurrentUserId(user.id)
+        
+        // 프로필 정보 미리 로드
+        try {
+          const response = await fetch(`/api/profiles/${user.id}`)
+          if (response.ok) {
+            const { profile } = await response.json()
+            setCurrentUserProfile({
+              display_name: profile?.display_name,
+              email: profile?.email,
+            })
+          }
+        } catch (error) {
+          console.warn('프로필 정보 조회 실패:', error)
+        }
       }
-    })
+    }
+    loadCurrentUser()
   }, [supabase])
   
   useEffect(() => {
@@ -159,7 +176,7 @@ export default function QA({
             fallbackInterval = null
           }
           
-          // UPDATE 이벤트에서 답변이 추가된 경우 자동으로 펼치기
+          // UPDATE 이벤트에서 답변이 추가된 경우 자동으로 펼치기 및 즉시 업데이트
           if (payload.eventType === 'UPDATE' && payload.new) {
             const updatedQuestion = payload.new as any
             if (updatedQuestion.status === 'answered' && updatedQuestion.answer) {
@@ -169,9 +186,28 @@ export default function QA({
                 return next
               })
             }
+            
+            // Optimistic 업데이트: 질문 목록에서 즉시 업데이트 (전체 새로고침 없이)
+            setQuestions((prev) => prev.map((q) => 
+              q.id === updatedQuestion.id ? { ...q, ...updatedQuestion } : q
+            ))
+          } else if (payload.eventType === 'INSERT' && payload.new) {
+            // INSERT 이벤트: 새 질문 추가 (프로필 정보는 나중에 loadQuestions에서 처리)
+            const newQuestion = payload.new as any
+            // 중복 체크 후 추가
+            setQuestions((prev) => {
+              if (prev.some(q => q.id === newQuestion.id)) {
+                return prev
+              }
+              // 프로필 정보는 나중에 loadQuestions에서 채워질 것
+              return [{ ...newQuestion, user: null }, ...prev]
+            })
+            // 프로필 정보를 위해 나중에 전체 새로고침 (선택적)
+            // loadQuestions()
+          } else {
+            // DELETE 등 다른 이벤트는 전체 새로고침
+            loadQuestions()
           }
-          
-          loadQuestions()
         }
       )
       .subscribe(async (status, err) => {
@@ -239,7 +275,28 @@ export default function QA({
     const questionContent = newQuestion.trim()
     const tempId = `temp-${Date.now()}`
     
-    // Optimistic Update: 즉시 UI에 임시 질문 추가
+    // 프로필 정보가 없으면 미리 로드
+    let userProfile = currentUserProfile
+    if (!userProfile || (!userProfile.display_name && !userProfile.email)) {
+      try {
+        const response = await fetch(`/api/profiles/${user.id}`)
+        if (response.ok) {
+          const { profile } = await response.json()
+          userProfile = {
+            display_name: profile?.display_name,
+            email: profile?.email,
+          }
+          setCurrentUserProfile(userProfile)
+        }
+      } catch (error) {
+        console.warn('프로필 정보 조회 실패:', error)
+      }
+    }
+    
+    // 표시명 결정 (프로필 정보 우선, 없으면 이메일, 없으면 '익명')
+    const displayName = userProfile?.display_name || userProfile?.email || '익명'
+    
+    // Optimistic Update: 즉시 UI에 임시 질문 추가 (프로필 정보 포함)
     const optimisticQuestion: Question = {
       id: parseInt(tempId.replace('temp-', '')),
       user_id: user.id,
@@ -247,8 +304,8 @@ export default function QA({
       status: 'published',
       created_at: new Date().toISOString(),
       user: {
-        display_name: '나',
-        email: undefined,
+        display_name: displayName,
+        email: userProfile?.email,
       },
     }
     
@@ -276,10 +333,17 @@ export default function QA({
         throw new Error(result.error || '질문 등록 실패')
       }
       
-      // 성공: Optimistic 질문을 실제 질문으로 교체
-      setQuestions((prev) => prev.map((q) => 
-        q.id === optimisticQuestion.id ? result.question : q
-      ))
+      // 성공: Optimistic 질문을 실제 질문으로 교체 (프로필 정보 유지)
+      const serverQuestion = result.question
+      setQuestions((prev) => prev.map((q) => {
+        if (q.id === optimisticQuestion.id) {
+          return {
+            ...serverQuestion,
+            user: serverQuestion.user || optimisticQuestion.user, // 서버 응답에 프로필이 없으면 Optimistic 유지
+          }
+        }
+        return q
+      }))
       
       onQuestionAsked?.(result.question)
     } catch (error: any) {

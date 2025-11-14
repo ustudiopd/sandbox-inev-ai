@@ -1,15 +1,25 @@
 'use client'
 
 import Link from 'next/link'
-import Button from '@/components/ui/Button'
 import { createClientSupabase } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
+import { formatTime } from '@/lib/webinar/utils'
+
+interface Webinar {
+  id: string
+  title: string
+  start_time: string | null
+  end_time: string | null
+  access_policy: string
+}
 
 export default function Home() {
   const router = useRouter()
   const supabase = createClientSupabase()
   const [checking, setChecking] = useState(true)
+  const [webinars, setWebinars] = useState<Webinar[]>([])
+  const [loadingWebinars, setLoadingWebinars] = useState(true)
   
   useEffect(() => {
     async function checkUserAndRedirect() {
@@ -40,6 +50,26 @@ export default function Home() {
     checkUserAndRedirect()
   }, [router, supabase])
   
+  useEffect(() => {
+    async function loadActiveWebinars() {
+      try {
+        const response = await fetch('/api/webinars/active')
+        if (response.ok) {
+          const { webinars: activeWebinars } = await response.json()
+          setWebinars(activeWebinars || [])
+        }
+      } catch (error) {
+        console.error('진행중인 웨비나 로드 실패:', error)
+      } finally {
+        setLoadingWebinars(false)
+      }
+    }
+    
+    if (!checking) {
+      loadActiveWebinars()
+    }
+  }, [checking])
+  
   if (checking) {
     return (
       <main className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
@@ -57,39 +87,65 @@ export default function Home() {
           <h1 className="text-6xl font-bold mb-6 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
             EventLive.ai
           </h1>
-          <p className="text-2xl text-gray-700 mb-4 font-semibold">Enterprise Edition v2.0</p>
-          <p className="text-lg text-gray-600 mb-12">B2B2C 멀티테넌시 웨비나 플랫폼</p>
+        </div>
+        
+        <div className="max-w-6xl mx-auto mt-20">
+          <h2 className="text-3xl font-bold text-gray-800 mb-8 text-center">현재 진행중인 웨비나</h2>
           
-          <div className="flex gap-4 justify-center mb-16">
-            <Link href="/signup">
-              <Button size="lg" className="px-8">
-                시작하기
-              </Button>
-            </Link>
-            <Link href="/login">
-              <Button variant="outline" size="lg" className="px-8">
-                로그인
-              </Button>
-            </Link>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-20">
-            <div className="bg-white rounded-xl shadow-lg p-8 hover:shadow-xl transition-shadow">
-              <div className="text-4xl mb-4">🎥</div>
-              <h3 className="text-xl font-semibold mb-2">실시간 웨비나</h3>
-              <p className="text-gray-600">YouTube 생중계 기반의 고성능 인터랙티브 웨비나</p>
+          {loadingWebinars ? (
+            <div className="text-center py-12">
+              <div className="text-lg text-gray-600">로딩 중...</div>
             </div>
-            <div className="bg-white rounded-xl shadow-lg p-8 hover:shadow-xl transition-shadow">
-              <div className="text-4xl mb-4">💬</div>
-              <h3 className="text-xl font-semibold mb-2">실시간 상호작용</h3>
-              <p className="text-gray-600">채팅, Q&A, 퀴즈, 추첨 등 다양한 상호작용 기능</p>
+          ) : webinars.length === 0 ? (
+            <div className="text-center py-12">
+              <div className="text-lg text-gray-600">현재 진행중인 웨비나가 없습니다.</div>
             </div>
-            <div className="bg-white rounded-xl shadow-lg p-8 hover:shadow-xl transition-shadow">
-              <div className="text-4xl mb-4">🏢</div>
-              <h3 className="text-xl font-semibold mb-2">멀티테넌시</h3>
-              <p className="text-gray-600">에이전시-클라이언트 계층 구조로 확장 가능한 SaaS</p>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {webinars.map((webinar) => (
+                <Link
+                  key={webinar.id}
+                  href={`/webinar/${webinar.id}`}
+                  className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-all duration-200 hover:scale-105 cursor-pointer"
+                >
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex-1">
+                      <div className="inline-block px-3 py-1 bg-red-100 text-red-600 rounded-full text-sm font-semibold mb-3">
+                        🔴 LIVE
+                      </div>
+                      <h3 className="text-xl font-semibold text-gray-800 mb-2 line-clamp-2">
+                        {webinar.title}
+                      </h3>
+                    </div>
+                  </div>
+                  {webinar.start_time && (
+                    <div className="text-sm text-gray-500">
+                      시작: {formatTime(webinar.start_time, 'long')}
+                    </div>
+                  )}
+                  {webinar.end_time && (
+                    <div className="text-sm text-gray-500 mt-1">
+                      종료: {formatTime(webinar.end_time, 'long')}
+                    </div>
+                  )}
+                  <div className="mt-3">
+                    {webinar.access_policy === 'guest_allowed' ? (
+                      <div className="inline-block px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">
+                        ✅ 게스트 입장 가능
+                      </div>
+                    ) : (
+                      <div className="inline-block px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
+                        📝 회원가입 필요
+                      </div>
+                    )}
+                  </div>
+                  <div className="mt-4 text-blue-600 font-medium">
+                    입장하기 →
+                  </div>
+                </Link>
+              ))}
             </div>
-          </div>
+          )}
         </div>
       </div>
     </main>
