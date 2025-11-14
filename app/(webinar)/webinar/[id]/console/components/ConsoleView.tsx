@@ -4,6 +4,9 @@ import { useState } from 'react'
 import Link from 'next/link'
 import QAModeration from './QAModeration'
 import ChatModeration from './ChatModeration'
+import FormManagement from './FormManagement'
+import FileManagement from './FileManagement'
+import GiveawayManagement from './GiveawayManagement'
 
 interface Webinar {
   id: string
@@ -27,7 +30,7 @@ interface ConsoleViewProps {
  * Q&A 모더레이션, 퀴즈, 추첨 등을 관리하는 운영자 전용 페이지
  */
 export default function ConsoleView({ webinar, userRole }: ConsoleViewProps) {
-  const [activeTab, setActiveTab] = useState<'qa' | 'chat' | 'quiz' | 'draw'>('qa')
+  const [activeTab, setActiveTab] = useState<'qa' | 'chat' | 'forms' | 'files' | 'giveaways'>('qa')
   
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
@@ -83,19 +86,29 @@ export default function ConsoleView({ webinar, userRole }: ConsoleViewProps) {
               💬 채팅 관리
             </button>
             <button
-              onClick={() => setActiveTab('quiz')}
+              onClick={() => setActiveTab('forms')}
               className={`px-6 py-4 text-sm font-medium transition-colors ${
-                activeTab === 'quiz'
+                activeTab === 'forms'
                   ? 'bg-blue-50 text-blue-600 border-b-2 border-blue-600'
                   : 'text-gray-600 hover:bg-gray-50'
               }`}
             >
-              🎯 퀴즈
+              📋 설문/퀴즈
             </button>
             <button
-              onClick={() => setActiveTab('draw')}
+              onClick={() => setActiveTab('files')}
               className={`px-6 py-4 text-sm font-medium transition-colors ${
-                activeTab === 'draw'
+                activeTab === 'files'
+                  ? 'bg-blue-50 text-blue-600 border-b-2 border-blue-600'
+                  : 'text-gray-600 hover:bg-gray-50'
+              }`}
+            >
+              📎 발표자료
+            </button>
+            <button
+              onClick={() => setActiveTab('giveaways')}
+              className={`px-6 py-4 text-sm font-medium transition-colors ${
+                activeTab === 'giveaways'
                   ? 'bg-blue-50 text-blue-600 border-b-2 border-blue-600'
                   : 'text-gray-600 hover:bg-gray-50'
               }`}
@@ -121,23 +134,24 @@ export default function ConsoleView({ webinar, userRole }: ConsoleViewProps) {
             </div>
           )}
           
-          {activeTab === 'quiz' && (
+          {activeTab === 'forms' && (
             <div>
-              <h2 className="text-xl font-semibold mb-4">퀴즈 관리</h2>
-              <div className="text-center py-12 text-gray-500">
-                <div className="text-5xl mb-4">🎯</div>
-                <p className="text-lg">퀴즈 기능은 곧 추가될 예정입니다</p>
-              </div>
+              <h2 className="text-xl font-semibold mb-4">설문/퀴즈 관리</h2>
+              <FormManagement webinarId={webinar.id} />
             </div>
           )}
           
-          {activeTab === 'draw' && (
+          {activeTab === 'files' && (
+            <div>
+              <h2 className="text-xl font-semibold mb-4">발표자료 관리</h2>
+              <FileManagement webinarId={webinar.id} />
+            </div>
+          )}
+          
+          {activeTab === 'giveaways' && (
             <div>
               <h2 className="text-xl font-semibold mb-4">추첨 관리</h2>
-              <div className="text-center py-12 text-gray-500">
-                <div className="text-5xl mb-4">🎁</div>
-                <p className="text-lg">추첨 기능은 곧 추가될 예정입니다</p>
-              </div>
+              <GiveawayManagement webinarId={webinar.id} />
             </div>
           )}
         </div>

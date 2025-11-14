@@ -169,19 +169,111 @@
   - 싱가폴 리전 (`sin1`) 설정
   - Supabase 리전과 일치
 
+## [2025-01-XX] 설문/퀴즈 통합 시스템 구현 완료
+- ✅ 설문/퀴즈 통합 데이터베이스 스키마 (`015_create_forms_system.sql`)
+  - `forms` 테이블 (kind: 'survey' | 'quiz')
+  - `form_questions` 테이블
+  - `form_submissions` 테이블
+  - `form_answers` 테이블
+  - `quiz_attempts` 테이블
+- ✅ 설문/퀴즈 관리 API (`/api/webinars/[webinarId]/forms/*`)
+  - 생성, 조회, 수정, 삭제
+  - 상태 변경 (draft → open → closed)
+  - 제출 처리 및 퀴즈 채점
+  - 결과 조회 및 통계
+- ✅ 설문/퀴즈 관리 UI (`FormManagement.tsx`)
+  - 설문/퀴즈 생성 및 편집
+  - 문항 관리 (단일 선택, 다중 선택, 텍스트)
+  - 정답 키 설정 (퀴즈)
+  - 결과 조회 모달
+- ✅ 참여자 UI (`FormWidget.tsx`)
+  - 설문/퀴즈 응답 폼
+  - 퀴즈 정답 즉시 표시 (제출 후)
+  - 제출 완료 메시지 자동 사라짐
+- ✅ 팝업 시스템 구현
+  - 세션 소개 탭에 버튼 배치
+  - 팝업 모달로 설문/퀴즈/발표자료/추첨 표시
+  - 자동 팝업 기능 (오픈된 항목 1회만)
+- ✅ 성능 최적화 (`021_optimize_form_loading_indexes.sql`)
+  - 병렬 쿼리 실행
+  - 필요한 컬럼만 선택
+  - 인덱스 추가 (form_submissions, forms)
+
+## [2025-01-XX] 발표자료 다운로드 기능 구현 완료
+- ✅ 파일 관리 데이터베이스 스키마 (`016_create_webinar_files.sql`)
+  - `webinar_files` 테이블
+  - Supabase Storage 연동
+- ✅ 파일 관리 API (`/api/webinars/[webinarId]/files/*`)
+  - 파일 업로드
+  - 파일 목록 조회
+  - 파일 다운로드 (서명된 URL)
+  - 파일 삭제
+- ✅ 파일 관리 UI (`FileManagement.tsx`)
+  - 파일 업로드
+  - 파일 목록 표시
+  - 파일 삭제
+- ✅ 참여자 UI (`FileDownload.tsx`)
+  - 파일 목록 표시
+  - 다운로드 버튼
+  - 팝업 모달 통합
+
+## [2025-01-XX] 추첨 기능 구현 완료
+- ✅ 추첨 데이터베이스 스키마 (`017_create_giveaways.sql`)
+  - `giveaways` 테이블
+  - `giveaway_entries` 테이블
+  - `giveaway_winners` 테이블
+  - Commit-Reveal 패턴 지원 (seed_commit, seed_reveal)
+- ✅ 추첨 관리 API (`/api/webinars/[webinarId]/giveaways/*`)
+  - 추첨 생성
+  - 추첨 목록 조회
+  - 추첨 참여 (엔트리 생성)
+  - 추첨 실행 (자동 seed 생성)
+  - 추첨 결과 조회 (당첨자 이름 포함)
+- ✅ 추첨 관리 UI (`GiveawayManagement.tsx`)
+  - 추첨 생성 모달
+  - 추첨 목록 표시
+  - 상태 관리 (draft → open → closed → drawn)
+  - 추첨 실행 애니메이션
+  - 당첨자 이름 표시
+- ✅ 참여자 UI (`GiveawayWidget.tsx`)
+  - 추첨 참여 버튼
+  - 참여자 수 실시간 표시
+  - 당첨자 목록 표시
+  - 팝업 모달 통합
+- ✅ 추첨 애니메이션
+  - 로딩 애니메이션 (슬롯머신 이모지)
+  - 완료 애니메이션 (축하 이모지)
+  - 당첨자 순차 표시 (fade-in-up)
+  - 그라데이션 배경 및 펄스 효과
+
+## [2025-01-XX] 운영 콘솔 개선
+- ✅ 운영 콘솔 접근 권한 개선
+  - 에이전시 관리자 (owner/admin) 접근 허용
+  - 클라이언트 관리자 (owner/admin/operator) 접근 허용
+- ✅ Q&A 모더레이션 개선 (`QAModeration.tsx`)
+  - 답변 기능 추가
+  - 실시간 업데이트
+- ✅ 채팅 모더레이션 개선 (`ChatModeration.tsx`)
+  - 삭제 기능 추가
+  - 실시간 업데이트 (optimistic update)
+- ✅ 콘솔 탭 구조 (`ConsoleView.tsx`)
+  - 설문/퀴즈 관리 탭
+  - 발표자료 관리 탭
+  - 추첨 관리 탭
+
 ## 남은 작업
 
-### Phase 3 - 웨비나 및 실시간 기능 (미완료)
-- ❌ 퀴즈 기능 (출제, 응답, 정답 공개)
-- ❌ 추첨 기능 (실행, 당첨자 알림)
-- ❌ 웨비나 등록 페이지 (`/webinar/[id]/register`)
+### Phase 3 - 웨비나 및 실시간 기능 (대부분 완료)
+- ✅ 퀴즈 기능 (출제, 응답, 정답 공개) - 완료
+- ✅ 추첨 기능 (실행, 당첨자 알림) - 완료
+- ✅ 설문조사 기능 - 완료
+- ✅ 발표자료 다운로드 기능 - 완료
 - ✅ 게스트 모드 (닉네임만으로 입장) - 완료
+- ❌ 웨비나 등록 페이지 (`/webinar/[id]/register`)
 - ❌ 초대 링크 처리 (`/invite/[token]`)
-- ❌ 설문조사 기능 (새로 요청됨)
-- ❌ 발표자료 다운로드 기능 (새로 요청됨)
 
 ### Phase 4 - 이벤트 로직 고도화 & 리포트
-- ❌ 퀴즈 정답자 집계 및 통계
+- ❌ 퀴즈 정답자 집계 및 통계 (기본 통계는 구현됨)
 - ❌ 추첨 재현성 보고 및 통계
 - ❌ 참여/체류/행동 리포트 고도화
 - ❌ 리포트 자동 발송

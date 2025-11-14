@@ -11,6 +11,7 @@ interface Question {
   created_at: string
   answered_by?: string
   answered_at?: string
+  answer?: string
   user?: {
     display_name?: string
     email?: string
@@ -25,6 +26,10 @@ export default function QAModeration({ webinarId }: QAModerationProps) {
   const [questions, setQuestions] = useState<Question[]>([])
   const [loading, setLoading] = useState(false)
   const [filter, setFilter] = useState<'all' | 'published' | 'answered' | 'pinned'>('all')
+  const [answeringQuestionId, setAnsweringQuestionId] = useState<number | null>(null)
+  const [answerText, setAnswerText] = useState<Record<number, string>>({})
+  const [answering, setAnswering] = useState(false)
+  const [expandedAnswers, setExpandedAnswers] = useState<Set<number>>(new Set())
   const supabase = createClientSupabase()
   
   useEffect(() => {
@@ -55,59 +60,40 @@ export default function QAModeration({ webinarId }: QAModerationProps) {
   const loadQuestions = async () => {
     setLoading(true)
     try {
-      let query = supabase
-        .from('questions')
-        .select(`
-          id,
-          user_id,
-          content,
-          status,
-          created_at,
-          answered_by,
-          answered_at,
-          profiles:user_id (
-            display_name,
-            email
-          )
-        `)
-        .eq('webinar_id', webinarId)
-      
-      if (filter === 'published') {
-        query = query.eq('status', 'published')
-      } else if (filter === 'answered') {
-        query = query.eq('status', 'answered')
-      } else if (filter === 'pinned') {
-        query = query.eq('status', 'pinned')
-      } else {
-        query = query.neq('status', 'hidden')
-      }
-      
-      const { data, error } = await query
-        .order('created_at', { ascending: false })
-      
-      if (error) throw error
-      
-      const formattedQuestions = (data || []).map((q: any) => ({
-        id: q.id,
-        user_id: q.user_id,
-        content: q.content,
-        status: q.status,
-        created_at: q.created_at,
-        answered_by: q.answered_by,
-        answered_at: q.answered_at,
-        user: q.profiles,
-      }))
-      
-      // 고정된 질문을 맨 위로
-      const sorted = formattedQuestions.sort((a, b) => {
-        if (a.status === 'pinned' && b.status !== 'pinned') return -1
-        if (a.status !== 'pinned' && b.status === 'pinned') return 1
-        return 0
+      // API를 통해 질문 조회 (프로필 정보 포함, RLS 우회)
+      const params = new URLSearchParams({
+        onlyMine: 'false', // 운영 콘솔에서는 전체 질문 조회
+        filter: filter,
       })
       
-      setQuestions(sorted)
-    } catch (error) {
+      const response = await fetch(`/api/webinars/${webinarId}/questions?${params}`)
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error || `HTTP ${response.status}: 질문 조회 실패`)
+      }
+      
+      const result = await response.json()
+      const loadedQuestions = result.questions || []
+      
+      setQuestions(loadedQuestions)
+      
+      // 답변이 있는 질문은 기본적으로 펼쳐진 상태로 설정
+      const answeredQuestionIds = loadedQuestions
+        .filter((q: Question) => q.status === 'answered' && q.answer)
+        .map((q: Question) => q.id)
+      
+      if (answeredQuestionIds.length > 0) {
+        setExpandedAnswers((prev) => {
+          const next = new Set(prev)
+          answeredQuestionIds.forEach((id: string) => next.add(Number(id)))
+          return next
+        })
+      }
+    } catch (error: any) {
       console.error('질문 로드 실패:', error)
+      // 사용자에게 에러 메시지 표시
+      setQuestions([])
     } finally {
       setLoading(false)
     }
@@ -159,6 +145,64 @@ export default function QAModeration({ webinarId }: QAModerationProps) {
       console.error('삭제 실패:', error)
       alert(error.message || '삭제에 실패했습니다')
     }
+  }
+
+  const handleAnswer = async (questionId: number) => {
+    const answer = answerText[questionId]?.trim()
+    if (!answer || answering) return
+    
+    setAnswering(true)
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        alert('로그인이 필요합니다')
+        return
+      }
+      
+      const response = await fetch(`/api/questions/${questionId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          status: 'answered',
+          answeredBy: user.id,
+          answer: answer,
+        }),
+      })
+      
+      const result = await response.json()
+      
+      if (!response.ok || result.error) {
+        throw new Error(result.error || '답변 등록 실패')
+      }
+      
+      // 답변 완료 후 상태 초기화
+      setAnsweringQuestionId(null)
+      setAnswerText((prev) => {
+        const next = { ...prev }
+        delete next[questionId]
+        return next
+      })
+      
+      // 질문 목록 새로고침
+      await loadQuestions()
+    } catch (error: any) {
+      console.error('답변 등록 실패:', error)
+      alert(error.message || '답변 등록에 실패했습니다')
+    } finally {
+      setAnswering(false)
+    }
+  }
+
+  const toggleAnswerExpanded = (questionId: number) => {
+    setExpandedAnswers((prev) => {
+      const next = new Set(prev)
+      if (next.has(questionId)) {
+        next.delete(questionId)
+      } else {
+        next.add(questionId)
+      }
+      return next
+    })
   }
   
   return (
@@ -240,6 +284,87 @@ export default function QAModeration({ webinarId }: QAModerationProps) {
                     </span>
                   </div>
                   <p className="text-sm text-gray-700">{question.content}</p>
+                  
+                  {/* 답변 표시 */}
+                  {question.answer && answeringQuestionId !== question.id && (
+                    <div className="mt-3 pt-3 border-t border-gray-200">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-xs font-medium text-green-700">답변</span>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => {
+                              setAnsweringQuestionId(question.id)
+                              setAnswerText((prev) => ({ ...prev, [question.id]: question.answer || '' }))
+                            }}
+                            className="text-xs text-blue-600 hover:text-blue-800"
+                          >
+                            수정
+                          </button>
+                          <button
+                            onClick={() => toggleAnswerExpanded(question.id)}
+                            className="text-xs text-gray-500 hover:text-gray-700"
+                          >
+                            {expandedAnswers.has(question.id) ? '접기' : '펼치기'}
+                          </button>
+                        </div>
+                      </div>
+                      {expandedAnswers.has(question.id) && (
+                        <p className="text-sm text-gray-600 whitespace-pre-wrap">{question.answer}</p>
+                      )}
+                    </div>
+                  )}
+                  
+                  {/* 답변 입력/수정 UI */}
+                  {answeringQuestionId === question.id ? (
+                    <div className="mt-3 pt-3 border-t border-gray-200">
+                      <textarea
+                        value={answerText[question.id] || ''}
+                        onChange={(e) => setAnswerText((prev) => ({ ...prev, [question.id]: e.target.value }))}
+                        placeholder="답변을 입력하세요..."
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                        rows={3}
+                      />
+                      <div className="flex gap-2 mt-2">
+                        <button
+                          onClick={() => handleAnswer(question.id)}
+                          disabled={answering || !answerText[question.id]?.trim()}
+                          className="px-4 py-1.5 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                        >
+                          {answering ? '등록 중...' : '답변 등록'}
+                        </button>
+                        <button
+                          onClick={() => {
+                            setAnsweringQuestionId(null)
+                            setAnswerText((prev) => {
+                              const next = { ...prev }
+                              delete next[question.id]
+                              return next
+                            })
+                          }}
+                          disabled={answering}
+                          className="px-4 py-1.5 bg-gray-100 text-gray-700 text-sm rounded-lg hover:bg-gray-200 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+                        >
+                          취소
+                        </button>
+                      </div>
+                    </div>
+                  ) : !question.answer && (
+                    <div className="mt-3 pt-3 border-t border-gray-200">
+                      <button
+                        onClick={() => {
+                          setAnsweringQuestionId(question.id)
+                          setExpandedAnswers((prev) => {
+                            const next = new Set(prev)
+                            next.add(question.id)
+                            return next
+                          })
+                        }}
+                        className="text-xs px-3 py-1.5 bg-blue-100 text-blue-800 rounded hover:bg-blue-200 transition-colors"
+                      >
+                        답변하기
+                      </button>
+                    </div>
+                  )}
                 </div>
                 <div className="flex gap-2 ml-4">
                   {question.status !== 'pinned' && (

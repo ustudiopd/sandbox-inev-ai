@@ -172,9 +172,51 @@ export default function Chat({
     try {
       // API를 통해 메시지 조회 (프로필 정보 포함, RLS 우회)
       const limit = isInitial ? 10 : 20 // 초기: 10개, 더보기: 20개
-      const response = await fetch(`/api/webinars/${webinarId}/messages?limit=${limit}`)
+      let response: Response
+      
+      try {
+        response = await fetch(`/api/webinars/${webinarId}/messages?limit=${limit}`, {
+          credentials: 'include', // 쿠키 포함
+        })
+      } catch (fetchError: any) {
+        // fetch 호출 자체가 실패한 경우 (네트워크 오류 등)
+        if (fetchError.name === 'TypeError' && fetchError.message === 'Failed to fetch') {
+          console.warn('네트워크 오류: 메시지 조회 실패 (서버 연결 불가)')
+          // 네트워크 오류는 조용히 처리 (폴백 폴링이 있으므로)
+          if (isInitial) {
+            setMessages([])
+          }
+          return
+        }
+        // 기타 fetch 오류는 다시 throw
+        throw fetchError
+      }
       
       if (!response.ok) {
+        // 401 에러인 경우 인증 상태 확인
+        if (response.status === 401) {
+          const { data: { session } } = await supabase.auth.getSession()
+          if (!session) {
+            console.warn('인증 세션이 없습니다. 로그인 페이지로 이동합니다.')
+            // 로그인 페이지로 리다이렉트 (현재 페이지 URL을 쿼리 파라미터로 전달)
+            const currentUrl = window.location.href
+            window.location.href = `/login?redirect=${encodeURIComponent(currentUrl)}`
+            return
+          }
+          // 세션이 있는데도 401이면 토큰 갱신 시도
+          console.warn('인증 토큰이 만료되었을 수 있습니다. 토큰 갱신 시도...')
+          const { data: { session: refreshedSession }, error: refreshError } = await supabase.auth.refreshSession()
+          if (refreshError || !refreshedSession) {
+            console.error('토큰 갱신 실패:', refreshError)
+            window.location.href = `/login?redirect=${encodeURIComponent(window.location.href)}`
+            return
+          }
+          // 토큰 갱신 후 재시도
+          console.log('토큰 갱신 성공, 메시지 조회 재시도...')
+          // 재귀 호출로 재시도 (무한 루프 방지를 위해 한 번만)
+          return loadMessages(isInitial)
+        }
+        
         const errorText = await response.text()
         let errorData
         try {
@@ -229,8 +271,21 @@ export default function Chat({
       
       setNextCursor(cursor)
       setHasMore(more)
-    } catch (error) {
+    } catch (error: any) {
+      // fetch 호출 자체가 실패한 경우는 이미 처리됨
+      // 여기서는 response 처리 중 발생한 에러만 처리
       console.error('메시지 로드 실패:', error)
+      
+      // 네트워크 오류인 경우 (이미 처리되었지만 안전장치)
+      if (error.name === 'TypeError' && error.message === 'Failed to fetch') {
+        console.warn('네트워크 오류: 서버에 연결할 수 없습니다.')
+        // 네트워크 오류는 사용자에게 알리지 않고 조용히 처리
+        // (폴백 폴링이나 재시도가 있으므로)
+      } else {
+        // 기타 에러는 콘솔에만 기록
+        console.error('메시지 로드 중 오류:', error.message || error)
+      }
+      
       // 에러 발생 시 즉시 종료 (고착 방지)
       if (isInitial) {
         setMessages([])
@@ -251,10 +306,32 @@ export default function Chat({
     try {
       const { beforeTs, beforeId } = nextCursor
       const response = await fetch(
-        `/api/webinars/${webinarId}/messages?limit=20&beforeTs=${encodeURIComponent(beforeTs)}&beforeId=${beforeId}`
+        `/api/webinars/${webinarId}/messages?limit=20&beforeTs=${encodeURIComponent(beforeTs)}&beforeId=${beforeId}`,
+        {
+          credentials: 'include', // 쿠키 포함
+        }
       )
       
       if (!response.ok) {
+        // 401 에러인 경우 인증 상태 확인
+        if (response.status === 401) {
+          const { data: { session } } = await supabase.auth.getSession()
+          if (!session) {
+            console.warn('인증 세션이 없습니다. 로그인 페이지로 이동합니다.')
+            window.location.href = `/login?redirect=${encodeURIComponent(window.location.href)}`
+            return
+          }
+          // 세션이 있는데도 401이면 토큰 갱신 시도
+          const { data: { session: refreshedSession }, error: refreshError } = await supabase.auth.refreshSession()
+          if (refreshError || !refreshedSession) {
+            console.error('토큰 갱신 실패:', refreshError)
+            window.location.href = `/login?redirect=${encodeURIComponent(window.location.href)}`
+            return
+          }
+          // 토큰 갱신 후 재시도
+          return loadMoreMessages()
+        }
+        
         const errorData = await response.json().catch(() => ({}))
         throw new Error(errorData.error || '메시지 더보기 실패')
       }
@@ -348,8 +425,9 @@ export default function Chat({
           lastEventAt.current = Date.now() // 이벤트 수신 시간 업데이트
           reconnectTriesRef.current = 0 // 재연결 시도 횟수 리셋
           
-          // 이벤트 수신 시 폴백 끄기
+          // 이벤트 수신 시 폴백 끄기 (실시간 구독이 정상 작동 중)
           if (fallbackOn) {
+            console.log('✅ 실시간 이벤트 수신, 폴백 폴링 비활성화')
             setFallbackOn(false)
           }
           
@@ -567,13 +645,29 @@ export default function Chat({
               console.warn('UPDATE 이벤트에 id가 없습니다:', payload)
               return
             }
-            setMessages((prev) =>
-              prev.map((msg) =>
+            
+            console.log('메시지 업데이트 이벤트 수신:', updatedMsg.id, 'hidden:', updatedMsg.hidden)
+            
+            setMessages((prev) => {
+              const hasMessage = prev.some(msg => msg.id === updatedMsg.id)
+              
+              if (!hasMessage) {
+                // 메시지가 목록에 없으면 무시 (아직 로드되지 않은 메시지)
+                console.log('업데이트된 메시지가 목록에 없음:', updatedMsg.id)
+                return prev
+              }
+              
+              // 메시지 업데이트 및 숨김 메시지 필터링
+              const updated = prev.map((msg) =>
                 msg.id === updatedMsg.id
-                  ? { ...msg, ...updatedMsg, hidden: updatedMsg.hidden }
+                  ? { ...msg, ...updatedMsg, hidden: updatedMsg.hidden ?? false }
                   : msg
               ).filter(msg => !msg.hidden)
-            )
+              
+              console.log('메시지 업데이트 반영 완료:', updatedMsg.id, 'hidden:', updatedMsg.hidden, '남은 메시지 수:', updated.length)
+              
+              return updated
+            })
           } else if (payload.eventType === 'DELETE') {
             // 삭제된 메시지 제거 (id 필수 확인)
             const deletedMsg = payload.old as any
@@ -590,20 +684,29 @@ export default function Chat({
         
         if (status === 'SUBSCRIBED') {
           reconnectTriesRef.current = 0
-          setFallbackOn(false)
+          if (fallbackOn) {
+            console.log('✅ 실시간 구독 성공, 폴백 폴링 비활성화')
+            setFallbackOn(false)
+          }
           lastEventAt.current = Date.now()
           console.log('✅ 실시간 구독 성공:', channelName)
         } else if (['CHANNEL_ERROR', 'TIMED_OUT', 'CLOSED'].includes(status)) {
           reconnectTriesRef.current++
-          const delay = Math.min(500 * Math.pow(2, reconnectTriesRef.current - 1), 15000)
+          const delay = Math.min(1000 * Math.pow(2, reconnectTriesRef.current - 1), 10000)
           
-          console.warn(`⚠️ 실시간 구독 실패 (${status}), ${delay}ms 후 재시도...`)
+          console.warn(`⚠️ 실시간 구독 실패 (${status}), ${delay}ms 후 재시도... (${reconnectTriesRef.current}/3)`)
           
           // 3회 실패 시 폴백 활성화
           if (reconnectTriesRef.current >= 3) {
             console.warn('🔴 실시간 구독 3회 실패, 폴백 폴링 활성화')
             setFallbackOn(true)
-            return // 재연결 시도 중단
+            // 폴백 활성화 후에도 주기적으로 재연결 시도
+            setTimeout(() => {
+              console.log('🔄 폴백 모드에서 재연결 시도')
+              reconnectTriesRef.current = 0 // 재시도 횟수 리셋
+              setReconnectKey(prev => prev + 1) // 재연결 시도
+            }, 30000) // 30초 후 재연결 시도
+            return
           }
           
           // 토큰 재주입 시도
@@ -611,6 +714,7 @@ export default function Chat({
             const { data: { session } } = await supabase.auth.getSession()
             if (session?.access_token) {
               supabase.realtime.setAuth(session.access_token)
+              console.log('토큰 재주입 완료')
             }
           } catch (tokenError) {
             console.warn('토큰 재주입 실패:', tokenError)
@@ -621,6 +725,7 @@ export default function Chat({
             // 채널 정리
             channel.unsubscribe().then(() => {
               supabase.removeChannel(channel)
+              console.log('채널 정리 완료, 재연결 시도')
             }).catch(() => {
               // 무시 (이미 정리되었을 수 있음)
             })
@@ -654,9 +759,12 @@ export default function Chat({
     return () => clearInterval(healthCheckInterval)
   }, [fallbackOn])
   
-  // 조건부 폴백 폴링 (증분 폴링 + 지터 + 가시성/오프라인 고려)
+  // 조건부 폴백 폴링 (증분 로드만 수행 - 새 메시지만 가져오기)
   useEffect(() => {
-    if (!fallbackOn) return
+    if (!fallbackOn) {
+      console.log('🛑 폴백 폴링 비활성화')
+      return
+    }
     
     // 가시성 및 온라인 상태 확인
     const isVisible = document.visibilityState === 'visible'
@@ -667,56 +775,92 @@ export default function Chat({
       return
     }
     
-    console.log('🔄 폴백 폴링 시작')
+    console.log('🔄 폴백 폴링 시작 (증분 로드 - 새 메시지만)')
     
     // 지터가 포함된 폴링 함수
+    let isPollingActive = true
+    
     const pollWithJitter = async () => {
-      try {
-        const response = await fetch(
-          `/api/webinars/${webinarId}/messages?after=${lastMessageIdRef.current}`
-        )
-        
-        if (response.ok) {
-          const { messages: fetchedMessages } = await response.json()
-          
-          if (fetchedMessages && fetchedMessages.length > 0) {
-            console.log(`📥 폴백 폴링: ${fetchedMessages.length}개 메시지 수신`)
-            
-            setMessages((prev) => {
-              const existingIds = new Set(prev.map(m => m.id))
-              const newMessages = fetchedMessages.filter((m: Message) => !existingIds.has(m.id))
-              
-              if (newMessages.length === 0) return prev
-              
-              const merged = [...prev, ...newMessages]
-              const sorted = merged.sort(
-                (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-              )
-              
-              // 윈도우 크기 제한 (가장 오래된 것부터 제거)
-              let windowed = sorted
-              if (sorted.length > MAX_MESSAGES_WINDOW) {
-                windowed = sorted.slice(-MAX_MESSAGES_WINDOW)
-              }
-              
-              // 마지막 메시지 ID 업데이트
-              lastMessageIdRef.current = Math.max(
-                ...windowed.map(m => typeof m.id === 'number' ? m.id : 0),
-                lastMessageIdRef.current
-              )
-              
-              return windowed
-            })
-            
-            // 이벤트 수신 시간 업데이트
-            lastEventAt.current = Date.now()
-          }
-        }
-      } catch (error) {
-        console.error('폴백 폴링 오류:', error)
+      // 폴백이 비활성화되었으면 중지
+      if (!isPollingActive) {
+        console.log('🛑 폴백 폴링 중지 (폴백 비활성화됨)')
+        return
       }
       
-      // 지터 적용: 기본 3초 ± 400ms 랜덤
+      try {
+        // 증분 로드: 마지막 메시지 ID 이후의 새 메시지만 가져오기
+        const afterParam = lastMessageIdRef.current > 0 ? `&after=${lastMessageIdRef.current}` : ''
+        const response = await fetch(
+          `/api/webinars/${webinarId}/messages?limit=20${afterParam}`,
+          {
+            credentials: 'include', // 쿠키 포함
+          }
+        )
+        
+        // 401 에러인 경우 폴백 폴링 중지 (인증 문제)
+        if (response.status === 401) {
+          console.warn('폴백 폴링 중 401 에러 발생, 폴링 중지')
+          isPollingActive = false
+          setFallbackOn(false)
+          return
+        }
+        
+        if (response.ok) {
+          const result = await response.json()
+          
+          if (result.success && result.messages) {
+            const fetchedMessages = result.messages
+            
+            if (fetchedMessages.length > 0) {
+              console.log(`📥 폴백 폴링: ${fetchedMessages.length}개 새 메시지 수신`)
+              
+              // 숨김 메시지 제외하고 기존 메시지에 추가
+              const visibleNewMessages = fetchedMessages.filter((m: Message) => !m.hidden)
+              
+              if (visibleNewMessages.length > 0) {
+                setMessages((prev) => {
+                  const existingIds = new Set(prev.map(m => m.id))
+                  const trulyNew = visibleNewMessages.filter((m: Message) => !existingIds.has(m.id))
+                  
+                  if (trulyNew.length === 0) return prev
+                  
+                  const merged = [...prev, ...trulyNew]
+                  const sorted = merged.sort(
+                    (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+                  )
+                  
+                  // 윈도우 크기 제한 (가장 오래된 것부터 제거)
+                  let windowed = sorted
+                  if (sorted.length > MAX_MESSAGES_WINDOW) {
+                    windowed = sorted.slice(-MAX_MESSAGES_WINDOW)
+                  }
+                  
+                  return windowed
+                })
+                
+                // 마지막 메시지 ID 업데이트
+                const maxId = Math.max(
+                  ...visibleNewMessages.map((m: any) => typeof m.id === 'number' ? m.id : 0),
+                  lastMessageIdRef.current
+                )
+                lastMessageIdRef.current = maxId
+              }
+              
+              // 이벤트 수신 시간 업데이트
+              lastEventAt.current = Date.now()
+            }
+          }
+        }
+      } catch (error: any) {
+        // 네트워크 오류는 조용히 처리 (재시도될 예정)
+        if (error.name === 'TypeError' && error.message === 'Failed to fetch') {
+          console.warn('폴백 폴링: 네트워크 오류 (다음 폴링에서 재시도)')
+        } else {
+          console.error('폴백 폴링 오류:', error)
+        }
+      }
+      
+      // 지터 적용: 기본 3초 ± 400ms 랜덤 (증분 로드이므로 간격을 줄임)
       const base = 3000
       const jitter = 400 - Math.random() * 800 // -400 ~ +400ms
       const nextDelay = base + jitter
@@ -729,14 +873,14 @@ export default function Chat({
     
     // 가시성/온라인 상태 변경 감지
     const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible' && navigator.onLine) {
+      if (document.visibilityState === 'visible' && navigator.onLine && fallbackOn) {
         // 복귀 시 즉시 1회 폴링
         pollWithJitter()
       }
     }
     
     const handleOnline = () => {
-      if (document.visibilityState === 'visible') {
+      if (document.visibilityState === 'visible' && fallbackOn) {
         // 온라인 복귀 시 즉시 1회 폴링
         pollWithJitter()
       }
@@ -747,6 +891,7 @@ export default function Chat({
     
     return () => {
       console.log('🛑 폴백 폴링 중지')
+      isPollingActive = false
       clearTimeout(timeoutId)
       document.removeEventListener('visibilitychange', handleVisibilityChange)
       window.removeEventListener('online', handleOnline)

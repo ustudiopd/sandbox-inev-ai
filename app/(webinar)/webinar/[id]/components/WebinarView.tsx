@@ -3,11 +3,15 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { createClientSupabase } from '@/lib/supabase/client'
 import YouTubePlayer from '@/components/webinar/YouTubePlayer'
 import Chat from '@/components/webinar/Chat'
 import QA from '@/components/webinar/QA'
 import PresenceBar from '@/components/webinar/PresenceBar'
+import FormWidget from '@/components/webinar/FormWidget'
+import FileDownload from '@/components/webinar/FileDownload'
+import GiveawayWidget from '@/components/webinar/GiveawayWidget'
 
 interface Webinar {
   id: string
@@ -39,6 +43,17 @@ export default function WebinarView({ webinar, isAdminMode = false }: WebinarVie
   const [activeTab, setActiveTab] = useState<'chat' | 'qa'>('chat')
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [mounted, setMounted] = useState(false)
+  const [openForms, setOpenForms] = useState<any[]>([])
+  const [openGiveaways, setOpenGiveaways] = useState<any[]>([])
+  const [files, setFiles] = useState<any[]>([])
+  const [popupContent, setPopupContent] = useState<{ type: 'form' | 'giveaway' | 'file'; id: string; title: string } | null>(null)
+  const [shownPopups, setShownPopups] = useState<Set<string>>(new Set())
+  const isInitialLoadRef = useRef(true)
+  const previousItemsRef = useRef<{ forms: Set<string>; giveaways: Set<string>; files: Set<string> }>({
+    forms: new Set(),
+    giveaways: new Set(),
+    files: new Set(),
+  })
   const fullscreenRef = useRef<HTMLDivElement>(null)
   const supabase = createClientSupabase()
   const router = useRouter()
@@ -46,6 +61,211 @@ export default function WebinarView({ webinar, isAdminMode = false }: WebinarVie
   useEffect(() => {
     setMounted(true)
   }, [])
+  
+  // 오픈된 폼, 추첨, 파일 로드
+  useEffect(() => {
+    const loadOpenItems = async () => {
+      try {
+        // 오픈된 폼 조회
+        let formsResponse: Response
+        try {
+          formsResponse = await fetch(
+            `/api/webinars/${webinar.id}/forms?status=open`,
+            {
+              credentials: 'include', // 쿠키 포함
+            }
+          )
+        } catch (fetchError: any) {
+          // 네트워크 오류는 조용히 처리 (재시도될 예정)
+          if (fetchError.name === 'TypeError' && fetchError.message === 'Failed to fetch') {
+            console.warn('네트워크 오류: 폼 조회 실패 (서버 연결 불가)')
+            return
+          }
+          throw fetchError
+        }
+        
+        const formsResult = await formsResponse.json()
+        if (formsResponse.ok && formsResult.forms) {
+          const loadedForms = formsResult.forms
+          const currentFormIds = new Set<string>(loadedForms.map((f: any) => f.id))
+          
+          // 새로 오픈된 폼 찾기 (이전에 없던 것)
+          if (!isInitialLoadRef.current) {
+            const newForms = loadedForms.filter((form: any) => !previousItemsRef.current.forms.has(form.id))
+            if (newForms.length > 0) {
+              // 첫 번째 새 폼만 팝업으로 표시
+              const newForm = newForms[0]
+              const popupKey = `form-${newForm.id}`
+              setShownPopups((prev) => {
+                const next = new Set(prev)
+                next.add(popupKey)
+                return next
+              })
+              setPopupContent({
+                type: 'form',
+                id: newForm.id,
+                title: newForm.title,
+              })
+            }
+          }
+          
+          setOpenForms(loadedForms)
+          previousItemsRef.current.forms = currentFormIds
+        }
+
+        // 오픈된 추첨 조회
+        let giveawaysResponse: Response
+        try {
+          giveawaysResponse = await fetch(
+            `/api/webinars/${webinar.id}/giveaways`,
+            {
+              credentials: 'include', // 쿠키 포함
+            }
+          )
+        } catch (fetchError: any) {
+          if (fetchError.name === 'TypeError' && fetchError.message === 'Failed to fetch') {
+            console.warn('네트워크 오류: 추첨 조회 실패 (서버 연결 불가)')
+            return
+          }
+          throw fetchError
+        }
+        
+        const giveawaysResult = await giveawaysResponse.json()
+        if (giveawaysResponse.ok && giveawaysResult.giveaways) {
+          const loadedGiveaways = giveawaysResult.giveaways.filter(
+            (g: any) => g.status === 'open' || g.status === 'drawn'
+          )
+          const currentGiveawayIds = new Set<string>(loadedGiveaways.map((g: any) => g.id))
+          
+          // 새로 오픈된 추첨 찾기 (이전에 없던 것)
+          if (!isInitialLoadRef.current) {
+            const newGiveaways = loadedGiveaways.filter((g: any) => !previousItemsRef.current.giveaways.has(g.id))
+            if (newGiveaways.length > 0) {
+              // 첫 번째 새 추첨만 팝업으로 표시
+              const newGiveaway = newGiveaways[0]
+              const popupKey = `giveaway-${newGiveaway.id}`
+              setShownPopups((prev) => {
+                const next = new Set(prev)
+                next.add(popupKey)
+                return next
+              })
+              setPopupContent({
+                type: 'giveaway',
+                id: newGiveaway.id,
+                title: newGiveaway.name || newGiveaway.title,
+              })
+            }
+          }
+          
+          setOpenGiveaways(loadedGiveaways)
+          previousItemsRef.current.giveaways = currentGiveawayIds
+        }
+
+        // 파일 목록 조회
+        let filesResponse: Response
+        try {
+          filesResponse = await fetch(
+            `/api/webinars/${webinar.id}/files`,
+            {
+              credentials: 'include', // 쿠키 포함
+            }
+          )
+        } catch (fetchError: any) {
+          if (fetchError.name === 'TypeError' && fetchError.message === 'Failed to fetch') {
+            console.warn('네트워크 오류: 파일 조회 실패 (서버 연결 불가)')
+            return
+          }
+          throw fetchError
+        }
+        
+        const filesResult = await filesResponse.json()
+        if (filesResponse.ok && filesResult.files) {
+          const loadedFiles = filesResult.files
+          const currentFileIds = new Set<string>(loadedFiles.map((f: any) => f.id))
+          
+          // 새로 업로드된 파일 찾기 (이전에 없던 것)
+          if (!isInitialLoadRef.current) {
+            const newFiles = loadedFiles.filter((file: any) => !previousItemsRef.current.files.has(file.id))
+            if (newFiles.length > 0) {
+              // 첫 번째 새 파일만 팝업으로 표시
+              const newFile = newFiles[0]
+              const popupKey = `file-${newFile.id}`
+              setShownPopups((prev) => {
+                const next = new Set(prev)
+                next.add(popupKey)
+                return next
+              })
+              setPopupContent({
+                type: 'file',
+                id: 'all',
+                title: '발표자료',
+              })
+            }
+          }
+          
+          setFiles(loadedFiles)
+          previousItemsRef.current.files = currentFileIds
+        }
+        
+        // 초기 로드 완료 표시
+        if (isInitialLoadRef.current) {
+          isInitialLoadRef.current = false
+        }
+      } catch (error: any) {
+        // 네트워크 오류가 아닌 다른 에러만 로깅
+        if (!(error.name === 'TypeError' && error.message === 'Failed to fetch')) {
+          console.error('오픈된 항목 로드 실패:', error)
+        }
+      }
+    }
+
+    loadOpenItems()
+
+    // 실시간 업데이트 구독
+    const channel = supabase
+      .channel(`webinar:${webinar.id}:participant-widgets`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'forms',
+          filter: `webinar_id=eq.${webinar.id}`,
+        },
+        () => {
+          loadOpenItems()
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'giveaways',
+          filter: `webinar_id=eq.${webinar.id}`,
+        },
+        () => {
+          loadOpenItems()
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'webinar_files',
+          filter: `webinar_id=eq.${webinar.id}`,
+        },
+        () => {
+          loadOpenItems()
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [webinar.id, supabase])
   
   // 웨비나 등록 확인 및 자동 등록
   useEffect(() => {
@@ -149,17 +369,21 @@ export default function WebinarView({ webinar, isAdminMode = false }: WebinarVie
     }
   }, [])
   
-  // ESC 키로 전체화면 해제
+  // ESC 키로 전체화면 해제 및 팝업 닫기
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isFullscreen) {
-        exitFullscreen()
+      if (e.key === 'Escape') {
+        if (popupContent) {
+          setPopupContent(null)
+        } else if (isFullscreen) {
+          exitFullscreen()
+        }
       }
     }
     
     window.addEventListener('keydown', handleEsc)
     return () => window.removeEventListener('keydown', handleEsc)
-  }, [isFullscreen])
+  }, [isFullscreen, popupContent])
   
   const fullscreenContent = isFullscreen && mounted ? (
     <div 
@@ -217,6 +441,61 @@ export default function WebinarView({ webinar, isAdminMode = false }: WebinarVie
   return (
     <>
       {mounted && createPortal(fullscreenContent, document.body)}
+      {/* 팝업 모달 */}
+      {popupContent && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+          onClick={(e) => {
+            // 배경 클릭 시 닫기
+            if (e.target === e.currentTarget) {
+              setPopupContent(null)
+            }
+          }}
+        >
+          <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+            {/* 팝업 헤더 */}
+            <div className="flex items-center justify-between p-4 border-b border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900">{popupContent.title}</h3>
+              <button
+                onClick={() => setPopupContent(null)}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+                aria-label="닫기"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            {/* 팝업 내용 */}
+            <div className="flex-1 overflow-y-auto p-4">
+              {popupContent.type === 'form' && (
+                <FormWidget
+                  webinarId={webinar.id}
+                  formId={popupContent.id}
+                  onSubmitted={() => {
+                    setPopupContent(null)
+                    // 제출 후 목록에서 제거 (설문의 경우)
+                    const form = openForms.find((f) => f.id === popupContent.id)
+                    if (form?.kind === 'survey') {
+                      setOpenForms((prev) => prev.filter((f) => f.id !== popupContent.id))
+                    }
+                  }}
+                />
+              )}
+              {popupContent.type === 'giveaway' && (
+                <GiveawayWidget
+                  webinarId={webinar.id}
+                  giveawayId={popupContent.id}
+                />
+              )}
+              {popupContent.type === 'file' && (
+                <FileDownload webinarId={webinar.id} canDelete={isAdminMode} />
+              )}
+            </div>
+          </div>
+        </div>
+      )}
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 w-full overflow-x-hidden">
       {/* 헤더 */}
       <header className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-40 w-full">
@@ -234,13 +513,23 @@ export default function WebinarView({ webinar, isAdminMode = false }: WebinarVie
                 <p className="text-xs lg:text-sm text-gray-600 mt-0.5 sm:mt-1 line-clamp-1">{webinar.description}</p>
               )}
             </div>
-            {webinar.clients?.logo_url && (
-              <img 
-                src={webinar.clients.logo_url} 
-                alt={webinar.clients.name}
-                className="h-6 sm:h-8 lg:h-12 w-auto ml-2 flex-shrink-0"
-              />
-            )}
+            <div className="flex items-center gap-3 ml-4">
+              {isAdminMode && (
+                <Link
+                  href={`/webinar/${webinar.id}/console`}
+                  className="px-3 py-1.5 sm:px-4 sm:py-2 bg-purple-600 text-white text-xs sm:text-sm font-medium rounded-lg hover:bg-purple-700 transition-colors whitespace-nowrap"
+                >
+                  운영 콘솔
+                </Link>
+              )}
+              {webinar.clients?.logo_url && (
+                <img 
+                  src={webinar.clients.logo_url} 
+                  alt={webinar.clients.name}
+                  className="h-6 sm:h-8 lg:h-12 w-auto flex-shrink-0"
+                />
+              )}
+            </div>
           </div>
         </div>
       </header>
@@ -305,6 +594,97 @@ export default function WebinarView({ webinar, isAdminMode = false }: WebinarVie
                   )}
                 </div>
               )}
+              
+              {/* 설문/퀴즈/발표자료/추첨 버튼 */}
+              <div className="mt-4 pt-4 border-t border-gray-200">
+                <div className="flex flex-wrap gap-2 sm:gap-3">
+                  {openForms.filter((f) => f.kind === 'survey').length > 0 && (
+                    <button
+                      onClick={() => {
+                        const survey = openForms.find((f) => f.kind === 'survey')
+                        if (survey) {
+                          setPopupContent({
+                            type: 'form',
+                            id: survey.id,
+                            title: survey.title,
+                          })
+                        }
+                      }}
+                      className="px-3 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors text-xs sm:text-sm font-medium flex items-center gap-1.5"
+                    >
+                      📋 설문조사
+                      {openForms.filter((f) => f.kind === 'survey').length > 1 && (
+                        <span className="bg-blue-500 text-white text-xs px-1.5 py-0.5 rounded-full">
+                          {openForms.filter((f) => f.kind === 'survey').length}
+                        </span>
+                      )}
+                    </button>
+                  )}
+                  {openForms.filter((f) => f.kind === 'quiz').length > 0 && (
+                    <button
+                      onClick={() => {
+                        const quiz = openForms.find((f) => f.kind === 'quiz')
+                        if (quiz) {
+                          setPopupContent({
+                            type: 'form',
+                            id: quiz.id,
+                            title: quiz.title,
+                          })
+                        }
+                      }}
+                      className="px-3 py-2 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors text-xs sm:text-sm font-medium flex items-center gap-1.5"
+                    >
+                      ✏️ 퀴즈
+                      {openForms.filter((f) => f.kind === 'quiz').length > 1 && (
+                        <span className="bg-purple-500 text-white text-xs px-1.5 py-0.5 rounded-full">
+                          {openForms.filter((f) => f.kind === 'quiz').length}
+                        </span>
+                      )}
+                    </button>
+                  )}
+                  {files.length > 0 && (
+                    <button
+                      onClick={() => {
+                        setPopupContent({
+                          type: 'file',
+                          id: 'all',
+                          title: '발표자료',
+                        })
+                      }}
+                      className="px-3 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors text-xs sm:text-sm font-medium flex items-center gap-1.5"
+                    >
+                      📎 발표자료
+                      {files.length > 1 && (
+                        <span className="bg-green-500 text-white text-xs px-1.5 py-0.5 rounded-full">
+                          {files.length}
+                        </span>
+                      )}
+                    </button>
+                  )}
+                  {openGiveaways.length > 0 && (
+                    <button
+                      onClick={() => {
+                        const giveaway = openGiveaways[0]
+                        if (giveaway) {
+                          setPopupContent({
+                            type: 'giveaway',
+                            id: giveaway.id,
+                            title: giveaway.name || giveaway.title || '추첨',
+                          })
+                        }
+                      }}
+                      className="px-3 py-2 bg-yellow-100 text-yellow-700 rounded-lg hover:bg-yellow-200 transition-colors text-xs sm:text-sm font-medium flex items-center gap-1.5"
+                    >
+                      🎁 추첨
+                      {openGiveaways.length > 1 && (
+                        <span className="bg-yellow-500 text-white text-xs px-1.5 py-0.5 rounded-full">
+                          {openGiveaways.length}
+                        </span>
+                      )}
+                    </button>
+                  )}
+                </div>
+              </div>
             </div>
             
             {/* Presence Bar - 모바일에서도 표시 */}
@@ -313,6 +693,7 @@ export default function WebinarView({ webinar, isAdminMode = false }: WebinarVie
               showTyping={true}
               className="text-xs sm:text-sm"
             />
+
             
             {/* 모바일 채팅/Q&A - 영상 아래 순서대로 */}
             <div className="lg:hidden">

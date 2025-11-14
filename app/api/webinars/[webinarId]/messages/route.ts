@@ -19,6 +19,7 @@ export async function GET(
     const beforeTs = searchParams.get('beforeTs') // ISO 8601 타임스탬프
     const beforeId = searchParams.get('beforeId') // 메시지 ID
     const limitParam = searchParams.get('limit')
+    const includeHidden = searchParams.get('includeHidden') === 'true' // 운영 콘솔용: 숨김 메시지 포함
     
     // 증분 폴링 파라미터 (하위 호환성)
     const afterId = searchParams.get('after')
@@ -99,7 +100,11 @@ export async function GET(
         client_msg_id
       `)
       .eq('webinar_id', webinarId)
-      .eq('hidden', false)
+    
+    // 운영 콘솔이 아닌 경우 숨김 메시지 제외
+    if (!includeHidden) {
+      query = query.eq('hidden', false)
+    }
     
     // 커서 기반 페이지네이션: 과거 메시지 더 불러오기
     if (beforeTs && beforeId) {

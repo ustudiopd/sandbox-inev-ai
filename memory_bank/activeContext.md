@@ -1,34 +1,26 @@
 # 현재 작업 상황 (Active Context)
 
 ## 1. 현재 집중하고 있는 작업  
-- **작업명**: 게스트 접속 및 UI/UX 개선 완료
+- **작업명**: 설문/퀴즈/발표자료/추첨 기능 구현 완료
 - **목표**: 
-  - 게스트 접속 기능 구현
-  - 웨비나별 독립 세션 관리
-  - 메인 페이지 및 관리자 페이지 UI 개선
-  - 모바일 반응형 사이드바
+  - 설문/퀴즈 통합 시스템 구현
+  - 발표자료 다운로드 기능 구현
+  - 추첨 기능 구현
+  - 팝업 시스템 및 UX 개선
 - **상태**: ✅ 완료
-  - 게스트 계정 생성 API 및 UI 구현
-  - 웨비나별 독립 회원가입/등록 시스템
-  - 회원가입 시 닉네임 선택 기능
-  - 메인 페이지 UI 개선 (웨비나 목록, 접근 정책 안내)
-  - 관리자 접속 페이지 생성 (`/admin`)
-  - 사이드바 모바일 반응형 (하단 메뉴)
-  - 로그아웃 기능 개선
-  - 웨비나 제목 클릭 기능
+  - 설문/퀴즈 통합 데이터베이스 및 API 구현
+  - 발표자료 파일 관리 시스템 구현
+  - 추첨 시스템 구현 (애니메이션 포함)
+  - 팝업 모달 시스템 구현
+  - 성능 최적화 (병렬 쿼리, 인덱스)
+  - 당첨자 이름 표시 기능
+  - 추첨 실행 애니메이션
 
 ## 2. 다음 예정 작업  
 - **우선순위 높음**: 
-  1. 설문조사 기능 구현 (새로 요청됨)
-     - 설문조사 생성/관리 (운영 콘솔)
-     - 설문조사 응답 (참여자)
-     - 설문조사 결과 조회/통계
-  2. 발표자료 다운로드 기능 구현 (새로 요청됨)
-     - 파일 업로드 (웨비나 생성/수정 시)
-     - 파일 다운로드 (참여자)
-     - 파일 관리 (운영 콘솔)
-  3. 퀴즈 기능 구현
-  4. 추첨 기능 구현
+  1. 웨비나 등록 페이지 구현 (`/webinar/[id]/register`)
+  2. 초대 링크 처리 (`/invite/[token]`)
+  3. 리포트 고도화 (퀴즈 통계, 추첨 재현성 보고)
 
 - **우선순위 중간**:
   5. 웨비나 등록 페이지
@@ -61,11 +53,25 @@
 - ✅ 메시지 조회 API 인증 오류 해결 (Route Handler 호환성 개선)
 - ✅ 웨비나별 등록 확인 강제 (모든 모드에서 등록 확인)
 - ✅ 웨비나 시간대 변환 문제 해결 (UTC ↔ 로컬 시간 변환)
+- ✅ 설문 폼 로딩 성능 최적화 (병렬 쿼리, 인덱스 추가)
+- ✅ 설문 질문 옵션 표시 문제 해결 (options 데이터 타입 처리)
+- ✅ `fill_org_fields()` 트리거 오류 해결 (record "w" is not assigned yet)
+- ✅ 설문 제출 시 org_fields 누락 문제 해결 (agency_id, client_id 컬럼 추가)
+- ✅ 추첨 Seed 커밋-리빌 검증 제거 (바로 추첨 실행)
+- ✅ 추첨 당첨자 이름 표시 기능 구현
+- ✅ 추첨 실행 애니메이션 구현
 
 ## 5. 현재 시스템 상태
 - **데이터베이스**: Supabase PostgreSQL (RLS 활성화)
 - **인증**: Supabase Auth
-- **실시간**: Supabase Realtime 활성화됨 (messages, questions, quizzes, quiz_responses, draws, winners, reactions 테이블)
-- **스토리지**: Supabase Storage (아직 미사용, 발표자료 다운로드에 필요)
+- **실시간**: Supabase Realtime 활성화됨 (messages, questions, forms, form_submissions, giveaways, giveaway_entries, giveaway_winners 테이블)
+- **스토리지**: Supabase Storage (발표자료 다운로드에 사용 중)
 - **배포**: Vercel (로컬 개발 중)
-- **최근 마이그레이션**: Realtime 활성화 (`enable_realtime_for_messages`)
+- **최근 마이그레이션**: 
+  - `015_create_forms_system.sql` (설문/퀴즈 통합 시스템)
+  - `016_create_webinar_files.sql` (발표자료 관리)
+  - `017_create_giveaways.sql` (추첨 시스템)
+  - `018_add_opened_closed_at_to_forms.sql` (폼 상태 관리)
+  - `019_fix_fill_org_fields_for_forms.sql` (트리거 수정)
+  - `020_add_org_fields_to_form_tables.sql` (org_fields 추가)
+  - `021_optimize_form_loading_indexes.sql` (성능 최적화)
