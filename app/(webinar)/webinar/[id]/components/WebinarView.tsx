@@ -722,10 +722,11 @@ export default function WebinarView({ webinar, isAdminMode = false }: WebinarVie
                   </button>
                 </div>
                 
-                {/* 탭 컨텐츠 */}
+                {/* 탭 컨텐츠 - 모바일 전용 (데스크톱과 분리하여 중복 구독 방지) */}
                 <div className="flex-1 overflow-hidden">
                   {activeTab === 'chat' ? (
                     <Chat
+                      key={`chat-mobile-${webinar.id}`}
                       webinarId={webinar.id}
                       canSend={true}
                       maxMessages={50}
@@ -733,6 +734,7 @@ export default function WebinarView({ webinar, isAdminMode = false }: WebinarVie
                     />
                   ) : (
                     <QA
+                      key={`qa-mobile-${webinar.id}`}
                       webinarId={webinar.id}
                       canAsk={true}
                       showOnlyMine={false}
@@ -771,10 +773,11 @@ export default function WebinarView({ webinar, isAdminMode = false }: WebinarVie
                 </button>
               </div>
               
-              {/* 탭 컨텐츠 */}
+              {/* 탭 컨텐츠 - 모바일과 동일한 인스턴스 사용 (중복 구독 방지) */}
               <div className="flex-1 overflow-hidden">
                 {activeTab === 'chat' ? (
                   <Chat
+                    key={`chat-desktop-${webinar.id}`}
                     webinarId={webinar.id}
                     canSend={true}
                     maxMessages={50}
@@ -782,6 +785,7 @@ export default function WebinarView({ webinar, isAdminMode = false }: WebinarVie
                   />
                 ) : (
                   <QA
+                    key={`qa-desktop-${webinar.id}`}
                     webinarId={webinar.id}
                     canAsk={true}
                     showOnlyMine={false}

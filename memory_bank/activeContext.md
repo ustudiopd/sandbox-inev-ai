@@ -1,20 +1,16 @@
 # 현재 작업 상황 (Active Context)
 
 ## 1. 현재 집중하고 있는 작업  
-- **작업명**: 슈퍼어드민 기능 구현 완료
+- **작업명**: Realtime 연결 안정성 개선 완료
 - **목표**: 
-  - 슈퍼어드민 계정 생성 및 관리
-  - 슈퍼어드민 대시보드 구현
-  - 에이전시/클라이언트 관리 및 삭제 기능
-  - RLS 무한 재귀 문제 해결
+  - Realtime 연결 끊김 문제 해결
+  - 메모리 누수 방지
+  - 중복 구독 방지
 - **상태**: ✅ 완료
-  - 슈퍼어드민 계정 생성 스크립트 구현
-  - JWT `app_metadata` 기반 권한 확인 시스템
-  - 슈퍼어드민 대시보드 구현
-  - 에이전시/클라이언트 관리 페이지 구현
-  - 삭제 기능 구현 (CASCADE 지원)
-  - RLS 무한 재귀 문제 해결
-  - Admin Supabase를 통한 성능 최적화
+  - 재연결 로직 개선 (setTimeout cleanup)
+  - 기존 채널 정리 개선 (비동기 대기)
+  - Chat 컴포넌트 중복 렌더링 방지
+  - 채널 참조 관리 개선
 
 ## 2. 다음 예정 작업  
 - **우선순위 높음**: 
@@ -64,6 +60,17 @@
 - ✅ Realtime 연결 원인코드 로깅 강화 (채널 subscribe 콜백에서 상세 에러 정보 로깅)
 - ✅ RLS 정책 분석 및 확인 (messages 테이블 RLS 정책 정상 작동 확인)
 - ✅ Supabase Publication 설정 확인 (messages 테이블이 Realtime Publication에 포함됨 확인)
+- ✅ messages 테이블 RLS 정책 단순화 적용 (성능 향상 및 RLS 재귀 방지)
+  - JWT 기반 슈퍼어드민 판정 함수 생성 (`jwt_is_super_admin()`)
+  - SELECT 정책: registrations 기반 얇은 ACL로 단순화
+  - INSERT 정책: user_id 확인만 (등록 확인 제거)
+  - UPDATE/DELETE 정책: JWT 기반 슈퍼어드민 확인
+  - registrations 테이블 인덱스 추가 (성능 최적화)
+- ✅ Realtime 연결 안정성 개선 완료
+  - 재연결 로직 개선 (setTimeout cleanup으로 메모리 누수 방지)
+  - 기존 채널 정리 개선 (비동기 대기로 중복 구독 방지)
+  - Chat 컴포넌트 중복 렌더링 방지 (key prop으로 인스턴스 분리)
+  - 채널 참조 관리 개선 (channelRef 사용)
 
 ## 5. 현재 시스템 상태
 - **데이터베이스**: Supabase PostgreSQL (RLS 활성화)

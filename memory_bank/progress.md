@@ -1,5 +1,21 @@
 # 완료된 작업 내역 (Progress)
 
+## [2025-01-XX] Realtime 연결 안정성 개선 완료
+- ✅ 재연결 로직 개선 (setTimeout cleanup)
+  - `reconnectTimeoutRef`, `fallbackReconnectTimeoutRef` 추가
+  - cleanup 함수에서 모든 타이머 취소
+  - 메모리 누수 및 경쟁 상태 방지
+- ✅ 기존 채널 정리 개선 (비동기 대기)
+  - `await`를 사용하여 기존 채널 정리 완료 대기
+  - 약간의 지연 추가 (100ms)로 정리 완료 보장
+  - 중복 구독 방지
+- ✅ Chat 컴포넌트 중복 렌더링 방지
+  - 모바일/데스크톱에서 각각 다른 `key` prop 사용
+  - 중복 구독 방지
+- ✅ 채널 참조 관리 개선
+  - `channelRef`를 사용하여 cleanup에서 채널 접근
+  - 비동기 함수 구조 개선
+
 ## [2025-01-XX] Phase 1 - 멀티테넌시 코어 완료
 - ✅ 데이터베이스 스키마 구현 (agencies, clients, profiles, memberships, webinars 등)
 - ✅ RLS 정책 구현 및 최적화 (무한 재귀 문제 해결)
@@ -303,6 +319,13 @@
   - messages 테이블 RLS 정책 분석 및 정상 작동 확인
   - Supabase Realtime Publication 설정 확인 (messages 테이블 포함 확인)
   - 관련 뷰(me, my_agencies, my_clients) 정의 확인
+- ✅ messages 테이블 RLS 정책 단순화 적용
+  - JWT 기반 슈퍼어드민 판정 함수 생성 (`jwt_is_super_admin()`)
+  - SELECT 정책: 복잡한 조건 제거, registrations 기반 얇은 ACL로 단순화
+  - INSERT 정책: 웨비나 등록 확인 제거 (앞단에서 처리), user_id 확인만
+  - UPDATE/DELETE 정책: profiles 테이블 조회 제거, JWT 기반 슈퍼어드민 확인
+  - registrations 테이블 복합 인덱스 추가 (webinar_id, user_id)
+  - 예상 성능 향상: SELECT 5-10배, INSERT 10-20배, UPDATE/DELETE 50-100배
 
 ## 남은 작업
 
