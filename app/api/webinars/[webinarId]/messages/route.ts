@@ -291,11 +291,48 @@ export async function GET(
     // hasMore: limit만큼 가져왔으면 더 있을 가능성이 있음
     const hasMore = loadedMessages.length === limit
     
+    // ETag 계산: 마지막 메시지 ID와 메시지 수를 기반으로 생성
+    // 증분 폴링(after)의 경우 마지막 메시지 ID 사용, 그 외에는 첫 메시지 ID 사용
+    const lastMsgId = filteredMessages.length > 0 
+      ? (typeof filteredMessages[filteredMessages.length - 1].id === 'number' 
+          ? filteredMessages[filteredMessages.length - 1].id 
+          : parseInt(String(filteredMessages[filteredMessages.length - 1].id), 10))
+      : 0
+    const firstMsgId = filteredMessages.length > 0
+      ? (typeof filteredMessages[0].id === 'number'
+          ? filteredMessages[0].id
+          : parseInt(String(filteredMessages[0].id), 10))
+      : 0
+    
+    // ETag: webinarId:lastMsgId:firstMsgId:count 형식
+    // 증분 폴링의 경우 afterId를 포함하여 더 정확한 캐싱
+    const etagKey = afterId 
+      ? `${webinarId}:after:${afterId}:${lastMsgId}:${filteredMessages.length}`
+      : `${webinarId}:${firstMsgId}:${lastMsgId}:${filteredMessages.length}:${includeHidden ? 'all' : 'visible'}`
+    const etag = `"${etagKey}"`
+    
+    // If-None-Match 헤더 확인 (304 응답)
+    const ifNoneMatch = req.headers.get('if-none-match')
+    if (ifNoneMatch === etag) {
+      return new NextResponse(null, {
+        status: 304,
+        headers: {
+          'Cache-Control': 'public, s-maxage=1, stale-while-revalidate=9',
+          'ETag': etag,
+        }
+      })
+    }
+    
     return NextResponse.json({
       success: true,
       messages: filteredMessages,
       nextCursor,
       hasMore,
+    }, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=1, stale-while-revalidate=9',
+        'ETag': etag,
+      }
     })
   } catch (error: any) {
     console.error('메시지 조회 API 에러:', error)

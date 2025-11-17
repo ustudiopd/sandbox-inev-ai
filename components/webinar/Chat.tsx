@@ -69,6 +69,8 @@ export default function Chat({
   const lastMessageIdRef = useRef<number>(0)
   const reconnectTriesRef = useRef<number>(0)
   const initialLoadTimeRef = useRef<number>(0) // 초기 로드 완료 시간
+  const etagRef = useRef<string | null>(null) // ETag 캐시
+  const pollBackoffRef = useRef<number>(0) // 폴링 백오프 (에러 시 증가)
   const supabase = createClientSupabase()
   
   // 최근 메시지만 유지하는 윈도우 크기 (50~100개)
@@ -175,8 +177,15 @@ export default function Chat({
       let response: Response
       
       try {
+        // ETag가 있고 초기 로드인 경우 If-None-Match 헤더 추가
+        const headers: HeadersInit = {}
+        if (etagRef.current && isInitial) {
+          headers['If-None-Match'] = etagRef.current
+        }
+        
         response = await fetch(`/api/webinars/${webinarId}/messages?limit=${limit}`, {
           credentials: 'include', // 쿠키 포함
+          headers: Object.keys(headers).length > 0 ? headers : undefined,
         })
       } catch (fetchError: any) {
         // fetch 호출 자체가 실패한 경우 (네트워크 오류 등)
@@ -226,6 +235,27 @@ export default function Chat({
         }
         console.error('메시지 조회 API 에러:', response.status, errorData)
         throw new Error(errorData.error || `메시지 조회 실패 (${response.status})`)
+      }
+      
+      // ETag 업데이트 (304가 아닌 경우)
+      if (response.status !== 304) {
+        const newEtag = response.headers.get('ETag')
+        if (newEtag) {
+          etagRef.current = newEtag
+        }
+      }
+      
+      // 304 Not Modified: 데이터 변경 없음
+      if (response.status === 304) {
+        const newEtag = response.headers.get('ETag')
+        if (newEtag) {
+          etagRef.current = newEtag
+        }
+        // 초기 로드인 경우 빈 배열로 설정하지 않고 기존 상태 유지
+        if (isInitial) {
+          setLoading(false)
+        }
+        return
       }
       
       const result = await response.json()
@@ -787,13 +817,36 @@ export default function Chat({
         return
       }
       
+      // 가시성 및 온라인 상태 확인 (폴링 중에도 체크)
+      const isVisible = document.visibilityState === 'visible'
+      const isOnline = navigator.onLine
+      
+      if (!isVisible || !isOnline) {
+        // 가시성/오프라인 상태면 다음 주기에서 재시도
+        const base = 15000 // 15초 기본
+        const jitter = 5000 - Math.random() * 10000 // ±5초
+        const nextDelay = base + jitter + pollBackoffRef.current
+        setTimeout(pollWithJitter, nextDelay)
+        return
+      }
+      
       try {
         // 증분 로드: 마지막 메시지 ID 이후의 새 메시지만 가져오기
         const afterParam = lastMessageIdRef.current > 0 ? `&after=${lastMessageIdRef.current}` : ''
+        const headers: HeadersInit = {
+          credentials: 'include', // 쿠키 포함
+        }
+        
+        // ETag가 있으면 If-None-Match 헤더 추가
+        if (etagRef.current) {
+          headers['If-None-Match'] = etagRef.current
+        }
+        
         const response = await fetch(
           `/api/webinars/${webinarId}/messages?limit=20${afterParam}`,
           {
             credentials: 'include', // 쿠키 포함
+            headers: etagRef.current ? { 'If-None-Match': etagRef.current } : undefined,
           }
         )
         
@@ -805,7 +858,31 @@ export default function Chat({
           return
         }
         
+        // 304 Not Modified: 데이터 변경 없음 → ETag만 업데이트하고 다음 폴링으로
+        if (response.status === 304) {
+          const newEtag = response.headers.get('ETag')
+          if (newEtag) {
+            etagRef.current = newEtag
+          }
+          // 백오프 초기화 (성공)
+          pollBackoffRef.current = 0
+          lastEventAt.current = Date.now()
+          
+          // 다음 폴링 스케줄링
+          const base = 15000 // 15초 기본 (3초 → 15초로 증가)
+          const jitter = 5000 - Math.random() * 10000 // ±5초
+          const nextDelay = base + jitter + pollBackoffRef.current
+          setTimeout(pollWithJitter, nextDelay)
+          return
+        }
+        
         if (response.ok) {
+          // ETag 업데이트
+          const newEtag = response.headers.get('ETag')
+          if (newEtag) {
+            etagRef.current = newEtag
+          }
+          
           const result = await response.json()
           
           if (result.success && result.messages) {
@@ -850,6 +927,13 @@ export default function Chat({
               lastEventAt.current = Date.now()
             }
           }
+          
+          // 백오프 초기화 (성공)
+          pollBackoffRef.current = 0
+        } else {
+          // 에러 발생 시 백오프 증가 (지수 백오프)
+          pollBackoffRef.current = Math.min(pollBackoffRef.current * 2 + 5000, 60000) // 최대 60초
+          console.warn(`폴백 폴링 에러 (${response.status}), 백오프: ${pollBackoffRef.current}ms`)
         }
       } catch (error: any) {
         // 네트워크 오류는 조용히 처리 (재시도될 예정)
@@ -858,12 +942,14 @@ export default function Chat({
         } else {
           console.error('폴백 폴링 오류:', error)
         }
+        // 에러 발생 시 백오프 증가
+        pollBackoffRef.current = Math.min(pollBackoffRef.current * 2 + 5000, 60000)
       }
       
-      // 지터 적용: 기본 3초 ± 400ms 랜덤 (증분 로드이므로 간격을 줄임)
-      const base = 3000
-      const jitter = 400 - Math.random() * 800 // -400 ~ +400ms
-      const nextDelay = base + jitter
+      // 지터 적용: 기본 15초 ± 5초 랜덤 (3초 → 15초로 증가)
+      const base = 15000
+      const jitter = 5000 - Math.random() * 10000 // ±5초
+      const nextDelay = base + jitter + pollBackoffRef.current
       
       setTimeout(pollWithJitter, nextDelay)
     }
@@ -873,15 +959,17 @@ export default function Chat({
     
     // 가시성/온라인 상태 변경 감지
     const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible' && navigator.onLine && fallbackOn) {
-        // 복귀 시 즉시 1회 폴링
+      if (document.visibilityState === 'visible' && navigator.onLine && fallbackOn && isPollingActive) {
+        // 복귀 시 즉시 1회 폴링 (백오프 초기화)
+        pollBackoffRef.current = 0
         pollWithJitter()
       }
     }
     
     const handleOnline = () => {
-      if (document.visibilityState === 'visible' && fallbackOn) {
-        // 온라인 복귀 시 즉시 1회 폴링
+      if (document.visibilityState === 'visible' && fallbackOn && isPollingActive) {
+        // 온라인 복귀 시 즉시 1회 폴링 (백오프 초기화)
+        pollBackoffRef.current = 0
         pollWithJitter()
       }
     }

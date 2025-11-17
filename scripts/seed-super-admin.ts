@@ -6,12 +6,12 @@
  * 
  * 환경 변수:
  *   SUPER_ADMIN_EMAIL=admin@example.com (선택, 기본값: admin@eventlive.ai)
+ *   SUPER_ADMIN_PASSWORD=password (선택, 기본값: uslab3300)
  *   NEXT_PUBLIC_SUPABASE_URL (필수)
  *   SUPABASE_SERVICE_ROLE_KEY (필수)
  */
 
 import { createClient } from '@supabase/supabase-js'
-import { randomBytes } from 'crypto'
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -19,6 +19,7 @@ const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 // 사용자는 "admin"만 입력해도 로그인 가능 (프론트엔드에서 자동 변환)
 const rawEmail = process.env.SUPER_ADMIN_EMAIL || 'admin'
 const email = rawEmail === 'admin' ? 'admin@eventlive.ai' : rawEmail
+const password = process.env.SUPER_ADMIN_PASSWORD || 'uslab3300'
 
 if (!url || !serviceKey) {
   console.error('❌ 환경 변수가 설정되지 않았습니다.')
@@ -27,8 +28,7 @@ if (!url || !serviceKey) {
   process.exit(1)
 }
 
-// 임시 비밀번호 생성 (최초 로그인 시 변경 필요)
-const tempPassword = randomBytes(16).toString('hex')
+// 비밀번호 설정 (환경 변수 또는 기본값 사용)
 
 ;(async () => {
   const admin = createClient(url, serviceKey)
@@ -51,11 +51,10 @@ const tempPassword = randomBytes(16).toString('hex')
       // 새 사용자 생성
       const { data: authData, error: authError } = await admin.auth.admin.createUser({
         email,
-        password: tempPassword,
+        password: password,
         email_confirm: true, // 이메일 확인 없이 바로 활성화
         app_metadata: { is_super_admin: true }, // JWT 클레임에 슈퍼어드민 권한 추가
         user_metadata: {
-          force_password_reset: true, // 최초 로그인 시 비밀번호 변경 강제
           display_name: 'Super Admin'
         }
       })
@@ -73,20 +72,20 @@ const tempPassword = randomBytes(16).toString('hex')
       if (rawEmail === 'admin') {
         console.log('ℹ️  로그인 시 이메일: "admin" 또는 "admin@eventlive.ai" 둘 다 사용 가능')
       }
-      console.log('⚠️  임시 비밀번호:', tempPassword)
-      console.log('⚠️  최초 로그인 시 비밀번호 변경이 필요합니다!')
+      console.log('✅ 비밀번호 설정 완료')
     } else {
       console.log('ℹ️  슈퍼어드민 계정이 이미 존재합니다:', email)
-      // 기존 사용자의 app_metadata 업데이트 (JWT 클레임 동기화)
-      const { error: updateMetadataError } = await admin.auth.admin.updateUserById(userId, {
+      // 기존 사용자의 비밀번호 및 app_metadata 업데이트
+      const { error: updateError } = await admin.auth.admin.updateUserById(userId, {
+        password: password,
         app_metadata: { is_super_admin: true }
       })
-      if (updateMetadataError) {
-        console.warn('⚠️  app_metadata 업데이트 실패 (무시됨):', updateMetadataError.message)
-      } else {
-        console.log('✅ JWT app_metadata 동기화 완료')
-        console.log('ℹ️  JWT 토큰 갱신을 위해 재로그인이 필요할 수 있습니다')
+      if (updateError) {
+        throw new Error(`사용자 업데이트 실패: ${updateError.message}`)
       }
+      console.log('✅ 비밀번호 업데이트 완료')
+      console.log('✅ JWT app_metadata 동기화 완료')
+      console.log('ℹ️  JWT 토큰 갱신을 위해 재로그인이 필요할 수 있습니다')
     }
 
     // 2) 프로필 확인 및 is_super_admin 설정
@@ -142,12 +141,9 @@ const tempPassword = randomBytes(16).toString('hex')
     }
 
     console.log('\n✅ 완료!')
-    if (!existingUser) {
-      console.log('\n📋 다음 단계:')
-      console.log('1. 이메일:', rawEmail === 'admin' ? 'admin (또는 admin@eventlive.ai)' : email)
-      console.log('2. 임시 비밀번호:', tempPassword)
-      console.log('3. 로그인 후 비밀번호를 변경하세요')
-    }
+    console.log('\n📋 로그인 정보:')
+    console.log('1. 이메일:', rawEmail === 'admin' ? 'admin (또는 admin@eventlive.ai)' : email)
+    console.log('2. 비밀번호:', password)
   } catch (error: any) {
     console.error('❌ 오류:', error.message)
     process.exit(1)
