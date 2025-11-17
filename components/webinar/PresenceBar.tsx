@@ -90,7 +90,7 @@ export default function PresenceBar({
           }
           
           const registration = registrationResponse.data
-          const isParticipant = registration?.role === 'attendee'
+          const isParticipant = (registration as any)?.role === 'attendee'
           
           // 관리자 여부 확인
           let isAdmin = false
@@ -101,12 +101,12 @@ export default function PresenceBar({
           
           const displayName = isAdmin || !isParticipant
             ? '관리자'
-            : (profile?.display_name || profile?.email || '익명')
+            : ((profile as any)?.display_name || (profile as any)?.email || '익명')
           
           setCurrentUser({
             id: user.id,
             display_name: displayName,
-            email: profile?.email,
+            email: (profile as any)?.email,
           })
         } catch (error) {
           console.warn('현재 사용자 프로필 조회 실패:', error)
@@ -120,8 +120,8 @@ export default function PresenceBar({
             
             setCurrentUser({
               id: user.id,
-              display_name: profile?.display_name || profile?.email || '익명',
-              email: profile?.email,
+              display_name: (profile as any)?.display_name || (profile as any)?.email || '익명',
+              email: (profile as any)?.email,
             })
           } catch (fallbackError) {
             setCurrentUser({
@@ -186,7 +186,7 @@ export default function PresenceBar({
                       if (profile) {
                         return {
                           ...user,
-                          display_name: profile.display_name,
+                          display_name: (profile as any).display_name,
                           email: profile.email,
                         }
                       }
@@ -202,7 +202,7 @@ export default function PresenceBar({
                             setParticipants((prev) =>
                               prev.map((p) =>
                                 p.id === user.id
-                                  ? { ...p, display_name: profile.display_name, email: profile.email }
+                                  ? { ...p, display_name: (profile as any).display_name, email: (profile as any).email }
                                   : p
                               )
                             )
@@ -286,8 +286,8 @@ export default function PresenceBar({
                   await channel.track({
                     user: {
                       id: user.id,
-                      display_name: profile?.display_name,
-                      email: profile?.email,
+                      display_name: (profile as any)?.display_name,
+                      email: (profile as any)?.email,
                     },
                     online_at: new Date().toISOString(),
                   })
@@ -302,8 +302,8 @@ export default function PresenceBar({
                   await channel.track({
                     user: {
                       id: user.id,
-                      display_name: profile?.display_name,
-                      email: profile?.email,
+                      display_name: (profile as any)?.display_name,
+                      email: (profile as any)?.email,
                     },
                     online_at: new Date().toISOString(),
                   })

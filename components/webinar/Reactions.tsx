@@ -83,14 +83,14 @@ export default function Reactions({
       const userReactionsSet = new Set<string>()
       
       data.forEach((reaction) => {
-        if (!grouped[reaction.emoji]) {
-          grouped[reaction.emoji] = { count: 0, userIds: new Set() }
+        if (!grouped[(reaction as any).emoji]) {
+          grouped[(reaction as any).emoji] = { count: 0, userIds: new Set() }
         }
-        grouped[reaction.emoji].count++
-        grouped[reaction.emoji].userIds.add(reaction.user_id)
+        grouped[(reaction as any).emoji].count++
+        grouped[(reaction as any).emoji].userIds.add((reaction as any).user_id)
         
-        if (user && reaction.user_id === user.id) {
-          userReactionsSet.add(reaction.emoji)
+        if (user && (reaction as any).user_id === user.id) {
+          userReactionsSet.add((reaction as any).emoji)
         }
       })
       
@@ -126,8 +126,8 @@ export default function Reactions({
         if (error) throw error
       } else {
         // 리액션 추가
-        const { error } = await supabase
-          .from('reactions')
+        const { error } = await (supabase
+          .from('reactions') as any)
           .insert({
             webinar_id: webinarId,
             user_id: user.id,

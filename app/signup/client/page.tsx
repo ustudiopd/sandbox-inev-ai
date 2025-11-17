@@ -83,13 +83,15 @@ function ClientSignupForm() {
       }
       
       // 프로필 업데이트
-      const { error: profileError } = await supabase
-        .from('profiles')
+      const updateQuery = (supabase
+        .from('profiles') as any)
         .update({
           display_name: formData.displayName,
           email: formData.email,
         })
         .eq('id', authData.user.id)
+      
+      const { error: profileError } = await updateQuery
       
       if (profileError) {
         console.warn('프로필 업데이트 실패:', profileError)

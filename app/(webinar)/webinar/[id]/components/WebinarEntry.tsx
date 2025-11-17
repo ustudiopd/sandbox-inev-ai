@@ -350,13 +350,21 @@ export default function WebinarEntry({ webinar }: WebinarEntryProps) {
           // 프로필 업데이트 (display_name, email)
           // 닉네임이 지정되면 닉네임을, 아니면 이름을 display_name으로 사용
           const finalDisplayName = nickname.trim() || displayName.trim()
-          await supabase
-            .from('profiles')
-            .update({
+          // 프로필 업데이트 (타입 오류 회피를 위해 any 사용)
+          try {
+            const profilesTable = (supabase as any).from('profiles')
+            const updateQuery = profilesTable.update({
               display_name: finalDisplayName,
               email: email,
-            })
-            .eq('id', data.user.id)
+            } as any)
+            const result = await updateQuery.eq('id', data.user.id)
+            
+            if (result?.error) {
+              console.error('프로필 업데이트 오류:', result.error)
+            }
+          } catch (updateError) {
+            console.error('프로필 업데이트 오류:', updateError)
+          }
         }
         
         // 웨비나 등록 (이 웨비나에 자동 등록)

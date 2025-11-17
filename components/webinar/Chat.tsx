@@ -75,6 +75,8 @@ export default function Chat({
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null) // 재연결 타이머
   const fallbackReconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null) // 폴백 재연결 타이머
   const channelRef = useRef<any>(null) // 현재 채널 참조 (cleanup용)
+  const isSettingUpRef = useRef<boolean>(false) // 채널 설정 중 플래그
+  const channelNameRef = useRef<string | null>(null) // 현재 채널명 (cleanup용)
   const supabase = createClientSupabase()
   
   // 최근 메시지만 유지하는 윈도우 크기 (50~100개)
@@ -102,8 +104,8 @@ export default function Chat({
             })
           ])
           
-          const registration = registrationResponse.data
-          const isParticipant = registration?.role === 'attendee'
+          const registration = registrationResponse.data as { role?: string } | null
+          const isParticipant = (registration as any)?.role === 'attendee'
           
           // 관리자 여부 확인
           let isAdmin = false
@@ -122,8 +124,8 @@ export default function Chat({
             id: user.id,
             display_name: isAdmin || !isParticipant
               ? '관리자'
-              : (profile?.display_name || profile?.email || '익명'),
-            email: profile?.email,
+              : ((profile as any)?.display_name || (profile as any)?.email || '익명'),
+            email: (profile as any)?.email,
           })
           return
         } catch (apiError) {
@@ -140,7 +142,7 @@ export default function Chat({
             .eq('user_id', user.id)
             .maybeSingle()
           
-          const isParticipant = registration?.role === 'attendee'
+          const isParticipant = (registration as any)?.role === 'attendee'
           
           const { data: profile } = await supabase
             .from('profiles')
@@ -151,9 +153,9 @@ export default function Chat({
           setCurrentUser({
             id: user.id,
             display_name: isParticipant 
-              ? (profile?.display_name || profile?.email || '익명')
+              ? ((profile as any)?.display_name || (profile as any)?.email || '익명')
               : '관리자',
-            email: profile?.email,
+            email: (profile as any)?.email,
           })
         } catch (error) {
           console.warn('직접 프로필 조회 실패:', error)
@@ -436,23 +438,33 @@ export default function Chat({
     
     // 고정 채널명 사용 (중복 구독 방지)
     const channelName = `webinar:${webinarId}:messages`
+    channelNameRef.current = channelName // cleanup용으로 저장
     
     // 실시간 구독 설정 (기존 채널 정리는 비동기로 처리)
     const setupRealtimeSubscription = async () => {
-      // 기존 채널 확인 및 제거 (비동기 대기)
-      const existingChannel = supabase.getChannels().find(
-        ch => ch.topic === `realtime:${channelName}`
-      )
-      if (existingChannel) {
-        console.warn('기존 채널 발견, 제거 중:', channelName)
-        await existingChannel.unsubscribe()
-        supabase.removeChannel(existingChannel)
-        // 약간의 지연을 두어 정리가 완전히 완료되도록 함
-        await new Promise(resolve => setTimeout(resolve, 100))
+      // 이미 설정 중이면 무시
+      if (isSettingUpRef.current) {
+        console.log('채널 설정이 이미 진행 중입니다. 무시합니다.')
+        return
       }
       
-      // 실시간 구독
-      const channel = supabase
+      isSettingUpRef.current = true
+      
+      try {
+        // 기존 채널 확인 및 제거 (비동기 대기)
+        const existingChannel = supabase.getChannels().find(
+          ch => ch.topic === `realtime:${channelName}`
+        )
+        if (existingChannel) {
+          console.warn('기존 채널 발견, 제거 중:', channelName)
+          await existingChannel.unsubscribe()
+          supabase.removeChannel(existingChannel)
+          // 약간의 지연을 두어 정리가 완전히 완료되도록 함
+          await new Promise(resolve => setTimeout(resolve, 100))
+        }
+        
+        // 실시간 구독
+        const channel = supabase
       .channel(channelName, {
         config: {
           broadcast: { self: false }, // 자신의 메시지는 제외 (Optimistic Update로 처리)
@@ -514,8 +526,8 @@ export default function Chat({
                     profile = result.profile
                   }
                   
-                  const registration = registrationResponse.data
-                  const isParticipant = registration?.role === 'attendee'
+                  const registration = registrationResponse.data as { role?: string } | null
+                  const isParticipant = (registration as any)?.role === 'attendee'
                   
                   // 관리자 여부 확인
                   let isAdmin = false
@@ -526,7 +538,7 @@ export default function Chat({
                   
                   const displayName = isAdmin || !isParticipant
                     ? '관리자'
-                    : (profile?.display_name || profile?.email || '익명')
+                    : ((profile as any)?.display_name || (profile as any)?.email || '익명')
                   
                   if (profile) {
                     return {
@@ -775,6 +787,9 @@ export default function Chat({
           }
           lastEventAt.current = Date.now()
           console.log('✅ 실시간 구독 성공:', channelName)
+          
+          // 채널 설정 완료 플래그 리셋 (구독 성공 후)
+          isSettingUpRef.current = false
         } else if (['CHANNEL_ERROR', 'TIMED_OUT', 'CLOSED'].includes(status)) {
           reconnectTriesRef.current++
           const delay = Math.min(1000 * Math.pow(2, reconnectTriesRef.current - 1), 10000)
@@ -835,10 +850,16 @@ export default function Chat({
         }
       })
       
-      // 채널을 ref에 저장 (cleanup용)
-      channelRef.current = channel
-      
-      return channel
+        // 채널을 ref에 저장 (cleanup용)
+        channelRef.current = channel
+        isSettingUpRef.current = false
+        
+        return channel
+      } catch (error) {
+        console.error('채널 설정 중 오류:', error)
+        isSettingUpRef.current = false
+        channelRef.current = null
+      }
     }
     
     // 실시간 구독 설정 실행
@@ -855,20 +876,47 @@ export default function Chat({
         fallbackReconnectTimeoutRef.current = null
       }
       
-      // 채널 정리
+      // 채널 정리 (설정 중이 아닐 때만)
       const currentChannel = channelRef.current
-      if (currentChannel) {
-        console.log('실시간 구독 해제:', channelName)
+      const currentChannelName = channelNameRef.current
+      
+      if (currentChannel && !isSettingUpRef.current) {
+        console.log('실시간 구독 해제:', currentChannelName)
         currentChannel.unsubscribe().then(() => {
           supabase.removeChannel(currentChannel)
           channelRef.current = null
+          channelNameRef.current = null
         }).catch((err: unknown) => {
           console.warn('채널 구독 해제 오류:', err)
           channelRef.current = null
+          channelNameRef.current = null
         })
+      } else if (isSettingUpRef.current) {
+        // 설정 중이면 설정 완료 후 정리되도록 대기
+        console.log('채널 설정 중이므로 cleanup을 지연합니다.')
+        const checkAndCleanup = () => {
+          const channel = channelRef.current
+          const channelName = channelNameRef.current
+          if (!isSettingUpRef.current && channel) {
+            console.log('실시간 구독 해제 (지연):', channelName)
+            channel.unsubscribe().then(() => {
+              supabase.removeChannel(channel)
+              channelRef.current = null
+              channelNameRef.current = null
+            }).catch((err: unknown) => {
+              console.warn('채널 구독 해제 오류:', err)
+              channelRef.current = null
+              channelNameRef.current = null
+            })
+          } else if (isSettingUpRef.current) {
+            // 아직 설정 중이면 다시 확인 (최대 5초 대기)
+            setTimeout(checkAndCleanup, 100)
+          }
+        }
+        setTimeout(checkAndCleanup, 100)
       }
     }
-  }, [webinarId, supabase, currentUser?.id, reconnectKey])
+  }, [webinarId, currentUser?.id, reconnectKey]) // supabase는 싱글턴이므로 dependency에서 제거
   
   // 헬스체크: 10초 동안 이벤트가 없으면 폴백 활성화
   useEffect(() => {
@@ -1129,8 +1177,8 @@ export default function Chat({
           const { profile } = await response.json()
           userProfile = {
             id: currentUser.id,
-            display_name: profile?.display_name,
-            email: profile?.email,
+            display_name: (profile as any)?.display_name,
+            email: (profile as any)?.email,
           }
           // currentUser 상태 업데이트
           setCurrentUser(userProfile)

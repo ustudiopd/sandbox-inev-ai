@@ -74,13 +74,21 @@ export default function AgencySignupPage() {
       // API에서 Admin으로 다시 확인하므로 안전함
       if (profileExists) {
         // 프로필 업데이트
-        await supabase
-          .from('profiles')
-          .update({
+        // 프로필 업데이트 (타입 오류 회피를 위해 any 사용)
+        try {
+          const profilesTable = (supabase as any).from('profiles')
+          const updateQuery = profilesTable.update({
             display_name: formData.displayName,
             email: formData.email,
-          })
-          .eq('id', authData.user.id)
+          } as any)
+          const result = await updateQuery.eq('id', authData.user.id)
+          
+          if (result?.error) {
+            console.error('프로필 업데이트 오류:', result.error)
+          }
+        } catch (updateError) {
+          console.error('프로필 업데이트 오류:', updateError)
+        }
       }
       
       // 3. 에이전시 생성 (서버 API 호출)
