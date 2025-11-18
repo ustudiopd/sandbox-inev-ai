@@ -7,7 +7,7 @@ export const runtime = 'nodejs'
 
 export async function POST(req: Request) {
   try {
-    const { agencyId, email, expiresInDays = 7 } = await req.json()
+    const { agencyId, clientId, email, expiresInDays = 7 } = await req.json()
     
     if (!agencyId) {
       return NextResponse.json(
@@ -21,6 +21,23 @@ export async function POST(req: Request) {
     
     const admin = createAdminSupabase()
     
+    // clientId가 제공된 경우, 해당 클라이언트가 이 에이전시에 속하는지 확인
+    if (clientId) {
+      const { data: client } = await admin
+        .from('clients')
+        .select('id, name, agency_id')
+        .eq('id', clientId)
+        .eq('agency_id', agencyId)
+        .single()
+      
+      if (!client) {
+        return NextResponse.json(
+          { error: 'Invalid clientId or client does not belong to this agency' },
+          { status: 400 }
+        )
+      }
+    }
+    
     // 초대 토큰 생성
     const token = randomBytes(32).toString('hex')
     const expiresAt = new Date()
@@ -31,6 +48,7 @@ export async function POST(req: Request) {
       .from('client_invitations')
       .insert({
         agency_id: agencyId,
+        client_id: clientId || null,
         token,
         email: email || null,
         expires_at: expiresAt.toISOString(),

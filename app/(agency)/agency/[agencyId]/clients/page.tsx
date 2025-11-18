@@ -3,6 +3,7 @@ import { createServerSupabase } from '@/lib/supabase/server'
 import Link from 'next/link'
 import ClientCreateModal from './components/ClientCreateModal'
 import ClientInviteModal from './components/ClientInviteModal'
+import ClientInviteButton from './components/ClientInviteButton'
 
 export default async function ClientsPage({
   params,
@@ -86,6 +87,11 @@ export default async function ClientsPage({
                         >
                           대시보드
                         </Link>
+                        <ClientInviteButton 
+                          agencyId={agencyId}
+                          clientId={client.id}
+                          clientName={client.name}
+                        />
                         <Link 
                           href={`/client/${client.id}/settings/branding`}
                           className="text-gray-600 hover:text-gray-800 font-medium hover:underline"

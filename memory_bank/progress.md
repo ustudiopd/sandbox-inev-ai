@@ -395,6 +395,39 @@
   - 성능 향상: Broadcast는 RLS를 거치지 않아 지연 시간 감소
   - 확장성: 단일 채널(`webinar:${webinarId}`)로 모든 이벤트 타입 처리 가능
 
+## [2025-01-XX] 다크모드 텍스트 입력창 가시성 개선
+- ✅ 모든 입력 필드에 명시적 배경색 및 텍스트 색상 추가
+  - `bg-white text-gray-900` 클래스 추가
+  - 다크모드에서도 텍스트 입력창이 명확하게 보이도록 개선
+- ✅ 수정된 컴포넌트
+  - Chat.tsx (메시지 입력)
+  - QA.tsx (질문 입력, 질문 수정, 답변 입력)
+  - FormWidget.tsx (설문/퀴즈 답변 입력)
+  - WebinarEntry.tsx (게스트/로그인/회원가입 입력)
+  - login/page.tsx (로그인 입력)
+  - settings/profile/page.tsx (프로필 설정 입력)
+  - signup/client/page.tsx (클라이언트 회원가입 입력)
+
+## [2025-01-XX] 클라이언트별 초대 기능 구현
+- ✅ 데이터베이스 마이그레이션 (`029_add_client_id_to_invitations.sql`)
+  - `client_invitations` 테이블에 `client_id` 컬럼 추가
+  - 클라이언트별 초대 토큰 관리 가능
+- ✅ 초대 API 개선 (`/api/clients/invite`)
+  - `clientId` 파라미터 추가
+  - 클라이언트 소속 검증 로직 추가
+  - 초대 생성 시 `client_id` 저장
+- ✅ 클라이언트 목록에 초대 버튼 추가
+  - 각 클라이언트 행에 "초대" 버튼 추가 (`ClientInviteButton.tsx`)
+  - 클라이언트별 초대 링크 생성 및 모달 표시
+- ✅ 회원가입 페이지 개선 (`/signup/client`)
+  - 초대 토큰으로 클라이언트 정보 조회 API 추가 (`/api/clients/invite-info`)
+  - 클라이언트명 자동 입력 및 고정 (수정 불가)
+  - `clientNameFixed` 상태로 입력 필드 비활성화
+- ✅ 회원가입 처리 로직 개선 (`/api/clients/create-self`)
+  - `client_id`가 있는 경우: 기존 클라이언트에 멤버로 추가 (role: 'member')
+  - `client_id`가 없는 경우: 새 클라이언트 생성 및 owner 역할 부여
+  - 두 가지 시나리오 모두 지원
+
 ## 남은 작업
 
 ### Phase 3 - 웨비나 및 실시간 기능 (대부분 완료)

@@ -660,7 +660,7 @@ export default function QA({
             value={newQuestion}
             onChange={(e) => setNewQuestion(e.target.value)}
             placeholder="질문을 입력하세요..."
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent mb-2"
+            className="w-full px-4 py-2 bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent mb-2"
             rows={3}
             maxLength={1000}
             disabled={sending}
@@ -708,7 +708,7 @@ export default function QA({
                   value={editContent}
                   onChange={(e) => setEditContent(e.target.value)}
                   placeholder="질문을 입력하세요..."
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent mb-4"
+                  className="w-full px-4 py-2 bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent mb-4"
                   rows={4}
                   maxLength={1000}
                   disabled={editing}
@@ -822,7 +822,7 @@ export default function QA({
                     value={answerText}
                     onChange={(e) => setAnswerText(e.target.value)}
                     placeholder="답변을 입력하세요..."
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent mb-4"
+                    className="w-full px-4 py-2 bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent mb-4"
                     rows={4}
                     maxLength={1000}
                     disabled={answering}

@@ -538,14 +538,14 @@ export default function FormWidget({
                   value={answers[question.id] || (submitted ? (userAnswers[question.id] || '') : '')}
                   onChange={(e) => !submitted && handleAnswerChange(question.id, e.target.value)}
                   disabled={submitted}
-                  className={`w-full px-3 py-2 border-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                  className={`w-full px-3 py-2 text-gray-900 border-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                     submitted && form.kind === 'quiz'
                       ? submissionResult?.questionResults?.find((r: any) => r.questionId === question.id)?.isCorrect
                         ? 'border-green-500 bg-green-50'
                         : 'border-red-500 bg-red-50'
                       : submitted && form.kind === 'survey'
                       ? 'border-blue-500 bg-blue-50'
-                      : 'border-gray-300'
+                      : 'border-gray-300 bg-white'
                   }`}
                   rows={4}
                   placeholder="답변을 입력하세요"

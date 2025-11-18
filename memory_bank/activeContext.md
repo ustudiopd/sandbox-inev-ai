@@ -1,18 +1,15 @@
 # 현재 작업 상황 (Active Context)
 
 ## 1. 현재 집중하고 있는 작업  
-- **작업명**: Realtime 연결 안정성 근본 개선
+- **작업명**: UI/UX 개선 및 클라이언트 관리 기능 강화
 - **목표**: 
-  - "SUBSCRIBED → 바로 CLOSED" 루프 해소
-  - 불필요한 폴백 활성화 방지
-  - 실시간 연결 안정화 및 지연 최소화
+  - 다크모드에서 텍스트 입력창 가시성 개선
+  - 클라이언트별 초대 기능 구현
+  - 회원가입 시 클라이언트명 고정 기능
 - **상태**: ✅ 완료
-  - 해결책.md의 5가지 수정안 모두 적용 완료
-  - A: 수동 종료 플래그로 CLOSED 오인 방지
-  - B: currentUser?.id 의존성 제거로 재구독 방지
-  - C: 채널 상태 기준 헬스체크
-  - D: 증분 조회 ETag 제거
-  - E: 채널 정리 로직 간소화
+  - 모든 입력 필드에 명시적 배경색 및 텍스트 색상 추가
+  - 클라이언트 목록에서 각 클라이언트별 초대 버튼 추가
+  - 초대 링크로 회원가입 시 클라이언트명 자동 고정
 
 ## 2. 다음 예정 작업  
 - **우선순위 높음**: 
@@ -21,12 +18,12 @@
   3. 리포트 고도화 (퀴즈 통계, 추첨 재현성 보고)
 
 - **우선순위 중간**:
-  5. 웨비나 등록 페이지
-  6. 초대 링크 처리 (`/invite/[token]`)
+  4. Typing 표시 기능 완성
+  5. 추가 UI/UX 개선사항
 
 - **우선순위 낮음**:
-  7. 리포트 고도화
-  8. Typing 표시 기능 완성
+  6. 리포트 고도화
+  7. 성능 최적화 추가 작업
 
 ## 3. 주요 이슈 및 블로커  
 - 현재 개발을 진행하는 데 방해가 되는 요소 없음
@@ -92,6 +89,14 @@
   - D: 증분 조회 ETag 제거로 304 오인 방지
   - E: 채널 정리 로직 간소화로 경합 방지
   - "SUBSCRIBED → 바로 CLOSED" 루프 완전 해소
+- ✅ 다크모드 텍스트 입력창 가시성 개선
+  - 모든 input/textarea 필드에 `bg-white text-gray-900` 클래스 추가
+  - 다크모드에서도 텍스트 입력창이 명확하게 보이도록 개선
+- ✅ 클라이언트별 초대 기능 구현
+  - `client_invitations` 테이블에 `client_id` 컬럼 추가
+  - 클라이언트 목록에 각 클라이언트별 초대 버튼 추가
+  - 회원가입 페이지에서 클라이언트명 자동 고정 기능
+  - 기존 클라이언트에 멤버 추가 또는 새 클라이언트 생성 지원
 
 ## 5. 현재 시스템 상태
 - **데이터베이스**: Supabase PostgreSQL (RLS 활성화)
@@ -107,3 +112,11 @@
   - `019_fix_fill_org_fields_for_forms.sql` (트리거 수정)
   - `020_add_org_fields_to_form_tables.sql` (org_fields 추가)
   - `021_optimize_form_loading_indexes.sql` (성능 최적화)
+  - `022_create_me_view.sql` (me 뷰 생성)
+  - `023_setup_profiles_rls.sql` (profiles RLS 설정)
+  - `024_fix_profiles_rls_recursion.sql` (RLS 재귀 문제 해결)
+  - `025_simplify_messages_rls.sql` (messages RLS 단순화)
+  - `026_create_short_links.sql` (짧은 링크 시스템)
+  - `027_add_nickname_to_registrations.sql` (registrations에 nickname 추가)
+  - `028_add_nickname_to_profiles.sql` (profiles에 nickname 추가)
+  - `029_add_client_id_to_invitations.sql` (client_invitations에 client_id 추가)

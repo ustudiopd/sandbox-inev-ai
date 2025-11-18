@@ -35,7 +35,7 @@ export async function POST(req: Request) {
     // 초대 토큰 검증
     const { data: invite } = await admin
       .from('client_invitations')
-      .select('agency_id, expires_at')
+      .select('agency_id, client_id, expires_at')
       .eq('token', inviteToken)
       .eq('used', false)
       .maybeSingle()
@@ -56,7 +56,70 @@ export async function POST(req: Request) {
     }
     
     const agencyId = invite.agency_id
+    const existingClientId = invite.client_id
     
+    // client_id가 있는 경우 (기존 클라이언트에 멤버 추가)
+    if (existingClientId) {
+      // 클라이언트 존재 확인
+      const { data: existingClient } = await admin
+        .from('clients')
+        .select('id, name')
+        .eq('id', existingClientId)
+        .single()
+      
+      if (!existingClient) {
+        return NextResponse.json(
+          { error: 'Invalid client' },
+          { status: 400 }
+        )
+      }
+      
+      // 초대 토큰 사용 처리
+      await admin
+        .from('client_invitations')
+        .update({ used: true, used_at: new Date().toISOString() })
+        .eq('token', inviteToken)
+      
+      // 클라이언트 멤버 추가
+      const { data: member, error: memberError } = await admin
+        .from('client_members')
+        .insert({
+          client_id: existingClientId,
+          user_id: userId,
+          role: 'member',
+        })
+        .select()
+        .single()
+      
+      if (memberError) {
+        // 이미 멤버인 경우 무시
+        if (memberError.code !== '23505') {
+          return NextResponse.json(
+            { error: memberError.message },
+            { status: 500 }
+          )
+        }
+      }
+      
+      // 감사 로그
+      await admin
+        .from('audit_logs')
+        .insert({
+          actor_user_id: userId,
+          agency_id: agencyId,
+          client_id: existingClientId,
+          action: 'CLIENT_MEMBER_ADD',
+          payload: { inviteToken }
+        })
+      
+      return NextResponse.json({
+        success: true,
+        client: existingClient,
+        isNewClient: false,
+      })
+    }
+    
+    // client_id가 없는 경우 (새 클라이언트 생성)
     // 초대 토큰 사용 처리
     await admin
       .from('client_invitations')
@@ -123,7 +186,7 @@ export async function POST(req: Request) {
         payload: { name, inviteToken }
       })
     
-    return NextResponse.json({ success: true, client })
+    return NextResponse.json({ success: true, client, isNewClient: true })
   } catch (error: any) {
     return NextResponse.json(
       { error: error.message || 'Internal server error' },

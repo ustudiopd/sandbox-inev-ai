@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, Suspense } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { createClientSupabase } from '@/lib/supabase/client'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
@@ -18,8 +18,26 @@ function ClientSignupForm() {
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [clientNameFixed, setClientNameFixed] = useState(false)
   const router = useRouter()
   const supabase = createClientSupabase()
+  
+  // 초대 토큰으로 클라이언트 정보 조회
+  useEffect(() => {
+    if (inviteToken) {
+      fetch(`/api/clients/invite-info?token=${inviteToken}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.clientName) {
+            setFormData(prev => ({ ...prev, clientName: data.clientName }))
+            setClientNameFixed(true)
+          }
+        })
+        .catch(err => {
+          console.error('Failed to fetch client info:', err)
+        })
+    }
+  }, [inviteToken])
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -162,11 +180,16 @@ function ClientSignupForm() {
             <input
               type="text"
               value={formData.clientName}
-              onChange={(e) => setFormData({ ...formData, clientName: e.target.value })}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+              onChange={(e) => !clientNameFixed && setFormData({ ...formData, clientName: e.target.value })}
+              className="w-full px-4 py-3 bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
               placeholder="클라이언트 이름을 입력하세요"
               required
+              disabled={clientNameFixed}
+              readOnly={clientNameFixed}
             />
+            {clientNameFixed && (
+              <p className="mt-1 text-sm text-gray-500">초대된 클라이언트명입니다</p>
+            )}
           </div>
           
           <div>
@@ -175,7 +198,7 @@ function ClientSignupForm() {
               type="text"
               value={formData.displayName}
               onChange={(e) => setFormData({ ...formData, displayName: e.target.value })}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+              className="w-full px-4 py-3 bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
               placeholder="이름을 입력하세요"
               required
             />
@@ -187,7 +210,7 @@ function ClientSignupForm() {
               type="email"
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+              className="w-full px-4 py-3 bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
               placeholder="your@email.com"
               required
             />
@@ -199,7 +222,7 @@ function ClientSignupForm() {
               type="password"
               value={formData.password}
               onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+              className="w-full px-4 py-3 bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
               placeholder="••••••••"
               required
               minLength={6}
@@ -212,7 +235,7 @@ function ClientSignupForm() {
               type="password"
               value={formData.confirmPassword}
               onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+              className="w-full px-4 py-3 bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
               placeholder="••••••••"
               required
             />
