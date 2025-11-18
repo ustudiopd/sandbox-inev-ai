@@ -80,6 +80,7 @@ export default function Chat({
   const isSettingUpRef = useRef<boolean>(false) // 채널 설정 중 플래그
   const channelNameRef = useRef<string | null>(null) // 현재 채널명 (cleanup용)
   const manualCloseRef = useRef<boolean>(false) // 수동 종료 플래그 (A번 수정안)
+  const pendingEventsRef = useRef<BroadcastEnvelope<ChatMessagePayload>[]>([]) // 초기 로드 중 이벤트 버퍼링 (해결책.md A안)
   // Supabase 클라이언트를 useMemo로 명시적 고정 (해결책.md 권장사항)
   const supabase = useMemo(() => createClientSupabase(), [])
   
@@ -290,6 +291,70 @@ export default function Chat({
         setMessages(loadedMessages || [])
         // 초기 로드 완료 시간 기록
         initialLoadTimeRef.current = Date.now()
+        
+        // 해결책.md A안: 버퍼링된 이벤트 처리
+        if (pendingEventsRef.current.length > 0) {
+          console.log(`📦 버퍼링된 이벤트 ${pendingEventsRef.current.length}개 처리 시작`)
+          // 버퍼링된 이벤트를 순차적으로 처리
+          // 주의: 이벤트는 이미 broadcast 핸들러에서 처리되므로, 여기서는 단순히 재트리거
+          // 실제로는 이벤트를 다시 발생시키는 대신, 메시지 목록과 비교하여 누락된 메시지만 추가
+          const bufferedEvents = [...pendingEventsRef.current]
+          pendingEventsRef.current = []
+          
+          // 버퍼링된 이벤트 중 chat:new 이벤트만 처리
+          bufferedEvents.forEach((env) => {
+            if (env.t === 'chat:new') {
+              const newMsg = env.payload as ChatMessagePayload
+              if (newMsg && !newMsg.hidden) {
+                // 메시지 목록에 이미 있는지 확인
+                const existingMessages = loadedMessages || []
+                const isDuplicate = existingMessages.some(
+                  (m: Message) => m.id === newMsg.id || 
+                  (newMsg.client_msg_id && m.client_msg_id === newMsg.client_msg_id)
+                )
+                
+                if (!isDuplicate) {
+                  console.log('📦 버퍼링된 메시지 추가:', newMsg.id)
+                  // 메시지 추가 (프로필 정보는 나중에 로드)
+                  setMessages((prev) => {
+                    const updated = [...prev, {
+                      id: newMsg.id,
+                      user_id: newMsg.user_id,
+                      content: newMsg.content,
+                      created_at: newMsg.created_at,
+                      hidden: newMsg.hidden,
+                      user: undefined,
+                      client_msg_id: newMsg.client_msg_id,
+                    }].sort((a, b) => 
+                      new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+                    )
+                    
+                    // lastMessageIdRef 갱신
+                    if (typeof newMsg.id === 'number') {
+                      lastMessageIdRef.current = Math.max(lastMessageIdRef.current, newMsg.id)
+                    }
+                    
+                    return updated
+                  })
+                  
+                  // 프로필 정보 비동기 로드
+                  fetch(`/api/profiles/${newMsg.user_id}`)
+                    .then(res => res.ok ? res.json() : null)
+                    .then(result => {
+                      if (result?.profile) {
+                        setMessages((prev) => prev.map(m => 
+                          m.id === newMsg.id 
+                            ? { ...m, user: result.profile }
+                            : m
+                        ))
+                      }
+                    })
+                    .catch(() => {})
+                }
+              }
+            }
+          })
+        }
       } else {
         // 더보기: 기존 메시지 앞에 추가
         setMessages((prev) => {
@@ -433,6 +498,7 @@ export default function Chat({
       initialLoadTimeRef.current = 0
       lastWebinarIdRef.current = webinarId
       reconnectTriesRef.current = 0 // webinarId 변경 시 재시도 횟수 리셋
+      pendingEventsRef.current = [] // 해결책.md: webinarId 변경 시 버퍼 초기화
     }
     
     // 초기 로드는 한 번만 실행 (재연결 시에는 메시지 유지)
@@ -514,9 +580,10 @@ export default function Chat({
             if (newMsg && !newMsg.hidden) {
               console.log('새 메시지 수신:', newMsg)
               
-              // 초기 로드가 완료되지 않았으면 무시 (초기 로드가 모든 메시지를 가져옴)
+              // 해결책.md A안: 초기 로드 중 이벤트 버퍼링
               if (initialLoadTimeRef.current === 0) {
-                console.log('초기 로드 전, Realtime 메시지 무시')
+                console.log('초기 로드 전, 이벤트 버퍼링:', env.t)
+                pendingEventsRef.current.push(env)
                 return
               }
               
@@ -590,26 +657,12 @@ export default function Chat({
                     return prev
                   }
                   
-                  // 현재 표시된 메시지 중 가장 최신 메시지 찾기
-                  const latestMsg = prev[prev.length - 1]
-                  if (latestMsg && latestMsg.created_at) {
-                    const latestTime = new Date(latestMsg.created_at).getTime()
-                    const newMsgTime = new Date(newMsg.created_at).getTime()
-                    
-                    // 새 메시지가 현재 표시된 메시지보다 오래된 것이면 무시
-                    // (과거 메시지는 초기 로드나 더보기로만 추가)
-                    if (newMsgTime <= latestTime) {
-                      console.log('과거 메시지 무시 (Realtime):', newMsg.created_at, 'vs', latestMsg.created_at)
-                      return prev
-                    }
-                  }
-                  
-              // 중복 방지: 이미 같은 ID나 client_msg_id가 있으면 무시
-              if (prev.some(m => {
-                // ID로 중복 확인
-                if (m.id === newMsg.id) return true
-                // client_msg_id로 중복 확인 (Optimistic 메시지와 실제 메시지 매칭)
-                if (newMsg.client_msg_id && m.client_msg_id === newMsg.client_msg_id) return true
+                  // 중복 방지: 이미 같은 ID나 client_msg_id가 있으면 무시 (우선 체크)
+                  if (prev.some(m => {
+                    // ID로 중복 확인
+                    if (m.id === newMsg.id) return true
+                    // client_msg_id로 중복 확인 (Optimistic 메시지와 실제 메시지 매칭)
+                    if (newMsg.client_msg_id && m.client_msg_id === newMsg.client_msg_id) return true
                 return false
               })) {
                 console.log('중복 메시지 무시 (Realtime):', newMsg.id, newMsg.client_msg_id)
@@ -638,29 +691,60 @@ export default function Chat({
                   user: finalUser,
                   isOptimistic: false,
                 }
+                
+                // 해결책.md: lastMessageIdRef 갱신
+                if (typeof newMsg.id === 'number') {
+                  lastMessageIdRef.current = Math.max(lastMessageIdRef.current, newMsg.id)
+                }
+                
                 return updated
               }
+              
+              // 해결책.md: 시간 기반 필터링 (엄격히 과거만 버림, 동일 시각 허용)
+              // 초기 로드 직후 2초 이내에는 시간 비교를 하지 않음
+              const timeSinceInitialLoad = Date.now() - initialLoadTimeRef.current
+              const shouldCheckTime = timeSinceInitialLoad > 2000 // 2초 이후에만 시간 체크
+              
+              if (shouldCheckTime) {
+                // 현재 표시된 메시지 중 가장 최신 메시지 찾기
+                const latestMsg = prev[prev.length - 1]
+                if (latestMsg && latestMsg.created_at) {
+                  const latestTime = new Date(latestMsg.created_at).getTime()
+                  const newMsgTime = new Date(newMsg.created_at).getTime()
                   
-                  // fetchProfile에서 이미 관리자 여부를 확인하여 "관리자"로 표시하도록 처리됨
-                  const finalUser = profileWithDisplayName
-                  
-                  const updated = [...prev, {
-                    id: newMsg.id,
-                    user_id: newMsg.user_id,
-                    content: newMsg.content,
-                    created_at: newMsg.created_at,
-                    hidden: newMsg.hidden,
-                    user: finalUser,
-                    client_msg_id: newMsg.client_msg_id,
-                  }].sort((a, b) => 
-                    new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-                  )
-                  
-                  // 윈도우 크기 제한 (가장 오래된 것부터 제거)
-                  if (updated.length > MAX_MESSAGES_WINDOW) {
-                    return updated.slice(-MAX_MESSAGES_WINDOW)
+                  // 해결책.md: <= → < 로 변경 (동일 시각 허용, 엄격히 과거만 버림)
+                  if (newMsgTime < latestTime) {
+                    console.log('과거 메시지 무시 (Realtime):', newMsg.created_at, 'vs', latestMsg.created_at)
+                    return prev
                   }
-                  return updated
+                }
+              }
+                  
+              // fetchProfile에서 이미 관리자 여부를 확인하여 "관리자"로 표시하도록 처리됨
+              const finalUser = profileWithDisplayName
+              
+              const updated = [...prev, {
+                id: newMsg.id,
+                user_id: newMsg.user_id,
+                content: newMsg.content,
+                created_at: newMsg.created_at,
+                hidden: newMsg.hidden,
+                user: finalUser,
+                client_msg_id: newMsg.client_msg_id,
+              }].sort((a, b) => 
+                new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+              )
+              
+              // 해결책.md: lastMessageIdRef 갱신
+              if (typeof newMsg.id === 'number') {
+                lastMessageIdRef.current = Math.max(lastMessageIdRef.current, newMsg.id)
+              }
+              
+              // 윈도우 크기 제한 (가장 오래된 것부터 제거)
+              if (updated.length > MAX_MESSAGES_WINDOW) {
+                return updated.slice(-MAX_MESSAGES_WINDOW)
+              }
+              return updated
                 })
                 
                 // 내가 보낸 메시지면 스피너 끄기 (이중 안전장치)
@@ -677,20 +761,7 @@ export default function Chat({
                     return prev
                   }
                   
-                  // 현재 표시된 메시지 중 가장 최신 메시지 찾기
-                  const latestMsg = prev[prev.length - 1]
-                  if (latestMsg && latestMsg.created_at) {
-                    const latestTime = new Date(latestMsg.created_at).getTime()
-                    const newMsgTime = new Date(newMsg.created_at).getTime()
-                    
-                    // 새 메시지가 현재 표시된 메시지보다 오래된 것이면 무시
-                    if (newMsgTime <= latestTime) {
-                      console.log('과거 메시지 무시 (Realtime, 프로필 오류):', newMsg.created_at, 'vs', latestMsg.created_at)
-                      return prev
-                    }
-                  }
-                  
-                  // 중복 방지: 이미 같은 ID나 client_msg_id가 있으면 무시
+                  // 중복 방지: 이미 같은 ID나 client_msg_id가 있으면 무시 (우선 체크)
                   if (prev.some(m => {
                     if (m.id === newMsg.id) return true
                     if (newMsg.client_msg_id && m.client_msg_id === newMsg.client_msg_id) return true
@@ -698,6 +769,25 @@ export default function Chat({
                   })) {
                     console.log('중복 메시지 무시 (Realtime, 프로필 오류):', newMsg.id, newMsg.client_msg_id)
                     return prev
+                  }
+                  
+                  // 해결책.md: 시간 기반 필터링 (엄격히 과거만 버림, 동일 시각 허용)
+                  const timeSinceInitialLoad = Date.now() - initialLoadTimeRef.current
+                  const shouldCheckTime = timeSinceInitialLoad > 2000
+                  
+                  if (shouldCheckTime) {
+                    // 현재 표시된 메시지 중 가장 최신 메시지 찾기
+                    const latestMsg = prev[prev.length - 1]
+                    if (latestMsg && latestMsg.created_at) {
+                      const latestTime = new Date(latestMsg.created_at).getTime()
+                      const newMsgTime = new Date(newMsg.created_at).getTime()
+                      
+                      // 해결책.md: <= → < 로 변경 (동일 시각 허용, 엄격히 과거만 버림)
+                      if (newMsgTime < latestTime) {
+                        console.log('과거 메시지 무시 (Realtime, 프로필 오류):', newMsg.created_at, 'vs', latestMsg.created_at)
+                        return prev
+                      }
+                    }
                   }
                   
                   const optimisticIndex = prev.findIndex(m => {
@@ -724,6 +814,11 @@ export default function Chat({
                   }].sort((a, b) => 
                     new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
                   )
+                  
+                  // 해결책.md: lastMessageIdRef 갱신
+                  if (typeof newMsg.id === 'number') {
+                    lastMessageIdRef.current = Math.max(lastMessageIdRef.current, newMsg.id)
+                  }
                   
                   // 윈도우 크기 제한 (가장 오래된 것부터 제거)
                   if (updated.length > MAX_MESSAGES_WINDOW) {
