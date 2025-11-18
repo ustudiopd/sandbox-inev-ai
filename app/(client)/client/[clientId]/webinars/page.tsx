@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import WebinarEditModal from './components/WebinarEditModal'
+import ShareLinkButton from '@/components/webinar/ShareLinkButton'
 
 export default function WebinarsPage() {
   const params = useParams()
@@ -196,13 +197,17 @@ export default function WebinarsPage() {
                             {webinar.access_policy === 'invite_only' && '초대 전용'}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm">
-                            <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-3 flex-wrap">
                               <Link 
                                 href={`/webinar/${webinar.id}`}
                                 className="text-blue-600 hover:text-blue-800 font-medium hover:underline"
                               >
                                 웨비나링크
                               </Link>
+                              <ShareLinkButton 
+                                webinarId={webinar.id} 
+                                webinarTitle={webinar.title}
+                              />
                               <Link 
                                 href={`/webinar/${webinar.id}/live?admin=true`}
                                 className="text-green-600 hover:text-green-800 font-medium hover:underline"

@@ -5,6 +5,7 @@ import { createClientSupabase } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { formatTime } from '@/lib/webinar/utils'
+import ShareLinkButton from '@/components/webinar/ShareLinkButton'
 
 interface Webinar {
   id: string
@@ -130,10 +131,9 @@ export default function Home() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {webinars.map((webinar) => (
-                <Link
+                <div
                   key={webinar.id}
-                  href={`/webinar/${webinar.id}`}
-                  className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-all duration-200 hover:scale-105 cursor-pointer"
+                  className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-all duration-200"
                 >
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex-1">
@@ -166,10 +166,20 @@ export default function Home() {
                       </div>
                     )}
                   </div>
-                  <div className="mt-4 text-blue-600 font-medium">
-                    입장하기 →
+                  <div className="mt-4 flex items-center justify-between">
+                    <Link
+                      href={`/webinar/${webinar.id}`}
+                      className="text-blue-600 font-medium hover:underline"
+                    >
+                      입장하기 →
+                    </Link>
+                    <ShareLinkButton 
+                      webinarId={webinar.id} 
+                      webinarTitle={webinar.title}
+                      className="ml-auto"
+                    />
                   </div>
-                </Link>
+                </div>
               ))}
             </div>
           )}

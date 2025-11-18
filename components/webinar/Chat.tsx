@@ -81,6 +81,7 @@ export default function Chat({
   const channelNameRef = useRef<string | null>(null) // 현재 채널명 (cleanup용)
   const manualCloseRef = useRef<boolean>(false) // 수동 종료 플래그 (A번 수정안)
   const pendingEventsRef = useRef<BroadcastEnvelope<ChatMessagePayload>[]>([]) // 초기 로드 중 이벤트 버퍼링 (해결책.md A안)
+  const seenMidRef = useRef<Set<string>>(new Set()) // envelope 단위 중복 제거 (해결책.md 3번)
   // Supabase 클라이언트를 useMemo로 명시적 고정 (해결책.md 권장사항)
   const supabase = useMemo(() => createClientSupabase(), [])
   
@@ -499,6 +500,7 @@ export default function Chat({
       lastWebinarIdRef.current = webinarId
       reconnectTriesRef.current = 0 // webinarId 변경 시 재시도 횟수 리셋
       pendingEventsRef.current = [] // 해결책.md: webinarId 변경 시 버퍼 초기화
+      seenMidRef.current.clear() // webinarId 변경 시 중복 체크 Set 초기화
     }
     
     // 초기 로드는 한 번만 실행 (재연결 시에는 메시지 유지)
@@ -572,6 +574,23 @@ export default function Chat({
           if (fallbackOn) {
             console.log('✅ 실시간 이벤트 수신, 폴백 폴링 비활성화')
             setFallbackOn(false)
+          }
+          
+          // 해결책.md 3번: envelope 단위 중복 제거 (mid 기반)
+          if (env?.mid && typeof env.mid === 'string') {
+            const seen = seenMidRef.current
+            if (seen.has(env.mid)) {
+              console.log('중복 envelope(mid) 무시:', env.mid)
+              return
+            }
+            seen.add(env.mid)
+            // 메모리 보호 (최대 2000개만 유지)
+            if (seen.size > 2000) {
+              const first = seen.values().next().value
+              if (first) {
+                seen.delete(first)
+              }
+            }
           }
           
           // 이벤트 타입별 처리
@@ -652,22 +671,19 @@ export default function Chat({
               
               fetchProfile().then((profileWithDisplayName) => {
                 setMessages((prev) => {
-                  // 현재 메시지가 없으면 무시 (초기 로드 전)
-                  if (prev.length === 0) {
-                    return prev
-                  }
+                  // 해결책.md 1번: prev.length === 0 가드 제거 (첫 메시지 누락 방지)
                   
-                  // 중복 방지: 이미 같은 ID나 client_msg_id가 있으면 무시 (우선 체크)
+                  // 해결책.md 2번: 중복 방지 먼저 체크 (id / client_msg_id)
                   if (prev.some(m => {
                     // ID로 중복 확인
                     if (m.id === newMsg.id) return true
                     // client_msg_id로 중복 확인 (Optimistic 메시지와 실제 메시지 매칭)
                     if (newMsg.client_msg_id && m.client_msg_id === newMsg.client_msg_id) return true
-                return false
-              })) {
-                console.log('중복 메시지 무시 (Realtime):', newMsg.id, newMsg.client_msg_id)
-                return prev
-              }
+                    return false
+                  })) {
+                    console.log('중복 메시지 무시 (Realtime):', newMsg.id, newMsg.client_msg_id)
+                    return prev
+                  }
               
               // client_msg_id로 optimistic 메시지 정확 교체
               const optimisticIndex = prev.findIndex(m => {
@@ -700,22 +716,35 @@ export default function Chat({
                 return updated
               }
               
-              // 해결책.md: 시간 기반 필터링 (엄격히 과거만 버림, 동일 시각 허용)
-              // 초기 로드 직후 2초 이내에는 시간 비교를 하지 않음
-              const timeSinceInitialLoad = Date.now() - initialLoadTimeRef.current
-              const shouldCheckTime = timeSinceInitialLoad > 2000 // 2초 이후에만 시간 체크
+              // 해결책.md 2번: "과거" 판정은 id 우선, 그다음 created_at
+              const prevMaxId = prev.reduce((acc, m) => 
+                typeof m.id === 'number' ? Math.max(acc, m.id) : acc, 
+                lastMessageIdRef.current
+              )
               
-              if (shouldCheckTime) {
-                // 현재 표시된 메시지 중 가장 최신 메시지 찾기
-                const latestMsg = prev[prev.length - 1]
-                if (latestMsg && latestMsg.created_at) {
-                  const latestTime = new Date(latestMsg.created_at).getTime()
-                  const newMsgTime = new Date(newMsg.created_at).getTime()
-                  
-                  // 해결책.md: <= → < 로 변경 (동일 시각 허용, 엄격히 과거만 버림)
-                  if (newMsgTime < latestTime) {
-                    console.log('과거 메시지 무시 (Realtime):', newMsg.created_at, 'vs', latestMsg.created_at)
-                    return prev
+              // id가 있으면 id 기준
+              if (typeof newMsg.id === 'number') {
+                if (newMsg.id <= prevMaxId) {
+                  console.log('과거 메시지(SEQ) 무시:', newMsg.id, '<=', prevMaxId)
+                  return prev
+                }
+              } else {
+                // id 없을 때만 created_at 보조 비교 (strict < 만 과거로 간주)
+                // 초기 로드 직후 2초 이내에는 시간 비교를 하지 않음
+                const timeSinceInitialLoad = Date.now() - initialLoadTimeRef.current
+                const shouldCheckTime = timeSinceInitialLoad > 2000 // 2초 이후에만 시간 체크
+                
+                if (shouldCheckTime && prev.length > 0) {
+                  const latestMsg = prev[prev.length - 1]
+                  if (latestMsg && latestMsg.created_at) {
+                    const latestTime = new Date(latestMsg.created_at).getTime()
+                    const newMsgTime = new Date(newMsg.created_at).getTime()
+                    
+                    // 해결책.md: <= → < 로 변경 (동일 시각 허용, 엄격히 과거만 버림)
+                    if (newMsgTime < latestTime) {
+                      console.log('과거 메시지(TS) 무시:', newMsg.created_at, '<', latestMsg.created_at)
+                      return prev
+                    }
                   }
                 }
               }
@@ -735,7 +764,7 @@ export default function Chat({
                 new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
               )
               
-              // 해결책.md: lastMessageIdRef 갱신
+              // 해결책.md 2번: lastMessageIdRef 갱신 (실시간/폴백 공용 커서)
               if (typeof newMsg.id === 'number') {
                 lastMessageIdRef.current = Math.max(lastMessageIdRef.current, newMsg.id)
               }
@@ -756,12 +785,9 @@ export default function Chat({
                 console.error('프로필 조회 오류:', error)
                 // 프로필 없이도 메시지 추가
                 setMessages((prev) => {
-                  // 현재 메시지가 없으면 무시
-                  if (prev.length === 0) {
-                    return prev
-                  }
+                  // 해결책.md 1번: prev.length === 0 가드 제거 (첫 메시지 누락 방지)
                   
-                  // 중복 방지: 이미 같은 ID나 client_msg_id가 있으면 무시 (우선 체크)
+                  // 해결책.md 2번: 중복 방지 먼저 체크 (id / client_msg_id)
                   if (prev.some(m => {
                     if (m.id === newMsg.id) return true
                     if (newMsg.client_msg_id && m.client_msg_id === newMsg.client_msg_id) return true
@@ -771,21 +797,34 @@ export default function Chat({
                     return prev
                   }
                   
-                  // 해결책.md: 시간 기반 필터링 (엄격히 과거만 버림, 동일 시각 허용)
-                  const timeSinceInitialLoad = Date.now() - initialLoadTimeRef.current
-                  const shouldCheckTime = timeSinceInitialLoad > 2000
+                  // 해결책.md 2번: "과거" 판정은 id 우선, 그다음 created_at
+                  const prevMaxId = prev.reduce((acc, m) => 
+                    typeof m.id === 'number' ? Math.max(acc, m.id) : acc, 
+                    lastMessageIdRef.current
+                  )
                   
-                  if (shouldCheckTime) {
-                    // 현재 표시된 메시지 중 가장 최신 메시지 찾기
-                    const latestMsg = prev[prev.length - 1]
-                    if (latestMsg && latestMsg.created_at) {
-                      const latestTime = new Date(latestMsg.created_at).getTime()
-                      const newMsgTime = new Date(newMsg.created_at).getTime()
-                      
-                      // 해결책.md: <= → < 로 변경 (동일 시각 허용, 엄격히 과거만 버림)
-                      if (newMsgTime < latestTime) {
-                        console.log('과거 메시지 무시 (Realtime, 프로필 오류):', newMsg.created_at, 'vs', latestMsg.created_at)
-                        return prev
+                  // id가 있으면 id 기준
+                  if (typeof newMsg.id === 'number') {
+                    if (newMsg.id <= prevMaxId) {
+                      console.log('과거 메시지(SEQ) 무시 (프로필 오류):', newMsg.id, '<=', prevMaxId)
+                      return prev
+                    }
+                  } else {
+                    // id 없을 때만 created_at 보조 비교 (strict < 만 과거로 간주)
+                    const timeSinceInitialLoad = Date.now() - initialLoadTimeRef.current
+                    const shouldCheckTime = timeSinceInitialLoad > 2000
+                    
+                    if (shouldCheckTime && prev.length > 0) {
+                      const latestMsg = prev[prev.length - 1]
+                      if (latestMsg && latestMsg.created_at) {
+                        const latestTime = new Date(latestMsg.created_at).getTime()
+                        const newMsgTime = new Date(newMsg.created_at).getTime()
+                        
+                        // 해결책.md: <= → < 로 변경 (동일 시각 허용, 엄격히 과거만 버림)
+                        if (newMsgTime < latestTime) {
+                          console.log('과거 메시지(TS) 무시 (프로필 오류):', newMsg.created_at, '<', latestMsg.created_at)
+                          return prev
+                        }
                       }
                     }
                   }
@@ -815,7 +854,7 @@ export default function Chat({
                     new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
                   )
                   
-                  // 해결책.md: lastMessageIdRef 갱신
+                  // 해결책.md 2번: lastMessageIdRef 갱신 (실시간/폴백 공용 커서)
                   if (typeof newMsg.id === 'number') {
                     lastMessageIdRef.current = Math.max(lastMessageIdRef.current, newMsg.id)
                   }
@@ -1149,12 +1188,13 @@ export default function Chat({
   
   // C번 수정안: 헬스체크를 채널 상태 기준으로 변경
   // "이벤트 부재" 대신 "채널 상태"로 판단하여 조용한 시간대에 불필요한 폴백 방지
+  // 해결책.md 4번: 헬스체크 임계치 완화 (3초 → 30초)
   useEffect(() => {
     const healthCheckInterval = setInterval(() => {
-      // 초기 로드 후 3초 이내에는 헬스체크 비활성화
+      // 초기 로드 후 10초 이내에는 헬스체크 비활성화 (해결책.md: 3초 → 10초)
       const timeSinceInitialLoad = Date.now() - initialLoadTimeRef.current
-      if (timeSinceInitialLoad < 3000) {
-        return // 초기 로드 후 3초 이내에는 헬스체크 건너뛰기
+      if (timeSinceInitialLoad < 10000) {
+        return // 초기 로드 후 10초 이내에는 헬스체크 건너뛰기
       }
       
       // 채널 상태 확인 (C번 수정안)
@@ -1170,7 +1210,7 @@ export default function Chat({
         })
         setFallbackOn(true)
       }
-    }, 3000) // 3초마다 체크 (채널 상태는 자주 확인할 필요 없음)
+    }, 5000) // 해결책.md 4번: 5초마다 체크 (3초 → 5초로 완화)
     
     return () => clearInterval(healthCheckInterval)
   }, [fallbackOn])
