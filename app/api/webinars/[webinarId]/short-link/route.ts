@@ -82,7 +82,7 @@ export async function POST(
       .single()
 
     if (existingLink) {
-      const shortUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://must.ai.kr'}/webinar/${existingLink.code}`
+      const shortUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://must.ai.kr'}/s/${existingLink.code}`
       return NextResponse.json({
         code: existingLink.code,
         shortUrl,
@@ -122,7 +122,7 @@ export async function POST(
       )
     }
 
-    const shortUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://must.ai.kr'}/webinar/${savedLink.code}`
+    const shortUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://must.ai.kr'}/s/${savedLink.code}`
 
     return NextResponse.json({
       code: savedLink.code,
