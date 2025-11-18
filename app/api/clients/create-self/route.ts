@@ -7,7 +7,7 @@ export const runtime = 'nodejs'
 
 export async function POST(req: Request) {
   try {
-    const { name, userId, inviteToken } = await req.json()
+    const { name, userId, inviteToken, displayName, email } = await req.json()
     
     if (!name || !userId || !inviteToken) {
       return NextResponse.json(
@@ -18,18 +18,92 @@ export async function POST(req: Request) {
     
     const admin = createAdminSupabase()
     
-    // userId가 실제로 존재하는 사용자인지 확인 (회원가입 직후 세션이 없을 수 있음)
-    const { data: profile } = await admin
+    // 프로필 확인 및 생성 (트리거가 늦게 실행될 수 있으므로 직접 생성)
+    let { data: profile } = await admin
       .from('profiles')
-      .select('id, email')
+      .select('id, email, display_name')
       .eq('id', userId)
       .maybeSingle()
     
     if (!profile) {
-      return NextResponse.json(
-        { error: 'User not found. Please try signing up again.' },
-        { status: 404 }
-      )
+      // 프로필이 없으면 생성 (최대 2초 대기 후 재시도)
+      for (let i = 0; i < 20; i++) {
+        const { data: existingProfile } = await admin
+          .from('profiles')
+          .select('id, email, display_name')
+          .eq('id', userId)
+          .maybeSingle()
+        
+        if (existingProfile) {
+          profile = existingProfile
+          break
+        }
+        await new Promise(resolve => setTimeout(resolve, 100))
+      }
+      
+      // 여전히 프로필이 없으면 직접 생성
+      if (!profile) {
+        // auth.users에서 이메일 가져오기
+        const { data: authUser } = await admin.auth.admin.getUserById(userId)
+        
+        const { error: createError } = await admin
+          .from('profiles')
+          .insert({
+            id: userId,
+            email: authUser?.user?.email || null,
+            display_name: authUser?.user?.user_metadata?.display_name || null,
+          })
+        
+        if (createError) {
+          // 이미 존재하는 경우 무시 (race condition)
+          if (createError.code !== '23505') {
+            return NextResponse.json(
+              { error: `프로필 생성 실패: ${createError.message}` },
+              { status: 500 }
+            )
+          }
+        }
+        
+        // 생성 후 다시 조회
+        const { data: newProfile } = await admin
+          .from('profiles')
+          .select('id, email, display_name')
+          .eq('id', userId)
+          .single()
+        
+        if (!newProfile) {
+          return NextResponse.json(
+            { error: '프로필 생성에 실패했습니다. 잠시 후 다시 시도해주세요.' },
+            { status: 500 }
+          )
+        }
+        
+        profile = newProfile
+      }
+    }
+    
+    // 프로필 업데이트 (display_name, email)
+    // 클라이언트에서 전달받은 정보 우선, 없으면 auth.users에서 가져오기
+    const { data: authUser } = await admin.auth.admin.getUserById(userId)
+    const updateData: { display_name?: string | null; email?: string | null } = {}
+    
+    if (displayName) {
+      updateData.display_name = displayName
+    } else if (authUser?.user?.user_metadata?.display_name) {
+      updateData.display_name = authUser.user.user_metadata.display_name
+    }
+    
+    if (email) {
+      updateData.email = email
+    } else if (authUser?.user?.email) {
+      updateData.email = authUser.user.email
+    }
+    
+    if (Object.keys(updateData).length > 0) {
+      await admin
+        .from('profiles')
+        .update(updateData)
+        .eq('id', userId)
     }
     
     // 초대 토큰 검증

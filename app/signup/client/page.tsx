@@ -79,45 +79,8 @@ function ClientSignupForm() {
       if (authError) throw authError
       if (!authData.user) throw new Error('사용자 생성 실패')
       
-      // 2. 프로필 생성/업데이트 (트리거로 자동 생성되지만 확인 필요)
-      // 프로필이 생성될 때까지 최대 5초 대기
-      let profileExists = false
-      for (let i = 0; i < 50; i++) {
-        const { data: existingProfile } = await supabase
-          .from('profiles')
-          .select('id')
-          .eq('id', authData.user.id)
-          .maybeSingle()
-        
-        if (existingProfile) {
-          profileExists = true
-          break
-        }
-        await new Promise(resolve => setTimeout(resolve, 100))
-      }
-      
-      if (!profileExists) {
-        throw new Error('프로필 생성에 실패했습니다. 잠시 후 다시 시도해주세요.')
-      }
-      
-      // 프로필 업데이트
-      const updateQuery = (supabase
-        .from('profiles') as any)
-        .update({
-          display_name: formData.displayName,
-          email: formData.email,
-        })
-        .eq('id', authData.user.id)
-      
-      const { error: profileError } = await updateQuery
-      
-      if (profileError) {
-        console.warn('프로필 업데이트 실패:', profileError)
-        // 프로필 업데이트 실패해도 계속 진행 (이미 생성되어 있을 수 있음)
-      }
-      
-      // 3. 클라이언트 생성 (초대 토큰 사용)
-      // 이메일 확인 여부와 관계없이 진행 (DB에는 이미 등록되어 있음)
+      // 2. 클라이언트 생성 (초대 토큰 사용)
+      // 프로필 생성은 서버 API에서 처리 (Admin Supabase로 RLS 우회)
       const response = await fetch('/api/clients/create-self', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -125,6 +88,8 @@ function ClientSignupForm() {
           name: formData.clientName,
           userId: authData.user.id,
           inviteToken: inviteToken,
+          displayName: formData.displayName,
+          email: formData.email,
         }),
       })
       
@@ -134,15 +99,13 @@ function ClientSignupForm() {
         throw new Error(result.error || '클라이언트 생성 실패')
       }
       
-      // 성공 시 안내 메시지
+      // 성공 시 로그인 처리
       if (authData.session) {
-        // 이메일 확인이 필요 없는 경우 (설정에 따라)
-        alert('회원가입이 완료되었습니다!')
+        // 세션이 있으면 바로 로그인
         router.push('/')
         router.refresh()
       } else {
-        // 이메일 확인이 필요한 경우
-        alert('회원가입이 완료되었습니다. 이메일을 확인하여 계정을 활성화해주세요.')
+        // 세션이 없으면 로그인 페이지로 이동 (이메일 인증 안내 없음)
         router.push('/login')
       }
     } catch (err: any) {
