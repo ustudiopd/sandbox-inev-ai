@@ -95,7 +95,16 @@ export async function POST(
     const { data: codeResult, error: codeError } = await admin
       .rpc('generate_short_code')
 
-    if (codeError || !codeResult) {
+    if (codeError) {
+      console.error('Short code generation error:', codeError)
+      return NextResponse.json(
+        { error: codeError.message || 'Failed to generate short code' },
+        { status: 500 }
+      )
+    }
+
+    if (!codeResult) {
+      console.error('Short code generation returned null')
       return NextResponse.json(
         { error: 'Failed to generate short code' },
         { status: 500 }
@@ -103,6 +112,14 @@ export async function POST(
     }
 
     const code = codeResult as string
+    
+    if (!code || code.length !== 6) {
+      console.error('Invalid short code generated:', code)
+      return NextResponse.json(
+        { error: 'Invalid short code generated' },
+        { status: 500 }
+      )
+    }
 
     // short_links 테이블에 저장
     const { data: savedLink, error: saveError } = await admin
