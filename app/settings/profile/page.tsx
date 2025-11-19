@@ -19,6 +19,13 @@ export default function ProfileSettingsPage() {
   } | null>(null)
   const [displayName, setDisplayName] = useState('')
   const [nickname, setNickname] = useState('')
+  const [showPasswordChange, setShowPasswordChange] = useState(false)
+  const [currentPassword, setCurrentPassword] = useState('')
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [changingPassword, setChangingPassword] = useState(false)
+  const [passwordError, setPasswordError] = useState('')
+  const [passwordSuccess, setPasswordSuccess] = useState(false)
 
   useEffect(() => {
     loadProfile()
@@ -84,6 +91,66 @@ export default function ProfileSettingsPage() {
       setError(err.message || '프로필 업데이트 중 오류가 발생했습니다')
     } finally {
       setSaving(false)
+    }
+  }
+
+  const handlePasswordChange = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setPasswordError('')
+    setPasswordSuccess(false)
+
+    // 입력 검증
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      setPasswordError('모든 필드를 입력해주세요')
+      return
+    }
+
+    if (newPassword.length < 6) {
+      setPasswordError('새 비밀번호는 최소 6자 이상이어야 합니다')
+      return
+    }
+
+    if (newPassword !== confirmPassword) {
+      setPasswordError('새 비밀번호와 확인 비밀번호가 일치하지 않습니다')
+      return
+    }
+
+    if (currentPassword === newPassword) {
+      setPasswordError('새 비밀번호는 현재 비밀번호와 달라야 합니다')
+      return
+    }
+
+    setChangingPassword(true)
+
+    try {
+      const response = await fetch('/api/profile/change-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          currentPassword,
+          newPassword,
+        }),
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || '비밀번호 변경 실패')
+      }
+
+      setPasswordSuccess(true)
+      setCurrentPassword('')
+      setNewPassword('')
+      setConfirmPassword('')
+      setShowPasswordChange(false)
+      
+      // 3초 후 성공 메시지 숨김
+      setTimeout(() => setPasswordSuccess(false), 3000)
+    } catch (err: any) {
+      console.error('비밀번호 변경 오류:', err)
+      setPasswordError(err.message || '비밀번호 변경 중 오류가 발생했습니다')
+    } finally {
+      setChangingPassword(false)
     }
   }
 
@@ -172,6 +239,123 @@ export default function ProfileSettingsPage() {
               <p className="mt-1 text-sm text-gray-500">
                 채팅에 표시될 닉네임입니다. 입력하지 않으면 이름이 표시됩니다
               </p>
+            </div>
+
+            {/* 비밀번호 변경 섹션 */}
+            <div className="border-t border-gray-200 pt-6">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900">비밀번호 변경</h3>
+                  <p className="text-sm text-gray-500">계정 보안을 위해 정기적으로 비밀번호를 변경하세요</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowPasswordChange(!showPasswordChange)
+                    setPasswordError('')
+                    setPasswordSuccess(false)
+                    setCurrentPassword('')
+                    setNewPassword('')
+                    setConfirmPassword('')
+                  }}
+                  className="px-4 py-2 text-sm font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"
+                >
+                  {showPasswordChange ? '취소' : '비밀번호 변경'}
+                </button>
+              </div>
+
+              {showPasswordChange && (
+                <div className="bg-gray-50 rounded-lg p-6 space-y-4">
+                  {passwordError && (
+                    <div className="p-3 bg-red-50 border-l-4 border-red-500 text-red-700 rounded">
+                      {passwordError}
+                    </div>
+                  )}
+
+                  {passwordSuccess && (
+                    <div className="p-3 bg-green-50 border-l-4 border-green-500 text-green-700 rounded">
+                      비밀번호가 성공적으로 변경되었습니다!
+                    </div>
+                  )}
+
+                  <form onSubmit={handlePasswordChange} className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        현재 비밀번호 <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="password"
+                        value={currentPassword}
+                        onChange={(e) => setCurrentPassword(e.target.value)}
+                        className="w-full px-4 py-3 bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                        placeholder="현재 비밀번호를 입력하세요"
+                        required
+                        disabled={changingPassword}
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        새 비밀번호 <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="password"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        className="w-full px-4 py-3 bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                        placeholder="새 비밀번호를 입력하세요 (최소 6자)"
+                        required
+                        minLength={6}
+                        disabled={changingPassword}
+                      />
+                      <p className="mt-1 text-sm text-gray-500">
+                        최소 6자 이상이어야 합니다
+                      </p>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        새 비밀번호 확인 <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="password"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        className="w-full px-4 py-3 bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                        placeholder="새 비밀번호를 다시 입력하세요"
+                        required
+                        minLength={6}
+                        disabled={changingPassword}
+                      />
+                    </div>
+
+                    <div className="flex gap-3">
+                      <button
+                        type="submit"
+                        disabled={changingPassword}
+                        className="px-6 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      >
+                        {changingPassword ? '변경 중...' : '비밀번호 변경'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowPasswordChange(false)
+                          setPasswordError('')
+                          setPasswordSuccess(false)
+                          setCurrentPassword('')
+                          setNewPassword('')
+                          setConfirmPassword('')
+                        }}
+                        disabled={changingPassword}
+                        className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      >
+                        취소
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              )}
             </div>
 
             <div className="flex gap-4 pt-4">
