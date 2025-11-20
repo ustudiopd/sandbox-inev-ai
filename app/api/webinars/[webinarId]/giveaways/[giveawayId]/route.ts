@@ -53,7 +53,7 @@ export async function PUT(
         .eq('user_id', user.id)
         .maybeSingle()
       
-      if (clientMember && ['owner', 'admin', 'operator'].includes(clientMember.role)) {
+      if (clientMember && ['owner', 'admin', 'operator', 'member'].includes(clientMember.role)) {
         hasPermission = true
       } else {
         // 에이전시 멤버십 확인 (owner/admin만 추첨 수정/삭제 가능)
@@ -167,7 +167,7 @@ export async function DELETE(
         .eq('user_id', user.id)
         .maybeSingle()
       
-      if (clientMember && ['owner', 'admin', 'operator'].includes(clientMember.role)) {
+      if (clientMember && ['owner', 'admin', 'operator', 'member'].includes(clientMember.role)) {
         hasPermission = true
       } else {
         // 에이전시 멤버십 확인 (owner/admin만 추첨 수정/삭제 가능)

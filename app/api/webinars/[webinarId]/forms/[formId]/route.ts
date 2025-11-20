@@ -172,7 +172,7 @@ export async function GET(
       } else if (result.type === 'quiz_permission' && 'profile' in result) {
         if (result.profile?.is_super_admin) {
           canViewAnswers = true
-        } else if (result.clientMember && ['owner', 'admin', 'operator'].includes(result.clientMember.role)) {
+        } else if (result.clientMember && ['owner', 'admin', 'operator', 'member'].includes(result.clientMember.role)) {
           canViewAnswers = true
         }
       }
@@ -310,7 +310,7 @@ export async function PUT(
         .eq('user_id', user.id)
         .maybeSingle()
       
-      if (clientMember && ['owner', 'admin', 'operator'].includes(clientMember.role)) {
+      if (clientMember && ['owner', 'admin', 'operator', 'member'].includes(clientMember.role)) {
         hasPermission = true
       }
     }
@@ -442,7 +442,7 @@ export async function DELETE(
         .eq('user_id', user.id)
         .maybeSingle()
       
-      if (clientMember && ['owner', 'admin', 'operator'].includes(clientMember.role)) {
+      if (clientMember && ['owner', 'admin', 'operator', 'member'].includes(clientMember.role)) {
         hasPermission = true
       } else {
         // 에이전시 멤버십 확인 (owner/admin만 삭제 가능)

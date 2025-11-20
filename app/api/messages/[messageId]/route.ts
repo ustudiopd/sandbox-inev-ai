@@ -64,7 +64,7 @@ export async function PATCH(
     if (profile?.is_super_admin) {
       hasPermission = true
     } else {
-      // 2. 클라이언트 멤버십 확인 (owner/admin/operator)
+      // 2. 클라이언트 멤버십 확인 (owner/admin/operator/member)
       const { data: clientMember } = await supabase
         .from('client_members')
         .select('role')
@@ -72,7 +72,7 @@ export async function PATCH(
         .eq('user_id', user.id)
         .maybeSingle()
       
-      if (clientMember && ['owner', 'admin', 'operator'].includes(clientMember.role)) {
+      if (clientMember && ['owner', 'admin', 'operator', 'member'].includes(clientMember.role)) {
         hasPermission = true
       } else {
         // 3. 에이전시 멤버십 확인 (owner/admin)
@@ -207,7 +207,7 @@ export async function DELETE(
     if (profile?.is_super_admin) {
       hasPermission = true
     } else {
-      // 2. 클라이언트 멤버십 확인 (owner/admin/operator)
+      // 2. 클라이언트 멤버십 확인 (owner/admin/operator/member)
       const { data: clientMember } = await supabase
         .from('client_members')
         .select('role')
@@ -215,7 +215,7 @@ export async function DELETE(
         .eq('user_id', user.id)
         .maybeSingle()
       
-      if (clientMember && ['owner', 'admin', 'operator'].includes(clientMember.role)) {
+      if (clientMember && ['owner', 'admin', 'operator', 'member'].includes(clientMember.role)) {
         hasPermission = true
       } else {
         // 3. 에이전시 멤버십 확인 (owner/admin)

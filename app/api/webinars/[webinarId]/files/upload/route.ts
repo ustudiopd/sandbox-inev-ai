@@ -49,7 +49,7 @@ export async function POST(
         .eq('user_id', user.id)
         .maybeSingle()
       
-      if (clientMember && ['owner', 'admin', 'operator'].includes(clientMember.role)) {
+      if (clientMember && ['owner', 'admin', 'operator', 'member'].includes(clientMember.role)) {
         hasPermission = true
       }
     }
