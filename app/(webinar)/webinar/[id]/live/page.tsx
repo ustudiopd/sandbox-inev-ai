@@ -37,8 +37,10 @@ export default async function WebinarLivePage({
     redirect(`/webinar/${id}`)
   }
   
-  // 특정 이메일로 접속 시 자동 관리자 모드 활성화
+  // 사용자 정보 조회
   const { data: { user } } = await supabase.auth.getUser()
+  
+  // 특정 이메일로 접속 시 자동 관리자 모드 활성화
   const isAutoAdminEmail = user && user.email === 'pd@ustudio.co.kr'
   if (isAutoAdminEmail) {
     isAdminMode = true
@@ -57,6 +59,42 @@ export default async function WebinarLivePage({
     if (!registration) {
       redirect(`/webinar/${id}`)
     }
+    
+    // 클라이언트 멤버 또는 에이전시 멤버인 경우 자동으로 운영 권한 부여
+    // (URL 파라미터로 명시적으로 admin=false가 아닌 경우에만)
+    if (searchParamsData?.admin !== 'false') {
+      // JWT app_metadata에서 슈퍼어드민 권한 확인
+      const isSuperAdmin = !!user?.app_metadata?.is_super_admin
+      
+      if (isSuperAdmin) {
+        isAdminMode = true
+      } else {
+        // 클라이언트 멤버십 확인 (Admin Supabase로 RLS 우회)
+        const { data: clientMember } = await admin
+          .from('client_members')
+          .select('role')
+          .eq('client_id', webinar.client_id)
+          .eq('user_id', user.id)
+          .maybeSingle()
+        
+        // 클라이언트 멤버는 모든 역할에서 운영 권한 부여 (owner, admin, operator, member)
+        if (clientMember && ['owner', 'admin', 'operator', 'member'].includes(clientMember.role)) {
+          isAdminMode = true
+        } else {
+          // 에이전시 멤버십 확인 (owner, admin만 운영 권한 부여)
+          const { data: agencyMember } = await admin
+            .from('agency_members')
+            .select('role')
+            .eq('agency_id', webinar.agency_id)
+            .eq('user_id', user.id)
+            .maybeSingle()
+          
+          if (agencyMember && ['owner', 'admin'].includes(agencyMember.role)) {
+            isAdminMode = true
+          }
+        }
+      }
+    }
   }
   
   // 관리자 모드인 경우 권한 확인
@@ -68,31 +106,28 @@ export default async function WebinarLivePage({
     
     // 특정 이메일은 권한 확인 건너뛰기
     if (!isAutoAdminEmail) {
-      // 관리자 권한 확인 (클라이언트 멤버 owner/admin/operator 또는 에이전시 멤버 owner/admin)
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('is_super_admin')
-        .eq('id', user.id)
-        .single()
+      // JWT app_metadata에서 슈퍼어드민 권한 확인
+      const isSuperAdmin = !!user?.app_metadata?.is_super_admin
       
       let hasAdminPermission = false
       
-      if (profile?.is_super_admin) {
+      if (isSuperAdmin) {
         hasAdminPermission = true
       } else {
-        // 클라이언트 멤버십 확인
-        const { data: clientMember } = await supabase
+        // 클라이언트 멤버십 확인 (Admin Supabase로 RLS 우회)
+        const { data: clientMember } = await admin
           .from('client_members')
           .select('role')
           .eq('client_id', webinar.client_id)
           .eq('user_id', user.id)
           .maybeSingle()
         
-        if (clientMember && ['owner', 'admin', 'operator'].includes(clientMember.role)) {
+        // 클라이언트 멤버는 모든 역할에서 운영 권한 부여
+        if (clientMember && ['owner', 'admin', 'operator', 'member'].includes(clientMember.role)) {
           hasAdminPermission = true
         } else {
           // 에이전시 멤버십 확인
-          const { data: agencyMember } = await supabase
+          const { data: agencyMember } = await admin
             .from('agency_members')
             .select('role')
             .eq('agency_id', webinar.agency_id)
