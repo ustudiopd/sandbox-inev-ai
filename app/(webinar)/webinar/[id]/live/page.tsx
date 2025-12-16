@@ -40,6 +40,12 @@ export default async function WebinarLivePage({
   // 사용자 정보 조회
   const { data: { user } } = await supabase.auth.getUser()
   
+  // 이메일 파라미터가 있고 로그인되지 않은 경우, 입장 페이지로 리다이렉트하여 자동 로그인 처리
+  const emailParam = searchParamsData?.email as string | undefined
+  if (emailParam && !user && webinar.access_policy === 'email_auth') {
+    redirect(`/webinar/${id}?email=${encodeURIComponent(emailParam)}`)
+  }
+  
   // 특정 이메일로 접속 시 자동 관리자 모드 활성화
   const isAutoAdminEmail = user && user.email === 'pd@ustudio.co.kr'
   if (isAutoAdminEmail) {

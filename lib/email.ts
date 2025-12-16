@@ -43,7 +43,8 @@ export async function sendWebinarRegistrationEmail(
     }
 
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
-    const entryUrl = `${baseUrl}/webinar/${webinarId}`
+    // 이메일 파라미터를 포함한 입장 링크 (자동 로그인용)
+    const entryUrl = `${baseUrl}/webinar/${webinarId}/live?email=${encodeURIComponent(to)}`
 
     const mailOptions = {
       from: `"모두의특강" <${process.env.SMTP_USER || 'admin@modoolecture.com'}>`,

@@ -45,6 +45,60 @@ export default function WebinarEntry({ webinar }: WebinarEntryProps) {
     const urlParams = new URLSearchParams(window.location.search)
     const type = urlParams.get('type')
     const token = urlParams.get('token')
+    const emailParam = urlParams.get('email')
+    
+    // 이메일 파라미터가 있고 email_auth 정책인 경우 자동 로그인 처리
+    if (emailParam && webinar.access_policy === 'email_auth') {
+      const emailLower = emailParam.toLowerCase().trim()
+      setEmail(emailLower)
+      setMode('email_auth')
+      
+      // 자동 로그인 처리
+      const autoLogin = async () => {
+        setLoading(true)
+        try {
+          const response = await fetch('/api/auth/email-signup', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              email: emailLower,
+              webinarId: webinar.id,
+            }),
+          })
+          
+          const result = await response.json()
+          
+          if (!response.ok) {
+            setError(result.error || '자동 로그인에 실패했습니다')
+            setLoading(false)
+            return
+          }
+          
+          // 바로 로그인 처리
+          if (result.sessionUrl) {
+            window.location.href = result.sessionUrl
+          } else if (result.email && result.password) {
+            // Fallback: 로그인 API 호출
+            const { error: signInError } = await supabase.auth.signInWithPassword({
+              email: result.email,
+              password: result.password,
+            })
+            if (signInError) {
+              setError(signInError.message)
+              setLoading(false)
+              return
+            }
+            window.location.href = `/webinar/${webinar.id}/live`
+          }
+        } catch (err: any) {
+          setError(err.message || '자동 로그인 중 오류가 발생했습니다')
+          setLoading(false)
+        }
+      }
+      
+      autoLogin()
+      return
+    }
     
     // 이메일 인증 완료 후 리다이렉트된 경우
     if ((type === 'signup' || type === 'email_auth') && token) {
