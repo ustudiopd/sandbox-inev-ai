@@ -24,11 +24,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     }
   }
 
-  // 웨비나 정보 조회 (slug 포함, 에러 처리)
-  // slug 필드가 없을 수 있으므로 먼저 기본 필드만 조회
+  // 웨비나 정보 조회 (slug 포함)
   const { data: webinar, error: webinarError } = await admin
     .from('webinars')
-    .select('id, title, description')
+    .select('id, slug, title, description')
     .eq('id', shortLink.webinar_id)
     .single()
 
@@ -36,21 +35,6 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     return {
       title: '웨비나를 찾을 수 없습니다',
     }
-  }
-  
-  // slug 필드가 있는 경우 추가 조회 (에러 무시)
-  try {
-    const { data: webinarWithSlug } = await admin
-      .from('webinars')
-      .select('slug')
-      .eq('id', shortLink.webinar_id)
-      .single()
-    
-    if (webinarWithSlug) {
-      (webinar as any).slug = webinarWithSlug.slug
-    }
-  } catch (err) {
-    // slug 필드가 없으면 무시
   }
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://must.ai.kr'
@@ -78,20 +62,22 @@ export default async function ShortLinkRedirectPage({
   params,
   searchParams 
 }: PageProps) {
-  const { code } = await params
-  const searchParamsData = await searchParams
-  const admin = createAdminSupabase()
+  try {
+    const { code } = await params
+    const searchParamsData = await searchParams
+    const admin = createAdminSupabase()
 
-  // 짧은 링크로 웨비나 ID 조회
-  const { data: shortLink, error } = await admin
-    .from('short_links')
-    .select('webinar_id, expires_at')
-    .eq('code', code)
-    .single()
+    // 짧은 링크로 웨비나 ID 조회
+    const { data: shortLink, error } = await admin
+      .from('short_links')
+      .select('webinar_id, expires_at')
+      .eq('code', code)
+      .single()
 
-  if (error || !shortLink) {
-    redirect('/')
-  }
+    if (error || !shortLink) {
+      console.error('짧은 링크 조회 실패:', error)
+      redirect('/')
+    }
 
   // 만료 시간 확인
   if (shortLink.expires_at) {
@@ -101,42 +87,21 @@ export default async function ShortLinkRedirectPage({
     }
   }
 
-  // 웨비나 정보 조회 (slug 포함, 에러 처리)
-  // slug 필드가 없을 수 있으므로 먼저 id만 조회 시도
-  let webinar: { id: string; slug?: string | null } | null = null
-  
-  // slug 필드가 있는지 확인하기 위해 먼저 id만 조회
-  const { data: webinarData, error: webinarError } = await admin
+  // 웨비나 정보 조회 (slug 포함)
+  // slug 필드가 null일 수 있으므로 직접 조회
+  const { data: webinar, error: webinarError } = await admin
     .from('webinars')
-    .select('id')
+    .select('id, slug')
     .eq('id', shortLink.webinar_id)
     .single()
 
-  if (webinarError || !webinarData) {
+  if (webinarError || !webinar) {
     console.error('웨비나 조회 실패:', webinarError)
     redirect('/')
   }
 
-  // slug 필드가 있는 경우 추가 조회
-  try {
-    const { data: webinarWithSlug } = await admin
-      .from('webinars')
-      .select('id, slug')
-      .eq('id', shortLink.webinar_id)
-      .single()
-    
-    webinar = webinarWithSlug || webinarData
-  } catch (err) {
-    // slug 필드가 없으면 id만 사용
-    webinar = webinarData
-  }
-
-  if (!webinar) {
-    redirect('/')
-  }
-
   // slug가 있으면 slug를 사용하고, 없으면 id를 사용
-  const webinarSlug = (webinar as any).slug || webinar.id
+  const webinarSlug = webinar.slug || webinar.id
 
   // URL 파라미터 유지 (이메일 등)
   const queryParams = new URLSearchParams()
@@ -160,12 +125,16 @@ export default async function ShortLinkRedirectPage({
     }
   })
 
-  const queryString = queryParams.toString()
-  const redirectUrl = queryString 
-    ? `/webinar/${webinarSlug}?${queryString}`
-    : `/webinar/${webinarSlug}`
+    const queryString = queryParams.toString()
+    const redirectUrl = queryString 
+      ? `/webinar/${webinarSlug}?${queryString}`
+      : `/webinar/${webinarSlug}`
 
-  // slug로 리다이렉트 (파라미터 포함)
-  redirect(redirectUrl)
+    // slug로 리다이렉트 (파라미터 포함)
+    redirect(redirectUrl)
+  } catch (err: any) {
+    console.error('ShortLinkRedirectPage 에러:', err)
+    redirect('/')
+  }
 }
 
