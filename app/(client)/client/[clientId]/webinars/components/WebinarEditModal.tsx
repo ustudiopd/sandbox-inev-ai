@@ -253,23 +253,57 @@ export default function WebinarEditModal({
                 <option value="invite_only">초대 전용</option>
               </select>
               {formData.accessPolicy === 'email_auth' && (
-                <div className="mt-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    등록된 이메일 목록 (한 줄에 하나씩)
-                  </label>
-                  <textarea
-                    value={formData.allowedEmails.join('\n')}
-                    onChange={(e) => {
-                      const emails = e.target.value.split('\n').map(email => email.trim()).filter(email => email)
-                      setFormData({ ...formData, allowedEmails: emails })
-                    }}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="user1@example.com&#10;user2@example.com&#10;user3@example.com"
-                    rows={6}
-                  />
-                  <p className="mt-1 text-sm text-gray-500">
-                    등록된 이메일 주소만 이 웨비나에 입장할 수 있습니다.
-                  </p>
+                <div className="mt-4 space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      등록된 이메일 목록 (한 줄에 하나씩)
+                    </label>
+                    <textarea
+                      value={formData.allowedEmails.join('\n')}
+                      onChange={(e) => {
+                        const emails = e.target.value.split('\n').map(email => email.trim()).filter(email => email)
+                        setFormData({ ...formData, allowedEmails: emails })
+                      }}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="user1@example.com&#10;user2@example.com&#10;user3@example.com"
+                      rows={6}
+                    />
+                    <p className="mt-1 text-sm text-gray-500">
+                      등록된 이메일 주소만 이 웨비나에 입장할 수 있습니다.
+                    </p>
+                  </div>
+                  
+                  {/* 등록된 이메일별 접속 링크 */}
+                  {formData.allowedEmails.length > 0 && (
+                    <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+                      <label className="block text-sm font-medium text-gray-700 mb-3">
+                        등록된 이메일별 접속 링크
+                      </label>
+                      <div className="space-y-2 max-h-60 overflow-y-auto">
+                        {formData.allowedEmails.map((email, index) => {
+                          const accessLink = `${process.env.NEXT_PUBLIC_APP_URL || 'https://must.ai.kr'}/webinar/${webinar.id}?email=${encodeURIComponent(email)}`
+                          return (
+                            <div key={index} className="flex items-center gap-2 p-2 bg-white rounded border border-gray-200">
+                              <div className="flex-1 min-w-0">
+                                <div className="text-xs text-gray-600 mb-1">{email}</div>
+                                <div className="text-xs text-blue-600 break-all">{accessLink}</div>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  navigator.clipboard.writeText(accessLink)
+                                  alert('접속 링크가 클립보드에 복사되었습니다.')
+                                }}
+                                className="px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors whitespace-nowrap"
+                              >
+                                복사
+                              </button>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

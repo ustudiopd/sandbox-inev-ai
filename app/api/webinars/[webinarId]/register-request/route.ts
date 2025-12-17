@@ -35,7 +35,7 @@ export async function POST(
     // 웨비나 정보 확인
     const { data: webinar, error: webinarError } = await admin
       .from('webinars')
-      .select('id, title, access_policy')
+      .select('id, title, access_policy, start_time')
       .eq('id', webinarId)
       .single()
     
@@ -93,7 +93,8 @@ export async function POST(
         email.trim(),
         displayName.trim(),
         webinar.title || '웨비나',
-        webinarId
+        webinarId,
+        webinar.start_time
       )
     } catch (emailError) {
       console.error('이메일 발송 실패 (등록은 성공):', emailError)
