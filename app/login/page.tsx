@@ -96,8 +96,11 @@ export default function LoginPage() {
             {loading ? '로그인 중...' : '로그인'}
           </button>
         </form>
-        <div className="mt-6 text-center">
-          <a href="/signup" className="text-sm text-blue-600 hover:text-blue-700 hover:underline transition-colors">
+        <div className="mt-6 text-center space-y-2">
+          <a href="/reset-password" className="block text-sm text-blue-600 hover:text-blue-700 hover:underline transition-colors">
+            비밀번호를 잊으셨나요?
+          </a>
+          <a href="/signup" className="block text-sm text-gray-600 hover:text-gray-700 hover:underline transition-colors">
             계정이 없으신가요? 회원가입
           </a>
         </div>

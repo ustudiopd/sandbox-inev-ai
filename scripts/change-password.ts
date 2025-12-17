@@ -9,6 +9,13 @@
  *   SUPABASE_SERVICE_ROLE_KEY (필수)
  */
 
+import dotenv from 'dotenv'
+import { config } from 'dotenv'
+import { resolve } from 'path'
+
+// .env.local 파일 로드
+config({ path: resolve(process.cwd(), '.env.local') })
+
 import { createClient } from '@supabase/supabase-js'
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL!
