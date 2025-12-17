@@ -121,13 +121,15 @@ export default async function ShortLinkRedirectPage({
 
     // slug가 있으면 slug를 사용하고, 없으면 id를 사용
     // slug가 null이거나 빈 문자열이면 id 사용
-    const webinarSlug = (webinar.slug && webinar.slug.trim()) ? webinar.slug : webinar.id
+    // 임시: 한글 slug 문제 해결 전까지 UUID 사용
+    const webinarSlug = webinar.id // 임시로 UUID 사용
     
     console.log('[ShortLink] 최종 slug 결정:', {
       code,
       webinarId: webinar.id,
       slug: webinar.slug,
-      finalSlug: webinarSlug
+      finalSlug: webinarSlug,
+      note: '임시로 UUID 사용'
     })
 
     // URL 파라미터 유지 (이메일 등)
@@ -153,7 +155,7 @@ export default async function ShortLinkRedirectPage({
     })
 
     const queryString = queryParams.toString()
-    // Next.js redirect는 자동으로 URL 인코딩하므로, slug를 그대로 사용
+    // UUID로 리다이렉트 (임시)
     const redirectUrl = queryString 
       ? `/webinar/${webinarSlug}?${queryString}`
       : `/webinar/${webinarSlug}`
@@ -161,11 +163,11 @@ export default async function ShortLinkRedirectPage({
     console.log('[ShortLink] 리다이렉트 실행:', {
       code,
       redirectUrl,
-      slug: webinarSlug,
+      webinarId: webinarSlug,
       queryString
     })
 
-    // slug로 리다이렉트 (파라미터 포함, Next.js가 자동 인코딩)
+    // UUID로 리다이렉트 (파라미터 포함)
     redirect(redirectUrl)
   } catch (err: any) {
     console.error('[ShortLink] 예외 발생:', {
