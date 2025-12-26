@@ -574,6 +574,24 @@
   - 구현 우선순위 3단계로 구분 (Phase 1-3)
   - 데이터베이스 최적화, 성능 고려사항, 보안 고려사항 포함
 
+## [2025-01-XX] 사이드바 및 레이아웃 개선 완료
+- ✅ 사이드바 접기 기능 완전 제거
+  - 접기/펼치기 버튼 제거 (항상 펼쳐진 상태 유지)
+  - SidebarContext에서 isCollapsed 항상 false로 고정
+  - sidebarWidth 항상 256px로 고정
+  - SidebarTree에서 접힘 상태 관련 코드 모두 제거
+- ✅ 운영콘솔 레이아웃 개선
+  - 사이드바와 콘텐츠 사이 회색 공간 제거
+  - LayoutWrapper에서 main 태그 너비를 `calc(100vw - ${sidebarWidth}px)`로 계산
+  - 콘텐츠 가운데 정렬 개선 (`max-w-7xl mx-auto` 정상 작동)
+  - 배경색을 LayoutWrapper의 main 태그로 이동하여 일관성 유지
+- ✅ 중복 레이아웃 래핑 제거
+  - `app/(admin)/layout.tsx`에서 중복 LayoutWrapper 제거
+  - `app/layout.tsx`에서만 LayoutWrapper 사용하도록 정리
+- ✅ 대시보드와 운영콘솔 레이아웃 일관성 유지
+  - 동일한 패딩 및 최대 너비 설정 (`p-8`, `max-w-7xl mx-auto`)
+  - 사이드바 너비에 맞춘 콘텐츠 영역 자동 조정
+
 ## 남은 작업
 
 ### Phase 3 - 웨비나 및 실시간 기능 (대부분 완료)
