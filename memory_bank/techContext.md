@@ -1,18 +1,22 @@
 # 기술 스택 정보 (Tech Context)
 
+## 서비스 정보
+- **서비스 이름**: EventFlow
+- **도메인**: EventFlow.kr
+
 ## 1. 프레임워크 및 라이브러리  
 
 ### 언어 및 버전
 - **TypeScript**: 최신 버전
 - **Node.js**: 18.x 이상 (Vercel Serverless Functions 요구사항)
-- **React**: 18.x (Next.js 내장)
+- **React**: 19.2.3 (Next.js 16 요구사항)
 
 ### 핵심 프레임워크
-- **Next.js**: 15.5.6 (App Router 사용)
+- **Next.js**: 16.0.10 (App Router 사용, Turbopack)
   - Server Components 기본
   - Route Handlers (API Routes)
   - Server Actions (미사용)
-- **React**: 18.x
+- **React**: 19.2.3
   - 함수형 컴포넌트
   - Hooks (useState, useEffect, useRef 등)
   - React Portal (전체화면 기능)
@@ -46,8 +50,12 @@
 - **next/navigation**: Next.js 네비게이션 (useRouter, useParams 등)
 - **react-dom**: React Portal 사용
 
-### 차트 라이브러리 (예정)
-- **Recharts**: 데이터 시각화 (리포트 페이지에 사용 예정)
+### 차트 라이브러리
+- **Recharts**: 데이터 시각화 (리포트 페이지 및 통계 대시보드에 사용 중)
+  - 라인 차트: 시간대별 추이
+  - 바 차트: 분포, 비교
+  - 파이 차트: 비율 표시
+  - 영역 차트: 누적 통계
 
 ## 2. 개발 환경  
 
@@ -157,11 +165,12 @@
 ### 주요 의존성
 ```json
 {
-  "next": "15.5.6",
-  "react": "^18.x",
-  "react-dom": "^18.x",
+  "next": "16.0.10",
+  "react": "^19.2.3",
+  "react-dom": "^19.2.3",
   "@supabase/ssr": "최신",
-  "@supabase/supabase-js": "최신"
+  "@supabase/supabase-js": "최신",
+  "recharts": "최신"
 }
 ```
 

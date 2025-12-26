@@ -38,8 +38,8 @@ export default function ConsoleView({ webinar, userRole }: ConsoleViewProps) {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
       {/* 헤더 */}
-      <header className="bg-white border-b border-gray-200 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 py-4">
+      <header className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-10">
+        <div className="max-w-full mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div>
               <div className="flex items-center gap-3">
@@ -54,6 +54,12 @@ export default function ConsoleView({ webinar, userRole }: ConsoleViewProps) {
               <p className="text-sm text-gray-600 mt-1">{webinar.title}</p>
             </div>
             <div className="flex items-center gap-3">
+              <Link
+                href={`/webinar/${webinarSlug}/stats`}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium whitespace-nowrap"
+              >
+                📊 통계
+              </Link>
               <Link
                 href={`/webinar/${webinarSlug}/live?admin=true&from=console`}
                 className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium whitespace-nowrap"
@@ -72,7 +78,7 @@ export default function ConsoleView({ webinar, userRole }: ConsoleViewProps) {
         </div>
       </header>
       
-      <div className="max-w-7xl mx-auto px-4 py-6">
+      <div className="max-w-full mx-auto px-4 py-6">
         {/* 탭 네비게이션 */}
         <div className="bg-white rounded-xl shadow-lg mb-6">
           <div className="border-b border-gray-200 flex">

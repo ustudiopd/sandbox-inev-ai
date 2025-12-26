@@ -42,18 +42,18 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   return {
     title: webinar.title || '웨비나',
-    description: webinar.description || 'EventLive 웨비나에 참여하세요',
+    description: webinar.description || 'EventFlow 웨비나에 참여하세요',
     openGraph: {
       title: webinar.title || '웨비나',
-      description: webinar.description || 'EventLive 웨비나에 참여하세요',
+      description: webinar.description || 'EventFlow 웨비나에 참여하세요',
       url: shortUrl,
-      siteName: 'EventLive',
+      siteName: 'EventFlow',
       type: 'website',
     },
     twitter: {
       card: 'summary_large_image',
       title: webinar.title || '웨비나',
-      description: webinar.description || 'EventLive 웨비나에 참여하세요',
+      description: webinar.description || 'EventFlow 웨비나에 참여하세요',
     },
   }
 }

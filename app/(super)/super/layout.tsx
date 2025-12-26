@@ -1,5 +1,6 @@
 import { requireSuperAdmin } from '@/lib/auth/guards'
 import SuperSidebar from './_components/SuperSidebar'
+import WorkspaceSwitcher from '@/components/layout/WorkspaceSwitcher'
 
 export default async function SuperLayout({
   children,

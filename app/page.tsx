@@ -112,7 +112,7 @@ export default function Home() {
       <div className="container mx-auto px-4 py-20">
         <div className="max-w-4xl mx-auto text-center">
           <h1 className="text-6xl font-bold mb-6 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-            EventLive.ai
+            EventFlow
           </h1>
           {isSuperAdmin && (
             <div className="mt-6">

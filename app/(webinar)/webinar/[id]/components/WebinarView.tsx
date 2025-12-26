@@ -12,6 +12,7 @@ import PresenceBar from '@/components/webinar/PresenceBar'
 import FormWidget from '@/components/webinar/FormWidget'
 import FileDownload from '@/components/webinar/FileDownload'
 import GiveawayWidget from '@/components/webinar/GiveawayWidget'
+import { usePresencePing } from '@/components/webinar/hooks/usePresencePing'
 
 interface Webinar {
   id: string
@@ -83,6 +84,9 @@ export default function WebinarView({ webinar, isAdminMode = false }: WebinarVie
   useEffect(() => {
     setMounted(true)
   }, [])
+
+  // Presence ping (접속 통계 수집)
+  usePresencePing(webinar.id)
   
   // 오픈된 폼, 추첨, 파일 로드
   useEffect(() => {

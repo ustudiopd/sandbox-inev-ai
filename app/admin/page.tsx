@@ -96,13 +96,13 @@ export default function AdminPage() {
       <div className="container mx-auto px-4 py-20">
         <div className="max-w-4xl mx-auto text-center mb-20">
           <h1 className="text-6xl font-bold mb-6 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-            EventLive.ai
+            EventFlow
           </h1>
         </div>
         
         <div className="max-w-[1600px] mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* 왼쪽: EventLive.ai 소개 */}
+            {/* 왼쪽: EventFlow 소개 */}
             <div className="flex flex-col justify-center">
               <div className="bg-white rounded-xl shadow-lg p-8">
                 <h2 className="text-2xl font-bold mb-4 text-gray-800">플랫폼 소개</h2>

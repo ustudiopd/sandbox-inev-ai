@@ -63,7 +63,7 @@ export default function LoginPage() {
           <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
             로그인
           </h1>
-          <p className="text-gray-600">EventLive.ai에 오신 것을 환영합니다</p>
+          <p className="text-gray-600">EventFlow에 오신 것을 환영합니다</p>
         </div>
         <form onSubmit={handleLogin} className="space-y-6">
           <div>

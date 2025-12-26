@@ -66,6 +66,7 @@ export default async function ConsolePage({
     console.log('[Console] 권한 체크:', {
       userId: user.id,
       webinarClientId: webinar.client_id,
+      webinarAgencyId: webinar.agency_id,
       clientMember,
       clientMemberError,
     })
@@ -75,17 +76,47 @@ export default async function ConsolePage({
       hasPermission = true
       userRole = clientMember.role
     } else {
-      // 에이전시 멤버십 확인 (owner/admin만 운영 콘솔 접근 가능)
-      const { data: agencyMember } = await admin
-        .from('agency_members')
-        .select('role')
-        .eq('agency_id', webinar.agency_id)
-        .eq('user_id', user.id)
-        .maybeSingle()
-      
-      if (agencyMember && ['owner', 'admin'].includes(agencyMember.role)) {
-        hasPermission = true
-        userRole = agencyMember.role
+      // 클라이언트 멤버가 없으면 에이전시 멤버십 확인
+      // 클라이언트가 속한 에이전시의 멤버인지 확인 (requireClientMember와 동일한 로직)
+      if (webinar.agency_id) {
+        const { data: agencyMember } = await admin
+          .from('agency_members')
+          .select('role')
+          .eq('agency_id', webinar.agency_id)
+          .eq('user_id', user.id)
+          .maybeSingle()
+        
+        console.log('[Console] 에이전시 멤버십 확인:', {
+          agencyId: webinar.agency_id,
+          agencyMember,
+        })
+        
+        // 에이전시 멤버는 owner/admin만 운영 콘솔 접근 가능
+        if (agencyMember && ['owner', 'admin'].includes(agencyMember.role)) {
+          hasPermission = true
+          userRole = agencyMember.role
+        } else {
+          // UStudio 계정 특별 처리: 에이전시 멤버가 없으면 자동으로 추가
+          const isUStudioAccount = user.email?.endsWith('@ustudio.co.kr') || user.email?.endsWith('@ustudio.com')
+          if (isUStudioAccount && !agencyMember) {
+            // UStudio 계정을 해당 에이전시에 owner 역할로 자동 추가
+            const { error: insertError } = await admin
+              .from('agency_members')
+              .insert({
+                agency_id: webinar.agency_id,
+                user_id: user.id,
+                role: 'owner'
+              })
+
+            if (!insertError) {
+              console.log(`[Console] UStudio 계정 ${user.email}을 에이전시 ${webinar.agency_id}에 멤버로 추가했습니다.`)
+              hasPermission = true
+              userRole = 'owner'
+            } else {
+              console.error(`[Console] UStudio 계정 멤버 추가 실패:`, insertError)
+            }
+          }
+        }
       }
     }
   }
@@ -102,4 +133,3 @@ export default async function ConsolePage({
   
   return <ConsoleView webinar={webinar} userRole={userRole} />
 }
-

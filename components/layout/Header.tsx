@@ -3,20 +3,18 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { createClientSupabase } from '@/lib/supabase/client'
-import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useEffect, useState, useMemo } from 'react'
 
 export default function Header() {
   const pathname = usePathname()
-  const router = useRouter()
   const [user, setUser] = useState<any>(null)
-  const supabase = createClientSupabase()
+  const supabase = useMemo(() => createClientSupabase(), [])
   
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
       setUser(data.user)
     })
-  }, [])
+  }, [supabase])
   
   const handleLogout = async () => {
     try {
@@ -53,7 +51,7 @@ export default function Header() {
         <div className="container mx-auto px-4 py-4">
           <div className="flex justify-between items-center">
             <Link href="/" className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              EventLive.ai
+              EventFlow
             </Link>
             <div className="flex gap-4">
               {user ? (

@@ -42,7 +42,7 @@ export default async function ClientDashboard({
     .order('created_at', { ascending: false })
   
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 p-8">
+    <div className="p-8">
       <div className="max-w-7xl mx-auto">
         <div className="mb-8">
           <div className="flex justify-between items-start mb-4">

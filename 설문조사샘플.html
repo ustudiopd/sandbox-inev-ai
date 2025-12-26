@@ -1,0 +1,118 @@
+import React, { useState } from 'react';
+
+const BoothEventSurvey = () => {
+  const [openSection, setOpenSection] = useState<number | null>(null);
+
+  return (
+    <div className="min-h-screen bg-white font-sans text-gray-900 pb-20">
+      {/* 상단 배너 */}
+      <div className="w-full bg-[#f8f9fa]">
+        <div className="max-w-screen-xl mx-auto">
+          {/* 실제 이미지 경로로 대체 필요 */}
+          <div className="bg-[#00B388] h-48 flex flex-col items-center justify-center text-white p-6 text-center">
+            <div className="text-2xl font-bold mb-2">HPE</div>
+            <h1 className="text-4xl font-extrabold tracking-tight">HPE 부스 이벤트</h1>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-2xl mx-auto px-5 py-10">
+        {/* 참여 방법 안내 */}
+        <section className="mb-12">
+          <h2 className="text-[#00B388] text-2xl font-bold mb-6">참여 방법</h2>
+          <div className="space-y-4 text-lg font-medium leading-relaxed">
+            <p><strong>하나.</strong> 부스 스태프로부터 메시지 카드를 받는다. HPE Networking에 바라는 점, 기대하는 변화, 또는 응원의 메시지를 자유롭게 작성한다.</p>
+            <p><strong>둘.</strong> 모든 설문 문항에 응답한다. (문항 단 3개!)</p>
+            <p><strong>셋.</strong> 설문 완료 화면을 부스 스태프에게 보여주고 사은품을 받는다. (이때에 메시지 카드도 같이 제출해 주세요!)</p>
+          </div>
+          <p className="text-[#00B388] text-right mt-6 text-sm font-bold">* 모든 사항은 필수 입력칸입니다.</p>
+        </section>
+
+        {/* 입력 폼 시작 */}
+        <form className="space-y-8">
+          {/* 기본 정보 */}
+          <div className="space-y-6">
+            <div>
+              <label className="block text-lg font-bold mb-2">회사명 *</label>
+              <input type="text" className="w-full border-b-2 border-gray-200 py-2 focus:border-[#00B388] outline-none transition-colors bg-white text-gray-900" />
+            </div>
+            <div>
+              <label className="block text-lg font-bold mb-2">이름 *</label>
+              <input type="text" className="w-full border-b-2 border-gray-200 py-2 focus:border-[#00B388] outline-none transition-colors bg-white text-gray-900" />
+            </div>
+            <div>
+              <label className="block text-lg font-bold mb-2">휴대전화번호 *</label>
+              <div className="flex gap-2 items-center">
+                <input type="text" defaultValue="010" readOnly className="w-1/3 border-b-2 border-gray-200 py-2 text-center bg-gray-50 outline-none text-gray-900" />
+                <input type="text" maxLength={4} className="w-1/3 border-b-2 border-gray-200 py-2 text-center focus:border-[#00B388] outline-none bg-white text-gray-900" />
+                <input type="text" maxLength={4} className="w-1/3 border-b-2 border-gray-200 py-2 text-center focus:border-[#00B388] outline-none bg-white text-gray-900" />
+              </div>
+            </div>
+          </div>
+
+          {/* 설문 문항 */}
+          <div className="space-y-10 pt-10">
+            {/* Q1 */}
+            <div className="space-y-4">
+              <h4 className="text-lg font-bold leading-tight">1. 현재 데이터센터 네트워크 프로젝트 계획이 있으시다면 언제입니까? *</h4>
+              <div className="grid grid-cols-1 gap-3">
+                {['1주일 이내', '1개월 이내', '1개월 - 3개월', '3개월 - 6개월', '6개월 - 12개월', '1년 이후', '계획없음'].map((option) => (
+                  <label key={option} className="flex items-center gap-3 cursor-pointer">
+                    <input type="radio" name="q1" className="w-5 h-5 accent-[#00B388]" />
+                    <span>{option}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            {/* Q4 (메시지 카드 번호) */}
+            <div className="space-y-4">
+              <h4 className="text-lg font-bold">4. 부스 스태프로부터 받으신 메시지 카드 번호를 입력해 주세요. *</h4>
+              <input type="text" className="w-full border-2 border-gray-200 p-3 rounded focus:border-[#00B388] outline-none bg-white text-gray-900" />
+            </div>
+          </div>
+
+          {/* 개인정보 수집동의 (아코디언) */}
+          <div className="space-y-4 pt-10">
+            <h3 className="text-xl font-bold mb-4 text-gray-800">개인정보 수집동의</h3>
+            {[
+              { id: 1, title: '개인정보 공유 동의' },
+              { id: 2, title: '개인정보 취급위탁 동의' },
+              { id: 3, title: '전화, 이메일, SMS 수신 동의' }
+            ].map((section) => (
+              <div key={section.id} className="border border-gray-200 rounded overflow-hidden">
+                <div 
+                  className="bg-gray-600 text-white p-4 flex justify-between items-center cursor-pointer"
+                  onClick={() => setOpenSection(openSection === section.id ? null : section.id)}
+                >
+                  <span className="font-bold">{section.title}</span>
+                  <div className="w-6 h-6 rounded-full border-2 border-white flex items-center justify-center">
+                    <span className="text-xs">✓</span>
+                  </div>
+                </div>
+                {openSection === section.id && (
+                  <div className="p-4 text-sm text-gray-600 bg-gray-50 leading-relaxed max-h-40 overflow-y-auto">
+                    {/* 상세 내용 텍스트 */}
+                    HPE (은)가 귀하의 개인정보를 수집ㆍ이용하는 목적은 다음과 같습니다...
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {/* 제출 버튼 */}
+          <div className="pt-10">
+            <button type="submit" className="w-full bg-[#00B388] text-white py-4 rounded-md text-xl font-bold shadow-lg hover:bg-[#008f6d] transition-colors">
+              제출하기
+            </button>
+            <p className="mt-6 text-center text-gray-800 font-bold leading-tight">
+              설문 완료 화면을 부스 스태프에게 보여주시면 사은품으로 ‘3단 자동 양우산’을 드립니다. (메시지 카드 제출 필수)
+            </p>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+export default BoothEventSurvey;

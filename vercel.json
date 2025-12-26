@@ -1,4 +1,10 @@
 {
-  "regions": ["sin1"]
+  "regions": ["sin1"],
+  "crons": [
+    {
+      "path": "/api/cron/webinar-access-snapshot",
+      "schedule": "*/1 * * * *"
+    }
+  ]
 }
 

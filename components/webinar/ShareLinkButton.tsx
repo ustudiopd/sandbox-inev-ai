@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 interface ShareLinkButtonProps {
   webinarId: string
@@ -15,6 +15,12 @@ export default function ShareLinkButton({
 }: ShareLinkButtonProps) {
   const [copied, setCopied] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [supportsShare, setSupportsShare] = useState(false)
+  
+  // 클라이언트에서만 navigator 확인 (Hydration 오류 방지)
+  useEffect(() => {
+    setSupportsShare(typeof navigator !== 'undefined' && 'share' in navigator)
+  }, [])
 
   const handleShare = async () => {
     setLoading(true)
@@ -38,7 +44,7 @@ export default function ShareLinkButton({
         try {
           await navigator.share({
             title: title,
-            text: `${title} - EventLive 웨비나에 참여하세요`,
+            text: `${title} - EventFlow 웨비나에 참여하세요`,
             url: urlToShare,
           })
           // 공유 성공
@@ -95,7 +101,7 @@ export default function ShareLinkButton({
         onClick={handleShare}
         disabled={loading}
         className="flex items-center gap-1 px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs font-medium"
-        title={typeof navigator !== 'undefined' && 'share' in navigator ? '공유하기' : '링크 복사'}
+        title={supportsShare ? '공유하기' : '링크 복사'}
       >
         {copied ? (
           <>
@@ -103,7 +109,7 @@ export default function ShareLinkButton({
           </>
         ) : (
           <>
-            {typeof navigator !== 'undefined' && 'share' in navigator ? '🔗 공유' : '📋 링크 복사'}
+            {supportsShare ? '🔗 공유' : '📋 링크 복사'}
           </>
         )}
       </button>

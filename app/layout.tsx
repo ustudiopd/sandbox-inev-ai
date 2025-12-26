@@ -7,7 +7,7 @@ import LayoutWrapper from '@/components/layout/LayoutWrapper'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'EventLive.ai - Enterprise Edition',
+  title: 'EventFlow - Enterprise Edition',
   description: 'B2B2C 멀티테넌시 웨비나 플랫폼',
 }
 

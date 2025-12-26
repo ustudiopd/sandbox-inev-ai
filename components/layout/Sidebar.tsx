@@ -5,11 +5,22 @@ import { usePathname, useRouter } from 'next/navigation'
 import { useParams } from 'next/navigation'
 import { createClientSupabase } from '@/lib/supabase/client'
 import { useEffect, useState } from 'react'
+import { useSidebar } from './SidebarContext'
+import SidebarTree from './SidebarTree'
 
 interface NavItem {
   name: string
   href: string
   icon: string
+  section?: 'overview' | 'manage' | 'current-event' | 'insights' | 'settings'
+  hidden?: boolean
+  disabled?: boolean
+}
+
+interface NavSection {
+  id: string
+  label: string
+  items: NavItem[]
 }
 
 export default function Sidebar() {
@@ -17,12 +28,31 @@ export default function Sidebar() {
   const params = useParams()
   const router = useRouter()
   const supabase = createClientSupabase()
+  const { sidebarWidth } = useSidebar()
   const [user, setUser] = useState<any>(null)
+  const [organizations, setOrganizations] = useState<{
+    isSuperAdmin: boolean
+    agencies: Array<{ id: string; name: string; role: string }>
+    clients: Array<{ id: string; name: string; role: string; agencyId: string; agencyName: string }>
+  } | null>(null)
+  const [showModeSwitcher, setShowModeSwitcher] = useState(false)
   
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
       setUser(data.user)
     })
+    
+    // 조직 목록 조회
+    fetch('/api/user/organizations')
+      .then(res => res.json())
+      .then(data => {
+        setOrganizations(data)
+        // 에이전시와 클라이언트 모두 있으면 모드 전환 표시
+        if (data.agencies?.length > 0 && data.clients?.length > 0) {
+          setShowModeSwitcher(true)
+        }
+      })
+      .catch(err => console.error('조직 목록 조회 실패:', err))
   }, [supabase])
   
   const handleLogout = async () => {
@@ -56,74 +86,22 @@ export default function Sidebar() {
   
   // 공개 페이지에서는 사이드바 숨김
   const isPublicPage = pathname === '/' || pathname.startsWith('/login') || pathname.startsWith('/signup')
-  if (isPublicPage) return null
-  
-  // 경로에 따라 다른 네비게이션 표시
-  const getNavItems = (): NavItem[] => {
-    if (pathname.includes('/super/')) {
-      return [
-        { name: '대시보드', href: '/super/dashboard', icon: '📊' },
-        { name: '에이전시 관리', href: '/super/agencies', icon: '🏢' },
-        { name: '계정 설정', href: '/settings/profile', icon: '⚙️' },
-      ]
-    } else if (pathname.includes('/agency/')) {
-      const agencyId = params?.agencyId as string
-      if (!agencyId) return []
-      return [
-        { name: '대시보드', href: `/agency/${agencyId}/dashboard`, icon: '📊' },
-        { name: '클라이언트', href: `/agency/${agencyId}/clients`, icon: '👥' },
-        { name: '리포트', href: `/agency/${agencyId}/reports`, icon: '📈' },
-        { name: '도메인', href: `/agency/${agencyId}/domains`, icon: '🌐' },
-        { name: '계정 설정', href: '/settings/profile', icon: '⚙️' },
-      ]
-    } else if (pathname.includes('/client/')) {
-      const clientId = params?.clientId as string
-      if (!clientId) return []
-      return [
-        { name: '대시보드', href: `/client/${clientId}/dashboard`, icon: '📊' },
-        { name: '웨비나', href: `/client/${clientId}/webinars`, icon: '🎥' },
-        { name: '가입계정관리', href: `/client/${clientId}/accounts`, icon: '👥' },
-        { name: '브랜딩', href: `/client/${clientId}/settings/branding`, icon: '🎨' },
-        { name: '계정 설정', href: '/settings/profile', icon: '⚙️' },
-      ]
-    }
-    return []
-  }
-  
-  const navItems = getNavItems()
-  
-  if (navItems.length === 0) return null
+  // 슈퍼 관리자 페이지는 별도 사이드바 사용
+  const isSuperPage = pathname.includes('/super/')
+  if (isPublicPage || isSuperPage) return null
   
   return (
     <>
       {/* 데스크톱 사이드바 */}
-      <aside className="hidden lg:flex w-64 bg-gradient-to-b from-gray-900 to-gray-800 text-white min-h-screen fixed left-0 top-0 flex-col">
-        <div className="p-6">
+      <aside className="hidden lg:flex bg-gradient-to-b from-gray-900 to-gray-800 text-white min-h-screen fixed left-0 top-0 flex-col transition-all duration-300 z-50 w-64">
+        <div className="p-6 flex items-center">
           <Link href="/" className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-            EventLive.ai
+            EventFlow
           </Link>
         </div>
-        <nav className="mt-8 flex-1">
-          {navItems.map((item) => {
-            const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`
-                  flex items-center gap-3 px-6 py-3 transition-all duration-200
-                  ${isActive 
-                    ? 'bg-blue-600 border-r-4 border-blue-400' 
-                    : 'hover:bg-gray-700'
-                  }
-                `}
-              >
-                <span className="text-xl">{item.icon}</span>
-                <span className="font-medium">{item.name}</span>
-              </Link>
-            )
-          })}
-        </nav>
+        
+        {/* 트리 구조 네비게이션 */}
+        <SidebarTree organizations={organizations} />
         <div className="p-4 border-t border-gray-700">
           {user && (
             <div className="mb-3 px-4 py-2">
@@ -136,35 +114,15 @@ export default function Sidebar() {
             onClick={handleLogout}
             className="w-full flex items-center gap-3 px-6 py-3 text-red-400 hover:bg-red-900/20 hover:text-red-300 transition-all duration-200 rounded-lg"
           >
-            <span className="text-xl">🚪</span>
+            <span className="text-xl flex-shrink-0">🚪</span>
             <span className="font-medium">로그아웃</span>
           </button>
         </div>
       </aside>
 
-      {/* 모바일 하단 메뉴 */}
+      {/* 모바일 하단 메뉴 - 트리 구조는 데스크톱 전용 */}
       <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-gradient-to-b from-gray-900 to-gray-800 text-white border-t border-gray-700 z-50">
         <div className="flex items-center justify-around px-2 py-2">
-          {navItems.map((item) => {
-            const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`
-                  flex flex-col items-center justify-center gap-1 px-3 py-2 rounded-lg transition-all duration-200 min-w-[60px]
-                  ${isActive 
-                    ? 'bg-blue-600 text-white' 
-                    : 'text-gray-400 hover:text-white hover:bg-gray-700'
-                  }
-                `}
-                title={item.name}
-              >
-                <span className="text-2xl">{item.icon}</span>
-                <span className="text-xs font-medium">{item.name}</span>
-              </Link>
-            )
-          })}
           <button
             onClick={handleLogout}
             className="flex flex-col items-center justify-center gap-1 px-3 py-2 rounded-lg transition-all duration-200 min-w-[60px] text-red-400 hover:text-red-300 hover:bg-red-900/20"
