@@ -179,9 +179,8 @@ export default function FormManagementTab({ campaignId, formId, publicPath, onFo
             phone: data.form.config.basicFields.phone || { enabled: true, required: true, label: '휴대전화번호' },
           })
         }
-        if (data.form.config.consentFields) {
-          setConsentFields(data.form.config.consentFields)
-        }
+        // consentFields는 항상 설정 (없으면 빈 배열)
+        setConsentFields(data.form.config.consentFields || [])
         // 소개 텍스트 로드
         if (data.form.config.introTexts) {
           setIntroTexts({
@@ -193,6 +192,9 @@ export default function FormManagementTab({ campaignId, formId, publicPath, onFo
             bottomNotice: data.form.config.introTexts.bottomNotice || introTexts.bottomNotice,
           })
         }
+      } else {
+        // config가 없으면 기본값으로 설정
+        setConsentFields([])
       }
     } catch (error: any) {
       console.error('폼 로드 오류:', error)
@@ -219,9 +221,8 @@ export default function FormManagementTab({ campaignId, formId, publicPath, onFo
             phone: form.config.basicFields.phone || { enabled: true, required: true, label: '휴대전화번호' },
           })
         }
-        if (form.config.consentFields) {
-          setConsentFields(form.config.consentFields)
-        }
+        // consentFields는 항상 설정 (없으면 빈 배열)
+        setConsentFields(form.config.consentFields || [])
         if (form.config.introTexts) {
           setIntroTexts({
             participationTitle: form.config.introTexts.participationTitle || introTexts.participationTitle,
@@ -232,6 +233,9 @@ export default function FormManagementTab({ campaignId, formId, publicPath, onFo
             bottomNotice: form.config.introTexts.bottomNotice || introTexts.bottomNotice,
           })
         }
+      } else {
+        // config가 없으면 기본값으로 설정
+        setConsentFields([])
       }
     }
     setEditing(false)
@@ -489,10 +493,16 @@ export default function FormManagementTab({ campaignId, formId, publicPath, onFo
     questions: questions,
     config: {
       basicFields,
-      consentFields,
+      consentFields: consentFields || [], // consentFields가 없으면 빈 배열
       introTexts,
     },
-  } : form
+  } : {
+    ...form,
+    config: {
+      ...form.config,
+      consentFields: form.config?.consentFields || consentFields || [], // form.config에 없으면 현재 상태 사용
+    },
+  }
 
   return (
     <div>

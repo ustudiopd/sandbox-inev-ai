@@ -53,10 +53,21 @@ export async function GET(
       options: typeof q.options === 'string' ? JSON.parse(q.options) : q.options,
     }))
     
+    // config 필드 확인 및 디버깅
+    console.log('[Form API] 폼 조회 결과:', {
+      formId: form.id,
+      hasConfig: !!form.config,
+      config: form.config,
+      consentFields: form.config?.consentFields,
+      enabledConsentFields: form.config?.consentFields?.filter((c: any) => c.enabled)?.length || 0,
+    })
+    
     return NextResponse.json({
       form: {
         ...form,
         questions: parsedQuestions,
+        // config가 JSONB로 저장되어 있으므로 그대로 반환
+        config: form.config || null,
       },
     })
   } catch (error: any) {
