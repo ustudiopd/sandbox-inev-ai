@@ -9,6 +9,42 @@ export const runtime = 'nodejs'
  * 6자리 숫자로 고유한 public_path 생성
  * 짧은 링크 시스템과 동일한 방식
  */
+// 6자리 영문숫자 코드 생성 함수
+function generateDashboardCode(): string {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
+  let code = ''
+  for (let i = 0; i < 6; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length))
+  }
+  return code
+}
+
+// 고유한 dashboard_code 생성
+async function generateUniqueDashboardCode(
+  admin: ReturnType<typeof createAdminSupabase>
+): Promise<string | null> {
+  let attempts = 0
+  const maxAttempts = 100
+  
+  while (attempts < maxAttempts) {
+    const code = generateDashboardCode()
+    
+    const { data: existing } = await admin
+      .from('event_survey_campaigns')
+      .select('id')
+      .eq('dashboard_code', code)
+      .maybeSingle()
+    
+    if (!existing) {
+      return code
+    }
+    
+    attempts++
+  }
+  
+  return null
+}
+
 async function generateUniquePublicPath(
   admin: ReturnType<typeof createAdminSupabase>,
   clientId: string

@@ -1,13 +1,11 @@
 import { NextResponse } from 'next/server'
-import { requireAuth } from '@/lib/auth/guards'
 import { createAdminSupabase } from '@/lib/supabase/admin'
-import { createServerSupabase } from '@/lib/supabase/server'
 
 export const runtime = 'nodejs'
 
 /**
- * 설문조사 캠페인 문항별 통계 조회
- * GET /api/event-survey/campaigns/[campaignId]/question-stats
+ * 공개 설문조사 캠페인 문항별 통계 조회 (인증 불필요)
+ * GET /api/public/event-survey/campaigns/[campaignId]/question-stats
  */
 export async function GET(
   req: Request,
@@ -21,13 +19,14 @@ export async function GET(
     // 캠페인 조회
     const { data: campaign, error: campaignError } = await admin
       .from('event_survey_campaigns')
-      .select('id, form_id, client_id, agency_id')
+      .select('id, form_id')
       .eq('id', campaignId)
+      .eq('status', 'published')
       .single()
     
     if (campaignError || !campaign) {
       return NextResponse.json(
-        { error: 'Campaign not found' },
+        { error: 'Campaign not found or not published' },
         { status: 404 }
       )
     }
@@ -37,51 +36,6 @@ export async function GET(
         success: true,
         questionStats: [],
       })
-    }
-    
-    // 권한 확인
-    const { user } = await requireAuth()
-    const supabase = await createServerSupabase()
-    
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('is_super_admin')
-      .eq('id', user.id)
-      .single()
-    
-    let hasPermission = false
-    
-    if (profile?.is_super_admin) {
-      hasPermission = true
-    } else {
-      const { data: clientMember } = await supabase
-        .from('client_members')
-        .select('role')
-        .eq('client_id', campaign.client_id)
-        .eq('user_id', user.id)
-        .maybeSingle()
-      
-      if (clientMember && ['owner', 'admin', 'operator', 'analyst', 'viewer'].includes(clientMember.role)) {
-        hasPermission = true
-      } else {
-        const { data: agencyMember } = await supabase
-          .from('agency_members')
-          .select('role')
-          .eq('agency_id', campaign.agency_id)
-          .eq('user_id', user.id)
-          .maybeSingle()
-        
-        if (agencyMember && ['owner', 'admin'].includes(agencyMember.role)) {
-          hasPermission = true
-        }
-      }
-    }
-    
-    if (!hasPermission) {
-      return NextResponse.json(
-        { error: 'Insufficient permissions' },
-        { status: 403 }
-      )
     }
     
     // 폼 문항 조회
@@ -105,7 +59,7 @@ export async function GET(
       })
     }
     
-    // 폼 제출 조회 (campaign_id로 연결된 event_survey_entries의 form_submission_id 사용)
+    // 폼 제출 조회
     const { data: entries } = await admin
       .from('event_survey_entries')
       .select('form_submission_id')
@@ -159,11 +113,9 @@ export async function GET(
       if (question.type === 'text') {
         // 텍스트 문항: 모든 답변 수집
         stats.textAnswers = answers?.map((a: any) => {
-          // text_answer 필드 우선 확인
           if (a.text_answer && typeof a.text_answer === 'string') {
             return a.text_answer
           }
-          // answer_value 필드 확인 (하위 호환성)
           if (a.answer_value && typeof a.answer_value === 'string') {
             return a.answer_value
           } else if (a.answer_value && typeof a.answer_value === 'object') {
@@ -190,7 +142,6 @@ export async function GET(
               }
             })
           } else if (a.answer_value) {
-            // answer_value가 문자열인 경우 (단일 선택)
             const choiceId = typeof a.answer_value === 'string' ? a.answer_value : a.answer_value.id || a.answer_value
             if (choiceDistribution[choiceId] !== undefined) {
               choiceDistribution[choiceId]++
@@ -216,5 +167,4 @@ export async function GET(
     )
   }
 }
-
 

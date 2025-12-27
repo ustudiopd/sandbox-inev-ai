@@ -32,6 +32,15 @@ export default async function SurveyPublicPage({
   // 예: /event/test -> public_path = /test, subPath = null
   // 예: /event/2025/triz/triz_1211_booth/survey -> public_path = /2025/triz/triz_1211_booth, subPath = survey
   
+  // dashboard 경로 처리: /event/{public_path}/dashboard/{code}
+  // 예: /event/345870/dashboard/PLZXW5 -> /event/dashboard/PLZXW5로 리다이렉트
+  if (path.length >= 2 && path[path.length - 2] === 'dashboard') {
+    const dashboardCode = path[path.length - 1]
+    
+    // dashboard 페이지로 리다이렉트
+    return redirect(`/event/dashboard/${dashboardCode}`)
+  }
+  
   // 마지막 경로가 survey, done, display 중 하나면 subPath로 처리
   const lastPath = path[path.length - 1]
   const isSubPath = ['survey', 'done', 'display'].includes(lastPath)

@@ -675,6 +675,26 @@
 - ✅ 타입 오류 수정
   - `Form` 인터페이스에 `introTexts` 타입 추가
   - `handleStartEdit` 및 `handleSaveEdit`에서 optional 필드 처리 개선
+- ✅ 설문 답변 통계 연동 개선
+  - `question-stats` API에서 `text_answer` 필드 우선 확인
+  - 기존 `answer_value` 필드도 하위 호환성으로 지원
+- ✅ 참여자 관리 기능 개선
+  - 참여자 클릭 시 설문 답변 상세 모달 표시
+  - 문항별 답변 확인 가능 (단일 선택, 다중 선택, 텍스트)
+  - `/api/event-survey/campaigns/[campaignId]/entries/[entryId]/answers` API 추가
+- ✅ 샘플 데이터 생성 기능 개선
+  - `options` 파싱 로직 개선 (JSONB 문자열, 배열, 객체 모두 처리)
+  - 선택지 ID 추출 함수 추가
+  - 스캔완료/경품 기록 없이 생성 (테스트용)
+  - 기존 데이터 삭제 옵션 추가
+- ✅ 공개 대시보드 기능 추가
+  - 6자리 영문숫자 `dashboard_code` 자동 생성
+  - `/event/dashboard/[code]` 경로로 로그인 없이 통계 확인 가능
+  - 개요 탭에 공개 대시보드 링크 표시 및 복사 기능
+  - `/api/public/event-survey/campaigns/[campaignId]/question-stats` 공개 API 추가
+- ✅ 통계 카드 중복 제거
+  - 상단의 중복된 통계 카드 제거
+  - 하단 "설문 통계" 섹션만 유지
 
 ## 남은 작업
 

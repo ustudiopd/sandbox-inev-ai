@@ -1,6 +1,23 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import {
+  RadialBarChart,
+  RadialBar,
+  BarChart,
+  Bar,
+  ComposedChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+} from 'recharts'
 
 interface OverviewTabProps {
   campaign: any
@@ -13,6 +30,8 @@ export default function OverviewTab({ campaign, onCampaignUpdate }: OverviewTabP
   const [allEntries, setAllEntries] = useState<any[]>([])
   const [loadingStats, setLoadingStats] = useState(false)
   const [questionStats, setQuestionStats] = useState<any[]>([])
+  const [generatingSample, setGeneratingSample] = useState(false)
+  const [deletingData, setDeletingData] = useState(false)
   
   // 참여자 데이터 및 통계 로드
   useEffect(() => {
@@ -51,6 +70,86 @@ export default function OverviewTab({ campaign, onCampaignUpdate }: OverviewTabP
       console.error('문항별 통계 로드 오류:', error)
     } finally {
       setLoadingStats(false)
+    }
+  }
+  
+  // 샘플 데이터 생성
+  const handleGenerateSampleData = async () => {
+    const clearExisting = confirm('기존 설문 참여 데이터를 모두 삭제하고 새로 생성하시겠습니까?\n\n취소하면 기존 데이터는 유지하고 추가로 생성합니다.')
+    
+    if (!confirm('50명의 샘플 설문 데이터를 생성하시겠습니까?\n\n(이름, 전화번호, 설문 답변만 생성됩니다)')) {
+      return
+    }
+    
+    setGeneratingSample(true)
+    try {
+      const response = await fetch(`/api/event-survey/campaigns/${campaign.id}/generate-sample-data`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ count: 50, clearExisting: clearExisting }),
+      })
+      
+      const result = await response.json()
+      
+      if (!response.ok) {
+        throw new Error(result.error || '샘플 데이터 생성 실패')
+      }
+      
+      alert(`성공적으로 ${result.created?.entries || 50}개의 샘플 데이터를 생성했습니다.\n페이지를 새로고침하여 최신 데이터를 확인합니다.`)
+      
+      // DB 반영 시간 확보를 위해 약간의 지연 후 페이지 새로고침
+      setTimeout(() => {
+        window.location.reload()
+      }, 1500)
+      
+    } catch (error: any) {
+      console.error('샘플 데이터 생성 오류:', error)
+      alert(error.message || '샘플 데이터 생성에 실패했습니다')
+    } finally {
+      setGeneratingSample(false)
+    }
+  }
+  
+  // 설문 데이터 삭제
+  const handleDeleteAllData = async () => {
+    if (!confirm('⚠️ 경고: 모든 설문 참여 데이터를 삭제하시겠습니까?\n\n이 작업은 되돌릴 수 없습니다.')) {
+      return
+    }
+    
+    if (!confirm('정말로 모든 데이터를 삭제하시겠습니까?\n\n- 참여자 정보\n- 설문 답변\n- 스캔 기록\n- 경품 기록\n\n모두 삭제됩니다.')) {
+      return
+    }
+    
+    setDeletingData(true)
+    try {
+      const response = await fetch(`/api/event-survey/campaigns/${campaign.id}/generate-sample-data`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ count: 0, clearExisting: true }),
+      })
+      
+      const result = await response.json()
+      
+      if (!response.ok) {
+        throw new Error(result.error || '데이터 삭제 실패')
+      }
+      
+      alert('모든 설문 참여 데이터가 삭제되었습니다.')
+      
+      // 페이지 새로고침
+      setTimeout(() => {
+        window.location.reload()
+      }, 1000)
+      
+    } catch (error: any) {
+      console.error('데이터 삭제 오류:', error)
+      alert(error.message || '데이터 삭제에 실패했습니다')
+    } finally {
+      setDeletingData(false)
     }
   }
   
@@ -99,6 +198,136 @@ export default function OverviewTab({ campaign, onCampaignUpdate }: OverviewTabP
     link.click()
   }
   
+  // 문항별 차트 렌더링 함수
+  const renderQuestionChart = (stat: any) => {
+    // 차트 데이터 준비
+    const chartData = stat.options.map((option: any) => {
+      const optionId = typeof option === 'string' ? option : option.id
+      const optionText = typeof option === 'string' ? option : option.text
+      const count = stat.choiceDistribution[optionId] || 0
+      const percentage = stat.totalAnswers > 0 
+        ? ((count / stat.totalAnswers) * 100) 
+        : 0
+      
+      return {
+        name: optionText,
+        value: count,
+        percentage: percentage,
+        fill: getColorForOption(stat.orderNo, optionText, stat.options.length),
+      }
+    })
+    
+    // 모든 문항: Donut Chart (통일된 스타일)
+    // 문항 3은 높은 가치부터 정렬
+    const displayData = stat.orderNo === 3 
+      ? [...chartData].sort((a, b) => b.value - a.value)
+      : chartData
+    
+    return (
+      <div className="w-full">
+        <ResponsiveContainer width="100%" height={280}>
+          <PieChart margin={{ top: 10, right: 10, bottom: 60, left: 10 }}>
+            <Pie
+              data={displayData}
+              cx="50%"
+              cy="50%"
+              labelLine={false}
+              label={false}
+              outerRadius={80}
+              innerRadius={40}
+              fill="#8884d8"
+              dataKey="value"
+            >
+              {displayData.map((entry: any, index: number) => (
+                <Cell key={`cell-${index}`} fill={entry.fill} />
+              ))}
+            </Pie>
+            <Tooltip
+              formatter={(value: number, name: string, props: any) => [
+                `${value}명 (${props.payload.percentage.toFixed(1)}%)`,
+                props.payload.name
+              ]}
+              contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px rgba(0,0,0,0.1)', fontSize: '12px' }}
+            />
+            <Legend
+              verticalAlign="bottom"
+              height={50}
+              formatter={(value, entry: any) => `${entry.payload.name}: ${entry.payload.value}명`}
+              wrapperStyle={{ fontSize: '11px', paddingTop: '10px' }}
+              iconType="circle"
+            />
+          </PieChart>
+        </ResponsiveContainer>
+      </div>
+    )
+    
+    // 기본: 막대 그래프
+    return (
+      <div className="space-y-3">
+        {chartData.map((item: any, index: number) => (
+          <div key={index} className="space-y-1">
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-gray-700">{item.name}</span>
+              <div className="flex items-center gap-2">
+                <span className="text-gray-600">{item.value}명</span>
+                <span className="text-gray-500">({item.percentage.toFixed(1)}%)</span>
+              </div>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-2.5">
+              <div
+                className="h-2.5 rounded-full transition-all"
+                style={{ width: `${item.percentage}%`, backgroundColor: item.fill }}
+              ></div>
+            </div>
+          </div>
+        ))}
+      </div>
+    )
+  }
+  
+  // 옵션별 색상 결정 함수
+  const getColorForOption = (orderNo: number, optionText: string, totalOptions: number) => {
+    // 문항 1: 긴박도에 따른 그라데이션 (1주일 이내 = 진한 색, 계획 없음 = 연한 회색)
+    if (orderNo === 1) {
+      const urgencyColors: Record<string, string> = {
+        '1주일 이내': '#dc2626',      // 진한 빨강
+        '1개월 이내': '#ea580c',      // 주황
+        '1개월 - 3개월': '#f59e0b',   // 노랑
+        '3개월 - 6개월': '#84cc16',   // 연두
+        '6개월 - 12개월': '#22c55e',   // 초록
+        '1년 이후': '#10b981',         // 청록
+        '계획없음': '#d1d5db',         // 연한 회색
+      }
+      return urgencyColors[optionText] || '#3b82f6'
+    }
+    
+    // 문항 2: 프로젝트 종류별 색상
+    if (orderNo === 2) {
+      const projectColors: Record<string, string> = {
+        '유무선 캠퍼스 & 브랜치 네트워크': '#3b82f6',
+        '엔터프라이즈 라우팅 (SD-WAN 포함)': '#8b5cf6',
+        '네트워크 보안': '#ef4444',
+        '해당 없음': '#9ca3af',
+      }
+      return projectColors[optionText] || '#6366f1'
+    }
+    
+    // 문항 3: 리드 퀄리티에 따른 색상 (높은 가치 = 진한 색)
+    if (orderNo === 3) {
+      const leadColors: Record<string, string> = {
+        'HPE 네트워크 전문가의 방문 요청': '#10b981',      // 진한 초록 (최고 가치)
+        'HPE 네트워크 전문가의 온라인 미팅 요청': '#3b82f6', // 파랑
+        'HPE 네트워크 전문가의 전화 상담 요청': '#f59e0b',   // 노랑
+        '관심 없음': '#d1d5db',                              // 연한 회색
+      }
+      return leadColors[optionText] || '#6366f1'
+    }
+    
+    // 기본 색상 팔레트
+    const colors = ['#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#06b6d4', '#6366f1']
+    return colors[totalOptions % colors.length] || '#3b82f6'
+  }
+  
   const handleStatusChange = async (newStatus: 'draft' | 'published' | 'closed') => {
     if (!confirm(`정말 상태를 "${newStatus === 'published' ? '발행됨' : newStatus === 'closed' ? '종료됨' : '초안'}"으로 변경하시겠습니까?`)) {
       return
@@ -133,22 +362,6 @@ export default function OverviewTab({ campaign, onCampaignUpdate }: OverviewTabP
   
   return (
     <div>
-      {/* 통계 카드 */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl shadow-lg p-6">
-          <div className="text-sm text-gray-600 mb-2">총 완료 수</div>
-          <div className="text-3xl font-bold text-purple-600">{campaign.stats?.total_completed || 0}</div>
-        </div>
-        <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl shadow-lg p-6">
-          <div className="text-sm text-gray-600 mb-2">스캔 수</div>
-          <div className="text-3xl font-bold text-blue-600">{campaign.stats?.total_verified || 0}</div>
-        </div>
-        <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl shadow-lg p-6">
-          <div className="text-sm text-gray-600 mb-2">경품 기록 수</div>
-          <div className="text-3xl font-bold text-green-600">{campaign.stats?.total_prize_recorded || 0}</div>
-        </div>
-      </div>
-      
       {/* 상세 통계 및 다운로드 */}
       <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
         <div className="flex justify-between items-center mb-4">
@@ -203,6 +416,105 @@ export default function OverviewTab({ campaign, onCampaignUpdate }: OverviewTabP
             총 {allEntries.length}명의 참여자 데이터를 다운로드할 수 있습니다.
           </div>
         )}
+        
+        {/* 공개 대시보드 링크 */}
+        <div className="mt-4 pt-4 border-t border-gray-200">
+          <div className="bg-blue-50 rounded-lg p-4">
+            <h4 className="text-sm font-semibold text-gray-900 mb-2">공개 대시보드</h4>
+            <p className="text-xs text-gray-600 mb-3">
+              아래 링크를 공유하면 로그인 없이 설문 통계를 볼 수 있습니다.
+            </p>
+            {campaign.dashboard_code ? (
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  readOnly
+                  value={`${typeof window !== 'undefined' ? window.location.origin : ''}/event/dashboard/${campaign.dashboard_code}`}
+                  className="flex-1 px-3 py-2 bg-white border border-gray-300 rounded text-sm font-mono text-gray-700"
+                  onClick={(e) => (e.target as HTMLInputElement).select()}
+                />
+                <button
+                  onClick={() => {
+                    const url = `${window.location.origin}/event/dashboard/${campaign.dashboard_code}`
+                    navigator.clipboard.writeText(url)
+                    alert('링크가 클립보드에 복사되었습니다.')
+                  }}
+                  className="px-3 py-2 bg-blue-600 text-white rounded text-sm font-medium hover:bg-blue-700 transition-colors"
+                >
+                  복사
+                </button>
+              </div>
+            ) : (
+              <div>
+                <button
+                  onClick={async () => {
+                    if (!campaign.id) {
+                      alert('캠페인 ID가 없습니다.')
+                      return
+                    }
+                    
+                    try {
+                      console.log('대시보드 코드 생성 요청:', campaign.id)
+                      const response = await fetch(`/api/event-survey/campaigns/${campaign.id}/generate-dashboard-code`, {
+                        method: 'POST',
+                        headers: {
+                          'Content-Type': 'application/json',
+                        },
+                      })
+                      
+                      console.log('대시보드 코드 생성 응답:', response.status, response.statusText)
+                      
+                      const result = await response.json()
+                      console.log('대시보드 코드 생성 결과:', result)
+                      
+                      if (!response.ok) {
+                        throw new Error(result.error || `서버 오류 (${response.status})`)
+                      }
+                      
+                      if (result.success) {
+                        alert('대시보드 코드가 생성되었습니다. 페이지를 새로고침합니다.')
+                        window.location.reload()
+                      } else {
+                        alert(result.error || '대시보드 코드 생성에 실패했습니다.')
+                      }
+                    } catch (error: any) {
+                      console.error('대시보드 코드 생성 오류:', error)
+                      alert(`대시보드 코드 생성에 실패했습니다: ${error.message || '알 수 없는 오류'}`)
+                    }
+                  }}
+                  className="px-4 py-2 bg-blue-600 text-white rounded text-sm font-medium hover:bg-blue-700 transition-colors"
+                >
+                  대시보드 코드 생성
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+        
+        {/* 샘플 데이터 생성 및 삭제 버튼 (테스트용) */}
+        {campaign.form_id && (
+          <div className="mt-4 pt-4 border-t border-gray-200">
+            <div className="flex gap-3 flex-wrap">
+              <button
+                onClick={handleGenerateSampleData}
+                disabled={generatingSample || deletingData}
+                className="px-4 py-2 bg-purple-100 text-purple-800 rounded-lg hover:bg-purple-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
+              >
+                {generatingSample ? '생성 중...' : '📊 샘플 데이터 생성 (50명)'}
+              </button>
+              <button
+                onClick={handleDeleteAllData}
+                disabled={generatingSample || deletingData || allEntries.length === 0}
+                className="px-4 py-2 bg-red-100 text-red-800 rounded-lg hover:bg-red-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
+              >
+                {deletingData ? '삭제 중...' : '🗑️ 모든 데이터 삭제'}
+              </button>
+            </div>
+            <p className="text-xs text-gray-500 mt-2">
+              테스트를 위해 50명의 샘플 설문 데이터를 생성하거나, 모든 설문 참여 데이터를 삭제할 수 있습니다.
+            </p>
+          </div>
+        )}
       </div>
       
       {/* 문항별 통계 */}
@@ -217,78 +529,51 @@ export default function OverviewTab({ campaign, onCampaignUpdate }: OverviewTabP
               <p>아직 응답이 없습니다.</p>
             </div>
           ) : (
-            <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {questionStats.map((stat, index) => (
-                <div key={stat.questionId} className="border border-gray-200 rounded-lg p-4">
+                <div key={stat.questionId} className="bg-gray-50 rounded-lg border border-gray-200 p-4 flex flex-col">
                   <div className="mb-3">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="text-sm font-medium text-gray-500">문항 {stat.orderNo}</span>
-                          <span className="text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded">
-                            {stat.questionType === 'single' ? '단일 선택' : stat.questionType === 'multiple' ? '다중 선택' : '텍스트'}
-                          </span>
-                        </div>
-                        <h4 className="text-base font-semibold text-gray-900">{stat.questionBody}</h4>
-                        <div className="text-sm text-gray-500 mt-1">
-                          총 {stat.totalAnswers}명 응답
-                        </div>
-                      </div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-sm font-medium text-gray-500">문항 {stat.orderNo}</span>
+                      <span className="text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded">
+                        {stat.questionType === 'single' ? '단일 선택' : stat.questionType === 'multiple' ? '다중 선택' : '텍스트'}
+                      </span>
+                    </div>
+                    <h4 className="text-sm font-semibold text-gray-900 mb-1 line-clamp-2">{stat.questionBody}</h4>
+                    <div className="text-xs text-gray-500">
+                      총 {stat.totalAnswers}명 응답
                     </div>
                   </div>
                   
-                  {stat.questionType === 'text' ? (
-                    // 텍스트 문항: 응답 목록
-                    <div className="mt-4">
-                      {stat.textAnswers.length > 0 ? (
-                        <div className="space-y-2 max-h-60 overflow-y-auto">
-                          {stat.textAnswers.map((answer: string, idx: number) => (
-                            <div key={idx} className="bg-gray-50 rounded p-2 text-sm text-gray-700">
-                              {answer}
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <p className="text-sm text-gray-500">응답이 없습니다.</p>
-                      )}
-                    </div>
-                  ) : (
-                    // 선택형 문항: 선택지별 분포
-                    <div className="mt-4">
-                      {stat.options && stat.options.length > 0 ? (
-                        <div className="space-y-3">
-                          {stat.options.map((option: any) => {
-                            const optionId = typeof option === 'string' ? option : option.id
-                            const optionText = typeof option === 'string' ? option : option.text
-                            const count = stat.choiceDistribution[optionId] || 0
-                            const percentage = stat.totalAnswers > 0 
-                              ? ((count / stat.totalAnswers) * 100).toFixed(1) 
-                              : '0.0'
-                            
-                            return (
-                              <div key={optionId} className="space-y-1">
-                                <div className="flex items-center justify-between text-sm">
-                                  <span className="text-gray-700">{optionText}</span>
-                                  <div className="flex items-center gap-2">
-                                    <span className="text-gray-600">{count}명</span>
-                                    <span className="text-gray-500">({percentage}%)</span>
-                                  </div>
-                                </div>
-                                <div className="w-full bg-gray-200 rounded-full h-2.5">
-                                  <div
-                                    className="bg-blue-600 h-2.5 rounded-full transition-all"
-                                    style={{ width: `${percentage}%` }}
-                                  ></div>
-                                </div>
+                  <div className="flex-1 flex items-center justify-center">
+                    {stat.questionType === 'text' ? (
+                      // 텍스트 문항: 응답 목록
+                      <div className="w-full">
+                        {stat.textAnswers.length > 0 ? (
+                          <div className="space-y-2 max-h-60 overflow-y-auto">
+                            {stat.textAnswers.map((answer: string, idx: number) => (
+                              <div key={idx} className="bg-white rounded p-2 text-xs text-gray-700">
+                                {answer}
                               </div>
-                            )
-                          })}
-                        </div>
-                      ) : (
-                        <p className="text-sm text-gray-500">선택지가 없습니다.</p>
-                      )}
-                    </div>
-                  )}
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-sm text-gray-500 text-center">응답이 없습니다.</p>
+                        )}
+                      </div>
+                    ) : (
+                      // 선택형 문항: 선택지별 분포 (차트로 표시)
+                      <div className="w-full">
+                        {stat.options && stat.options.length > 0 ? (
+                          <div>
+                            {renderQuestionChart(stat)}
+                          </div>
+                        ) : (
+                          <p className="text-sm text-gray-500 text-center">선택지가 없습니다.</p>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
