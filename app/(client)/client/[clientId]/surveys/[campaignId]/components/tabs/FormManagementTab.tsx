@@ -120,8 +120,8 @@ export default function FormManagementTab({ campaignId, formId, publicPath, onFo
     phone: { enabled: true, required: true, label: '휴대전화번호' },
   })
   
-  // 개인정보 동의 설정
-  const [consentFields, setConsentFields] = useState([
+  // 개인정보 동의 설정 초기값
+  const defaultConsentFields = [
     {
       id: 'consent1',
       enabled: true,
@@ -143,7 +143,9 @@ export default function FormManagementTab({ campaignId, formId, publicPath, onFo
       title: '전화, 이메일, SMS 수신 동의',
       content: 'HPE (은)는 제품 및 서비스, 프로모션 또는 시장조사 등의 유용한 정보를 온·오프라인을 통해 안내 드리고자 합니다.\n\n기프트 제공 또는 기프티콘 발송을 위하여 전화 연락 또는 SMS 발송을 드릴 수 있습니다.',
     },
-  ])
+  ]
+  
+  const [consentFields, setConsentFields] = useState(defaultConsentFields)
   
   useEffect(() => {
     if (formId) {
@@ -179,8 +181,14 @@ export default function FormManagementTab({ campaignId, formId, publicPath, onFo
             phone: data.form.config.basicFields.phone || { enabled: true, required: true, label: '휴대전화번호' },
           })
         }
-        // consentFields는 항상 설정 (없으면 빈 배열)
-        setConsentFields(data.form.config.consentFields || [])
+        // consentFields는 항상 설정 (없으면 기본값 사용)
+        if (data.form.config.consentFields && data.form.config.consentFields.length > 0) {
+          setConsentFields(data.form.config.consentFields)
+        } else {
+          // consentFields가 없으면 기본값으로 복원
+          console.log('[FormManagementTab] consentFields가 없어서 기본값으로 복원')
+          setConsentFields(defaultConsentFields)
+        }
         // 소개 텍스트 로드
         if (data.form.config.introTexts) {
           setIntroTexts({
@@ -221,8 +229,14 @@ export default function FormManagementTab({ campaignId, formId, publicPath, onFo
             phone: form.config.basicFields.phone || { enabled: true, required: true, label: '휴대전화번호' },
           })
         }
-        // consentFields는 항상 설정 (없으면 빈 배열)
-        setConsentFields(form.config.consentFields || [])
+        // consentFields는 항상 설정 (없으면 기본값 사용)
+        if (form.config.consentFields && form.config.consentFields.length > 0) {
+          setConsentFields(form.config.consentFields)
+        } else {
+          // consentFields가 없으면 기본값으로 복원
+          console.log('[FormManagementTab] handleCancel: consentFields가 없어서 기본값으로 복원')
+          setConsentFields(defaultConsentFields)
+        }
         if (form.config.introTexts) {
           setIntroTexts({
             participationTitle: form.config.introTexts.participationTitle || introTexts.participationTitle,
@@ -234,8 +248,9 @@ export default function FormManagementTab({ campaignId, formId, publicPath, onFo
           })
         }
       } else {
-        // config가 없으면 기본값으로 설정
-        setConsentFields([])
+        // config가 없으면 기본값으로 복원
+        console.log('[FormManagementTab] handleCancel: config가 없어서 기본값으로 복원')
+        setConsentFields(defaultConsentFields)
       }
     }
     setEditing(false)
@@ -486,23 +501,63 @@ export default function FormManagementTab({ campaignId, formId, publicPath, onFo
   }
   
   // 미리보기용 폼 데이터 구성
+  // questions의 options 정규화 (배열이 아닌 경우 처리)
+  const normalizeQuestions = (qs: FormQuestion[]) => {
+    return qs.map(q => {
+      // options가 배열이 아닌 경우 처리
+      let normalizedOptions: any[] | undefined = undefined
+      if (q.type === 'single' || q.type === 'multiple') {
+        if (q.options) {
+          if (Array.isArray(q.options)) {
+            normalizedOptions = q.options
+          } else if (typeof q.options === 'string') {
+            try {
+              normalizedOptions = JSON.parse(q.options)
+            } catch {
+              normalizedOptions = []
+            }
+          } else {
+            normalizedOptions = []
+          }
+        } else {
+          normalizedOptions = []
+        }
+      }
+      return {
+        ...q,
+        options: normalizedOptions,
+      }
+    })
+  }
+  
   const previewFormData = editing ? {
     id: formId || 'preview',
     title: formTitle,
     description: formDescription,
-    questions: questions,
+    questions: normalizeQuestions(questions),
     config: {
       basicFields,
-      consentFields: consentFields || [], // consentFields가 없으면 빈 배열
+      consentFields: consentFields.length > 0 ? consentFields : (form?.config?.consentFields && form.config.consentFields.length > 0 ? form.config.consentFields : defaultConsentFields), // 현재 상태가 비어있으면 form.config에서 가져오고, 그것도 없으면 기본값
       introTexts,
     },
   } : {
     ...form,
+    questions: form?.questions ? normalizeQuestions(form.questions) : [],
     config: {
       ...form.config,
-      consentFields: form.config?.consentFields || consentFields || [], // form.config에 없으면 현재 상태 사용
+      consentFields: (form.config?.consentFields && form.config.consentFields.length > 0) ? form.config.consentFields : (consentFields.length > 0 ? consentFields : defaultConsentFields), // form.config에 없으면 현재 상태 사용, 그것도 없으면 기본값
     },
   }
+  
+  // 디버깅: 미리보기 데이터 확인
+  console.log('[FormManagementTab] previewFormData 구성:', {
+    editing,
+    consentFieldsState: consentFields,
+    consentFieldsLength: consentFields.length,
+    formConfigConsentFields: form?.config?.consentFields,
+    previewConsentFields: previewFormData.config.consentFields,
+    previewConsentFieldsLength: previewFormData.config.consentFields?.length || 0,
+  })
 
   return (
     <div>

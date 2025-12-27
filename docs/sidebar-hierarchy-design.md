@@ -935,3 +935,4 @@ function shouldShowCurrentEventSection(
 8. 클라이언트 리포트 페이지
 9. 슈퍼 관리자 전사 통계 페이지
 10. 핀 고정 기능
+

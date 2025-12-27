@@ -1,8 +1,10 @@
 import { notFound, redirect } from 'next/navigation'
 import { headers } from 'next/headers'
+import { Suspense } from 'react'
 import { createAdminSupabase } from '@/lib/supabase/admin'
 import QRCodeDisplay from './components/QRCodeDisplay'
 import SurveyPage from './components/SurveyPage'
+import DonePageClient from './components/DonePageClient'
 
 /**
  * 설문조사 공개 페이지 catch-all 라우트
@@ -256,10 +258,36 @@ export default async function SurveyPublicPage({
     const host = headersList.get('host') || 'localhost:3000'
     const protocol = headersList.get('x-forwarded-proto') || 'http'
     const baseUrl = `${protocol}://${host}`
-    return <SurveyPage campaign={campaign} baseUrl={baseUrl} />
+    return (
+      <Suspense fallback={
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-cyan-50 to-teal-50 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">로딩 중...</p>
+          </div>
+        </div>
+      }>
+        <SurveyPage campaign={campaign} baseUrl={baseUrl} />
+      </Suspense>
+    )
   } else if (subPath === 'done') {
     // 완료 페이지
-    return <DonePage campaign={campaign} />
+    const headersList = await headers()
+    const host = headersList.get('host') || 'localhost:3000'
+    const protocol = headersList.get('x-forwarded-proto') || 'http'
+    const baseUrl = `${protocol}://${host}`
+    return (
+      <Suspense fallback={
+        <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-50 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">로딩 중...</p>
+          </div>
+        </div>
+      }>
+        <DonePageClient campaign={campaign} baseUrl={baseUrl} />
+      </Suspense>
+    )
   } else if (subPath === 'display') {
     // 디스플레이 페이지
     return <DisplayPage campaign={campaign} />
@@ -276,84 +304,77 @@ function WelcomePage({ campaign, baseUrl, isDraft = false }: { campaign: any; ba
   const headerImageUrl = 'https://yqsayphssjznthrxpgfb.supabase.co/storage/v1/object/public/webinar-thumbnails/hpe-booth-header.jpg'
   
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-cyan-50 to-teal-50">
-      {/* 헤더 이미지 영역 */}
-      <div className="relative w-full overflow-hidden bg-gradient-to-br from-blue-50 via-cyan-50 to-teal-50 flex items-center justify-center">
-        <img 
-          src={headerImageUrl} 
-          alt={campaign.title || '이벤트 헤더'}
-          className="w-1/2 h-auto object-contain"
-        />
-        {/* 오버레이 그라데이션 (텍스트 가독성 향상) */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/10 to-transparent pointer-events-none"></div>
+    <div className="min-h-screen bg-white font-sans text-gray-900 pb-20">
+      {/* 상단 배너 */}
+      <div className="w-full bg-[#f8f9fa]">
+        <div className="max-w-screen-xl mx-auto">
+          <div className="relative w-full overflow-hidden flex justify-center">
+            <img
+              src={headerImageUrl}
+              alt={campaign.title || '이벤트 헤더'}
+              className="w-full h-auto max-w-[600px]"
+              style={{ maxHeight: '300px' }}
+            />
+          </div>
+        </div>
       </div>
       
       {/* 메인 콘텐츠 영역 */}
-      <div className="w-1/2 mx-auto px-4 py-8 md:py-12">
+      <div className="max-w-[640px] mx-auto px-4 sm:px-5 py-6 sm:py-10">
         {isDraft && (
-          <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+          <div className="mb-4 sm:mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
             <p className="text-yellow-800 text-sm font-medium">
               ⚠️ 이 캠페인은 초안 상태입니다. 관리자 대시보드에서 발행해주세요.
             </p>
           </div>
         )}
         
-        <div className="bg-white rounded-xl shadow-lg p-6 md:p-8">
-          <div className="text-center mb-8">
-            <h1 className="text-3xl md:text-4xl font-bold mb-4 text-gray-900">
+        <div className="bg-gray-50 rounded-lg shadow-md p-6 sm:p-8 md:p-10">
+          {/* 제목 및 설명 영역 */}
+          <div className="text-center mb-8 sm:mb-10">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 text-gray-900">
               {campaign.title}
             </h1>
             {campaign.host && (
-              <p className="text-gray-600 text-sm mb-4">주최: {campaign.host}</p>
+              <p className="text-gray-600 text-sm sm:text-base mb-4">주최: {campaign.host}</p>
             )}
-            <p className="text-gray-700 text-base md:text-lg">
+            <p className="text-base sm:text-lg text-gray-700 max-w-2xl mx-auto">
               설문조사에 참여하시면 경품 이벤트에 참여하실 수 있습니다.
             </p>
           </div>
           
-          <div className="grid md:grid-cols-2 gap-8 items-center">
+          {/* 버튼 및 QR 코드 영역 */}
+          <div className="grid md:grid-cols-2 gap-8 sm:gap-10 md:gap-12 mb-8 sm:mb-10">
             {/* 왼쪽: 버튼 영역 */}
-            <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-4 sm:gap-5 justify-center">
               <a
                 href={`/event${campaign.public_path}/survey`}
-                className="px-8 py-4 bg-gradient-to-r from-cyan-500 to-teal-600 text-white rounded-lg hover:from-cyan-600 hover:to-teal-700 shadow-lg hover:shadow-xl transition-all font-medium text-center text-lg"
+                className="w-full bg-[#00B388] text-white py-4 sm:py-5 rounded-md text-lg sm:text-xl font-bold shadow-lg hover:bg-[#008f6d] transition-colors text-center"
               >
                 설문 참여하기
               </a>
               <a
                 href={`/event${campaign.public_path}/survey?lookup=true`}
-                className="px-8 py-4 border-2 border-cyan-500 text-cyan-600 rounded-lg hover:bg-cyan-50 transition-all font-medium text-center"
+                className="w-full px-6 sm:px-8 py-3 sm:py-4 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all font-medium text-center text-base sm:text-lg"
               >
                 참여 확인하기
               </a>
             </div>
             
             {/* 오른쪽: QR 코드 영역 */}
-            <div className="flex flex-col items-center">
-              <h3 className="text-lg font-semibold text-gray-700 mb-4">QR 코드로 접속하기</h3>
+            <div className="flex flex-col items-center justify-center">
+              <h3 className="text-lg sm:text-xl font-semibold text-gray-700 mb-4 sm:mb-5">QR 코드로 접속하기</h3>
               <QRCodeDisplay url={surveyUrl} />
-              <p className="text-xs text-gray-500 mt-4 text-center">
-                QR 코드를 스캔하여 설문조사에 바로 참여하세요
-              </p>
             </div>
           </div>
+          
+          {/* URL 표시 (섹션 전체 아래 가운데) */}
+          <div className="pt-6 sm:pt-8 border-t border-gray-200 text-center">
+            <p className="text-xs sm:text-sm text-gray-500 font-mono break-all px-4">
+              {surveyUrl}
+            </p>
+          </div>
         </div>
-      </div>
-    </div>
-  )
-}
-
-
-// 완료 페이지 컴포넌트 (임시)
-function DonePage({ campaign }: { campaign: any }) {
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-50 flex items-center justify-center p-8">
-      <div className="max-w-2xl w-full bg-white rounded-xl shadow-lg p-8 text-center">
-        <div className="text-6xl mb-4">✓</div>
-        <h1 className="text-3xl font-bold mb-4 text-green-600">설문 완료되었습니다</h1>
-        <p className="text-gray-600 mb-8">
-          완료번호와 확인코드를 부스 스태프에게 보여주세요.
-        </p>
       </div>
     </div>
   )

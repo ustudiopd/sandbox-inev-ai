@@ -133,3 +133,4 @@ export default async function ConsolePage({
   
   return <ConsoleView webinar={webinar} userRole={userRole} />
 }
+

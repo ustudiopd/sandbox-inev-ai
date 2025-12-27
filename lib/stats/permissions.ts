@@ -112,3 +112,4 @@ export async function checkWebinarStatsPermission(webinarId: string) {
 
   return { hasPermission: false, webinar }
 }
+

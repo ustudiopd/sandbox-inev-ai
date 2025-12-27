@@ -282,3 +282,4 @@ on public.form_submissions (form_id, submitted_at);
 -- giveaway_entries 통계용 인덱스
 create index if not exists idx_giveaway_entries_giveaway_created
 on public.giveaway_entries (giveaway_id, created_at);
+

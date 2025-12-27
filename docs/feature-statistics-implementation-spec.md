@@ -1528,3 +1528,4 @@ ON registrations(webinar_id, created_at);
 - [기존 통계 명세서](./webinar-statistics-spec.md)
 - [API 라우트 구조](../app/api/)
 - [데이터베이스 스키마](../supabase/migrations/)
+

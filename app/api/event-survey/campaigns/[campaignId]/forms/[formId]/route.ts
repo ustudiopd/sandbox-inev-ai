@@ -122,6 +122,7 @@ export async function PUT(
     if (profile?.is_super_admin) {
       hasPermission = true
     } else {
+      // 클라이언트 멤버 확인
       const { data: clientMember } = await supabase
         .from('client_members')
         .select('role')
@@ -131,6 +132,18 @@ export async function PUT(
       
       if (clientMember && ['owner', 'admin', 'operator'].includes(clientMember.role)) {
         hasPermission = true
+      } else {
+        // 에이전시 멤버 확인
+        const { data: agencyMember } = await supabase
+          .from('agency_members')
+          .select('role')
+          .eq('agency_id', form.agency_id)
+          .eq('user_id', user.id)
+          .maybeSingle()
+        
+        if (agencyMember && ['owner', 'admin'].includes(agencyMember.role)) {
+          hasPermission = true
+        }
       }
     }
     

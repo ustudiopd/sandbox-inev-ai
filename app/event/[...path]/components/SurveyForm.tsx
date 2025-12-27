@@ -48,6 +48,7 @@ interface SurveyFormProps {
   campaignId: string
   formId: string | null
   onSubmitted: (result: { survey_no: number; code6: string }) => void
+  publicPath?: string
   previewMode?: boolean
   previewFormData?: any
   editMode?: boolean
@@ -75,6 +76,7 @@ export default function SurveyForm({
   campaignId, 
   formId, 
   onSubmitted, 
+  publicPath,
   previewMode = false, 
   previewFormData,
   editMode = false,
@@ -476,9 +478,23 @@ export default function SurveyForm({
         </div>
       </div>
 
-      <div className="max-w-[640px] mx-auto px-5 py-10">
+      <div className="max-w-[640px] mx-auto px-4 sm:px-5 py-6 sm:py-10">
+        {/* 등록화면으로 돌아가기 버튼 */}
+        {publicPath && !previewMode && (
+          <div className="mb-4">
+            <a
+              href={`/event${publicPath}`}
+              className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 transition-colors"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+              등록화면으로 돌아가기
+            </a>
+          </div>
+        )}
         {/* 설문 영역 (회색 배경 박스) */}
-        <div className="bg-gray-50 rounded-lg shadow-md p-6 md:p-8">
+        <div className="bg-gray-50 rounded-lg shadow-md p-5 sm:p-6 md:p-8">
           {/* 참여 방법 안내 */}
           <section className="mb-12">
             {editMode && editingField === 'participationTitle' ? (
@@ -726,7 +742,7 @@ export default function SurveyForm({
                       />
                     )}
                     
-                    {question.type === 'single' && question.options && (
+                    {question.type === 'single' && question.options && Array.isArray(question.options) && question.options.length > 0 && (
                       <div className="grid grid-cols-1 gap-1.5">
                         {question.options.map((option: any) => {
                           const optionId = typeof option === 'string' ? option : option.id
@@ -752,7 +768,7 @@ export default function SurveyForm({
                       </div>
                     )}
                     
-                    {question.type === 'multiple' && question.options && (
+                    {question.type === 'multiple' && question.options && Array.isArray(question.options) && question.options.length > 0 && (
                       <div className="grid grid-cols-1 gap-1.5">
                         {question.options.map((option: any) => {
                           const optionId = typeof option === 'string' ? option : option.id
@@ -793,10 +809,71 @@ export default function SurveyForm({
             )}
             
             {/* 개인정보 수집동의 (아코디언) */}
-            {form?.config?.consentFields && form.config.consentFields.filter(c => c.enabled).length > 0 && (
-              <div className="space-y-4 pt-10">
-                <h3 className="text-xl font-bold mb-4 text-gray-800">개인정보 수집동의</h3>
-                {form.config.consentFields.filter(c => c.enabled).map((consent, index) => {
+            {(() => {
+              // 기본값 정의 (미리보기와 동일)
+              const defaultConsentFields = [
+                {
+                  id: 'consent1',
+                  enabled: true,
+                  required: true,
+                  title: '개인정보 공유 동의',
+                  content: 'HPE (은)가 귀하의 개인정보를 수집ㆍ이용하는 목적은 다음과 같습니다 제품과 서비스에 대해 귀하와의 연락, 고객 서비스 증진, 제품 및 서비스에 대한 정보 제공 및 판매, 새로운 서비스와 혜택에 대한 업데이트, 개별 프로모션 제안, 제품 및 서비스에 대한 시장 조사\n\n수집하려는 개인정보의 항목: 이름 회사명 휴대전화번호\n\n개인정보의 보유 및 이용 기간: 처리 목적 달성시까지\n\n개인정보를 공유받는 자의 개인정보 보유 및 이용 기간: 개인정보 수집 및 이용 목적 달성 시까지 보관합니다.\n\n동의를 거부할 권리 및 동의 거부에 따른 불이익: 귀하는 위2항의 선택정보 개인정보의 수집ㆍ이용에 대한 동의를 거부할 수 있으며, 동의를 거부한 경우에는 HPE (은)는 귀하에게 그와 관련된 정보나 혜택은 제공하지 않게 됩니다.\n\n촬영 동의\n본인은 HPE Discover More AI Seoul 2026 행사 중 촬영되는 사진·영상이 HPE 홍보 목적으로 활용될 수 있음에 동의합니다. (활용기간: 목적 달성 시)\n\n기념품 수령 정책 동의\n본인은 소속 기관의 기념품·금품 수령 관련 규정을 이해하며, 이를 준수하는 책임이 본인에게 있음을 확인합니다. HPE는 이에 대한 책임이 없음을 확인합니다.',
+                },
+                {
+                  id: 'consent2',
+                  enabled: true,
+                  required: true,
+                  title: '개인정보 취급위탁 동의',
+                  content: 'HPE (은)는 다음과 같은 마케팅과 커뮤니케이션 등의 목적으로 HPE (은)(을)를 보조하는 서비스 제공자와 공급자에게 개인정보 취급을 위탁할 수 있습니다.\n\n수탁자: ㈜언택트온\n\n위탁하는 업무의 내용: 세미나/이벤트 등 마케팅 프로모션 참석 및 등록 확인, 세미나/이벤트 설문지 키인 작업 및 통계 분석, 기프트 제공',
+                },
+                {
+                  id: 'consent3',
+                  enabled: true,
+                  required: true,
+                  title: '전화, 이메일, SMS 수신 동의',
+                  content: 'HPE (은)는 제품 및 서비스, 프로모션 또는 시장조사 등의 유용한 정보를 온·오프라인을 통해 안내 드리고자 합니다.\n\n기프트 제공 또는 기프티콘 발송을 위하여 전화 연락 또는 SMS 발송을 드릴 수 있습니다.',
+                },
+              ]
+              
+              // consentFields가 없거나 비어있으면 기본값 사용
+              const consentFields = (form?.config?.consentFields && form.config.consentFields.length > 0)
+                ? form.config.consentFields 
+                : defaultConsentFields
+              
+              const enabledConsentFields = consentFields.filter((c: any) => {
+                // enabled가 명시적으로 false가 아닌 경우 모두 표시
+                const isEnabled = c.enabled !== false && c.enabled !== undefined
+                return isEnabled
+              })
+              
+              // 디버깅 로그 (자세한 정보)
+              console.log('[SurveyForm] 개인정보 동의 렌더링 체크:', {
+                hasForm: !!form,
+                hasConfig: !!form?.config,
+                config: form?.config,
+                formConfigConsentFields: form?.config?.consentFields,
+                consentFields: consentFields,
+                consentFieldsLength: consentFields.length,
+                enabledConsentFields: enabledConsentFields,
+                enabledCount: enabledConsentFields.length,
+                enabledDetails: consentFields.map((c: any) => ({
+                  id: c.id,
+                  enabled: c.enabled,
+                  title: c.title,
+                })),
+              })
+              
+              if (enabledConsentFields.length === 0) {
+                console.log('[SurveyForm] 개인정보 동의 항목이 없어서 렌더링하지 않음')
+                return null
+              }
+              
+              console.log('[SurveyForm] 개인정보 동의 섹션 렌더링:', enabledConsentFields.length, '개 항목')
+              
+              return (
+                <div className="space-y-4 pt-10">
+                  <h3 className="text-xl font-bold mb-4 text-gray-800">개인정보 수집동의</h3>
+                  {enabledConsentFields.map((consent: any, index: number) => {
                   const consentId = consent.id
                   const consentState = consentId === 'consent1' ? consent1 : consentId === 'consent2' ? consent2 : consent3
                   const setConsentState = consentId === 'consent1' ? setConsent1 : consentId === 'consent2' ? setConsent2 : setConsent3
@@ -835,9 +912,10 @@ export default function SurveyForm({
                       )}
                     </div>
                   )
-                })}
-              </div>
-            )}
+                  })}
+                </div>
+              )
+            })()}
 
             {/* 제출 버튼 */}
             <div className="pt-10">

@@ -104,8 +104,45 @@ export async function POST(
       )
     }
     
-    // code6 생성 (survey_no를 6자리로 패딩)
-    const code6 = surveyNo.toString().padStart(6, '0')
+    // code6 생성 (알파벳+숫자 혼합 6자리 랜덤 코드)
+    const generateCode6 = (): string => {
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
+      let code = ''
+      for (let i = 0; i < 6; i++) {
+        code += chars.charAt(Math.floor(Math.random() * chars.length))
+      }
+      return code
+    }
+    
+    // 중복 체크를 포함한 고유한 code6 생성
+    let code6: string = ''
+    let attempts = 0
+    const maxAttempts = 100
+    
+    while (attempts < maxAttempts) {
+      code6 = generateCode6()
+      
+      // 같은 캠페인 내에서 중복 체크
+      const { data: existingCode } = await admin
+        .from('event_survey_entries')
+        .select('id')
+        .eq('campaign_id', campaignId)
+        .eq('code6', code6)
+        .maybeSingle()
+      
+      if (!existingCode) {
+        break // 고유한 코드 생성 성공
+      }
+      
+      attempts++
+    }
+    
+    if (attempts >= maxAttempts || !code6) {
+      return NextResponse.json(
+        { error: 'Failed to generate unique code. Please try again.' },
+        { status: 500 }
+      )
+    }
     
     // 폼 제출 처리 (form_submissions와 form_answers 생성)
     let formSubmissionId: string | null = null
