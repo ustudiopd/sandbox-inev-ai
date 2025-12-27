@@ -18,6 +18,7 @@ import {
   Pie,
   Cell,
 } from 'recharts'
+import AnalysisReportSection from './AnalysisReportSection'
 
 interface OverviewTabProps {
   campaign: any
@@ -160,8 +161,17 @@ export default function OverviewTab({ campaign, onCampaignUpdate }: OverviewTabP
       return
     }
     
-    // CSV 헤더
-    const headers = [
+    // 문항 정보 가져오기 (헤더 생성용)
+    const questions = questionStats.length > 0 
+      ? questionStats.map((stat: any) => ({
+          id: stat.questionId,
+          body: stat.questionBody,
+          orderNo: stat.orderNo,
+        }))
+      : []
+    
+    // CSV 헤더 생성
+    const baseHeaders = [
       '순번',
       '확인코드',
       '이름',
@@ -172,17 +182,37 @@ export default function OverviewTab({ campaign, onCampaignUpdate }: OverviewTabP
       '경품명',
     ]
     
-    // CSV 데이터 행
-    const rows = allEntries.map((entry: any) => [
-      entry.survey_no || '',
-      entry.code6 || '',
-      entry.name || '',
-      entry.company || '',
-      entry.phone_norm || '',
-      entry.completed_at ? new Date(entry.completed_at).toLocaleString('ko-KR') : '',
-      entry.verified_at ? new Date(entry.verified_at).toLocaleString('ko-KR') : '',
-      entry.prize_label || '',
-    ])
+    // 문항별 헤더 추가
+    const questionHeaders = questions
+      .sort((a: any, b: any) => a.orderNo - b.orderNo)
+      .map((q: any) => `문항 ${q.orderNo}: ${q.body}`)
+    
+    const headers = [...baseHeaders, ...questionHeaders]
+    
+    // CSV 데이터 행 생성
+    const rows = allEntries.map((entry: any) => {
+      const baseRow = [
+        entry.survey_no || '',
+        entry.code6 || '',
+        entry.name || '',
+        entry.company || '',
+        entry.phone_norm || '',
+        entry.completed_at ? new Date(entry.completed_at).toLocaleString('ko-KR') : '',
+        entry.verified_at ? new Date(entry.verified_at).toLocaleString('ko-KR') : '',
+        entry.prize_label || '',
+      ]
+      
+      // 문항별 답변 추가 (entries에 이미 answers가 포함되어 있음)
+      const answerMap = new Map(
+        (entry.answers || []).map((a: any) => [a.questionId, a.answer])
+      )
+      
+      const answerRow = questions
+        .sort((a: any, b: any) => a.orderNo - b.orderNo)
+        .map((q: any) => answerMap.get(q.id) || '답변 없음')
+      
+      return [...baseRow, ...answerRow]
+    })
     
     // CSV 내용 생성
     const csvContent = [
@@ -642,6 +672,11 @@ export default function OverviewTab({ campaign, onCampaignUpdate }: OverviewTabP
             {new Date(campaign.updated_at).toLocaleString('ko-KR')}
           </div>
         )}
+      </div>
+
+      {/* AI 분석 보고서 섹션 */}
+      <div className="mt-8">
+        <AnalysisReportSection campaignId={campaign.id} />
       </div>
     </div>
   )

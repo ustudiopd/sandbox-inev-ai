@@ -41,7 +41,7 @@ export async function generateSlugFromTitle(title: string): Promise<string | nul
 슬러그:`
 
     // Gemini 2.0 Flash 모델 사용
-    const modelName = 'gemini-2.0-flash-exp'
+    const modelName = 'gemini-2.0-flash'
     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`
     
     const response = await fetch(apiUrl, {
@@ -103,4 +103,7 @@ export async function generateSlugFromTitle(title: string): Promise<string | nul
     return null
   }
 }
+
+
+
 

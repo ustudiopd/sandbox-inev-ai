@@ -936,3 +936,5 @@ function shouldShowCurrentEventSection(
 9. 슈퍼 관리자 전사 통계 페이지
 10. 핀 고정 기능
 
+
+

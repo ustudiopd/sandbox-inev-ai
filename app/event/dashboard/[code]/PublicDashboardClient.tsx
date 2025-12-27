@@ -1,6 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import type { JSX } from 'react'
+import ReactMarkdown from 'react-markdown'
 import {
   PieChart,
   Pie,
@@ -14,14 +16,375 @@ interface PublicDashboardClientProps {
   campaign: any
 }
 
+interface PublicReport {
+  id: string
+  analyzed_at: string
+  sample_count: number
+  total_questions: number
+  report_title: string
+  summary: string
+  lens: string
+  created_at: string
+}
+
+interface PublicReportDetail extends PublicReport {
+  report_content_md: string
+  report_content_full_md: string
+  statistics_snapshot: any
+  references_used: any
+}
+
+// 컬러풀한 도넛 차트 색상 팔레트
+const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D']
+
+// 마크다운 렌더러 컴포넌트 (주요 발견사항 및 권장사항 카드화)
+function MarkdownRenderer({ content }: { content: string }) {
+  const lines = content.split('\n')
+  const sections: Array<{ title: string; content: string; isKeyFindings: boolean; isRecommendations: boolean }> = []
+  let currentTitle = ''
+  let currentContent: string[] = []
+
+  const processSection = () => {
+    if (currentContent.length > 0 || currentTitle) {
+      const sectionContent = currentContent.join('\n')
+      const isKeyFindings =
+        currentTitle.includes('주요 발견사항') ||
+        currentTitle.includes('주요 발견') ||
+        currentTitle.includes('Key Findings') ||
+        currentTitle.includes('주요 인사이트')
+      
+      const isRecommendations =
+        currentTitle.includes('권장사항') ||
+        currentTitle.includes('권장') ||
+        currentTitle.includes('Recommendations') ||
+        currentTitle.includes('제안사항')
+
+      sections.push({
+        title: currentTitle.replace(/^##\s*/, ''),
+        content: sectionContent,
+        isKeyFindings,
+        isRecommendations,
+      })
+      currentContent = []
+      currentTitle = ''
+    }
+  }
+
+  lines.forEach((line) => {
+    const trimmed = line.trim()
+    if (trimmed.startsWith('##')) {
+      processSection()
+      currentTitle = trimmed
+    } else {
+      currentContent.push(line)
+    }
+  })
+
+  processSection()
+
+  if (sections.length === 0) {
+    return <MarkdownContent content={content} isCardMode={false} isRecommendations={false} />
+  }
+
+  return (
+    <div>
+      {sections.map((section, index) => (
+        <div key={index} className={index > 0 ? 'mt-6' : ''}>
+          <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm mb-6">
+            {section.title && (
+              <h2 className="text-xl font-bold text-gray-900 mb-4 pb-3 border-b border-gray-200">
+                {section.title}
+              </h2>
+            )}
+            <MarkdownContent 
+              content={section.content} 
+              isCardMode={section.isKeyFindings} 
+              isRecommendations={section.isRecommendations}
+            />
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+// 마크다운 콘텐츠 렌더러
+function MarkdownContent({ content, isCardMode, isRecommendations = false }: { content: string; isCardMode: boolean; isRecommendations?: boolean }) {
+  if (isRecommendations) {
+    // 권장사항 모드: 깔끔한 카드 디자인
+    const RecommendationCard = ({ blockContent, index }: { blockContent: string; index: number }) => {
+      const lines = blockContent.split('\n')
+      if (lines.length === 0) return null
+
+      let title = ''
+      let category = ''
+      let contentWithoutTitle = blockContent
+
+      // 제목 추출 (###)
+      const titleMatch = lines[0].match(/^###\s*(.+)$/)
+      if (titleMatch) {
+        title = titleMatch[1].trim()
+        contentWithoutTitle = lines.slice(1).join('\n')
+      }
+
+      const categoryMatch = (contentWithoutTitle + ' ' + title).match(/(performance|content|marketing|sales|기술|콘텐츠|마케팅|영업|성능|컨텐츠)/i)
+      if (categoryMatch) {
+        const matched = categoryMatch[1].toLowerCase()
+        const categoryMap: Record<string, string> = {
+          performance: 'performance',
+          content: 'content',
+          marketing: 'marketing',
+          sales: 'sales',
+          기술: 'performance',
+          성능: 'performance',
+          콘텐츠: 'content',
+          컨텐츠: 'content',
+          마케팅: 'marketing',
+          영업: 'sales',
+        }
+        category = categoryMap[matched] || matched
+      }
+
+      const getCategoryTag = (cat: string) => {
+        const categoryMap: Record<string, { label: string; bg: string; text: string }> = {
+          performance: { label: 'performance', bg: 'bg-blue-100', text: 'text-blue-700' },
+          content: { label: 'content', bg: 'bg-blue-100', text: 'text-blue-700' },
+          marketing: { label: 'marketing', bg: 'bg-blue-100', text: 'text-blue-700' },
+          sales: { label: 'sales', bg: 'bg-blue-100', text: 'text-blue-700' },
+        }
+        return categoryMap[cat] || { label: cat, bg: 'bg-blue-100', text: 'text-blue-700' }
+      }
+
+      const categoryTag = category ? getCategoryTag(category) : null
+
+      return (
+        <div className="bg-gray-50 border border-gray-200 rounded-lg p-5 mb-4">
+          <div className="flex items-start justify-between mb-3">
+            {title && (
+              <h4 className="font-bold text-gray-900 text-lg flex-1 pr-4">{title}</h4>
+            )}
+            {categoryTag && (
+              <span className={`px-3 py-1 text-xs rounded ${categoryTag.bg} ${categoryTag.text} whitespace-nowrap font-medium`}>
+                {categoryTag.label}
+              </span>
+            )}
+          </div>
+          <div className="text-gray-700">
+            <ReactMarkdown
+              components={{
+                p: ({ children }) => (
+                  <p className="text-gray-700 mb-4 leading-relaxed">{children}</p>
+                ),
+                ul: ({ children }) => (
+                  <ul className="list-disc list-inside text-gray-700 mb-4 space-y-2 pl-2">{children}</ul>
+                ),
+                ol: ({ children }) => (
+                  <ol className="list-decimal list-inside text-gray-700 mb-4 space-y-2 pl-2">{children}</ol>
+                ),
+                li: ({ children }) => (
+                  <li className="text-gray-700 mb-1 leading-relaxed">{children}</li>
+                ),
+                strong: ({ children }) => (
+                  <strong className="font-bold text-gray-900">{children}</strong>
+                ),
+                h4: ({ children }) => (
+                  <h4 className="text-base font-semibold text-gray-900 mt-4 mb-2">{children}</h4>
+                ),
+              }}
+            >
+              {contentWithoutTitle.trim()}
+            </ReactMarkdown>
+          </div>
+        </div>
+      )
+    }
+
+    const blocks = content.split(/(?=^###\s)/m).filter((b) => b.trim())
+    
+    return (
+      <div className="space-y-4">
+        {blocks.map((block, index) => (
+          <RecommendationCard key={index} blockContent={block} index={index} />
+        ))}
+      </div>
+    )
+  }
+
+  if (isCardMode) {
+    // 주요 발견사항 카드 모드
+    const blocks = content.split(/(?=^###\s)/m).filter((b) => b.trim())
+    const cards: JSX.Element[] = []
+
+    if (blocks.length === 0) {
+      // ### 제목이 없으면 일반 단락으로 처리
+      const paragraphs = content.split(/\n\n+/).filter((p) => p.trim())
+      paragraphs.forEach((para, index) => {
+        if (para.trim()) {
+          cards.push(
+            <div key={index} className="bg-gray-50 border border-gray-200 rounded-lg p-5 mb-4">
+              <div className="text-sm text-gray-700">
+                <ReactMarkdown
+                  components={{
+                    p: ({ children }) => (
+                      <p className="mb-3 leading-relaxed">{children}</p>
+                    ),
+                    ul: ({ children }) => (
+                      <ul className="list-disc list-inside space-y-2 mb-3 pl-2">{children}</ul>
+                    ),
+                    ol: ({ children }) => (
+                      <ol className="list-decimal list-inside space-y-2 mb-3 pl-2">{children}</ol>
+                    ),
+                    li: ({ children }) => (
+                      <li className="leading-relaxed">{children}</li>
+                    ),
+                    strong: ({ children }) => (
+                      <strong className="font-bold text-gray-900">{children}</strong>
+                    ),
+                  }}
+                >
+                  {para.trim()}
+                </ReactMarkdown>
+              </div>
+            </div>
+          )
+        }
+      })
+    } else {
+      blocks.forEach((block, index) => {
+        const lines = block.split('\n')
+        if (lines.length === 0) return
+
+        let title = ''
+        let priority = ''
+        let contentWithoutTitle = block
+
+        // 제목 추출 (###)
+        const titleMatch = lines[0].match(/^###\s*(.+)$/)
+        if (titleMatch) {
+          title = titleMatch[1].trim()
+          contentWithoutTitle = lines.slice(1).join('\n')
+        }
+
+        // 우선순위 추출
+        const priorityMatch = contentWithoutTitle.match(/(높음|중간|낮음)/)
+        if (priorityMatch) {
+          priority = priorityMatch[1]
+        }
+
+        // 카드 배경색 결정
+        const bgColor =
+          priority === '높음'
+            ? 'bg-red-50 border-red-200'
+            : priority === '중간'
+              ? 'bg-yellow-50 border-yellow-200'
+              : 'bg-green-50 border-green-200'
+
+        cards.push(
+          <div key={index} className={`rounded-lg border p-5 mb-4 ${bgColor}`}>
+            <div className="flex items-start justify-between mb-3">
+              {title && <h4 className="font-bold text-gray-900 text-base flex-1">{title}</h4>}
+              {priority && (
+                <span
+                  className={`px-2 py-1 text-xs rounded ml-2 whitespace-nowrap ${
+                    priority === '높음'
+                      ? 'bg-red-100 text-red-700'
+                      : priority === '중간'
+                        ? 'bg-yellow-100 text-yellow-700'
+                        : 'bg-green-100 text-green-700'
+                  }`}
+                >
+                  {priority}
+                </span>
+              )}
+            </div>
+            <div className="text-sm text-gray-700">
+              <ReactMarkdown
+                components={{
+                  p: ({ children }) => (
+                    <p className="mb-3 leading-relaxed">{children}</p>
+                  ),
+                  ul: ({ children }) => (
+                    <ul className="list-disc list-inside space-y-2 mb-3 pl-2">{children}</ul>
+                  ),
+                  ol: ({ children }) => (
+                    <ol className="list-decimal list-inside space-y-2 mb-3 pl-2">{children}</ol>
+                  ),
+                  li: ({ children }) => (
+                    <li className="leading-relaxed">{children}</li>
+                  ),
+                  strong: ({ children }) => (
+                    <strong className="font-bold text-gray-900">{children}</strong>
+                  ),
+                }}
+              >
+                {contentWithoutTitle.trim()}
+              </ReactMarkdown>
+            </div>
+          </div>
+        )
+      })
+    }
+
+    return <div className="space-y-4">{cards}</div>
+  }
+
+  // 일반 모드: 박스로 감싼 표준 마크다운 렌더링
+  return (
+    <div className="bg-gray-50 border border-gray-200 rounded-lg p-5">
+      <div className="text-gray-700">
+        <ReactMarkdown
+          components={{
+            h2: ({ children }) => (
+              <h2 className="text-xl font-bold text-gray-900 mt-6 mb-4 pb-2 border-b border-gray-200">{children}</h2>
+            ),
+            h3: ({ children }) => (
+              <h3 className="text-lg font-bold text-gray-900 mt-5 mb-3">{children}</h3>
+            ),
+            h4: ({ children }) => (
+              <h4 className="text-base font-semibold text-gray-900 mt-4 mb-2">{children}</h4>
+            ),
+            p: ({ children }) => (
+              <p className="text-gray-700 mb-4 leading-relaxed">{children}</p>
+            ),
+            ul: ({ children }) => (
+              <ul className="list-disc list-inside text-gray-700 mb-4 space-y-2 pl-2">{children}</ul>
+            ),
+            ol: ({ children }) => (
+              <ol className="list-decimal list-inside text-gray-700 mb-4 space-y-2 pl-2">{children}</ol>
+            ),
+            li: ({ children }) => (
+              <li className="text-gray-700 mb-1 leading-relaxed">{children}</li>
+            ),
+            strong: ({ children }) => (
+              <strong className="font-bold text-gray-900">{children}</strong>
+            ),
+            blockquote: ({ children }) => (
+              <blockquote className="border-l-4 border-gray-300 pl-4 italic text-gray-600 my-4 bg-gray-50 py-2 rounded">
+                {children}
+              </blockquote>
+            ),
+          }}
+        >
+          {content}
+        </ReactMarkdown>
+      </div>
+    </div>
+  )
+}
+
 export default function PublicDashboardClient({ campaign }: PublicDashboardClientProps) {
   const [loadingStats, setLoadingStats] = useState(false)
   const [questionStats, setQuestionStats] = useState<any[]>([])
+  const [publicReports, setPublicReports] = useState<PublicReport[]>([])
+  const [loadingReports, setLoadingReports] = useState(false)
+  const [selectedReport, setSelectedReport] = useState<PublicReportDetail | null>(null)
+  const [loadingDetail, setLoadingDetail] = useState(false)
   
   useEffect(() => {
     if (campaign.form_id) {
       loadQuestionStats()
     }
+    loadPublicReports()
   }, [campaign.id, campaign.form_id])
   
   const loadQuestionStats = async () => {
@@ -40,6 +403,125 @@ export default function PublicDashboardClient({ campaign }: PublicDashboardClien
     } finally {
       setLoadingStats(false)
     }
+  }
+
+  const loadPublicReports = async () => {
+    setLoadingReports(true)
+    try {
+      const response = await fetch(`/api/public/event-survey/campaigns/${campaign.id}/analysis/reports`)
+      const result = await response.json()
+      
+      if (result.success && result.reports) {
+        setPublicReports(result.reports)
+      }
+    } catch (error) {
+      console.error('공개 보고서 목록 로드 오류:', error)
+    } finally {
+      setLoadingReports(false)
+    }
+  }
+
+  const handleViewReport = async (reportId: string) => {
+    setLoadingDetail(true)
+    try {
+      const response = await fetch(
+        `/api/public/event-survey/campaigns/${campaign.id}/analysis/reports/${reportId}`
+      )
+      const result = await response.json()
+
+      if (result.success && result.report) {
+        setSelectedReport(result.report)
+      }
+    } catch (error) {
+      console.error('보고서 상세 로드 오류:', error)
+    } finally {
+      setLoadingDetail(false)
+    }
+  }
+
+  const renderDonutCharts = () => {
+    if (!selectedReport?.statistics_snapshot?.questions) return null
+
+    const summaryQuestions = selectedReport.statistics_snapshot.questions
+      .filter((q: any) => q.analysis?.summary_chart && q.questionType !== 'text')
+      .slice(0, 6)
+
+    if (summaryQuestions.length === 0) return null
+
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        {summaryQuestions.map((question: any) => {
+          const data = Object.entries(question.choiceDistribution || {}).map(([key, value]) => {
+            const option = question.options?.find((opt: any) => (opt.id || opt) === key)
+            return {
+              name: option ? (option.text || option) : key,
+              value: value as number,
+            }
+          })
+
+          return (
+            <div key={question.questionId} className="bg-white p-4 rounded-lg shadow border border-gray-200">
+              <h4 className="text-sm font-semibold text-gray-900 mb-3 line-clamp-2">{question.questionBody}</h4>
+              <ResponsiveContainer width="100%" height={250}>
+                <PieChart>
+                  <Pie
+                    data={data}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={({ percent }) => {
+                      if (percent && percent < 0.05) return ''
+                      return `${percent ? (percent * 100).toFixed(0) : 0}%`
+                    }}
+                    outerRadius={70}
+                    innerRadius={30}
+                    fill="#8884d8"
+                    dataKey="value"
+                    style={{
+                      fontSize: '12px',
+                      fontWeight: 600,
+                    }}
+                  >
+                    {data.map((entry: any, index: number) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: '#ffffff',
+                      border: '1px solid #e2e8f0',
+                      borderRadius: '6px',
+                      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                      fontSize: '12px',
+                    }}
+                    labelStyle={{ color: '#1e293b', fontWeight: 600 }}
+                    formatter={(value: number, name: string, props: any) => {
+                      const percent = props.payload.percent
+                      return [`${value}명 (${percent ? (percent * 100).toFixed(1) : 0}%)`, props.payload.name]
+                    }}
+                  />
+                  <Legend
+                    verticalAlign="bottom"
+                    height={36}
+                    iconType="circle"
+                    wrapperStyle={{
+                      fontSize: '11px',
+                      paddingTop: '8px',
+                    }}
+                    formatter={(value: string) => {
+                      if (value.length > 15) {
+                        return value.substring(0, 15) + '...'
+                      }
+                      return value
+                    }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          )
+        })}
+      </div>
+    )
   }
   
   // 옵션별 색상 결정 함수 (문항별로 컬러풀하고 대비가 뚜렷한 색상 팔레트 사용)
@@ -284,6 +766,131 @@ export default function PublicDashboardClient({ campaign }: PublicDashboardClien
                         </div>
                       )}
                     </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* AI 분석 보고서 섹션 */}
+        {publicReports.length > 0 && (
+          <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">AI 분석 보고서</h3>
+            
+            {loadingReports ? (
+              <div className="text-center py-8 text-gray-500">보고서 목록을 불러오는 중...</div>
+            ) : selectedReport ? (
+              <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <button
+                    onClick={() => setSelectedReport(null)}
+                    className="text-blue-600 hover:text-blue-700 flex items-center gap-2 text-sm font-medium transition-colors"
+                  >
+                    ← 보고서 목록으로
+                  </button>
+                </div>
+
+                <div className="bg-white rounded-lg shadow-lg p-6 space-y-6 border border-gray-200">
+                  {/* 고정 신뢰 문구 */}
+                  <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-lg">
+                    <p className="text-sm text-gray-700 italic">
+                      본 보고서는 캠페인 설문 응답을 기반으로, 리서치/방법론 공개 원칙(AAPOR Transparency)과 시장조사 품질/윤리 가이드라인(ISO 20252, ICC/ESOMAR Code)을 참고하여 작성되었습니다. 또한 리드 우선순위와 후속 액션 제안은 BANT 및 MEDDIC 프레임워크 관점으로 구조화했습니다.
+                    </p>
+                  </div>
+
+                  {/* 분석 대상 요약 */}
+                  <div className="border-b border-gray-200 pb-6">
+                    <h3 className="text-lg font-bold text-gray-900 mb-4">🎯 분석 대상</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                      <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                        <div className="text-sm text-gray-600 mb-1">분석 시점</div>
+                        <div className="text-lg font-bold text-gray-900">
+                          {new Date(selectedReport.analyzed_at).toLocaleString('ko-KR', {
+                            year: 'numeric',
+                            month: '2-digit',
+                            day: '2-digit',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
+                        </div>
+                      </div>
+                      <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                        <div className="text-sm text-gray-600 mb-1">총 응답 수</div>
+                        <div className="text-2xl font-bold text-gray-900">
+                          {selectedReport.sample_count.toLocaleString()}명
+                        </div>
+                      </div>
+                      <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                        <div className="text-sm text-gray-600 mb-1">분석 문항 수</div>
+                        <div className="text-2xl font-bold text-gray-900">
+                          {selectedReport.total_questions}개
+                        </div>
+                      </div>
+                      <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                        <div className="text-sm text-gray-600 mb-1">분석 관점</div>
+                        <div className="text-lg font-bold text-gray-900">
+                          {selectedReport.lens === 'general'
+                            ? '일반'
+                            : selectedReport.lens === 'sales'
+                              ? '영업'
+                              : '마케팅'}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 레퍼런스 요약 */}
+                  {selectedReport.references_used?.references && (
+                    <div className="border-b border-gray-200 pb-6">
+                      <h3 className="text-lg font-bold text-gray-900 mb-4">📚 관련 레퍼런스 요약</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        {selectedReport.references_used.references.map((ref: any) => (
+                          <div key={ref.id} className="bg-gray-50 border border-gray-200 p-4 rounded-lg">
+                            <h4 className="font-semibold text-sm text-gray-900 mb-1">{ref.title}</h4>
+                            <p className="text-xs text-gray-600">{ref.summary}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 도넛 차트 요약 */}
+                  {renderDonutCharts()}
+
+                  {/* AI 분석 본문 */}
+                  <div className="prose prose-slate max-w-none">
+                    <MarkdownRenderer content={selectedReport.report_content_md || selectedReport.report_content_full_md} />
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {publicReports.map((report) => (
+                  <div
+                    key={report.id}
+                    className="bg-gray-50 border border-gray-200 rounded-lg p-6 hover:shadow-lg transition-all cursor-pointer"
+                    onClick={() => handleViewReport(report.id)}
+                  >
+                    <h4 className="text-lg font-bold text-gray-900 mb-3">{report.report_title}</h4>
+                    <div className="text-sm text-gray-600 space-y-2 mb-4">
+                      <div className="flex items-center gap-2">
+                        <span className="text-gray-500">분석 시점:</span>
+                        <span className="font-medium text-gray-700">
+                          {new Date(report.analyzed_at).toLocaleString('ko-KR')}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-gray-500">응답 수:</span>
+                        <span className="font-semibold text-gray-900">{report.sample_count.toLocaleString()}명</span>
+                        <span className="text-gray-400">|</span>
+                        <span className="text-gray-500">문항 수:</span>
+                        <span className="font-semibold text-gray-900">{report.total_questions}개</span>
+                      </div>
+                    </div>
+                    {report.summary && (
+                      <p className="text-sm text-gray-700 line-clamp-3 leading-relaxed">{report.summary}</p>
+                    )}
                   </div>
                 ))}
               </div>

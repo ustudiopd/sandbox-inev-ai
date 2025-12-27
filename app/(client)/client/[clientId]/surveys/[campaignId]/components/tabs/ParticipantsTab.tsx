@@ -9,34 +9,33 @@ interface ParticipantsTabProps {
 
 export default function ParticipantsTab({ campaignId, entries }: ParticipantsTabProps) {
   const [selectedEntry, setSelectedEntry] = useState<any>(null)
-  const [loadingAnswers, setLoadingAnswers] = useState(false)
-  const [answers, setAnswers] = useState<any>(null)
   
-  const handleEntryClick = async (entry: any) => {
+  const handleEntryClick = (entry: any) => {
     setSelectedEntry(entry)
-    setLoadingAnswers(true)
-    setAnswers(null)
-    
-    try {
-      const response = await fetch(`/api/event-survey/campaigns/${campaignId}/entries/${entry.id}/answers`)
-      const result = await response.json()
-      
-      if (result.success) {
-        setAnswers(result)
-      } else {
-        alert('답변을 불러오는 중 오류가 발생했습니다.')
-      }
-    } catch (error) {
-      console.error('답변 조회 오류:', error)
-      alert('답변을 불러오는 중 오류가 발생했습니다.')
-    } finally {
-      setLoadingAnswers(false)
-    }
   }
   
   const closeModal = () => {
     setSelectedEntry(null)
-    setAnswers(null)
+  }
+  
+  // entries에 포함된 answers를 questions 형식으로 변환
+  const getAnswersForEntry = (entry: any) => {
+    if (!entry.answers || entry.answers.length === 0) {
+      return []
+    }
+    
+    return entry.answers.map((a: any) => ({
+      id: a.questionId,
+      order_no: a.orderNo,
+      body: a.questionBody,
+      type: a.questionType,
+      answer: {
+        text: a.answer !== '답변 없음' && a.questionType === 'text' ? a.answer : null,
+        choices: a.answer !== '답변 없음' && (a.questionType === 'single' || a.questionType === 'multiple') 
+          ? a.answer.split(', ').map((text: string) => ({ text }))
+          : null,
+      },
+    }))
   }
   
   return (
@@ -144,54 +143,57 @@ export default function ParticipantsTab({ campaignId, entries }: ParticipantsTab
               </div>
               
               {/* 설문 답변 */}
-              {loadingAnswers ? (
-                <div className="text-center py-12">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-400 mx-auto mb-4"></div>
-                  <p className="text-gray-500">답변을 불러오는 중...</p>
-                </div>
-              ) : answers && answers.questions ? (
-                <div className="space-y-6">
-                  {answers.questions.map((q: any, index: number) => (
-                    <div key={q.id} className="border border-gray-200 rounded-lg p-4">
-                      <div className="flex items-start gap-2 mb-3">
-                        <span className="text-sm font-medium text-gray-500">문항 {q.order_no}</span>
-                        <span className="text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded">
-                          {q.type === 'single' ? '단일 선택' : q.type === 'multiple' ? '다중 선택' : '텍스트'}
-                        </span>
-                      </div>
-                      <h4 className="text-base font-semibold text-gray-900 mb-3">{q.body}</h4>
-                      
-                      {q.answer ? (
-                        <div className="mt-3">
-                          {q.type === 'text' ? (
-                            <div className="bg-gray-50 rounded p-3 text-sm text-gray-700">
-                              {q.answer.text || '답변 없음'}
-                            </div>
-                          ) : (
-                            <div className="space-y-2">
-                              {q.answer.choices && q.answer.choices.length > 0 ? (
-                                q.answer.choices.map((choice: any, idx: number) => (
-                                  <div key={idx} className="bg-blue-50 border border-blue-200 rounded p-2 text-sm text-gray-700">
-                                    {typeof choice === 'string' ? choice : choice.text || choice.id}
-                                  </div>
-                                ))
-                              ) : (
-                                <div className="text-sm text-gray-500">답변 없음</div>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      ) : (
-                        <div className="text-sm text-gray-500 mt-3">답변 없음</div>
-                      )}
+              {(() => {
+                const questions = getAnswersForEntry(selectedEntry)
+                
+                if (questions.length === 0) {
+                  return (
+                    <div className="text-center py-12 text-gray-500">
+                      <p>답변 데이터가 없습니다.</p>
                     </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-12 text-gray-500">
-                  <p>답변 데이터를 불러올 수 없습니다.</p>
-                </div>
-              )}
+                  )
+                }
+                
+                return (
+                  <div className="space-y-6">
+                    {questions.map((q: any, index: number) => (
+                      <div key={q.id} className="border border-gray-200 rounded-lg p-4">
+                        <div className="flex items-start gap-2 mb-3">
+                          <span className="text-sm font-medium text-gray-500">문항 {q.order_no}</span>
+                          <span className="text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded">
+                            {q.type === 'single' ? '단일 선택' : q.type === 'multiple' ? '다중 선택' : '텍스트'}
+                          </span>
+                        </div>
+                        <h4 className="text-base font-semibold text-gray-900 mb-3">{q.body}</h4>
+                        
+                        {q.answer && (q.answer.text || (q.answer.choices && q.answer.choices.length > 0)) ? (
+                          <div className="mt-3">
+                            {q.type === 'text' ? (
+                              <div className="bg-gray-50 rounded p-3 text-sm text-gray-700">
+                                {q.answer.text || '답변 없음'}
+                              </div>
+                            ) : (
+                              <div className="space-y-2">
+                                {q.answer.choices && q.answer.choices.length > 0 ? (
+                                  q.answer.choices.map((choice: any, idx: number) => (
+                                    <div key={idx} className="bg-blue-50 border border-blue-200 rounded p-2 text-sm text-gray-700">
+                                      {typeof choice === 'string' ? choice : choice.text || choice.id}
+                                    </div>
+                                  ))
+                                ) : (
+                                  <div className="text-sm text-gray-500">답변 없음</div>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="text-sm text-gray-500 mt-3">답변 없음</div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )
+              })()}
             </div>
           </div>
         </div>

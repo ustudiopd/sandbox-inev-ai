@@ -77,6 +77,13 @@ export async function GET(
       )
     }
     
+    // 캠페인 정보 조회 (form_id 가져오기)
+    const { data: campaignWithForm } = await admin
+      .from('event_survey_campaigns')
+      .select('form_id')
+      .eq('id', campaignId)
+      .single()
+    
     // 모든 참여자 목록 조회 (제한 없음)
     const { data: entries, error: entriesError } = await admin
       .from('event_survey_entries')
@@ -91,9 +98,93 @@ export async function GET(
       )
     }
     
+    // 폼 문항 조회 (한 번만)
+    let questions: any[] = []
+    if (campaignWithForm?.form_id) {
+      const { data: questionsData } = await admin
+        .from('form_questions')
+        .select('*')
+        .eq('form_id', campaignWithForm.form_id)
+        .order('order_no', { ascending: true })
+      
+      questions = questionsData || []
+    }
+    
+    // 모든 submission_id 수집
+    const submissionIds = (entries || [])
+      .map((e: any) => e.form_submission_id)
+      .filter(Boolean)
+    
+    // 모든 답변 한 번에 조회
+    let allAnswers: any[] = []
+    if (submissionIds.length > 0) {
+      const { data: answersData } = await admin
+        .from('form_answers')
+        .select('*')
+        .in('submission_id', submissionIds)
+      
+      allAnswers = answersData || []
+    }
+    
+    // submission_id별로 답변 그룹화
+    const answersBySubmission = new Map<string, any[]>()
+    allAnswers.forEach((answer: any) => {
+      if (!answersBySubmission.has(answer.submission_id)) {
+        answersBySubmission.set(answer.submission_id, [])
+      }
+      answersBySubmission.get(answer.submission_id)!.push(answer)
+    })
+    
+    // 각 참여자의 설문 답변 매핑
+    const entriesWithAnswers = (entries || []).map((entry: any) => {
+      if (!entry.form_submission_id || questions.length === 0) {
+        return { ...entry, answers: [] }
+      }
+      
+      const answers = answersBySubmission.get(entry.form_submission_id) || []
+      if (answers.length === 0) {
+        return { ...entry, answers: [] }
+      }
+      
+      // 문항별 답변 매핑
+      const answersMap = new Map(answers.map((a: any) => [a.question_id, a]))
+      
+      const detailedAnswers = questions.map((q: any) => {
+        const answer = answersMap.get(q.id)
+        const parsedOptions = q.options ? (typeof q.options === 'string' ? JSON.parse(q.options) : q.options) : []
+        
+        let displayAnswer = '답변 없음'
+        if (answer) {
+          if (q.type === 'text') {
+            displayAnswer = answer.text_answer || '답변 없음'
+          } else if (q.type === 'single' || q.type === 'multiple') {
+            if (answer.choice_ids && Array.isArray(answer.choice_ids) && answer.choice_ids.length > 0) {
+              displayAnswer = answer.choice_ids.map((choiceId: string) => {
+                const option = parsedOptions.find((opt: any) => (opt.id || opt) === choiceId)
+                return option ? (option.text || option) : choiceId
+              }).join(', ')
+            }
+          }
+        }
+        
+        return {
+          questionId: q.id,
+          questionBody: q.body,
+          questionType: q.type,
+          orderNo: q.order_no,
+          answer: displayAnswer,
+        }
+      })
+      
+      return {
+        ...entry,
+        answers: detailedAnswers,
+      }
+    })
+    
     return NextResponse.json({
       success: true,
-      entries: entries || [],
+      entries: entriesWithAnswers || [],
     })
   } catch (error: any) {
     console.error('참여자 목록 조회 오류:', error)

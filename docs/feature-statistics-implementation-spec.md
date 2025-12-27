@@ -1529,3 +1529,5 @@ ON registrations(webinar_id, created_at);
 - [API 라우트 구조](../app/api/)
 - [데이터베이스 스키마](../supabase/migrations/)
 
+
+

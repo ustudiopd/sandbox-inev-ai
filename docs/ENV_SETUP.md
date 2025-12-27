@@ -261,3 +261,5 @@ curl -H "Authorization: Bearer your_cron_secret" \
 - [Supabase API Keys 문서](https://supabase.com/docs/guides/api/api-keys)
 - [Next.js Environment Variables 문서](https://nextjs.org/docs/basic-features/environment-variables)
 
+
+

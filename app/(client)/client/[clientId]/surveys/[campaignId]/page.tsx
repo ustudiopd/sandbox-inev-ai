@@ -92,13 +92,99 @@ export default async function SurveyCampaignDetailPage({
     .eq('campaign_id', campaignId)
     .not('prize_recorded_at', 'is', null)
   
-  // 참여자 목록 (최근 100개)
+  // 참여자 목록 (최근 100개, 답변 포함)
   const { data: entries } = await admin
     .from('event_survey_entries')
     .select('*')
     .eq('campaign_id', campaignId)
     .order('completed_at', { ascending: false })
     .limit(100)
+  
+  // 각 참여자의 설문 답변도 함께 가져오기
+  let entriesWithAnswers: any[] = entries || []
+  
+  if (campaign.form_id && entries && entries.length > 0) {
+    // 폼 문항 조회 (한 번만)
+    const { data: questions } = await admin
+      .from('form_questions')
+      .select('*')
+      .eq('form_id', campaign.form_id)
+      .order('order_no', { ascending: true })
+    
+    if (questions && questions.length > 0) {
+      // 모든 submission_id 수집
+      const submissionIds = entries
+        .map((e: any) => e.form_submission_id)
+        .filter(Boolean)
+      
+      // 모든 답변 한 번에 조회
+      let allAnswers: any[] = []
+      if (submissionIds.length > 0) {
+        const { data: answersData } = await admin
+          .from('form_answers')
+          .select('*')
+          .in('submission_id', submissionIds)
+        
+        allAnswers = answersData || []
+      }
+      
+      // submission_id별로 답변 그룹화
+      const answersBySubmission = new Map<string, any[]>()
+      allAnswers.forEach((answer: any) => {
+        if (!answersBySubmission.has(answer.submission_id)) {
+          answersBySubmission.set(answer.submission_id, [])
+        }
+        answersBySubmission.get(answer.submission_id)!.push(answer)
+      })
+      
+      // 각 참여자의 설문 답변 매핑
+      entriesWithAnswers = entries.map((entry: any) => {
+        if (!entry.form_submission_id) {
+          return { ...entry, answers: [] }
+        }
+        
+        const answers = answersBySubmission.get(entry.form_submission_id) || []
+        if (answers.length === 0) {
+          return { ...entry, answers: [] }
+        }
+        
+        // 문항별 답변 매핑
+        const answersMap = new Map(answers.map((a: any) => [a.question_id, a]))
+        
+        const detailedAnswers = questions.map((q: any) => {
+          const answer = answersMap.get(q.id)
+          const parsedOptions = q.options ? (typeof q.options === 'string' ? JSON.parse(q.options) : q.options) : []
+          
+          let displayAnswer = '답변 없음'
+          if (answer) {
+            if (q.type === 'text') {
+              displayAnswer = answer.text_answer || '답변 없음'
+            } else if (q.type === 'single' || q.type === 'multiple') {
+              if (answer.choice_ids && Array.isArray(answer.choice_ids) && answer.choice_ids.length > 0) {
+                displayAnswer = answer.choice_ids.map((choiceId: string) => {
+                  const option = parsedOptions.find((opt: any) => (opt.id || opt) === choiceId)
+                  return option ? (option.text || option) : choiceId
+                }).join(', ')
+              }
+            }
+          }
+          
+          return {
+            questionId: q.id,
+            questionBody: q.body,
+            questionType: q.type,
+            orderNo: q.order_no,
+            answer: displayAnswer,
+          }
+        })
+        
+        return {
+          ...entry,
+          answers: detailedAnswers,
+        }
+      })
+    }
+  }
   
   const campaignWithStats = {
     ...campaign,
@@ -107,7 +193,7 @@ export default async function SurveyCampaignDetailPage({
       total_verified: verifiedCount || 0,
       total_prize_recorded: prizeRecordedCount || 0,
     },
-    entries: entries || [],
+    entries: entriesWithAnswers,
   }
   
   return <SurveyCampaignDetailView campaign={campaignWithStats} clientId={clientId} />

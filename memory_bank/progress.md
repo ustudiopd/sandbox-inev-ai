@@ -727,6 +727,45 @@
   - 편집 모드, 새 탭에서 열기, 미리보기 닫기 버튼 아이콘만 표시
   - 모바일 최적화 적용
 
+## [2025-01-XX] AI 분석 보고서 Decision-grade v3 구현 완료
+- ✅ Evidence Catalog 생성 함수 구현 (`lib/surveys/analysis/buildComputedMetrics.ts`)
+  - 모든 수치의 원천을 ID로 관리 (E1~En)
+  - 문항별 분포, 교차표 하이라이트, 리드 스코어 분포, 채널 선호도, 데이터 품질 포함
+- ✅ Capacity Plan 생성 함수 구현 (`lib/surveys/analysis/buildComputedMetrics.ts`)
+  - P0/P1 리드 수 계산
+  - 필요한 온라인 미팅/방문 미팅/SE 동행 슬롯 수 계산
+  - 티어별 권장 SLA 제공
+- ✅ Decision Cards 스키마 추가 (`lib/surveys/analysis/actionPackSchema.ts`)
+  - 의사결정 지원을 위한 구조화된 카드 (질문, 선택지 A/B/C, 추천, 근거 ID, 신뢰도)
+  - ActionPackV09Extended 스키마 생성
+- ✅ Action Board 스키마 개선 (`lib/surveys/analysis/actionPackSchema.ts`)
+  - 시간대별 실행 계획 구조화 (d0: 24시간, d7: 7일, d14: 14일)
+  - 각 Action Item에 owner, title, targetCount, kpi, steps 포함
+- ✅ AI 프롬프트 업데이트 (`lib/surveys/analysis/gemini.ts`)
+  - System Prompt에 Decision Cards 및 Action Board 생성 가이드 추가
+  - User Prompt에 Evidence Catalog 및 Capacity Plan 제공
+  - owner 필드 값 명시 ("sales", "marketing", "ops"만 허용)
+  - 첫 번째 insight에 "24시간 실행 플랜" 필수 요구사항 강조
+- ✅ 렌더링 함수 업데이트 (`lib/surveys/analysis/renderMarkdown.ts`)
+  - Decision Cards 렌더링 추가 (옵션 비교, 추천 강조, Confidence 배지)
+  - Action Board 렌더링 개선 (24h/7d/14d 구조화, KPI 강조)
+- ✅ Linter 규칙 강화 (`lib/surveys/analysis/reportLinter.ts`)
+  - Decision Cards 검증 규칙 추가 (evidenceIds, recommendation, confidence)
+  - Action Board 검증 규칙 추가 (targetCount, KPI, 일반론 문장 금지)
+- ✅ API 라우트 업데이트 (`app/api/event-survey/campaigns/[campaignId]/analysis/generate/route.ts`)
+  - Evidence Catalog 및 Capacity Plan 생성 및 전달
+  - owner 필드 정규화 로직 추가 (AI가 잘못된 값 반환 시 자동 변환)
+- ✅ UI 컴포넌트 업데이트 (`app/(client)/client/[clientId]/surveys/[campaignId]/components/tabs/AnalysisReportSection.tsx`)
+  - Decision Cards 렌더링 추가 (옵션 비교, Confidence 배지)
+  - Action Board 렌더링 추가 (24h/7d/14d 타임라인, KPI 강조)
+  - Insights 섹션 추가 (V0.9 지원)
+- ✅ Gemini 모델 변경 (`lib/surveys/analysis/gemini.ts`)
+  - `gemini-2.0-flash` → `gemini-3-flash-preview`로 변경
+  - 최신 모델 활용으로 Decision Cards 및 Action Board 생성 품질 향상
+- ✅ 초시계 카운터 및 생성 시간 표시 기능 추가 (`AnalysisReportSection.tsx`)
+  - 보고서 생성 중 초시계 카운터 표시 (로딩 스피너 + 시간)
+  - 완료 알림에 생성 시간 표기 (성공/실패 모두)
+
 ## 남은 작업
 
 ### Phase 3 - 웨비나 및 실시간 기능 (대부분 완료)

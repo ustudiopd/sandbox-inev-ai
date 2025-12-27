@@ -328,3 +328,5 @@
 - 게스트 모드 (`guest_allowed`)
 - 초대 전용 모드 (`invite_only`)
 
+
+

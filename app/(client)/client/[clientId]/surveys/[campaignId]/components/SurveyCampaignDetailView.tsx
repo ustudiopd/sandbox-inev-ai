@@ -55,61 +55,66 @@ export default function SurveyCampaignDetailView({ campaign, clientId }: SurveyC
         
         {/* 탭 네비게이션 */}
         <div className="bg-white rounded-xl shadow-lg mb-6 overflow-hidden">
-          <div className="border-b border-gray-200 flex">
+          <div className="border-b border-gray-200 flex overflow-x-auto">
             <button
               onClick={() => setActiveTab('overview')}
               title="개요"
-              className={`px-3 sm:px-6 py-3 sm:py-4 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center ${
+              className={`px-3 sm:px-6 py-3 sm:py-4 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center gap-2 ${
                 activeTab === 'overview'
                   ? 'bg-blue-50 text-blue-600 border-b-2 border-blue-600'
                   : 'text-gray-600 hover:bg-gray-50'
               }`}
             >
               <span className="text-xl sm:text-2xl">📊</span>
+              <span className="hidden lg:inline text-sm font-medium whitespace-nowrap">개요</span>
             </button>
             <button
               onClick={() => setActiveTab('form')}
               title="폼 관리"
-              className={`px-3 sm:px-6 py-3 sm:py-4 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center ${
+              className={`px-3 sm:px-6 py-3 sm:py-4 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center gap-2 ${
                 activeTab === 'form'
                   ? 'bg-blue-50 text-blue-600 border-b-2 border-blue-600'
                   : 'text-gray-600 hover:bg-gray-50'
               }`}
             >
               <span className="text-xl sm:text-2xl">📋</span>
+              <span className="hidden lg:inline text-sm font-medium whitespace-nowrap">폼 관리</span>
             </button>
             <button
               onClick={() => setActiveTab('publicSettings')}
               title="공개페이지 설정"
-              className={`px-3 sm:px-6 py-3 sm:py-4 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center ${
+              className={`px-3 sm:px-6 py-3 sm:py-4 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center gap-2 ${
                 activeTab === 'publicSettings'
                   ? 'bg-blue-50 text-blue-600 border-b-2 border-blue-600'
                   : 'text-gray-600 hover:bg-gray-50'
               }`}
             >
               <span className="text-xl sm:text-2xl">🌐</span>
+              <span className="hidden lg:inline text-sm font-medium whitespace-nowrap">공개페이지 설정</span>
             </button>
             <button
               onClick={() => setActiveTab('participants')}
               title="참여자 관리"
-              className={`px-3 sm:px-6 py-3 sm:py-4 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center ${
+              className={`px-3 sm:px-6 py-3 sm:py-4 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center gap-2 ${
                 activeTab === 'participants'
                   ? 'bg-blue-50 text-blue-600 border-b-2 border-blue-600'
                   : 'text-gray-600 hover:bg-gray-50'
               }`}
             >
               <span className="text-xl sm:text-2xl">👥</span>
+              <span className="hidden lg:inline text-sm font-medium whitespace-nowrap">참여자 관리</span>
             </button>
             <button
               onClick={() => setActiveTab('settings')}
               title="설정"
-              className={`px-3 sm:px-6 py-3 sm:py-4 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center ${
+              className={`px-3 sm:px-6 py-3 sm:py-4 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center gap-2 ${
                 activeTab === 'settings'
                   ? 'bg-blue-50 text-blue-600 border-b-2 border-blue-600'
                   : 'text-gray-600 hover:bg-gray-50'
               }`}
             >
               <span className="text-xl sm:text-2xl">⚙️</span>
+              <span className="hidden lg:inline text-sm font-medium whitespace-nowrap">설정</span>
             </button>
           </div>
         </div>
