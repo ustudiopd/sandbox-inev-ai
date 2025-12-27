@@ -563,34 +563,37 @@ export default function FormManagementTab({ campaignId, formId, publicPath, onFo
     <div>
       {showPreview ? (
         <div className="space-y-4">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-semibold">설문 페이지 미리보기</h3>
-            <div className="flex gap-3">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-4">
+            <h3 className="text-base sm:text-lg font-semibold">설문 페이지 미리보기</h3>
+            <div className="flex gap-2 sm:gap-3">
               <button
                 onClick={() => setPreviewEditMode(!previewEditMode)}
-                className={`px-4 py-2 rounded-lg transition-colors text-sm ${
+                title={previewEditMode ? '편집 모드 OFF' : '편집 모드 ON'}
+                className={`px-3 sm:px-4 py-2 rounded-lg transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center ${
                   previewEditMode
                     ? 'bg-purple-600 text-white hover:bg-purple-700'
                     : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                 }`}
               >
-                {previewEditMode ? '편집 모드 OFF' : '편집 모드 ON'}
+                <span className="text-xl sm:text-2xl">✏️</span>
               </button>
               {publicPath && (
                 <a
                   href={`/event${publicPath}/survey`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                  title="새 탭에서 열기"
+                  className="px-3 sm:px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
                 >
-                  새 탭에서 열기
+                  <span className="text-xl sm:text-2xl">🔗</span>
                 </a>
               )}
               <button
                 onClick={() => setShowPreview(false)}
-                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                title="미리보기 닫기"
+                className="px-3 sm:px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
               >
-                미리보기 닫기
+                <span className="text-xl sm:text-2xl">✕</span>
               </button>
             </div>
           </div>

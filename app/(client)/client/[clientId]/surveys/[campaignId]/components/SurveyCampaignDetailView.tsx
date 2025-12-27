@@ -22,30 +22,30 @@ export default function SurveyCampaignDetailView({ campaign, clientId }: SurveyC
   }
   
   return (
-    <div className="p-8">
+    <div className="p-4 sm:p-6 md:p-8">
       <div className="max-w-7xl mx-auto">
         {/* 헤더 */}
-        <div className="mb-8">
-          <div className="flex justify-between items-start mb-4">
-            <div>
-              <div className="flex items-center gap-3 mb-2">
+        <div className="mb-6 sm:mb-8">
+          <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4 mb-4">
+            <div className="flex-1 min-w-0">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-2">
                 <Link
                   href={`/client/${clientId}/surveys`}
-                  className="text-blue-600 hover:text-blue-700 hover:underline text-sm"
+                  className="text-blue-600 hover:text-blue-700 hover:underline text-xs sm:text-sm flex-shrink-0"
                 >
                   ← 설문조사 목록으로
                 </Link>
-                <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                   운영 콘솔
                 </h1>
               </div>
-              <p className="text-gray-600">{campaignData.title}</p>
+              <p className="text-sm sm:text-base text-gray-600 truncate">{campaignData.title}</p>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 flex-shrink-0">
               <Link
                 href={`/event${campaignData.public_path}`}
                 target="_blank"
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium whitespace-nowrap"
+                className="px-3 sm:px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-xs sm:text-sm font-medium min-h-[44px] flex items-center justify-center"
               >
                 공개 페이지 보기
               </Link>
@@ -58,53 +58,58 @@ export default function SurveyCampaignDetailView({ campaign, clientId }: SurveyC
           <div className="border-b border-gray-200 flex">
             <button
               onClick={() => setActiveTab('overview')}
-              className={`px-6 py-4 text-sm font-medium transition-colors ${
+              title="개요"
+              className={`px-3 sm:px-6 py-3 sm:py-4 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center ${
                 activeTab === 'overview'
                   ? 'bg-blue-50 text-blue-600 border-b-2 border-blue-600'
                   : 'text-gray-600 hover:bg-gray-50'
               }`}
             >
-              📊 개요
+              <span className="text-xl sm:text-2xl">📊</span>
             </button>
             <button
               onClick={() => setActiveTab('form')}
-              className={`px-6 py-4 text-sm font-medium transition-colors ${
+              title="폼 관리"
+              className={`px-3 sm:px-6 py-3 sm:py-4 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center ${
                 activeTab === 'form'
                   ? 'bg-blue-50 text-blue-600 border-b-2 border-blue-600'
                   : 'text-gray-600 hover:bg-gray-50'
               }`}
             >
-              📋 폼 관리
+              <span className="text-xl sm:text-2xl">📋</span>
             </button>
             <button
               onClick={() => setActiveTab('publicSettings')}
-              className={`px-6 py-4 text-sm font-medium transition-colors ${
+              title="공개페이지 설정"
+              className={`px-3 sm:px-6 py-3 sm:py-4 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center ${
                 activeTab === 'publicSettings'
                   ? 'bg-blue-50 text-blue-600 border-b-2 border-blue-600'
                   : 'text-gray-600 hover:bg-gray-50'
               }`}
             >
-              ⚙️ 공개페이지 설정
+              <span className="text-xl sm:text-2xl">🌐</span>
             </button>
             <button
               onClick={() => setActiveTab('participants')}
-              className={`px-6 py-4 text-sm font-medium transition-colors ${
+              title="참여자 관리"
+              className={`px-3 sm:px-6 py-3 sm:py-4 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center ${
                 activeTab === 'participants'
                   ? 'bg-blue-50 text-blue-600 border-b-2 border-blue-600'
                   : 'text-gray-600 hover:bg-gray-50'
               }`}
             >
-              👥 참여자 관리
+              <span className="text-xl sm:text-2xl">👥</span>
             </button>
             <button
               onClick={() => setActiveTab('settings')}
-              className={`px-6 py-4 text-sm font-medium transition-colors ${
+              title="설정"
+              className={`px-3 sm:px-6 py-3 sm:py-4 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center ${
                 activeTab === 'settings'
                   ? 'bg-blue-50 text-blue-600 border-b-2 border-blue-600'
                   : 'text-gray-600 hover:bg-gray-50'
               }`}
             >
-              ⚙️ 설정
+              <span className="text-xl sm:text-2xl">⚙️</span>
             </button>
           </div>
         </div>

@@ -5,6 +5,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { useParams } from 'next/navigation'
 import { createClientSupabase } from '@/lib/supabase/client'
 import { useEffect, useState } from 'react'
+import React from 'react'
 import { useSidebar } from './SidebarContext'
 import SidebarTree from './SidebarTree'
 
@@ -86,14 +87,15 @@ export default function Sidebar() {
   
   // 공개 페이지에서는 사이드바 숨김
   const isPublicPage = pathname === '/' || pathname.startsWith('/login') || pathname.startsWith('/signup')
-  // 슈퍼 관리자 페이지는 별도 사이드바 사용
+  // 슈퍼 관리자 페이지는 데스크톱 사이드바는 별도 사용하지만 모바일 하단 메뉴는 표시
   const isSuperPage = pathname.includes('/super/')
-  if (isPublicPage || isSuperPage) return null
+  if (isPublicPage) return null
   
   return (
     <>
-      {/* 데스크톱 사이드바 */}
-      <aside className="hidden lg:flex bg-gradient-to-b from-gray-900 to-gray-800 text-white min-h-screen fixed left-0 top-0 flex-col transition-all duration-300 z-50 w-64">
+      {/* 데스크톱 사이드바 - 슈퍼 관리자 페이지는 제외 */}
+      {!isSuperPage && (
+        <aside className="hidden lg:flex bg-gradient-to-b from-gray-900 to-gray-800 text-white min-h-screen fixed left-0 top-0 flex-col transition-all duration-300 z-50 w-64">
         <div className="p-6 flex items-center">
           <Link href="/" className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
             EventFlow
@@ -119,17 +121,84 @@ export default function Sidebar() {
           </button>
         </div>
       </aside>
+      )}
 
-      {/* 모바일 하단 메뉴 - 트리 구조는 데스크톱 전용 */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-gradient-to-b from-gray-900 to-gray-800 text-white border-t border-gray-700 z-50">
-        <div className="flex items-center justify-around px-2 py-2">
+      {/* 모바일 하단 메뉴 - 홈, 클라이언트 관리, 대시보드, 로그아웃 */}
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-gradient-to-b from-gray-900 to-gray-800 text-white border-t border-gray-700 z-50 safe-area-bottom">
+        <div className="flex items-center justify-around px-2 py-2 pb-[env(safe-area-inset-bottom)]">
+          {/* 홈 */}
+          {(() => {
+            let homeHref = '/'
+            let isHomeActive = pathname === '/'
+            
+            if (organizations?.isSuperAdmin) {
+              homeHref = '/super/dashboard'
+              isHomeActive = pathname === '/super/dashboard'
+            } else if (organizations?.agencies && organizations.agencies.length > 0) {
+              const agencyId = organizations.agencies[0].id
+              homeHref = `/agency/${agencyId}/dashboard`
+              isHomeActive = pathname === `/agency/${agencyId}/dashboard`
+            } else if (organizations?.clients && organizations.clients.length > 0) {
+              const clientId = organizations.clients[0].id
+              homeHref = `/client/${clientId}/dashboard`
+              isHomeActive = pathname === `/client/${clientId}/dashboard`
+            }
+            
+            return (
+              <Link
+                href={homeHref}
+                className={`flex items-center justify-center px-3 py-3 rounded-lg transition-all duration-200 min-w-[44px] min-h-[44px] ${
+                  isHomeActive
+                    ? 'text-blue-400 bg-blue-900/30'
+                    : 'text-gray-300 hover:text-white hover:bg-gray-700'
+                }`}
+                title="홈"
+              >
+                <span className="text-2xl">🏠</span>
+              </Link>
+            )
+          })()}
+
+          {/* 클라이언트 관리 */}
+          {(() => {
+            let clientsHref = '#'
+            let isClientsActive = false
+            
+            if (organizations?.isSuperAdmin) {
+              clientsHref = '/super/clients'
+              isClientsActive = pathname.includes('/super/clients')
+            } else if (organizations?.agencies && organizations.agencies.length > 0) {
+              const agencyId = organizations.agencies[0].id
+              clientsHref = `/agency/${agencyId}/clients`
+              isClientsActive = pathname.includes(`/agency/${agencyId}/clients`)
+            } else if (organizations?.clients && organizations.clients.length > 0) {
+              const clientId = organizations.clients[0].id
+              clientsHref = `/client/${clientId}/accounts`
+              isClientsActive = pathname.includes(`/client/${clientId}/accounts`)
+            }
+            
+            return (
+              <Link
+                href={clientsHref}
+                className={`flex items-center justify-center px-3 py-3 rounded-lg transition-all duration-200 min-w-[44px] min-h-[44px] ${
+                  isClientsActive
+                    ? 'text-blue-400 bg-blue-900/30'
+                    : 'text-gray-300 hover:text-white hover:bg-gray-700'
+                }`}
+                title="클라이언트 관리"
+              >
+                <span className="text-2xl">👥</span>
+              </Link>
+            )
+          })()}
+
+          {/* 로그아웃 */}
           <button
             onClick={handleLogout}
-            className="flex flex-col items-center justify-center gap-1 px-3 py-2 rounded-lg transition-all duration-200 min-w-[60px] text-red-400 hover:text-red-300 hover:bg-red-900/20"
+            className="flex items-center justify-center px-3 py-3 rounded-lg transition-all duration-200 min-w-[44px] min-h-[44px] text-red-400 hover:text-red-300 hover:bg-red-900/20"
             title="로그아웃"
           >
-            <span className="text-2xl">🚪</span>
-            <span className="text-xs font-medium">로그아웃</span>
+            <span className="text-2xl">✕</span>
           </button>
         </div>
       </nav>

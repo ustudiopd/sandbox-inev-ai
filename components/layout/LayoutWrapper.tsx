@@ -62,15 +62,13 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
   
   // 나머지 모든 페이지 (관리 페이지, 관리 웨비나 페이지 등)는 사이드바 표시
   // 사이드바가 fixed이므로 flex 레이아웃 불필요
+  // 모바일에서는 사이드바가 숨겨지므로 marginLeft를 0으로 설정
   return (
     <>
       <Sidebar />
       <main 
-        className="pb-16 lg:pb-0 transition-all duration-300 min-h-screen bg-gradient-to-br from-gray-50 to-blue-50"
+        className="min-w-0 pb-[calc(4rem+env(safe-area-inset-bottom))] lg:pb-0 transition-all duration-300 min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 ml-0 lg:ml-64 w-full lg:w-[calc(100vw-16rem)] lg:max-w-[calc(100vw-16rem)]"
         style={{ 
-          marginLeft: `${sidebarWidth}px`,
-          width: `calc(100vw - ${sidebarWidth}px)`,
-          maxWidth: `calc(100vw - ${sidebarWidth}px)`,
           boxSizing: 'border-box'
         }}
       >
