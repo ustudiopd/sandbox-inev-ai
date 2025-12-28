@@ -1261,7 +1261,7 @@ export default function AnalysisReportSection({ campaignId }: AnalysisReportSect
 
   if (selectedReport) {
     return (
-      <div className="space-y-6">
+      <div className="bg-white rounded-lg shadow-lg p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-5 md:space-y-6">
         <div className="flex items-center justify-between">
           <button
             onClick={() => setSelectedReport(null)}
@@ -1294,8 +1294,6 @@ export default function AnalysisReportSection({ campaignId }: AnalysisReportSect
             </button>
           </div>
         </div>
-
-        <div className="bg-white rounded-lg shadow-lg p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-5 md:space-y-6">
           {/* 고정 신뢰 문구 */}
           <div className="bg-blue-50 border-l-4 border-blue-500 p-3 sm:p-4 rounded-lg">
             <p className="text-sm text-slate-700 italic">
@@ -1309,14 +1307,17 @@ export default function AnalysisReportSection({ campaignId }: AnalysisReportSect
             <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 md:gap-4">
               <div className="p-2 sm:p-3 md:p-4 bg-slate-50 rounded-lg border border-slate-200">
                 <div className="text-sm text-slate-600 mb-1">분석 시점</div>
-                <div className="text-lg font-bold text-slate-900">
-                  {new Date(selectedReport.analyzed_at).toLocaleString('ko-KR', {
+                <div className="text-base sm:text-lg font-bold text-slate-900">
+                  <div>{new Date(selectedReport.analyzed_at).toLocaleDateString('ko-KR', {
                     year: 'numeric',
                     month: '2-digit',
                     day: '2-digit',
+                  })}</div>
+                  <div className="text-sm sm:text-base">{new Date(selectedReport.analyzed_at).toLocaleTimeString('ko-KR', {
                     hour: '2-digit',
                     minute: '2-digit',
-                  })}
+                    hour12: true,
+                  })}</div>
                 </div>
               </div>
               <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
@@ -1362,14 +1363,13 @@ export default function AnalysisReportSection({ campaignId }: AnalysisReportSect
           {/* 도넛 차트 요약 */}
           {renderDonutCharts()}
 
-          {/* AI 분석 본문 */}
-          <div className="prose prose-slate max-w-none">
-            {selectedReport.action_pack ? (
-              <ActionPackRenderer actionPack={selectedReport.action_pack} />
-            ) : (
-              <MarkdownRenderer content={selectedReport.report_md || selectedReport.report_content_md || selectedReport.report_content_full_md} />
-            )}
-          </div>
+        {/* AI 분석 본문 */}
+        <div className="prose prose-slate max-w-none">
+          {selectedReport.action_pack ? (
+            <ActionPackRenderer actionPack={selectedReport.action_pack} />
+          ) : (
+            <MarkdownRenderer content={selectedReport.report_md || selectedReport.report_content_md || selectedReport.report_content_full_md} />
+          )}
         </div>
       </div>
     )

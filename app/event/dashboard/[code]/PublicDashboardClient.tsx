@@ -966,23 +966,23 @@ export default function PublicDashboardClient({ campaign }: PublicDashboardClien
 
         {/* AI 분석 보고서 섹션 */}
         {publicReports.length > 0 && (
-          <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">AI 분석 보고서</h3>
+          <div className="bg-white rounded-xl shadow-lg p-3 sm:p-4 md:p-6 mb-4 sm:mb-6 md:mb-8">
+            <div className="flex items-center justify-between mb-3 sm:mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">AI 분석 보고서</h3>
+              {selectedReport && (
+                <button
+                  onClick={() => setSelectedReport(null)}
+                  className="text-blue-600 hover:text-blue-700 flex items-center gap-2 text-sm font-medium transition-colors"
+                >
+                  ← 대시보드 돌아가기
+                </button>
+              )}
+            </div>
             
             {loadingReports ? (
               <div className="text-center py-8 text-gray-500">보고서 목록을 불러오는 중...</div>
             ) : selectedReport ? (
-              <div className="space-y-3 sm:space-y-4 md:space-y-6">
-                <div className="flex items-center justify-between">
-                  <button
-                    onClick={() => setSelectedReport(null)}
-                    className="text-blue-600 hover:text-blue-700 flex items-center gap-2 text-sm font-medium transition-colors"
-                  >
-                    ← 대시보드 돌아가기
-                  </button>
-                </div>
-
-                <div className="bg-white rounded-lg shadow-lg p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-5 md:space-y-6 border border-gray-200">
+              <div className="space-y-4 sm:space-y-5 md:space-y-6">
                   {/* 고정 신뢰 문구 */}
                   <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-lg">
                     <p className="text-sm text-gray-700 italic">
@@ -996,14 +996,17 @@ export default function PublicDashboardClient({ campaign }: PublicDashboardClien
                     <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 md:gap-4">
                       <div className="p-2 sm:p-3 md:p-4 bg-gray-50 rounded-lg border border-gray-200">
                         <div className="text-sm text-gray-600 mb-1">분석 시점</div>
-                        <div className="text-lg font-bold text-gray-900">
-                          {new Date(selectedReport.analyzed_at).toLocaleString('ko-KR', {
+                        <div className="text-base sm:text-lg font-bold text-gray-900">
+                          <div>{new Date(selectedReport.analyzed_at).toLocaleDateString('ko-KR', {
                             year: 'numeric',
                             month: '2-digit',
                             day: '2-digit',
+                          })}</div>
+                          <div className="text-sm sm:text-base">{new Date(selectedReport.analyzed_at).toLocaleTimeString('ko-KR', {
                             hour: '2-digit',
                             minute: '2-digit',
-                          })}
+                            hour12: true,
+                          })}</div>
                         </div>
                       </div>
                       <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
@@ -1049,14 +1052,13 @@ export default function PublicDashboardClient({ campaign }: PublicDashboardClien
                   {/* 도넛 차트 요약 */}
                   {renderDonutCharts()}
 
-                  {/* AI 분석 본문 */}
-                  <div className="prose prose-slate max-w-none">
-                    {selectedReport.action_pack ? (
-                      <ActionPackRenderer actionPack={selectedReport.action_pack} />
-                    ) : (
-                      <MarkdownRenderer content={selectedReport.report_md || selectedReport.report_content_md || selectedReport.report_content_full_md} />
-                    )}
-                  </div>
+                {/* AI 분석 본문 */}
+                <div className="prose prose-slate max-w-none">
+                  {selectedReport.action_pack ? (
+                    <ActionPackRenderer actionPack={selectedReport.action_pack} />
+                  ) : (
+                    <MarkdownRenderer content={selectedReport.report_md || selectedReport.report_content_md || selectedReport.report_content_full_md} />
+                  )}
                 </div>
               </div>
             ) : (
