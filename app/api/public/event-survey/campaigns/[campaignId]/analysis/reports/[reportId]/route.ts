@@ -60,7 +60,9 @@ export async function GET(
         report_content_md: report.report_content_md,
         report_content_full_md: report.report_content_full_md,
         report_md: report.report_md,
-        action_pack: report.action_pack, // Action Pack 추가
+        action_pack: report.action_pack, // 기존 Action Pack
+        analysis_pack: report.analysis_pack, // 새 Analysis Pack 추가
+        decision_pack: report.decision_pack, // 새 Decision Pack 추가
         statistics_snapshot: report.statistics_snapshot,
         references_used: report.references_used,
         created_at: report.created_at,

@@ -32,6 +32,8 @@ interface PublicReportDetail extends PublicReport {
   report_content_full_md: string
   report_md?: string
   action_pack?: any // Action Pack 추가
+  analysis_pack?: any // Analysis Pack 추가
+  decision_pack?: any // Decision Pack 추가
   statistics_snapshot: any
   references_used: any
 }
@@ -45,6 +47,221 @@ function ActionPackRenderer({ actionPack }: { actionPack: any }) {
 
   return (
     <div className="space-y-4 sm:space-y-6 md:space-y-8">
+      {/* Decision Cards (Decision-grade v3) */}
+      {actionPack.decisionCards && actionPack.decisionCards.length > 0 && (
+        <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+          <h2 className="text-xl font-bold text-slate-900 mb-4 pb-3 border-b border-gray-200">
+            🎯 Decision Cards (의사결정 지원)
+          </h2>
+          <div className="space-y-6">
+            {actionPack.decisionCards.map((card: any, index: number) => {
+              const confidenceBadge = card.confidence === 'Confirmed' 
+                ? '✅ 확정' 
+                : card.confidence === 'Directional' 
+                ? '⚠️ 방향성' 
+                : '❓ 가설'
+              const confidenceColor = card.confidence === 'Confirmed'
+                ? 'bg-green-100 text-green-800 border-green-300'
+                : card.confidence === 'Directional'
+                ? 'bg-yellow-100 text-yellow-800 border-yellow-300'
+                : 'bg-gray-100 text-gray-800 border-gray-300'
+              
+              return (
+                <div key={index} className="bg-gray-50 border border-gray-200 rounded-lg p-6">
+                  <div className="flex items-start justify-between mb-4">
+                    <h3 className="text-lg font-bold text-slate-900 flex-1">{index + 1}. {card.question}</h3>
+                    <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${confidenceColor}`}>
+                      {confidenceBadge}
+                    </span>
+                  </div>
+                  
+                  {/* 선택지 비교 */}
+                  <div className="mb-4 space-y-3">
+                    <h4 className="font-semibold text-slate-900 mb-2">선택지 비교</h4>
+                    {card.options && card.options.map((opt: any) => {
+                      const isRecommended = opt.id === card.recommendation
+                      return (
+                        <div
+                          key={opt.id}
+                          className={`p-4 rounded-lg border-2 ${
+                            isRecommended
+                              ? 'bg-blue-50 border-blue-400 shadow-md'
+                              : 'bg-white border-gray-200'
+                          }`}
+                        >
+                          <div className="flex items-start justify-between mb-2">
+                            <h5 className="font-bold text-slate-900">옵션 {opt.id}: {opt.title}</h5>
+                            {isRecommended && (
+                              <span className="px-2 py-1 bg-blue-600 text-white text-xs font-semibold rounded">
+                                👉 추천
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-sm text-slate-700 mb-2">{opt.description}</p>
+                          <p className="text-sm text-slate-600"><strong>기대 효과:</strong> {opt.expectedImpact}</p>
+                          {opt.risks && (
+                            <p className="text-sm text-orange-700 mt-2"><strong>리스크:</strong> {opt.risks}</p>
+                          )}
+                        </div>
+                      )
+                    })}
+                  </div>
+                  
+                  {/* 추천 이유 및 근거 */}
+                  <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                    <p className="font-semibold text-blue-900 mb-2">추천 이유</p>
+                    <p className="text-sm text-blue-800 mb-2">{card.rationale}</p>
+                    <p className="text-xs text-blue-700">
+                      <strong>근거 참조:</strong> {card.evidenceIds?.join(', ') || '없음'}
+                    </p>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Action Board (Decision-grade v3) */}
+      {actionPack.actionBoard && (
+        <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+          <h2 className="text-xl font-bold text-slate-900 mb-4 pb-3 border-b border-gray-200">
+            📋 Action Board (실행 계획)
+          </h2>
+          <div className="space-y-6">
+            {/* 24시간 내 실행 */}
+            {actionPack.actionBoard.d0 && actionPack.actionBoard.d0.length > 0 && (
+              <div>
+                <h3 className="text-lg font-bold text-slate-900 mb-3">24시간 내 실행 (D+0)</h3>
+                <div className="space-y-4">
+                  {actionPack.actionBoard.d0.map((action: any, index: number) => {
+                    const ownerText = action.owner === 'sales' ? '영업' : action.owner === 'marketing' ? '마케팅' : '운영'
+                    return (
+                      <div key={index} className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                        <div className="flex items-start justify-between mb-2">
+                          <h4 className="font-bold text-slate-900">{ownerText}: {action.title}</h4>
+                        </div>
+                        <div className="text-sm text-slate-700 space-y-1">
+                          <p><strong>대상:</strong> {action.targetCount}</p>
+                          <p><strong>목표 KPI:</strong> {action.kpi}</p>
+                          {action.steps && action.steps.length > 0 && (
+                            <div className="mt-2">
+                              <p className="font-semibold mb-1">실행 단계:</p>
+                              <ul className="list-disc list-inside space-y-1">
+                                {action.steps.map((step: string, stepIndex: number) => (
+                                  <li key={stepIndex}>{step}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* 7일 내 실행 */}
+            {actionPack.actionBoard.d7 && actionPack.actionBoard.d7.length > 0 && (
+              <div>
+                <h3 className="text-lg font-bold text-slate-900 mb-3">7일 내 실행 (D+7)</h3>
+                <div className="space-y-4">
+                  {actionPack.actionBoard.d7.map((action: any, index: number) => {
+                    const ownerText = action.owner === 'sales' ? '영업' : action.owner === 'marketing' ? '마케팅' : '운영'
+                    return (
+                      <div key={index} className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                        <div className="flex items-start justify-between mb-2">
+                          <h4 className="font-bold text-slate-900">{ownerText}: {action.title}</h4>
+                        </div>
+                        <div className="text-sm text-slate-700 space-y-1">
+                          <p><strong>대상:</strong> {action.targetCount}</p>
+                          <p><strong>목표 KPI:</strong> {action.kpi}</p>
+                          {action.steps && action.steps.length > 0 && (
+                            <div className="mt-2">
+                              <p className="font-semibold mb-1">실행 단계:</p>
+                              <ul className="list-disc list-inside space-y-1">
+                                {action.steps.map((step: string, stepIndex: number) => (
+                                  <li key={stepIndex}>{step}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* 14일 내 실행 */}
+            {actionPack.actionBoard.d14 && actionPack.actionBoard.d14.length > 0 && (
+              <div>
+                <h3 className="text-lg font-bold text-slate-900 mb-3">14일 내 실행 (D+14)</h3>
+                <div className="space-y-4">
+                  {actionPack.actionBoard.d14.map((action: any, index: number) => {
+                    const ownerText = action.owner === 'sales' ? '영업' : action.owner === 'marketing' ? '마케팅' : '운영'
+                    return (
+                      <div key={index} className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                        <div className="flex items-start justify-between mb-2">
+                          <h4 className="font-bold text-slate-900">{ownerText}: {action.title}</h4>
+                        </div>
+                        <div className="text-sm text-slate-700 space-y-1">
+                          <p><strong>대상:</strong> {action.targetCount}</p>
+                          <p><strong>목표 KPI:</strong> {action.kpi}</p>
+                          {action.steps && action.steps.length > 0 && (
+                            <div className="mt-2">
+                              <p className="font-semibold mb-1">실행 단계:</p>
+                              <ul className="list-disc list-inside space-y-1">
+                                {action.steps.map((step: string, stepIndex: number) => (
+                                  <li key={stepIndex}>{step}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Playbooks */}
+      {actionPack.playbooks && (
+        <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+          <h2 className="text-xl font-bold text-slate-900 mb-4 pb-3 border-b border-gray-200">
+            📖 Playbooks
+          </h2>
+          <div className="space-y-6">
+            {actionPack.playbooks.sales && actionPack.playbooks.sales.length > 0 && (
+              <div>
+                <h3 className="text-lg font-bold text-slate-900 mb-3">세일즈 플레이북</h3>
+                <ul className="list-decimal list-inside space-y-2 text-slate-700">
+                  {actionPack.playbooks.sales.map((item: string, index: number) => (
+                    <li key={index}>{item}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {actionPack.playbooks.marketing && actionPack.playbooks.marketing.length > 0 && (
+              <div>
+                <h3 className="text-lg font-bold text-slate-900 mb-3">마케팅 플레이북</h3>
+                <ul className="list-decimal list-inside space-y-2 text-slate-700">
+                  {actionPack.playbooks.marketing.map((item: string, index: number) => (
+                    <li key={index}>{item}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Executive Summary */}
       {actionPack.executiveSummary && (
         <div className="bg-white border border-gray-200 rounded-lg p-3 sm:p-4 md:p-6 shadow-sm">
@@ -631,10 +848,32 @@ export default function PublicDashboardClient({ campaign }: PublicDashboardClien
   }
 
   const renderDonutCharts = () => {
-    if (!selectedReport?.statistics_snapshot?.questions) return null
+    // 새 파이프라인 (analysis_pack) 또는 기존 파이프라인 (statistics_snapshot.questions) 지원
+    let questions: any[] = []
+    
+    if (selectedReport?.analysis_pack?.questions) {
+      // 새 파이프라인: analysis_pack.questions 사용
+      questions = selectedReport.analysis_pack.questions
+    } else if (selectedReport?.statistics_snapshot?.questions) {
+      // 기존 파이프라인: statistics_snapshot.questions 사용
+      questions = selectedReport.statistics_snapshot.questions
+    }
+    
+    if (questions.length === 0) return null
 
-    const summaryQuestions = selectedReport.statistics_snapshot.questions
-      .filter((q: any) => q.analysis?.summary_chart && q.questionType !== 'text')
+    // 새 파이프라인은 topChoices를 사용, 기존 파이프라인은 choiceDistribution 사용
+    const summaryQuestions = questions
+      .filter((q: any) => {
+        // 새 파이프라인: topChoices가 있고 questionType이 text가 아닌 경우
+        if (q.topChoices && q.topChoices.length > 0 && q.questionType !== 'text') {
+          return true
+        }
+        // 기존 파이프라인: analysis?.summary_chart가 있는 경우
+        if (q.analysis?.summary_chart && q.questionType !== 'text') {
+          return true
+        }
+        return false
+      })
       .slice(0, 6)
 
     if (summaryQuestions.length === 0) return null
@@ -642,13 +881,27 @@ export default function PublicDashboardClient({ campaign }: PublicDashboardClien
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
         {summaryQuestions.map((question: any) => {
-          const data = Object.entries(question.choiceDistribution || {}).map(([key, value]) => {
-            const option = question.options?.find((opt: any) => (opt.id || opt) === key)
-            return {
-              name: option ? (option.text || option) : key,
-              value: value as number,
-            }
-          })
+          // 새 파이프라인: topChoices를 사용하여 데이터 생성
+          let data: any[] = []
+          
+          if (question.topChoices && question.topChoices.length > 0) {
+            // 새 파이프라인: topChoices를 차트 데이터로 변환
+            data = question.topChoices.map((choice: any) => ({
+              name: choice.text,
+              value: choice.count,
+            }))
+          } else if (question.choiceDistribution) {
+            // 기존 파이프라인: choiceDistribution 사용
+            data = Object.entries(question.choiceDistribution).map(([key, value]) => {
+              const option = question.options?.find((opt: any) => (opt.id || opt) === key)
+              return {
+                name: option ? (option.text || option) : key,
+                value: value as number,
+              }
+            })
+          }
+          
+          if (data.length === 0) return null
 
           return (
             <div key={question.questionId} className="bg-white p-4 rounded-lg shadow border border-gray-200">
@@ -1054,8 +1307,8 @@ export default function PublicDashboardClient({ campaign }: PublicDashboardClien
 
                 {/* AI 분석 본문 */}
                 <div className="prose prose-slate max-w-none">
-                  {selectedReport.action_pack ? (
-                    <ActionPackRenderer actionPack={selectedReport.action_pack} />
+                  {selectedReport.decision_pack || selectedReport.action_pack ? (
+                    <ActionPackRenderer actionPack={selectedReport.decision_pack || selectedReport.action_pack} />
                   ) : (
                     <MarkdownRenderer content={selectedReport.report_md || selectedReport.report_content_md || selectedReport.report_content_full_md} />
                   )}
