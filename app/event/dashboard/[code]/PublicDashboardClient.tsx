@@ -30,12 +30,203 @@ interface PublicReport {
 interface PublicReportDetail extends PublicReport {
   report_content_md: string
   report_content_full_md: string
+  report_md?: string
+  action_pack?: any // Action Pack 추가
   statistics_snapshot: any
   references_used: any
 }
 
 // 컬러풀한 도넛 차트 색상 팔레트
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D']
+
+// Action Pack 렌더러 컴포넌트 (AnalysisReportSection.tsx에서 복사)
+function ActionPackRenderer({ actionPack }: { actionPack: any }) {
+  if (!actionPack) return null
+
+  return (
+    <div className="space-y-4 sm:space-y-6 md:space-y-8">
+      {/* Executive Summary */}
+      {actionPack.executiveSummary && (
+        <div className="bg-white border border-gray-200 rounded-lg p-3 sm:p-4 md:p-6 shadow-sm">
+          <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3 md:mb-4 pb-2 sm:pb-3 border-b border-gray-200">
+            📊 Executive Summary
+          </h2>
+          {actionPack.executiveSummary.oneLiner && (
+            <p className="text-base sm:text-lg text-gray-700 mb-3 sm:mb-4 md:mb-6 font-medium">{actionPack.executiveSummary.oneLiner}</p>
+          )}
+        </div>
+      )}
+
+      {/* Insights (V0.9) */}
+      {actionPack.insights && actionPack.insights.length > 0 && (
+        <div className="bg-white border border-gray-200 rounded-lg p-3 sm:p-4 md:p-6 shadow-sm">
+          <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-3 sm:mb-4 pb-2 sm:pb-3 border-b border-gray-200">
+            💡 주요 인사이트
+          </h2>
+          <div className="space-y-3 sm:space-y-4">
+            {actionPack.insights.map((insight: any, index: number) => (
+              <div key={index} className="bg-gray-50 border border-gray-200 rounded-lg p-3 sm:p-4 md:p-5">
+                <h4 className="font-bold text-gray-900 text-base sm:text-lg mb-2">{index + 1}. {insight.title}</h4>
+                <div className="text-sm text-gray-700 space-y-1 sm:space-y-2">
+                  <p><strong>근거:</strong> {insight.evidence}</p>
+                  <p><strong>해석:</strong> {insight.soWhat}</p>
+                  {insight.nextActions && insight.nextActions.length > 0 && (
+                    <div className="mt-2 sm:mt-3 space-y-2">
+                      {insight.nextActions.map((action: any, actionIndex: number) => (
+                        <div key={actionIndex} className="p-2 sm:p-3 bg-blue-50 rounded-lg border border-blue-200">
+                          <p className="font-semibold text-blue-900 mb-1">
+                            {action.owner === 'sales' ? '영업' : action.owner === 'marketing' ? '마케팅' : '운영'} ({action.due})
+                          </p>
+                          {action.steps && action.steps.length > 0 && (
+                            <ul className="list-disc list-inside space-y-1 text-sm text-blue-800">
+                              {action.steps.map((step: string, stepIndex: number) => (
+                                <li key={stepIndex}>{step}</li>
+                              ))}
+                            </ul>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Priority Queue & SLA */}
+      {actionPack.priorityQueue && actionPack.priorityQueue.length > 0 && (
+        <div className="bg-white border border-gray-200 rounded-lg p-3 sm:p-4 md:p-6 shadow-sm">
+          <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-3 sm:mb-4 pb-2 sm:pb-3 border-b border-gray-200">
+            🎯 Priority Queue & SLA
+          </h2>
+          <div className="space-y-3 sm:space-y-4">
+            {actionPack.priorityQueue.map((queue: any, index: number) => (
+              <div key={index} className="bg-gray-50 border border-gray-200 rounded-lg p-3 sm:p-4 md:p-5">
+                <h4 className="font-bold text-gray-900 mb-2">{queue.tier}</h4>
+                <div className="text-sm text-gray-700 space-y-1">
+                  <p><strong>수량:</strong> {queue.count}명</p>
+                  <p><strong>비율:</strong> {queue.pct}%</p>
+                  <p><strong>SLA:</strong> {queue.sla}</p>
+                  <p className="mt-2"><strong>토크트랙:</strong> {queue.script}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Marketing Pack */}
+      {actionPack.marketingPack && actionPack.marketingPack.length > 0 && (
+        <div className="bg-white border border-gray-200 rounded-lg p-3 sm:p-4 md:p-6 shadow-sm">
+          <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-3 sm:mb-4 pb-2 sm:pb-3 border-b border-gray-200">
+            📢 Marketing Pack
+          </h2>
+          <div className="space-y-3 sm:space-y-4">
+            {actionPack.marketingPack.map((pack: any, index: number) => (
+              <div key={index} className="bg-gray-50 border border-gray-200 rounded-lg p-3 sm:p-4 md:p-5">
+                <h4 className="font-bold text-gray-900 text-base sm:text-lg mb-2">{index + 1}. {pack.theme}</h4>
+                <div className="text-sm text-gray-700 space-y-2">
+                  <p><strong>타겟 세그먼트:</strong> {pack.targetSegment}</p>
+                  
+                  {pack.suggestedAssets && pack.suggestedAssets.length > 0 && (
+                    <div>
+                      <p className="font-semibold mb-1">제안 자산:</p>
+                      <ul className="list-disc list-inside space-y-1">
+                        {pack.suggestedAssets.map((asset: string, assetIndex: number) => (
+                          <li key={assetIndex}>{asset}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {pack.distribution && pack.distribution.length > 0 && (
+                    <div>
+                      <p className="font-semibold mb-1">배포 채널:</p>
+                      <ul className="list-disc list-inside space-y-1">
+                        {pack.distribution.map((channel: string, channelIndex: number) => (
+                          <li key={channelIndex}>{channel}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  <p><strong>근거:</strong> {pack.rationale}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 설문 개선 제안 */}
+      {actionPack.surveyNextQuestions && actionPack.surveyNextQuestions.length > 0 && (
+        <div className="bg-white border border-gray-200 rounded-lg p-3 sm:p-4 md:p-6 shadow-sm">
+          <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-3 sm:mb-4 pb-2 sm:pb-3 border-b border-gray-200">
+            🔧 설문 개선 제안
+          </h2>
+          <div className="space-y-3 sm:space-y-4">
+            {actionPack.surveyNextQuestions.map((rec: any, index: number) => (
+              <div key={index} className="bg-gray-50 border border-gray-200 rounded-lg p-3 sm:p-4 md:p-5">
+                <h4 className="font-bold text-gray-900 mb-2">{index + 1}. {rec.question}</h4>
+                <div className="text-sm text-gray-700 space-y-2">
+                  <p><strong>중요성:</strong> {rec.why}</p>
+                  <p><strong>답변 유형:</strong> {rec.answerType === 'single' ? '단일 선택' : rec.answerType === 'multiple' ? '다중 선택' : '텍스트'}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 데이터 품질 */}
+      {actionPack.dataQuality && actionPack.dataQuality.length > 0 && (
+        <div className="bg-white border border-gray-200 rounded-lg p-3 sm:p-4 md:p-6 shadow-sm">
+          <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-3 sm:mb-4 pb-2 sm:pb-3 border-b border-gray-200">
+            ⚠️ 데이터 품질
+          </h2>
+          <div className="space-y-2">
+            {actionPack.dataQuality
+              .filter((quality: any) => {
+                if (typeof quality === 'string') {
+                  return !quality.includes('ℹ️ 정보:') && !quality.includes('ℼ 정보:') && quality.trim().length > 0
+                }
+                if (quality && typeof quality === 'object' && quality.message) {
+                  return !quality.message.includes('ℹ️ 정보:') && !quality.message.includes('ℼ 정보:') && quality.message.trim().length > 0
+                }
+                return false
+              })
+              .map((quality: any, index: number) => {
+                if (typeof quality === 'string') {
+                  return (
+                    <div key={index} className="p-2 sm:p-3 rounded-lg bg-blue-50 border border-blue-200">
+                      <p className="text-sm text-blue-800">{quality}</p>
+                    </div>
+                  )
+                }
+                if (quality && typeof quality === 'object' && quality.message) {
+                  return (
+                    <div
+                      key={index}
+                      className={`p-2 sm:p-3 rounded-lg ${
+                        quality.level === 'warning' ? 'bg-yellow-50 border border-yellow-200' : 'bg-blue-50 border border-blue-200'
+                      }`}
+                    >
+                      <p className={`text-sm ${quality.level === 'warning' ? 'text-yellow-800' : 'text-blue-800'}`}>
+                        <strong>{quality.level === 'warning' ? '⚠️ 경고' : 'ℹ️ 정보'}:</strong> {quality.message}
+                      </p>
+                    </div>
+                  )
+                }
+                return null
+              })}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
 
 // 마크다운 렌더러 컴포넌트 (주요 발견사항 및 권장사항 카드화)
 function MarkdownRenderer({ content }: { content: string }) {
@@ -675,11 +866,11 @@ export default function PublicDashboardClient({ campaign }: PublicDashboardClien
   }
   
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-50 py-2 sm:py-4 md:py-8">
+      <div className="max-w-7xl mx-auto px-2 sm:px-4 md:px-6 lg:px-8">
         {/* 헤더 */}
-        <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">{campaign.title}</h1>
+        <div className="bg-white rounded-xl shadow-lg p-3 sm:p-4 md:p-6 mb-4 sm:mb-6 md:mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">{campaign.title}</h1>
           {campaign.host && (
             <p className="text-gray-600 text-sm">주최: {campaign.host}</p>
           )}
@@ -781,17 +972,17 @@ export default function PublicDashboardClient({ campaign }: PublicDashboardClien
             {loadingReports ? (
               <div className="text-center py-8 text-gray-500">보고서 목록을 불러오는 중...</div>
             ) : selectedReport ? (
-              <div className="space-y-6">
+              <div className="space-y-3 sm:space-y-4 md:space-y-6">
                 <div className="flex items-center justify-between">
                   <button
                     onClick={() => setSelectedReport(null)}
                     className="text-blue-600 hover:text-blue-700 flex items-center gap-2 text-sm font-medium transition-colors"
                   >
-                    ← 보고서 목록으로
+                    ← 대시보드 돌아가기
                   </button>
                 </div>
 
-                <div className="bg-white rounded-lg shadow-lg p-6 space-y-6 border border-gray-200">
+                <div className="bg-white rounded-lg shadow-lg p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-5 md:space-y-6 border border-gray-200">
                   {/* 고정 신뢰 문구 */}
                   <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-lg">
                     <p className="text-sm text-gray-700 italic">
@@ -800,10 +991,10 @@ export default function PublicDashboardClient({ campaign }: PublicDashboardClien
                   </div>
 
                   {/* 분석 대상 요약 */}
-                  <div className="border-b border-gray-200 pb-6">
-                    <h3 className="text-lg font-bold text-gray-900 mb-4">🎯 분석 대상</h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-                      <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                  <div className="border-b border-gray-200 pb-4 sm:pb-6">
+                    <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-3 sm:mb-4">🎯 분석 대상</h3>
+                    <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 md:gap-4">
+                      <div className="p-2 sm:p-3 md:p-4 bg-gray-50 rounded-lg border border-gray-200">
                         <div className="text-sm text-gray-600 mb-1">분석 시점</div>
                         <div className="text-lg font-bold text-gray-900">
                           {new Date(selectedReport.analyzed_at).toLocaleString('ko-KR', {
@@ -842,11 +1033,11 @@ export default function PublicDashboardClient({ campaign }: PublicDashboardClien
 
                   {/* 레퍼런스 요약 */}
                   {selectedReport.references_used?.references && (
-                    <div className="border-b border-gray-200 pb-6">
-                      <h3 className="text-lg font-bold text-gray-900 mb-4">📚 관련 레퍼런스 요약</h3>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="border-b border-gray-200 pb-4 sm:pb-6">
+                      <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-3 sm:mb-4">📚 관련 레퍼런스 요약</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2 sm:gap-3">
                         {selectedReport.references_used.references.map((ref: any) => (
-                          <div key={ref.id} className="bg-gray-50 border border-gray-200 p-4 rounded-lg">
+                          <div key={ref.id} className="bg-gray-50 border border-gray-200 p-3 sm:p-4 rounded-lg">
                             <h4 className="font-semibold text-sm text-gray-900 mb-1">{ref.title}</h4>
                             <p className="text-xs text-gray-600">{ref.summary}</p>
                           </div>
@@ -860,7 +1051,11 @@ export default function PublicDashboardClient({ campaign }: PublicDashboardClien
 
                   {/* AI 분석 본문 */}
                   <div className="prose prose-slate max-w-none">
-                    <MarkdownRenderer content={selectedReport.report_content_md || selectedReport.report_content_full_md} />
+                    {selectedReport.action_pack ? (
+                      <ActionPackRenderer actionPack={selectedReport.action_pack} />
+                    ) : (
+                      <MarkdownRenderer content={selectedReport.report_md || selectedReport.report_content_md || selectedReport.report_content_full_md} />
+                    )}
                   </div>
                 </div>
               </div>

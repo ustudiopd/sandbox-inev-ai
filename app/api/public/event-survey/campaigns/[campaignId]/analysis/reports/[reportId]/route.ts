@@ -59,6 +59,8 @@ export async function GET(
         lens: report.lens,
         report_content_md: report.report_content_md,
         report_content_full_md: report.report_content_full_md,
+        report_md: report.report_md,
+        action_pack: report.action_pack, // Action Pack 추가
         statistics_snapshot: report.statistics_snapshot,
         references_used: report.references_used,
         created_at: report.created_at,

@@ -39,15 +39,15 @@ function ActionPackRenderer({ actionPack }: { actionPack: any }) {
   if (!actionPack) return null
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-4 sm:space-y-6 md:space-y-8">
       {/* Executive Summary */}
       {actionPack.executiveSummary && (
-        <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
-          <h2 className="text-xl font-bold text-slate-900 mb-4 pb-3 border-b border-gray-200">
+        <div className="bg-white border border-gray-200 rounded-lg p-3 sm:p-4 md:p-6 shadow-sm">
+          <h2 className="text-lg sm:text-xl font-bold text-slate-900 mb-2 sm:mb-3 md:mb-4 pb-2 sm:pb-3 border-b border-gray-200">
             📊 Executive Summary
           </h2>
           {actionPack.executiveSummary.oneLiner && (
-            <p className="text-lg text-slate-700 mb-6 font-medium">{actionPack.executiveSummary.oneLiner}</p>
+            <p className="text-base sm:text-lg text-slate-700 mb-3 sm:mb-4 md:mb-6 font-medium">{actionPack.executiveSummary.oneLiner}</p>
           )}
           
           {actionPack.executiveSummary.topWins && actionPack.executiveSummary.topWins.length > 0 && (
@@ -326,13 +326,13 @@ function ActionPackRenderer({ actionPack }: { actionPack: any }) {
 
       {/* Priority Queue & SLA (V0.9) */}
       {actionPack.priorityQueue && actionPack.priorityQueue.length > 0 && (
-        <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
-          <h2 className="text-xl font-bold text-slate-900 mb-4 pb-3 border-b border-gray-200">
+        <div className="bg-white border border-gray-200 rounded-lg p-3 sm:p-4 md:p-6 shadow-sm">
+          <h2 className="text-lg sm:text-xl font-bold text-slate-900 mb-3 sm:mb-4 pb-2 sm:pb-3 border-b border-gray-200">
             🎯 Priority Queue & SLA
           </h2>
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             {actionPack.priorityQueue.map((queue: any, index: number) => (
-              <div key={index} className="bg-gray-50 border border-gray-200 rounded-lg p-5">
+              <div key={index} className="bg-gray-50 border border-gray-200 rounded-lg p-3 sm:p-4 md:p-5">
                 <h4 className="font-bold text-slate-900 mb-2">{queue.tier}</h4>
                 <div className="text-sm text-slate-700 space-y-1">
                   <p><strong>수량:</strong> {queue.count}명</p>
@@ -514,14 +514,14 @@ function ActionPackRenderer({ actionPack }: { actionPack: any }) {
 
       {/* Marketing Pack */}
       {actionPack.marketingPack && actionPack.marketingPack.length > 0 && (
-        <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
-          <h2 className="text-xl font-bold text-slate-900 mb-4 pb-3 border-b border-gray-200">
+        <div className="bg-white border border-gray-200 rounded-lg p-3 sm:p-4 md:p-6 shadow-sm">
+          <h2 className="text-lg sm:text-xl font-bold text-slate-900 mb-3 sm:mb-4 pb-2 sm:pb-3 border-b border-gray-200">
             📢 Marketing Pack
           </h2>
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             {actionPack.marketingPack.map((pack: any, index: number) => (
-              <div key={index} className="bg-gray-50 border border-gray-200 rounded-lg p-5">
-                <h4 className="font-bold text-slate-900 text-lg mb-2">{index + 1}. {pack.theme}</h4>
+              <div key={index} className="bg-gray-50 border border-gray-200 rounded-lg p-3 sm:p-4 md:p-5">
+                <h4 className="font-bold text-slate-900 text-base sm:text-lg mb-2">{index + 1}. {pack.theme}</h4>
                 <div className="text-sm text-slate-700 space-y-2">
                   <p><strong>타겟 세그먼트:</strong> {pack.targetSegment}</p>
                   
@@ -557,13 +557,13 @@ function ActionPackRenderer({ actionPack }: { actionPack: any }) {
 
       {/* 설문 개선 제안 */}
       {actionPack.surveyIterationRecommendations && actionPack.surveyIterationRecommendations.length > 0 && (
-        <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
-          <h2 className="text-xl font-bold text-slate-900 mb-4 pb-3 border-b border-gray-200">
+        <div className="bg-white border border-gray-200 rounded-lg p-3 sm:p-4 md:p-6 shadow-sm">
+          <h2 className="text-lg sm:text-xl font-bold text-slate-900 mb-3 sm:mb-4 pb-2 sm:pb-3 border-b border-gray-200">
             🔧 설문 개선 제안
           </h2>
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             {actionPack.surveyIterationRecommendations.map((rec: any, index: number) => (
-              <div key={index} className="bg-gray-50 border border-gray-200 rounded-lg p-5">
+              <div key={index} className="bg-gray-50 border border-gray-200 rounded-lg p-3 sm:p-4 md:p-5">
                 <h4 className="font-bold text-slate-900 mb-2">{index + 1}. {rec.gap}</h4>
                 <div className="text-sm text-slate-700 space-y-2">
                   <p><strong>중요성:</strong> {rec.whyItMatters}</p>
@@ -578,8 +578,8 @@ function ActionPackRenderer({ actionPack }: { actionPack: any }) {
 
       {/* 데이터 품질 */}
       {actionPack.dataQuality && actionPack.dataQuality.length > 0 && (
-        <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
-          <h2 className="text-xl font-bold text-slate-900 mb-4 pb-3 border-b border-gray-200">
+        <div className="bg-white border border-gray-200 rounded-lg p-3 sm:p-4 md:p-6 shadow-sm">
+          <h2 className="text-lg sm:text-xl font-bold text-slate-900 mb-3 sm:mb-4 pb-2 sm:pb-3 border-b border-gray-200">
             ⚠️ 데이터 품질
           </h2>
           <div className="space-y-2">
@@ -598,7 +598,7 @@ function ActionPackRenderer({ actionPack }: { actionPack: any }) {
                 // V0.9: 문자열 배열인 경우
                 if (typeof quality === 'string') {
                   return (
-                    <div key={index} className="p-3 rounded-lg bg-blue-50 border border-blue-200">
+                    <div key={index} className="p-2 sm:p-3 rounded-lg bg-blue-50 border border-blue-200">
                       <p className="text-sm text-blue-800">
                         {quality}
                       </p>
@@ -610,7 +610,7 @@ function ActionPackRenderer({ actionPack }: { actionPack: any }) {
                   return (
                     <div
                       key={index}
-                      className={`p-3 rounded-lg ${
+                      className={`p-2 sm:p-3 rounded-lg ${
                         quality.level === 'warning' ? 'bg-yellow-50 border border-yellow-200' : 'bg-blue-50 border border-blue-200'
                       }`}
                     >
@@ -1295,19 +1295,19 @@ export default function AnalysisReportSection({ campaignId }: AnalysisReportSect
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-lg p-6 space-y-6">
+        <div className="bg-white rounded-lg shadow-lg p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-5 md:space-y-6">
           {/* 고정 신뢰 문구 */}
-          <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-lg">
+          <div className="bg-blue-50 border-l-4 border-blue-500 p-3 sm:p-4 rounded-lg">
             <p className="text-sm text-slate-700 italic">
               본 보고서는 캠페인 설문 응답을 기반으로, 리서치/방법론 공개 원칙(AAPOR Transparency)과 시장조사 품질/윤리 가이드라인(ISO 20252, ICC/ESOMAR Code)을 참고하여 작성되었습니다. 또한 리드 우선순위와 후속 액션 제안은 BANT 및 MEDDIC 프레임워크 관점으로 구조화했습니다.
             </p>
           </div>
 
           {/* 분석 대상 요약 */}
-          <div className="border-b border-slate-200 pb-6">
-            <h3 className="text-lg font-bold text-slate-900 mb-4">🎯 분석 대상</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
+          <div className="border-b border-slate-200 pb-4 sm:pb-6">
+            <h3 className="text-base sm:text-lg font-bold text-slate-900 mb-3 sm:mb-4">🎯 분석 대상</h3>
+            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 md:gap-4">
+              <div className="p-2 sm:p-3 md:p-4 bg-slate-50 rounded-lg border border-slate-200">
                 <div className="text-sm text-slate-600 mb-1">분석 시점</div>
                 <div className="text-lg font-bold text-slate-900">
                   {new Date(selectedReport.analyzed_at).toLocaleString('ko-KR', {
@@ -1346,11 +1346,11 @@ export default function AnalysisReportSection({ campaignId }: AnalysisReportSect
 
           {/* 레퍼런스 요약 */}
           {selectedReport.references_used?.references && (
-            <div className="border-b border-slate-200 pb-6">
-              <h3 className="text-lg font-bold text-slate-900 mb-4">📚 관련 레퍼런스 요약</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="border-b border-slate-200 pb-4 sm:pb-6">
+              <h3 className="text-base sm:text-lg font-bold text-slate-900 mb-3 sm:mb-4">📚 관련 레퍼런스 요약</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 sm:gap-3">
                 {selectedReport.references_used.references.map((ref: any) => (
-                  <div key={ref.id} className="bg-slate-50 border border-slate-200 p-4 rounded-lg">
+                  <div key={ref.id} className="bg-slate-50 border border-slate-200 p-3 sm:p-4 rounded-lg">
                     <h4 className="font-semibold text-sm text-slate-900 mb-1">{ref.title}</h4>
                     <p className="text-xs text-slate-600">{ref.summary}</p>
                   </div>
