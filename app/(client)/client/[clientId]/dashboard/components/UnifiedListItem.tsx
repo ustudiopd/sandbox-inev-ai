@@ -5,7 +5,7 @@ import Link from 'next/link'
 
 interface UnifiedListItemProps {
   item: {
-    type: 'webinar' | 'survey'
+    type: 'webinar' | 'survey' | 'registration'
     id: string
     slug?: string | null
     title: string
@@ -19,6 +19,7 @@ interface UnifiedListItemProps {
 export default function UnifiedListItem({ item, clientId }: UnifiedListItemProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const isWebinar = item.type === 'webinar'
+  const isRegistration = item.type === 'registration'
   const webinarSlug = isWebinar ? (item.slug || item.id) : null
   
   const actions = isWebinar ? [
@@ -49,9 +50,11 @@ export default function UnifiedListItem({ item, clientId }: UnifiedListItemProps
           <span className={`px-2 py-1 text-xs font-semibold rounded flex-shrink-0 ${
             isWebinar 
               ? 'bg-blue-100 text-blue-800' 
+              : isRegistration
+              ? 'bg-cyan-100 text-cyan-800'
               : 'bg-purple-100 text-purple-800'
           }`}>
-            {isWebinar ? '웨비나' : '설문'}
+            {isWebinar ? '웨비나' : isRegistration ? '등록' : '설문'}
           </span>
           <div className="flex-1 min-w-0">
             <div className="font-medium text-gray-800 truncate">{item.title}</div>

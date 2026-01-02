@@ -36,7 +36,7 @@ export default function SidebarTree({ organizations }: SidebarTreeProps) {
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set())
   const [agencies, setAgencies] = useState<Array<{ id: string; name: string }>>([])
   const [clients, setClients] = useState<Array<{ id: string; name: string; agencyId: string }>>([])
-  const [webinars, setWebinars] = useState<Map<string, Array<{ id: string; title: string; slug?: string; type?: 'webinar' | 'survey' }>>>(new Map())
+  const [webinars, setWebinars] = useState<Map<string, Array<{ id: string; title: string; slug?: string; type?: 'webinar' | 'survey' | 'registration' }>>>(new Map())
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
@@ -357,22 +357,23 @@ export default function SidebarTree({ organizations }: SidebarTreeProps) {
               children: []
             }
 
-            // 웨비나/설문조사 로드
+            // 웨비나/설문조사/등록 페이지 로드
             const clientEvents = webinars.get(client.id) || []
             clientEvents.forEach(event => {
               const isSurvey = event.type === 'survey'
+              const isRegistration = event.type === 'registration'
               const eventNode: TreeNode = {
-                id: `${isSurvey ? 'survey' : 'webinar'}-${event.id}`,
+                id: `${isSurvey ? 'survey' : isRegistration ? 'registration' : 'webinar'}-${event.id}`,
                 label: event.title,
                 type: 'webinar', // TreeNode 타입은 webinar로 통일
-                icon: isSurvey ? '📋' : '🎥',
-                expanded: expandedNodes.has(`${isSurvey ? 'survey' : 'webinar'}-${event.id}`),
-                active: isSurvey 
+                icon: isSurvey ? '📋' : isRegistration ? '📝' : '🎥',
+                expanded: expandedNodes.has(`${isSurvey ? 'survey' : isRegistration ? 'registration' : 'webinar'}-${event.id}`),
+                active: isSurvey || isRegistration
                   ? pathname.includes(`/client/${client.id}/surveys/${event.id}`)
                   : pathname.includes(`/webinar/${event.slug || event.id}/`),
-                children: isSurvey ? [
+                children: isSurvey || isRegistration ? [
                   {
-                    id: `survey-${event.id}-console`,
+                    id: `${isSurvey ? 'survey' : 'registration'}-${event.id}-console`,
                     label: '콘솔',
                     type: 'page',
                     href: `/client/${client.id}/surveys/${event.id}`,
@@ -458,18 +459,19 @@ export default function SidebarTree({ organizations }: SidebarTreeProps) {
           const clientEvents = webinars.get(client.id) || []
           clientEvents.forEach(event => {
             const isSurvey = event.type === 'survey'
+            const isRegistration = event.type === 'registration'
             const eventNode: TreeNode = {
-              id: `${isSurvey ? 'survey' : 'webinar'}-${event.id}`,
+              id: `${isSurvey ? 'survey' : isRegistration ? 'registration' : 'webinar'}-${event.id}`,
               label: event.title,
               type: 'webinar', // TreeNode 타입은 webinar로 통일
-              icon: isSurvey ? '📋' : '🎥',
-              expanded: expandedNodes.has(`${isSurvey ? 'survey' : 'webinar'}-${event.id}`),
-              active: isSurvey 
+              icon: isSurvey ? '📋' : isRegistration ? '📝' : '🎥',
+              expanded: expandedNodes.has(`${isSurvey ? 'survey' : isRegistration ? 'registration' : 'webinar'}-${event.id}`),
+              active: isSurvey || isRegistration
                 ? pathname.includes(`/client/${client.id}/surveys/${event.id}`)
                 : pathname.includes(`/webinar/${event.slug || event.id}/`),
-              children: isSurvey ? [
+              children: isSurvey || isRegistration ? [
                 {
-                  id: `survey-${event.id}-console`,
+                  id: `${isSurvey ? 'survey' : 'registration'}-${event.id}-console`,
                   label: '콘솔',
                   type: 'page',
                   href: `/client/${client.id}/surveys/${event.id}`,

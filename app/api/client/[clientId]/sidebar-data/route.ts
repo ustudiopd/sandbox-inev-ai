@@ -33,10 +33,10 @@ export async function GET(
     let events: any[] = []
 
     if (isSurveyClient) {
-      // 설문조사 캠페인 목록 (최근 20개)
+      // 설문조사 및 등록 페이지 캠페인 목록 (최근 20개)
       const { data: campaigns } = await admin
         .from('event_survey_campaigns')
-        .select('id, title, public_path, created_at')
+        .select('id, title, public_path, type, created_at')
         .eq('client_id', clientId)
         .order('created_at', { ascending: false })
         .limit(20)
@@ -44,8 +44,8 @@ export async function GET(
       events = (campaigns || []).map((c: any) => ({
         id: c.id,
         title: c.title,
-        slug: c.public_path, // 설문조사는 public_path를 slug로 사용
-        type: 'survey',
+        slug: c.public_path, // public_path를 slug로 사용
+        type: c.type || 'survey', // 기본값은 'survey'
       }))
     } else {
       // 웨비나 목록 (최근 20개)

@@ -693,4 +693,3 @@ export function buildCapacityPlan(
     suggestedSLA,
   }
 }
-

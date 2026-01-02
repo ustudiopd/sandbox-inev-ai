@@ -1,4 +1,4 @@
-import { createAdminSupabase } from '../lib/supabase/admin'
+import { createAdminSupabase } from '@/lib/supabase/admin'
 import { readFileSync } from 'fs'
 import { join } from 'path'
 import dotenv from 'dotenv'
@@ -6,12 +6,12 @@ import dotenv from 'dotenv'
 // .env.local 파일 로드
 dotenv.config({ path: '.env.local' })
 
-async function uploadHeaderImage() {
+async function uploadEdmHeader1600_1() {
   try {
     const admin = createAdminSupabase()
     
     // 이미지 파일 읽기
-    const imagePath = join(process.cwd(), 'img', 'header_img.jpg')
+    const imagePath = join(process.cwd(), 'img', 'edm_header_1600_1.jpg')
     console.log('이미지 파일 경로:', imagePath)
     
     const imageBuffer = readFileSync(imagePath)
@@ -49,7 +49,7 @@ async function uploadHeaderImage() {
     }
     
     // 이미지 업로드
-    const filePath = 'hpe-booth-header.jpg'
+    const filePath = 'edm_header_1600_1.jpg'
     console.log('이미지 업로드 중...')
     
     const { data: uploadData, error: uploadError } = await admin.storage
@@ -67,27 +67,17 @@ async function uploadHeaderImage() {
     console.log('✅ 이미지 업로드 완료:', uploadData?.path)
     
     // Public URL 생성
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-    if (!supabaseUrl) {
-      throw new Error('NEXT_PUBLIC_SUPABASE_URL 환경 변수가 설정되지 않았습니다.')
-    }
+    const { data: urlData } = admin.storage
+      .from(bucketName)
+      .getPublicUrl(filePath)
     
-    const publicUrl = `${supabaseUrl}/storage/v1/object/public/${bucketName}/${filePath}`
-    console.log('\n✅ 업로드 완료!')
-    console.log('📎 Public URL:', publicUrl)
-    console.log('\n이 URL을 설문 페이지에서 사용하세요.')
-    
-    return publicUrl
+    console.log('✅ Public URL:', urlData?.publicUrl)
+    console.log('\n이미지가 성공적으로 업로드되었습니다!')
+    console.log('웹에서 접근 가능한 URL:', urlData?.publicUrl)
   } catch (error: any) {
-    console.error('❌ 오류:', error.message)
+    console.error('❌ 업로드 실패:', error.message)
     process.exit(1)
   }
 }
 
-uploadHeaderImage()
-
-
-
-
-
-
+uploadEdmHeader1600_1()

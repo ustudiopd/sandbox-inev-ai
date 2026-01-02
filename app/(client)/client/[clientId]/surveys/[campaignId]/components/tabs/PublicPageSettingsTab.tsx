@@ -10,7 +10,10 @@ interface PublicPageSettingsTabProps {
 
 export default function PublicPageSettingsTab({ campaignId, campaign, onCampaignUpdate }: PublicPageSettingsTabProps) {
   const [saving, setSaving] = useState(false)
-  const [welcomeSchema, setWelcomeSchema] = useState(JSON.stringify(campaign.welcome_schema || {}, null, 2))
+  const welcomeSchemaData = campaign.welcome_schema || {}
+  const [showTitle, setShowTitle] = useState(welcomeSchemaData.showTitle !== false) // 기본값 true
+  const [showQRCode, setShowQRCode] = useState(welcomeSchemaData.showQRCode !== false) // 기본값 true
+  const [welcomeSchema, setWelcomeSchema] = useState(JSON.stringify(welcomeSchemaData, null, 2))
   const [completionSchema, setCompletionSchema] = useState(JSON.stringify(campaign.completion_schema || {}, null, 2))
   const [displaySchema, setDisplaySchema] = useState(JSON.stringify(campaign.display_schema || {}, null, 2))
   
@@ -22,7 +25,10 @@ export default function PublicPageSettingsTab({ campaignId, campaign, onCampaign
     let parsedWelcomeSchema, parsedCompletionSchema, parsedDisplaySchema
     
     try {
-      parsedWelcomeSchema = welcomeSchema.trim() ? JSON.parse(welcomeSchema) : null
+      parsedWelcomeSchema = welcomeSchema.trim() ? JSON.parse(welcomeSchema) : {}
+      // 체크박스 값 반영
+      parsedWelcomeSchema.showTitle = showTitle
+      parsedWelcomeSchema.showQRCode = showQRCode
     } catch (e) {
       alert('웰컴 페이지 설정 JSON 형식이 올바르지 않습니다')
       return
@@ -72,6 +78,51 @@ export default function PublicPageSettingsTab({ campaignId, campaign, onCampaign
   
   return (
     <div className="space-y-6">
+        {/* 웰컴 페이지 표시 옵션 */}
+        <div className="bg-gray-50 rounded-lg p-4 space-y-4">
+          <h3 className="text-sm font-semibold text-gray-900 mb-3">웰컴 페이지 표시 옵션</h3>
+          <div className="space-y-3">
+            <label className="flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                checked={showTitle}
+                onChange={(e) => {
+                  setShowTitle(e.target.checked)
+                  // JSON도 업데이트
+                  try {
+                    const current = welcomeSchema.trim() ? JSON.parse(welcomeSchema) : {}
+                    current.showTitle = e.target.checked
+                    setWelcomeSchema(JSON.stringify(current, null, 2))
+                  } catch (err) {
+                    // JSON 파싱 실패 시 무시
+                  }
+                }}
+                className="w-5 h-5 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+              />
+              <span className="ml-3 text-sm text-gray-700">제목 표시</span>
+            </label>
+            <label className="flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                checked={showQRCode}
+                onChange={(e) => {
+                  setShowQRCode(e.target.checked)
+                  // JSON도 업데이트
+                  try {
+                    const current = welcomeSchema.trim() ? JSON.parse(welcomeSchema) : {}
+                    current.showQRCode = e.target.checked
+                    setWelcomeSchema(JSON.stringify(current, null, 2))
+                  } catch (err) {
+                    // JSON 파싱 실패 시 무시
+                  }
+                }}
+                className="w-5 h-5 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+              />
+              <span className="ml-3 text-sm text-gray-700">QR 코드 표시</span>
+            </label>
+          </div>
+        </div>
+        
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
             웰컴 페이지 설정 (JSON)

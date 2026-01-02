@@ -5,13 +5,16 @@ import { createAdminSupabase } from '@/lib/supabase/admin'
 import QRCodeDisplay from './components/QRCodeDisplay'
 import SurveyPage from './components/SurveyPage'
 import DonePageClient from './components/DonePageClient'
+import RegistrationPage from './components/RegistrationPage'
+import WelcomePage from './components/WelcomePage'
 
 /**
- * 설문조사 공개 페이지 catch-all 라우트
+ * 이벤트 공개 페이지 catch-all 라우트 (설문조사 + 등록 페이지)
  * 
  * URL 구조:
  * - /event/{public_path} -> 시작 페이지
- * - /event/{public_path}/survey -> 설문 페이지
+ * - /event/{public_path}/survey -> 설문 페이지 (type='survey')
+ * - /event/{public_path}/register -> 등록 페이지 (type='registration')
  * - /event/{public_path}/done -> 완료 페이지
  * - /event/{public_path}/display -> 디스플레이 페이지
  */
@@ -41,9 +44,9 @@ export default async function SurveyPublicPage({
     return redirect(`/event/dashboard/${dashboardCode}`)
   }
   
-  // 마지막 경로가 survey, done, display 중 하나면 subPath로 처리
+  // 마지막 경로가 survey, register, done, display 중 하나면 subPath로 처리
   const lastPath = path[path.length - 1]
-  const isSubPath = ['survey', 'done', 'display'].includes(lastPath)
+  const isSubPath = ['survey', 'register', 'done', 'display'].includes(lastPath)
   
   const subPath = isSubPath ? lastPath : null
   const publicPath = '/' + (isSubPath ? path.slice(0, -1) : path).join('/')
@@ -246,8 +249,11 @@ export default async function SurveyPublicPage({
     campaignId: campaign.id,
     title: campaign.title,
     public_path: campaign.public_path,
-    status: campaign.status
+    status: campaign.status,
+    type: campaign.type || 'survey'
   }, null, 2))
+  
+  const campaignType = campaign.type || 'survey' // 기본값은 'survey'
   
   // subPath에 따라 다른 페이지 렌더링
   if (!subPath) {
@@ -260,7 +266,18 @@ export default async function SurveyPublicPage({
     // draft 상태인 경우 경고 표시
     const isDraft = campaign.status === 'draft'
     
-    return <WelcomePage campaign={campaign} baseUrl={baseUrl} isDraft={isDraft} />
+    return (
+      <Suspense fallback={
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-cyan-50 to-teal-50 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">로딩 중...</p>
+          </div>
+        </div>
+      }>
+        <WelcomePage campaign={campaign} baseUrl={baseUrl} isDraft={isDraft} campaignType={campaignType} />
+      </Suspense>
+    )
   } else if (subPath === 'survey') {
     // 설문 페이지
     const headersList = await headers()
@@ -297,6 +314,27 @@ export default async function SurveyPublicPage({
         <DonePageClient campaign={campaign} baseUrl={baseUrl} />
       </Suspense>
     )
+  } else if (subPath === 'register') {
+    // 등록 페이지 (type='registration'인 경우만)
+    if (campaignType !== 'registration') {
+      notFound()
+    }
+    const headersList = await headers()
+    const host = headersList.get('host') || 'localhost:3000'
+    const protocol = headersList.get('x-forwarded-proto') || 'http'
+    const baseUrl = `${protocol}://${host}`
+    return (
+      <Suspense fallback={
+        <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-rose-50 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">로딩 중...</p>
+          </div>
+        </div>
+      }>
+        <RegistrationPage campaign={campaign} baseUrl={baseUrl} />
+      </Suspense>
+    )
   } else if (subPath === 'display') {
     // 디스플레이 페이지
     return <DisplayPage campaign={campaign} />
@@ -306,88 +344,6 @@ export default async function SurveyPublicPage({
   }
 }
 
-// 시작 페이지 컴포넌트
-function WelcomePage({ campaign, baseUrl, isDraft = false }: { campaign: any; baseUrl: string; isDraft?: boolean }) {
-  const surveyUrl = `${baseUrl}/event${campaign.public_path}/survey`
-  // 헤더 이미지 URL (HPE 부스 이벤트 이미지)
-  const headerImageUrl = 'https://yqsayphssjznthrxpgfb.supabase.co/storage/v1/object/public/webinar-thumbnails/hpe-booth-header.jpg'
-  
-  return (
-    <div className="min-h-screen bg-white font-sans text-gray-900 pb-20">
-      {/* 상단 배너 */}
-      <div className="w-full bg-[#f8f9fa]">
-        <div className="max-w-screen-xl mx-auto">
-          <div className="relative w-full overflow-hidden flex justify-center">
-            <img
-              src={headerImageUrl}
-              alt={campaign.title || '이벤트 헤더'}
-              className="w-full h-auto max-w-[600px]"
-              style={{ maxHeight: '300px' }}
-            />
-          </div>
-        </div>
-      </div>
-      
-      {/* 메인 콘텐츠 영역 */}
-      <div className="max-w-[640px] mx-auto px-4 sm:px-5 py-6 sm:py-10">
-        {isDraft && (
-          <div className="mb-4 sm:mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-            <p className="text-yellow-800 text-sm font-medium">
-              ⚠️ 이 캠페인은 초안 상태입니다. 관리자 대시보드에서 발행해주세요.
-            </p>
-          </div>
-        )}
-        
-        <div className="bg-gray-50 rounded-lg shadow-md p-6 sm:p-8 md:p-10">
-          {/* 제목 및 설명 영역 */}
-          <div className="text-center mb-8 sm:mb-10">
-            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 text-gray-900">
-              {campaign.title}
-            </h1>
-            {campaign.host && (
-              <p className="text-gray-600 text-sm sm:text-base mb-4">주최: {campaign.host}</p>
-            )}
-            <p className="text-base sm:text-lg text-gray-700 max-w-2xl mx-auto">
-              설문조사에 참여하시면 경품 이벤트에 참여하실 수 있습니다.
-            </p>
-          </div>
-          
-          {/* 버튼 및 QR 코드 영역 */}
-          <div className="grid md:grid-cols-2 gap-8 sm:gap-10 md:gap-12 mb-8 sm:mb-10">
-            {/* 왼쪽: 버튼 영역 */}
-            <div className="flex flex-col gap-4 sm:gap-5 justify-center">
-              <a
-                href={`/event${campaign.public_path}/survey`}
-                className="w-full bg-[#00B388] text-white py-4 sm:py-5 rounded-md text-lg sm:text-xl font-bold shadow-lg hover:bg-[#008f6d] transition-colors text-center"
-              >
-                설문 참여하기
-              </a>
-              <a
-                href={`/event${campaign.public_path}/survey?lookup=true`}
-                className="w-full px-6 sm:px-8 py-3 sm:py-4 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all font-medium text-center text-base sm:text-lg"
-              >
-                참여 확인하기
-              </a>
-            </div>
-            
-            {/* 오른쪽: QR 코드 영역 */}
-            <div className="flex flex-col items-center justify-center">
-              <h3 className="text-lg sm:text-xl font-semibold text-gray-700 mb-4 sm:mb-5">QR 코드로 접속하기</h3>
-              <QRCodeDisplay url={surveyUrl} />
-            </div>
-          </div>
-          
-          {/* URL 표시 (섹션 전체 아래 가운데) */}
-          <div className="pt-6 sm:pt-8 border-t border-gray-200 text-center">
-            <p className="text-xs sm:text-sm text-gray-500 font-mono break-all px-4">
-              {surveyUrl}
-            </p>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
 
 // 디스플레이 페이지 컴포넌트 (임시)
 function DisplayPage({ campaign }: { campaign: any }) {

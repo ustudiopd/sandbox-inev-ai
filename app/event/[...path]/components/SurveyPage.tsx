@@ -91,13 +91,12 @@ export default function SurveyPage({ campaign, baseUrl }: SurveyPageProps) {
       <div className="min-h-screen bg-white font-sans text-gray-900 pb-20">
         {/* 상단 배너 */}
         <div className="w-full bg-[#f8f9fa]">
-          <div className="max-w-screen-xl mx-auto">
+          <div className="max-w-[640px] mx-auto">
             <div className="relative w-full overflow-hidden flex justify-center">
               <img
                 src={headerImageUrl}
                 alt="이벤트 헤더"
-                className="w-full h-auto max-w-[600px]"
-                style={{ maxHeight: '300px' }}
+                className="h-auto w-full"
               />
             </div>
           </div>

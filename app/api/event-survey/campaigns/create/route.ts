@@ -88,6 +88,7 @@ export async function POST(req: Request) {
       host,
       publicPath, // 선택사항: 제공되면 사용, 없으면 자동 생성
       status = 'draft',
+      type = 'survey', // 'survey' 또는 'registration'
       formId,
       welcomeSchema,
       completionSchema,
@@ -255,6 +256,9 @@ export async function POST(req: Request) {
       }
     }
     
+    // 캠페인 타입 검증
+    const campaignType = type === 'registration' ? 'registration' : 'survey'
+    
     // 캠페인 생성
     const { data: campaign, error: campaignError } = await admin
       .from('event_survey_campaigns')
@@ -265,6 +269,7 @@ export async function POST(req: Request) {
         host: host || null,
         public_path: finalPublicPath,
         status: status || 'draft',
+        type: campaignType,
         form_id: formId || null,
         welcome_schema: welcomeSchema || null,
         completion_schema: completionSchema || null,

@@ -116,7 +116,7 @@ export default function SurveyForm({
     participationStep2: '모든 설문 문항에 응답한다. (문항 단 3개!)',
     participationStep3: '설문 완료 화면을 부스 스태프에게 보여주고 사은품을 받는다. (이때에 메시지 카드도 같이 제출해 주세요!)',
     requiredNotice: '* 모든 사항은 필수 입력칸입니다.',
-    bottomNotice: '설문 완료 화면을 부스 스태프에게 보여주시면 사은품으로 \'3단 자동 양우산\'을 드립니다. (메시지 카드 제출 필수)',
+    bottomNotice: '',
   }
   
   const currentIntroTexts = introTexts || form?.config?.introTexts || defaultIntroTexts
@@ -466,13 +466,12 @@ export default function SurveyForm({
     <div className="min-h-screen bg-white font-sans text-gray-900 pb-20">
       {/* 상단 배너 */}
       <div className="w-full bg-[#f8f9fa]">
-        <div className="max-w-screen-xl mx-auto">
+        <div className="max-w-[640px] mx-auto">
           <div className="relative w-full overflow-hidden flex justify-center">
             <img
               src={headerImageUrl}
               alt="이벤트 헤더"
-              className="w-full h-auto max-w-[600px]"
-              style={{ maxHeight: '300px' }}
+              className="h-auto w-full"
             />
           </div>
         </div>
@@ -495,127 +494,6 @@ export default function SurveyForm({
         )}
         {/* 설문 영역 (회색 배경 박스) */}
         <div className="bg-gray-50 rounded-lg shadow-md p-5 sm:p-6 md:p-8">
-          {/* 참여 방법 안내 */}
-          <section className="mb-12">
-            {editMode && editingField === 'participationTitle' ? (
-              <input
-                type="text"
-                value={editValue}
-                onChange={(e) => setEditValue(e.target.value)}
-                onBlur={handleSaveEdit}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault()
-                    handleSaveEdit()
-                  } else if (e.key === 'Escape') {
-                    handleCancelEdit()
-                  }
-                }}
-                className="text-[#00B388] text-xl font-bold mb-6 w-full border-2 border-blue-400 rounded px-2 py-1 bg-blue-50"
-                autoFocus
-              />
-            ) : (
-              <h2 
-                className={`text-[#00B388] text-xl font-bold mb-6 ${editMode ? 'hover:bg-gray-100 cursor-pointer rounded px-2 py-1' : ''}`}
-                onClick={() => editMode && handleStartEdit('participationTitle', currentIntroTexts.participationTitle || defaultIntroTexts.participationTitle)}
-              >
-                {currentIntroTexts.participationTitle}
-              </h2>
-            )}
-            <div className="space-y-4 text-base font-medium leading-relaxed">
-              {editMode && editingField === 'participationStep1' ? (
-                <textarea
-                  value={editValue}
-                  onChange={(e) => setEditValue(e.target.value)}
-                  onBlur={handleSaveEdit}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Escape') {
-                      handleCancelEdit()
-                    }
-                  }}
-                  className="w-full border-2 border-blue-400 rounded px-2 py-1 bg-blue-50"
-                  rows={2}
-                  autoFocus
-                />
-              ) : (
-                <p 
-                  className={editMode ? 'hover:bg-gray-100 cursor-pointer rounded px-2 py-1' : ''}
-                  onClick={() => editMode && handleStartEdit('participationStep1', currentIntroTexts.participationStep1 || defaultIntroTexts.participationStep1)}
-                >
-                  <strong>하나.</strong> {currentIntroTexts.participationStep1}
-                </p>
-              )}
-              {editMode && editingField === 'participationStep2' ? (
-                <textarea
-                  value={editValue}
-                  onChange={(e) => setEditValue(e.target.value)}
-                  onBlur={handleSaveEdit}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Escape') {
-                      handleCancelEdit()
-                    }
-                  }}
-                  className="w-full border-2 border-blue-400 rounded px-2 py-1 bg-blue-50"
-                  rows={2}
-                  autoFocus
-                />
-              ) : (
-                <p 
-                  className={editMode ? 'hover:bg-gray-100 cursor-pointer rounded px-2 py-1' : ''}
-                  onClick={() => editMode && handleStartEdit('participationStep2', currentIntroTexts.participationStep2 || defaultIntroTexts.participationStep2)}
-                >
-                  <strong>둘.</strong> {currentIntroTexts.participationStep2}
-                </p>
-              )}
-              {editMode && editingField === 'participationStep3' ? (
-                <textarea
-                  value={editValue}
-                  onChange={(e) => setEditValue(e.target.value)}
-                  onBlur={handleSaveEdit}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Escape') {
-                      handleCancelEdit()
-                    }
-                  }}
-                  className="w-full border-2 border-blue-400 rounded px-2 py-1 bg-blue-50"
-                  rows={2}
-                  autoFocus
-                />
-              ) : (
-                <p 
-                  className={editMode ? 'hover:bg-gray-100 cursor-pointer rounded px-2 py-1' : ''}
-                  onClick={() => editMode && handleStartEdit('participationStep3', currentIntroTexts.participationStep3 || defaultIntroTexts.participationStep3)}
-                >
-                  <strong>셋.</strong> {currentIntroTexts.participationStep3}
-                </p>
-              )}
-            </div>
-            {editMode && editingField === 'requiredNotice' ? (
-              <input
-                type="text"
-                value={editValue}
-                onChange={(e) => setEditValue(e.target.value)}
-                onBlur={handleSaveEdit}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault()
-                    handleSaveEdit()
-                  } else if (e.key === 'Escape') {
-                    handleCancelEdit()
-                  }
-                }}
-                className="text-[#00B388] text-right mt-6 text-xs font-bold w-full border-2 border-blue-400 rounded px-2 py-1 bg-blue-50"
-                autoFocus
-              />
-            ) : (
-              <p 
-                className={`text-[#00B388] text-right mt-6 text-xs font-bold ${editMode ? 'hover:bg-gray-100 cursor-pointer rounded px-2 py-1' : ''}`}
-                onClick={() => editMode && handleStartEdit('requiredNotice', currentIntroTexts.requiredNotice || defaultIntroTexts.requiredNotice)}
-              >
-                {currentIntroTexts.requiredNotice}
-              </p>
-            )}
-          </section>
 
           {/* 에러 메시지 */}
           {error && (
@@ -696,10 +574,6 @@ export default function SurveyForm({
             {/* 폼 문항 */}
             {form && form.questions && form.questions.length > 0 && (
               <div className="space-y-6 pt-10">
-                <h3 className="text-lg font-semibold text-gray-900">{form.title}</h3>
-                {form.description && (
-                  <p className="text-gray-600 text-sm">{form.description}</p>
-                )}
                 
                 {form.questions.map((question, index) => (
                   <div key={question.id} className="space-y-2">
@@ -926,28 +800,6 @@ export default function SurveyForm({
               >
                 {submitting ? '제출 중...' : previewMode ? '미리보기 모드에서는 제출할 수 없습니다' : '제출하기'}
               </button>
-              {editMode && editingField === 'bottomNotice' ? (
-                <textarea
-                  value={editValue}
-                  onChange={(e) => setEditValue(e.target.value)}
-                  onBlur={handleSaveEdit}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Escape') {
-                      handleCancelEdit()
-                    }
-                  }}
-                  className="mt-6 w-full border-2 border-blue-400 rounded px-2 py-1 bg-blue-50 text-center text-gray-800 font-bold leading-tight"
-                  rows={2}
-                  autoFocus
-                />
-              ) : (
-                <p 
-                  className={`mt-6 text-center text-gray-800 font-bold leading-tight ${editMode ? 'hover:bg-gray-100 cursor-pointer rounded px-2 py-1' : ''}`}
-                  onClick={() => editMode && handleStartEdit('bottomNotice', currentIntroTexts.bottomNotice || defaultIntroTexts.bottomNotice)}
-                >
-                  {currentIntroTexts.bottomNotice}
-                </p>
-              )}
             </div>
           </form>
         </div>
