@@ -628,7 +628,7 @@ export default function RegistrationPage({ campaign, baseUrl }: RegistrationPage
                 </a>을 참조하시기 바랍니다. 
                 동의한 사항에 대해 언제든지 취소 또는 수정하여 HPE의 마케팅 커뮤니케이션 서비스를 받을 수 있습니다. 
                 이 작업을 수행하려면 HPE 이메일 마케팅 커뮤니케이션 페이지 하단의 옵트아웃 및 환경설정 메커니즘을 사용하거나{' '}
-                <a href="#" className="text-[#00B388] hover:underline">이 링크</a>를 클릭하시면 됩니다. 
+                <a href="/unsubscribe" target="_blank" rel="noopener noreferrer" className="text-[#00B388] hover:underline">이 링크</a>를 클릭하시면 됩니다. 
                 마케팅 팀으로부터 전화를 받으실 수 있도록 휴대폰 번호를 제공하신 경우, 로밍 요금이 적용될 수 있음을 알아두시기 바랍니다.
               </p>
               <label className="flex items-start cursor-pointer">
