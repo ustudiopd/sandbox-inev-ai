@@ -29,9 +29,6 @@ export default function RegistrationPage({ campaign, baseUrl }: RegistrationPage
   const [lastName, setLastName] = useState('')
   const [jobTitle, setJobTitle] = useState('')
   const [company, setCompany] = useState('')
-  const [postalCode, setPostalCode] = useState('')
-  const [city, setCity] = useState('')
-  const [country, setCountry] = useState('대한민국')
   const [phoneCountryCode, setPhoneCountryCode] = useState('+82')
   const [phone1, setPhone1] = useState('010')
   const [phone2, setPhone2] = useState('')
@@ -116,23 +113,13 @@ export default function RegistrationPage({ campaign, baseUrl }: RegistrationPage
       return
     }
     
-    if (!jobTitle.trim()) {
-      setError('직책을 입력해주세요.')
-      return
-    }
-    
     if (!company.trim()) {
       setError('회사명을 입력해주세요.')
       return
     }
     
-    if (!postalCode.trim()) {
-      setError('우편번호를 입력해주세요.')
-      return
-    }
-    
-    if (!city.trim()) {
-      setError('시/도를 입력해주세요.')
+    if (!jobTitle.trim()) {
+      setError('직급을 입력해주세요.')
       return
     }
     
@@ -168,20 +155,17 @@ export default function RegistrationPage({ campaign, baseUrl }: RegistrationPage
           company: company.trim(),
           phone: phone,
           phone_norm: phoneNorm,
-          registration_data: {
-            email: email.trim(),
-            firstName: firstName.trim(),
-            lastName: lastName.trim(),
-            jobTitle: jobTitle.trim(),
-            postalCode: postalCode.trim(),
-            city: city.trim(),
-            country: country,
-            phoneCountryCode: phoneCountryCode,
-            customQuestion: customQuestion.trim(),
-            consentEmail: consentEmail,
-            consentPhone: consentPhone,
-            privacyConsent: privacyConsent,
-          },
+            registration_data: {
+              email: email.trim(),
+              firstName: firstName.trim(),
+              lastName: lastName.trim(),
+              jobTitle: jobTitle.trim(),
+              phoneCountryCode: phoneCountryCode,
+              customQuestion: customQuestion.trim(),
+              consentEmail: consentEmail,
+              consentPhone: consentPhone,
+              privacyConsent: privacyConsent,
+            },
         }),
       })
       
@@ -361,15 +345,6 @@ export default function RegistrationPage({ campaign, baseUrl }: RegistrationPage
             이벤트 등록
           </h2>
           
-          <div className="mb-6">
-            <p className="text-sm sm:text-base text-gray-600">
-              장소
-            </p>
-            <p className="text-sm sm:text-base text-gray-900 font-medium">
-              콘레드 서울, 2026.01.29
-            </p>
-          </div>
-          
           <form onSubmit={handleSubmit} className="space-y-5 sm:space-y-6">
             {error && (
               <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
@@ -377,10 +352,26 @@ export default function RegistrationPage({ campaign, baseUrl }: RegistrationPage
               </div>
             )}
             
-            {/* 이메일 */}
+            {/* 회사명 */}
             <div className="flex items-center gap-4">
               <label className="text-sm font-medium text-gray-700 whitespace-nowrap min-w-[100px]">
-                이메일 <span className="text-red-500">*</span>
+                회사명 <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                value={company}
+                onChange={(e) => setCompany(e.target.value)}
+                className="flex-1 px-4 py-2.5 border-b-2 border-gray-200 focus:border-[#00B388] outline-none transition-colors bg-white text-gray-900 text-base"
+                placeholder="회사명을 입력하세요"
+                disabled={submitting}
+                required
+              />
+            </div>
+            
+            {/* 이메일 주소 */}
+            <div className="flex items-center gap-4">
+              <label className="text-sm font-medium text-gray-700 whitespace-nowrap min-w-[100px]">
+                이메일 주소 <span className="text-red-500">*</span>
               </label>
               <input
                 type="email"
@@ -425,95 +416,26 @@ export default function RegistrationPage({ campaign, baseUrl }: RegistrationPage
               />
             </div>
             
-            {/* 직책 */}
+            {/* 직급 */}
             <div className="flex items-center gap-4">
               <label className="text-sm font-medium text-gray-700 whitespace-nowrap min-w-[100px]">
-                직책 <span className="text-red-500">*</span>
+                직급 <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
                 value={jobTitle}
                 onChange={(e) => setJobTitle(e.target.value)}
                 className="flex-1 px-4 py-2.5 border-b-2 border-gray-200 focus:border-[#00B388] outline-none transition-colors bg-white text-gray-900 text-base"
-                placeholder="직책을 입력하세요"
+                placeholder="직급을 입력하세요"
                 disabled={submitting}
                 required
               />
             </div>
             
-            {/* 회사명 */}
-            <div className="flex items-center gap-4">
-              <label className="text-sm font-medium text-gray-700 whitespace-nowrap min-w-[100px]">
-                회사명 <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                value={company}
-                onChange={(e) => setCompany(e.target.value)}
-                className="flex-1 px-4 py-2.5 border-b-2 border-gray-200 focus:border-[#00B388] outline-none transition-colors bg-white text-gray-900 text-base"
-                placeholder="회사명을 입력하세요"
-                disabled={submitting}
-                required
-              />
-            </div>
-            
-            {/* 우편번호 */}
-            <div className="flex items-center gap-4">
-              <label className="text-sm font-medium text-gray-700 whitespace-nowrap min-w-[100px]">
-                우편번호 <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                value={postalCode}
-                onChange={(e) => setPostalCode(e.target.value.replace(/\D/g, '').slice(0, 5))}
-                className="flex-1 px-4 py-2.5 border-b-2 border-gray-200 focus:border-[#00B388] outline-none transition-colors bg-white text-gray-900 text-base"
-                placeholder="우편번호를 입력하세요"
-                maxLength={5}
-                disabled={submitting}
-                required
-              />
-            </div>
-            
-            {/* 시/도 */}
-            <div className="flex items-center gap-4">
-              <label className="text-sm font-medium text-gray-700 whitespace-nowrap min-w-[100px]">
-                시/도 <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                value={city}
-                onChange={(e) => setCity(e.target.value)}
-                className="flex-1 px-4 py-2.5 border-b-2 border-gray-200 focus:border-[#00B388] outline-none transition-colors bg-white text-gray-900 text-base"
-                placeholder="시/도를 입력하세요"
-                disabled={submitting}
-                required
-              />
-            </div>
-            
-            {/* 나라/지역 */}
+            {/* 휴대폰 번호 */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                나라/지역 <span className="text-red-500">*</span>
-              </label>
-              <select
-                value={country}
-                onChange={(e) => setCountry(e.target.value)}
-                className="w-full px-4 py-2.5 border-b-2 border-gray-200 focus:border-[#00B388] outline-none transition-colors bg-white text-gray-900 text-base"
-                disabled={submitting}
-                required
-              >
-                <option value="대한민국">대한민국</option>
-                <option value="미국">미국</option>
-                <option value="일본">일본</option>
-                <option value="중국">중국</option>
-                <option value="기타">기타</option>
-              </select>
-            </div>
-            
-            {/* 전화번호 */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                전화번호 <span className="text-red-500">*</span>
+                휴대폰 번호 <span className="text-red-500">*</span>
               </label>
               <div className="flex gap-2 items-center">
                 <input
@@ -567,12 +489,7 @@ export default function RegistrationPage({ campaign, baseUrl }: RegistrationPage
             {/* 커스텀 질문 */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                <div className="mb-1 text-gray-600 text-xs sm:text-sm">
-                  Can we one customized question more in here? Please make this one as mandatory field.
-                </div>
-                <div>
-                  새로워진 HPE Networking에 대한 궁금한 점을 남겨주세요. 행사 당일 답변드립니다. <span className="text-red-500">*</span>
-                </div>
+                새로워진 HPE Networking에 대한 궁금한 점을 남겨 주세요. 행사 당일 답변드립니다. <span className="text-red-500">*</span>
               </label>
               <textarea
                 value={customQuestion}
@@ -587,7 +504,7 @@ export default function RegistrationPage({ campaign, baseUrl }: RegistrationPage
             
             {/* 커뮤니케이션 동의 */}
             <div className="pt-4 border-t border-gray-200">
-              <p className="text-sm sm:text-base text-gray-700 mb-4">
+              <p className="text-sm font-medium text-gray-700 mb-4">
                 HPE에 대한 맞춤식 커뮤니케이션을 통해 HPE 파트너의 제품, 서비스, 특별 행사 및 이벤트 정보를 선택적으로 받으시겠습니까?
               </p>
               <div className="space-y-3">
