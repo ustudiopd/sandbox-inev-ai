@@ -11,7 +11,7 @@ async function uploadHeaderImage() {
     const admin = createAdminSupabase()
     
     // 이미지 파일 읽기
-    const imagePath = join(process.cwd(), 'img', 'header_img.jpg')
+    const imagePath = join(process.cwd(), 'img', 'hpe-booth-header.jpg')
     console.log('이미지 파일 경로:', imagePath)
     
     const imageBuffer = readFileSync(imagePath)
