@@ -257,7 +257,30 @@ export default async function SurveyPublicPage({
   
   // subPath에 따라 다른 페이지 렌더링
   if (!subPath) {
-    // 시작 페이지에서 설문 페이지로 바로 리다이렉트
+    // 445870는 WelcomePage를 보여주고, 345870만 설문 페이지로 리다이렉트
+    if (publicPath === '/445870') {
+      // WelcomePage 표시
+      const headersList = await headers()
+      const host = headersList.get('host') || 'localhost:3000'
+      const protocol = headersList.get('x-forwarded-proto') || 'http'
+      const baseUrl = `${protocol}://${host}`
+      
+      const isDraft = campaign.status === 'draft'
+      
+      return (
+        <Suspense fallback={
+          <div className="min-h-screen bg-gradient-to-br from-blue-50 via-cyan-50 to-teal-50 flex items-center justify-center">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-600 mx-auto mb-4"></div>
+              <p className="text-gray-600">로딩 중...</p>
+            </div>
+          </div>
+        }>
+          <WelcomePage campaign={campaign} baseUrl={baseUrl} isDraft={isDraft} campaignType={campaignType} />
+        </Suspense>
+      )
+    }
+    // 345870는 설문 페이지로 바로 리다이렉트
     return redirect(`/event${publicPath}/survey`)
   } else if (subPath === 'survey') {
     // 설문 페이지

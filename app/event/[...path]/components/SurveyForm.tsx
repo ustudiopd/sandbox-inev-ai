@@ -480,13 +480,17 @@ export default function SurveyForm({
       <div className="max-w-[640px] mx-auto px-4 sm:px-5 py-6 sm:py-10">
         {/* 참여 확인하기 버튼 */}
         {publicPath && !previewMode && (
-          <div className="mb-4">
-            <a
-              href={`/event${publicPath}/survey?lookup=true`}
-              className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 transition-colors"
-            >
-              참여 확인하기
-            </a>
+          <div className="mb-4 flex justify-between items-center">
+            <div></div>
+            <div className="flex flex-col items-end gap-1">
+              <a
+                href={`/event${publicPath}/survey?lookup=true`}
+                className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 transition-colors"
+              >
+                참여 확인하기
+              </a>
+              <p className="text-xs text-gray-500">*모든 사항은 필수 입력칸입니다.</p>
+            </div>
           </div>
         )}
         {/* 설문 영역 (회색 배경 박스) */}
@@ -507,7 +511,7 @@ export default function SurveyForm({
                 <div>
                   <label className="block text-base font-bold mb-2">
                     {form?.config?.basicFields?.company?.label || '회사명'}
-                    {(form?.config?.basicFields?.company?.required !== false) && ' *'}
+                    {(form?.config?.basicFields?.company?.required !== false) && <span className="text-red-500"> *</span>}
                   </label>
                   <input
                     type="text"
@@ -521,8 +525,8 @@ export default function SurveyForm({
               {(!form?.config || form.config.basicFields?.name?.enabled !== false) && (
                 <div>
                   <label className="block text-base font-bold mb-2">
-                    {form?.config?.basicFields?.name?.label || '이름'}
-                    {(form?.config?.basicFields?.name?.required !== false) && ' *'}
+                    {form?.config?.basicFields?.name?.label || '성함'}
+                    {(form?.config?.basicFields?.name?.required !== false) && <span className="text-red-500"> *</span>}
                   </label>
                   <input
                     type="text"
@@ -536,8 +540,8 @@ export default function SurveyForm({
               {(!form?.config || form.config.basicFields?.phone?.enabled !== false) && (
                 <div>
                   <label className="block text-base font-bold mb-2">
-                    {form?.config?.basicFields?.phone?.label || '휴대전화번호'}
-                    {(form?.config?.basicFields?.phone?.required !== false) && ' *'}
+                    {form?.config?.basicFields?.phone?.label || '휴대폰 번호'}
+                    {(form?.config?.basicFields?.phone?.required !== false) && <span className="text-red-500"> *</span>}
                   </label>
                 <div className="flex gap-2 items-center">
                   <input
@@ -599,7 +603,7 @@ export default function SurveyForm({
                         title={editMode ? (onQuestionTextChange ? '클릭: 편집 | Ctrl+클릭: 폼 관리로 이동' : 'Ctrl+클릭: 폼 관리로 이동') : ''}
                       >
                         {index + 1}. {question.body}
-                        {question.type === 'single' && <span className="text-red-500 ml-1">*</span>}
+                        {(question.type === 'single' || question.type === 'multiple') && <span className="text-red-500 ml-1">*</span>}
                       </h4>
                     )}
                     
@@ -688,21 +692,21 @@ export default function SurveyForm({
                   enabled: true,
                   required: true,
                   title: '개인정보 공유 동의',
-                  content: 'HPE (은)가 귀하의 개인정보를 수집ㆍ이용하는 목적은 다음과 같습니다 제품과 서비스에 대해 귀하와의 연락, 고객 서비스 증진, 제품 및 서비스에 대한 정보 제공 및 판매, 새로운 서비스와 혜택에 대한 업데이트, 개별 프로모션 제안, 제품 및 서비스에 대한 시장 조사\n\n수집하려는 개인정보의 항목: 이름 회사명 휴대전화번호\n\n개인정보의 보유 및 이용 기간: 처리 목적 달성시까지\n\n개인정보를 공유받는 자의 개인정보 보유 및 이용 기간: 개인정보 수집 및 이용 목적 달성 시까지 보관합니다.\n\n동의를 거부할 권리 및 동의 거부에 따른 불이익: 귀하는 위2항의 선택정보 개인정보의 수집ㆍ이용에 대한 동의를 거부할 수 있으며, 동의를 거부한 경우에는 HPE (은)는 귀하에게 그와 관련된 정보나 혜택은 제공하지 않게 됩니다.\n\n촬영 동의\n본인은 HPE Discover More AI Seoul 2026 행사 중 촬영되는 사진·영상이 HPE 홍보 목적으로 활용될 수 있음에 동의합니다. (활용기간: 목적 달성 시)\n\n기념품 수령 정책 동의\n본인은 소속 기관의 기념품·금품 수령 관련 규정을 이해하며, 이를 준수하는 책임이 본인에게 있음을 확인합니다. HPE는 이에 대한 책임이 없음을 확인합니다.',
+                  content: 'HPE (은)가 귀하의 개인정보를 수집ㆍ이용하는 목적은 다음과 같습니다 제품과 서비스에 대해 귀하와의 연락, 고객 서비스 증진, 제품 및 서비스에 대한 정보 제공 및 판매, 새로운 서비스와 혜택에 대한 업데이트, 개별 프로모션 제안, 제품 및 서비스에 대한 시장 조사\n\n1. 수집하려는 개인정보의 항목: 이름 이메일 회사명 회사번호 휴대전화번호 직급 주소 우편번호\n\n2. 개인정보의 보유 및 이용 기간: 처리 목적 달성시까지\n\n3. 개인정보를 공유받는 자의 개인정보 보유 및 이용 기간: 개인정보 수집 및 이용 목적 달성 시까지 보관합니다.\n\n4. 동의를 거부할 권리 및 동의 거부에 따른 불이익: 귀하는 위2항의 선택정보 개인정보의 수집ㆍ이용에 대한 동의를 거부할 수 있으며, 동의를 거부한 경우에는 HPE (은)는 귀하에게 그와 관련된 정보나 혜택은 제공하지 않게 됩니다.\n\n5. 수수 금지 관련 정책: 귀하의 회사는 수수 금지와 관련된 정책 및 권리를 가질 수 있으며, 귀하는 이를 준수할 책임이 있습니다. HPE는 이에 대한 책임이 없음을 확인합니다. 귀하는 이 외 모든 HPE 이벤트 약관을 읽고 동의하셨습니다.',
                 },
                 {
                   id: 'consent2',
                   enabled: true,
                   required: true,
                   title: '개인정보 취급위탁 동의',
-                  content: 'HPE (은)는 다음과 같은 마케팅과 커뮤니케이션 등의 목적으로 HPE (은)(을)를 보조하는 서비스 제공자와 공급자에게 개인정보 취급을 위탁할 수 있습니다.\n\n수탁자: ㈜언택트온\n\n위탁하는 업무의 내용: 세미나/이벤트 등 마케팅 프로모션 참석 및 등록 확인, 세미나/이벤트 설문지 키인 작업 및 통계 분석, 기프트 제공',
+                  content: 'HPE (은)는 다음과 같은 마케팅과 커뮤니케이션 등의 목적으로 HPE (은)(을)를 보조하는 서비스 제공자와 공급자에게 개인정보 취급을 위탁할 수 있습니다.\n\n1. 수탁자: (주)언택트온\n\n2. 위탁하는 업무의 내용: 세미나/이벤트 등 마케팅 프로모션 참석 및 등록 확인, 세미나/이벤트 설문지 키인 작업 및 통계 분석, 기프트 제공',
                 },
                 {
                   id: 'consent3',
                   enabled: true,
                   required: true,
                   title: '전화, 이메일, SMS 수신 동의',
-                  content: 'HPE (은)는 제품 및 서비스, 프로모션 또는 시장조사 등의 유용한 정보를 온·오프라인을 통해 안내 드리고자 합니다.\n\n기프트 제공 또는 기프티콘 발송을 위하여 전화 연락 또는 SMS 발송을 드릴 수 있습니다.',
+                  content: 'HPE (은)는 제품 및 서비스, 프로모션 또는 시장조사 등의 유용한 정보를 온·오프라인을 통해 안내 드리고자 합니다. 기프트 제공 또는 기프티콘 발송을 위하여 전화 연락 또는 SMS 발송을 드릴 수 있습니다.',
                 },
               ]
               

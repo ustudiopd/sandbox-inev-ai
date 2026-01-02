@@ -120,7 +120,7 @@ export default function SurveyPage({ campaign, baseUrl }: SurveyPageProps) {
               
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  이름
+                  성함
                 </label>
                 <input
                   type="text"
@@ -134,7 +134,7 @@ export default function SurveyPage({ campaign, baseUrl }: SurveyPageProps) {
               
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  전화번호
+                  휴대폰 번호
                 </label>
                 <div className="flex gap-2">
                   <div className="flex-1 relative">

@@ -128,11 +128,6 @@ export default function RegistrationPage({ campaign, baseUrl }: RegistrationPage
       return
     }
     
-    if (!customQuestion.trim()) {
-      setError('궁금한 점을 입력해주세요.')
-      return
-    }
-    
     if (!privacyConsent) {
       setError('개인정보취급방침에 동의해주세요.')
       return
@@ -384,10 +379,10 @@ export default function RegistrationPage({ campaign, baseUrl }: RegistrationPage
               />
             </div>
             
-            {/* 이름 */}
+            {/* 성함 */}
             <div className="flex items-center gap-4">
               <label className="text-sm font-medium text-gray-700 whitespace-nowrap min-w-[100px]">
-                이름 <span className="text-red-500">*</span>
+                성함 <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
@@ -489,16 +484,21 @@ export default function RegistrationPage({ campaign, baseUrl }: RegistrationPage
             {/* 커스텀 질문 */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                새로워진 HPE Networking에 대한 궁금한 점을 남겨 주세요. 행사 당일 답변드립니다. <span className="text-red-500">*</span>
+                새로워진 HPE Networking에 대한 궁금한 점을 남겨 주세요. 행사 당일 답변드립니다.
               </label>
               <textarea
                 value={customQuestion}
-                onChange={(e) => setCustomQuestion(e.target.value)}
-                className="w-full px-4 py-2.5 border-b-2 border-gray-200 focus:border-[#00B388] outline-none transition-colors bg-white text-gray-900 text-base resize-none"
+                onChange={(e) => {
+                  setCustomQuestion(e.target.value)
+                  // 자동 높이 조절
+                  e.target.style.height = 'auto'
+                  e.target.style.height = `${e.target.scrollHeight}px`
+                }}
+                className="w-full px-4 py-2.5 border-b-2 border-gray-200 focus:border-[#00B388] outline-none transition-colors bg-white text-gray-900 text-base resize-none overflow-hidden"
                 placeholder="궁금한 점을 입력해주세요"
-                rows={4}
+                rows={1}
                 disabled={submitting}
-                required
+                style={{ minHeight: '2.5rem' }}
               />
             </div>
             
@@ -513,20 +513,20 @@ export default function RegistrationPage({ campaign, baseUrl }: RegistrationPage
                     type="checkbox"
                     checked={consentEmail}
                     onChange={(e) => setConsentEmail(e.target.checked)}
-                    className="w-5 h-5 text-[#00B388] border-gray-300 rounded focus:ring-[#00B388]"
+                    className="w-4 h-4 text-[#00B388] border-gray-300 rounded focus:ring-[#00B388]"
                     disabled={submitting}
                   />
-                  <span className="ml-3 text-sm sm:text-base text-gray-700">이메일</span>
+                  <span className="ml-3 text-sm font-medium text-gray-700">이메일</span>
                 </label>
                 <label className="flex items-center cursor-pointer">
                   <input
                     type="checkbox"
                     checked={consentPhone}
                     onChange={(e) => setConsentPhone(e.target.checked)}
-                    className="w-5 h-5 text-[#00B388] border-gray-300 rounded focus:ring-[#00B388]"
+                    className="w-4 h-4 text-[#00B388] border-gray-300 rounded focus:ring-[#00B388]"
                     disabled={submitting}
                   />
-                  <span className="ml-3 text-sm sm:text-base text-gray-700">전화번호</span>
+                  <span className="ml-3 text-sm font-medium text-gray-700">전화번호</span>
                 </label>
               </div>
             </div>
@@ -570,11 +570,11 @@ export default function RegistrationPage({ campaign, baseUrl }: RegistrationPage
                   type="checkbox"
                   checked={privacyConsent}
                   onChange={(e) => setPrivacyConsent(e.target.checked)}
-                  className="w-5 h-5 text-[#00B388] border-gray-300 rounded focus:ring-[#00B388] mt-0.5"
+                  className="w-4 h-4 text-[#00B388] border-gray-300 rounded focus:ring-[#00B388] mt-0.5"
                   disabled={submitting}
                   required
                 />
-                <span className="ml-3 text-sm sm:text-base text-gray-700">
+                <span className="ml-3 text-sm font-medium text-gray-700">
                   개인정보취급방침에 동의합니다 <span className="text-red-500">*</span>
                 </span>
               </label>
