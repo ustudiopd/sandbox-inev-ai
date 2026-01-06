@@ -801,6 +801,14 @@ export default function PublicDashboardClient({ campaign }: PublicDashboardClien
   const qrInputRef = useRef<HTMLInputElement>(null)
   const scanTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   
+  // 통계 상태 (클라이언트에서 업데이트 가능)
+  const [campaignStats, setCampaignStats] = useState(campaign.stats || {
+    total_completed: 0,
+    total_verified: 0,
+    total_prize_recorded: 0,
+  })
+  const [refreshingStats, setRefreshingStats] = useState(false)
+  
   useEffect(() => {
     if (campaign.form_id) {
       loadQuestionStats()
@@ -963,6 +971,28 @@ export default function PublicDashboardClient({ campaign }: PublicDashboardClien
       console.error('문항별 통계 로드 오류:', error)
     } finally {
       setLoadingStats(false)
+    }
+  }
+
+  const refreshStats = async () => {
+    setRefreshingStats(true)
+    try {
+      // 통계 카드 데이터 새로고침
+      const statsResponse = await fetch(`/api/public/event-survey/campaigns/${campaign.id}/stats`)
+      const statsResult = await statsResponse.json()
+      
+      if (statsResult.success && statsResult.stats) {
+        setCampaignStats(statsResult.stats)
+      }
+
+      // 문항별 통계도 함께 새로고침
+      if (campaign.form_id) {
+        await loadQuestionStats()
+      }
+    } catch (error) {
+      console.error('통계 새로고침 오류:', error)
+    } finally {
+      setRefreshingStats(false)
     }
   }
 
@@ -1484,27 +1514,52 @@ export default function PublicDashboardClient({ campaign }: PublicDashboardClien
         {/* 통계 탭 */}
         {activeTab === 'stats' && (
           <div>
+            {/* 통계 헤더 및 새로고침 버튼 */}
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-gray-900">통계</h2>
+              <button
+                onClick={refreshStats}
+                disabled={refreshingStats}
+                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+              >
+                <svg
+                  className={`w-5 h-5 ${refreshingStats ? 'animate-spin' : ''}`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                  />
+                </svg>
+                {refreshingStats ? '새로고침 중...' : '새로고침'}
+              </button>
+            </div>
+
             {/* 통계 카드 */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
               <div className="bg-white rounded-xl shadow-lg p-6">
             <div className="text-sm text-gray-600 mb-1">총 참여자</div>
-            <div className="text-3xl font-bold text-gray-900">{campaign.stats?.total_completed || 0}</div>
+            <div className="text-3xl font-bold text-gray-900">{campaignStats.total_completed || 0}</div>
           </div>
           <div className="bg-white rounded-xl shadow-lg p-6">
             <div className="text-sm text-gray-600 mb-1">스캔 완료</div>
-            <div className="text-3xl font-bold text-blue-600">{campaign.stats?.total_verified || 0}</div>
-            {campaign.stats?.total_completed > 0 && (
+            <div className="text-3xl font-bold text-blue-600">{campaignStats.total_verified || 0}</div>
+            {campaignStats.total_completed > 0 && (
               <div className="text-xs text-gray-500 mt-1">
-                ({((campaign.stats?.total_verified || 0) / campaign.stats.total_completed * 100).toFixed(1)}%)
+                ({((campaignStats.total_verified || 0) / campaignStats.total_completed * 100).toFixed(1)}%)
               </div>
             )}
           </div>
           <div className="bg-white rounded-xl shadow-lg p-6">
             <div className="text-sm text-gray-600 mb-1">경품 기록</div>
-            <div className="text-3xl font-bold text-green-600">{campaign.stats?.total_prize_recorded || 0}</div>
-            {campaign.stats?.total_completed > 0 && (
+            <div className="text-3xl font-bold text-green-600">{campaignStats.total_prize_recorded || 0}</div>
+            {campaignStats.total_completed > 0 && (
               <div className="text-xs text-gray-500 mt-1">
-                ({((campaign.stats?.total_prize_recorded || 0) / campaign.stats.total_completed * 100).toFixed(1)}%)
+                ({((campaignStats.total_prize_recorded || 0) / campaignStats.total_completed * 100).toFixed(1)}%)
               </div>
             )}
           </div>
