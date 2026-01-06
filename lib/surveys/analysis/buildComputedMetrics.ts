@@ -663,9 +663,7 @@ export function buildCapacityPlan(
   // P0+P1 리드 중 온라인 미팅 선호 비율 추정
   const p0p1Total = p0Count + p1Count
   const onlineMeetingRatio = sampleCount > 0 ? onlineMeetingCount / sampleCount : 0
-  const visitRatio = sampleCount > 0 ? visitRequestCount / sampleCount : 0
-
-  // 필요한 슬롯 수 계산 (P0+P1 기준)
+  const visitRatio = sampleCount > 0 ? visitRequestCount / sampleCount : 0  // 필요한 슬롯 수 계산 (P0+P1 기준)
   const meetingSlotsNeeded = Math.ceil(p0p1Total * onlineMeetingRatio)
   const visitSlotsNeeded = Math.ceil(p0p1Total * visitRatio)
   
