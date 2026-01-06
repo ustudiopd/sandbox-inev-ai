@@ -13,7 +13,7 @@ import { lintDecisionPack, buildQualityPrompt, type LinterWarning } from './lint
  */
 export async function generateDecisionPackWithRetry(
   analysisPack: AnalysisPack,
-  maxRetries = 2
+  maxRetries = 4 // 재시도 횟수 증가 (2 -> 4)
 ): Promise<{ decisionPack: DecisionPack; warnings: LinterWarning[] }> {
   let lastError: Error | null = null
   let retryIssues: z.ZodIssue[] | undefined = undefined
@@ -93,22 +93,30 @@ async function generateDecisionPack(
 3. **명확한 추천**: Decision Cards는 A/B/C 옵션을 비교하고 명확한 추천을 제시해야 합니다
 4. **실행 가능성**: Action Board는 24시간/7일/14일 단위로 구체적인 실행 계획을 포함해야 합니다
 
-**출력 형식:**
-- Decision Cards: 최소 3개, 최대 5개
-- Action Board: d0 (24시간), d7 (7일), d14 (14일) 각각 최소 1개 이상
-- Playbooks: 세일즈/마케팅 각각 최소 3개 이상
-- Survey Next Questions: 최소 2개 이상
+**필수 출력 형식 (반드시 모두 포함해야 함):**
+- Decision Cards: 정확히 3-5개 (반드시 포함)
+- Action Board: d0 (24시간), d7 (7일), d14 (14일) 각각 최소 1개 이상 (반드시 포함)
+- Playbooks: 세일즈/마케팅 각각 최소 3개 이상 (반드시 포함)
+- Survey Next Questions: 최소 2개 이상 (반드시 포함)
 
 **중요 규칙:**
 - 숫자/카운트는 반드시 Evidence Catalog에서만 인용 (예: "E1에 따르면 34% (17/50)")
 - 없는 숫자는 "Unknown" 처리
 - 모든 액션은 owner, targetCount, kpi를 포함해야 함
 - Decision Cards의 evidenceIds는 최소 2개 이상 포함
+- Decision Cards의 각 옵션은 title, description, expectedImpact를 반드시 포함해야 함
+- Action Board의 각 항목은 owner, title, targetCount, kpi, steps를 반드시 포함해야 함
+
+**Decision Cards 필수 질문 (최소 3개 포함):**
+1. "지금 바로 컨택해야 하는 리드는 몇 명인가?"
+2. "영업 리소스가 제한될 때, 어느 채널에 몇 슬롯을 배정해야 하나?"
+3. "마케팅은 어떤 메시지/오퍼로 어떤 세그먼트를 먼저 치면 되나?"
+4. "다음 설문에서 어떤 질문을 추가해야 하나?" (선택)
 
 ${retryPrompt}
 ${qualityPrompt}
 
-위 원칙을 따라 Decision Pack JSON을 생성하세요.`
+위 원칙을 엄격히 따라 Decision Pack JSON을 생성하세요. 모든 필수 필드를 반드시 포함해야 합니다.`
 
   const userPrompt = buildUserPrompt(analysisPack)
 

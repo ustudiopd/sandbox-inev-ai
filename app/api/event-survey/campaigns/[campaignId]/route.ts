@@ -383,3 +383,116 @@ export async function PATCH(
     )
   }
 }
+
+/**
+ * 설문조사 캠페인 삭제
+ * DELETE /api/event-survey/campaigns/[campaignId]
+ */
+export async function DELETE(
+  req: Request,
+  { params }: { params: Promise<{ campaignId: string }> }
+) {
+  try {
+    const { campaignId } = await params
+    
+    const admin = createAdminSupabase()
+    
+    // 캠페인 정보 조회
+    const { data: campaign, error: campaignError } = await admin
+      .from('event_survey_campaigns')
+      .select('id, client_id, agency_id')
+      .eq('id', campaignId)
+      .single()
+    
+    if (campaignError || !campaign) {
+      return NextResponse.json(
+        { error: 'Campaign not found' },
+        { status: 404 }
+      )
+    }
+    
+    // 권한 확인 (owner/admin만 삭제 가능)
+    const { user } = await requireAuth()
+    const supabase = await createServerSupabase()
+    
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('is_super_admin')
+      .eq('id', user.id)
+      .single()
+    
+    let hasPermission = false
+    
+    if (profile?.is_super_admin) {
+      hasPermission = true
+    } else {
+      // 클라이언트 멤버십 확인
+      const { data: clientMember } = await supabase
+        .from('client_members')
+        .select('role')
+        .eq('client_id', campaign.client_id)
+        .eq('user_id', user.id)
+        .maybeSingle()
+      
+      if (clientMember && ['owner', 'admin'].includes(clientMember.role)) {
+        hasPermission = true
+      } else {
+        // 에이전시 멤버십 확인 (owner/admin만 허용)
+        const { data: agencyMember } = await supabase
+          .from('agency_members')
+          .select('role')
+          .eq('agency_id', campaign.agency_id)
+          .eq('user_id', user.id)
+          .maybeSingle()
+        
+        if (agencyMember && ['owner', 'admin'].includes(agencyMember.role)) {
+          hasPermission = true
+        }
+      }
+    }
+    
+    if (!hasPermission) {
+      return NextResponse.json(
+        { error: 'Insufficient permissions to delete campaign' },
+        { status: 403 }
+      )
+    }
+    
+    // 캠페인 삭제 (관련 데이터는 cascade로 자동 삭제됨)
+    const { error: deleteError } = await admin
+      .from('event_survey_campaigns')
+      .delete()
+      .eq('id', campaignId)
+    
+    if (deleteError) {
+      console.error('캠페인 삭제 오류:', deleteError)
+      return NextResponse.json(
+        { error: deleteError.message || '캠페인 삭제에 실패했습니다' },
+        { status: 500 }
+      )
+    }
+    
+    // 감사 로그
+    try {
+      await admin
+        .from('audit_logs')
+        .insert({
+          actor_user_id: user.id,
+          agency_id: campaign.agency_id,
+          client_id: campaign.client_id,
+          action: 'CAMPAIGN_DELETE',
+          payload: { campaign_id: campaignId }
+        })
+    } catch (auditError) {
+      console.warn('감사 로그 생성 실패:', auditError)
+    }
+    
+    return NextResponse.json({ success: true })
+  } catch (error: any) {
+    console.error('캠페인 삭제 API 전체 오류:', error)
+    return NextResponse.json(
+      { error: error.message || 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}

@@ -37,10 +37,11 @@ export async function POST(
 ) {
   try {
     const { campaignId } = await params
-    const { lens = 'general', useNewPipeline = true } = await req.json().catch(() => ({
+    // 항상 새 파이프라인 사용 (Decision Cards, Action Board 포함)
+    const { lens = 'general' } = await req.json().catch(() => ({
       lens: 'general',
-      useNewPipeline: true,
     }))
+    const useNewPipeline = true // 항상 새 파이프라인 사용
 
     console.log('[analysis/generate] request body:', { lens, useNewPipeline })
 
