@@ -192,8 +192,8 @@ export async function buildAnalysisPack(
   }
 
   // 4-1. 답변 정규화 (구현 명세서 v1.0)
-  let normalizedAnswers: ReturnType<typeof normalizeAnswers>
-  let answersArray: Answer[]
+  let normalizedAnswers: ReturnType<typeof normalizeAnswers> = []
+  let answersArray: Answer[] = []
 
   try {
     normalizedAnswers = normalizeAnswers(answers || [])
@@ -206,6 +206,11 @@ export async function buildAnalysisPack(
         hasTextAnswer: !!normalizedAnswers[0].textAnswer,
       } : null,
     })
+
+    // 정규화된 답변이 없으면 에러
+    if (normalizedAnswers.length === 0) {
+      throw new Error(`정규화된 답변이 없습니다. 원본 답변 수: ${answers?.length || 0}`)
+    }
 
     // 기존 인터페이스와 호환되도록 변환
     answersArray = normalizedAnswers
@@ -222,8 +227,19 @@ export async function buildAnalysisPack(
       normalizedCount: normalizedAnswers.length,
       filteredCount: answersArray.length,
     })
+
+    // 변환된 답변이 없으면 에러
+    if (answersArray.length === 0) {
+      throw new Error(`유효한 답변이 없습니다. 정규화된 답변 수: ${normalizedAnswers.length}`)
+    }
   } catch (error: any) {
-    console.error('[buildAnalysisPack] 답변 정규화 오류:', error)
+    console.error('[buildAnalysisPack] 답변 정규화 오류:', {
+      error: error.message,
+      stack: error.stack,
+      answersCount: answers?.length || 0,
+      normalizedAnswersCount: normalizedAnswers.length,
+      answersArrayCount: answersArray.length,
+    })
     throw new Error(`답변 처리 실패: ${error.message || '알 수 없는 오류'}`)
   }
 
@@ -303,15 +319,28 @@ export async function buildAnalysisPack(
     submissionsCount: submissionsArray.length,
   })
 
-  const crosstabs = buildCrosstabs(
-    questionsWithRole,
-    answersArray,
-    submissionsArray
-  )
-
-  console.log('[buildAnalysisPack] 교차표 생성 완료:', {
-    crosstabsCount: crosstabs.length,
-  })
+  let crosstabs: ReturnType<typeof buildCrosstabs>
+  try {
+    crosstabs = buildCrosstabs(
+      questionsWithRole,
+      answersArray,
+      submissionsArray
+    )
+    console.log('[buildAnalysisPack] 교차표 생성 완료:', {
+      crosstabsCount: crosstabs.length,
+    })
+  } catch (error: any) {
+    console.error('[buildAnalysisPack] 교차표 생성 오류:', {
+      error: error.message,
+      stack: error.stack,
+      questionsCount: questionsWithRole.length,
+      answersCount: answersArray.length,
+      submissionsCount: submissionsArray.length,
+    })
+    // 교차표 생성 실패 시 빈 배열로 처리 (치명적이지 않음)
+    crosstabs = []
+    console.warn('[buildAnalysisPack] 교차표 생성 실패, 빈 배열로 대체')
+  }
 
   // 7. 교차표 하이라이트 생성
   const crosstabHighlights = buildCrosstabHighlights(crosstabs, submissionIds.length)
