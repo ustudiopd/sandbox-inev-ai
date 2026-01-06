@@ -230,10 +230,26 @@ function getAnswerKey(answer: Answer, question: Question): string {
 
   if (answer.choice_ids && answer.choice_ids.length > 0) {
     const firstChoiceId = answer.choice_ids[0]
-    const option = question.options?.find(
-      (opt: any) => (opt.id || opt) === firstChoiceId
-    )
-    return option ? option.text || option : firstChoiceId
+    
+    // 정규화된 옵션 형식 ({ id, text }) 또는 기존 형식 지원
+    const option = question.options?.find((opt: any) => {
+      if (typeof opt === 'object' && opt !== null) {
+        // 정규화된 형식: { id: string, text: string }
+        return opt.id === firstChoiceId
+      }
+      // 기존 형식: opt 자체가 id이거나 문자열
+      return (opt.id || opt) === firstChoiceId
+    })
+    
+    if (option) {
+      // 정규화된 형식인지 확인
+      if (typeof option === 'object' && 'text' in option) {
+        return option.text || String(option.id || option)
+      }
+      return String(option)
+    }
+    
+    return String(firstChoiceId)
   }
 
   return answer.answer_value || ''

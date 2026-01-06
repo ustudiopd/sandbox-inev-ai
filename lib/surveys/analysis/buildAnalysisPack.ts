@@ -112,26 +112,47 @@ export async function buildAnalysisPack(
   }
 
   // 2-1. 문항 정규화 및 역할 추정 (구현 명세서 v1.0)
-  const normalizedQuestions = normalizeQuestions(questions)
-  const questionsWithRoleData = inferQuestionRoles(
-    questions.map((q: any) => ({
-      id: q.id,
-      body: q.body,
-      type: q.type,
-      options: normalizedQuestions.find((nq) => nq.id === q.id)?.options,
-      analysis_role_override: q.analysis_role_override,
-    }))
-  )
+  let normalizedQuestions: ReturnType<typeof normalizeQuestions>
+  let questionsWithRoleData: ReturnType<typeof inferQuestionRoles>
+  let questionsWithRole: Question[]
 
-  // 기존 인터페이스와 호환되도록 변환
-  const questionsWithRole: Question[] = questionsWithRoleData.map((qwr) => ({
-    id: qwr.id,
-    order_no: questions.find((q: any) => q.id === qwr.id)?.order_no || 0,
-    body: qwr.body,
-    type: qwr.type,
-    options: qwr.options,
-    role: qwr.role,
-  }))
+  try {
+    normalizedQuestions = normalizeQuestions(questions)
+    console.log('[buildAnalysisPack] 문항 정규화 완료:', {
+      count: normalizedQuestions.length,
+      sample: normalizedQuestions[0] ? {
+        id: normalizedQuestions[0].id,
+        optionsCount: normalizedQuestions[0].options.length,
+      } : null,
+    })
+
+    questionsWithRoleData = inferQuestionRoles(
+      questions.map((q: any) => ({
+        id: q.id,
+        body: q.body,
+        type: q.type,
+        options: normalizedQuestions.find((nq) => nq.id === q.id)?.options,
+        analysis_role_override: q.analysis_role_override,
+      }))
+    )
+    console.log('[buildAnalysisPack] 역할 추정 완료:', {
+      count: questionsWithRoleData.length,
+      roles: questionsWithRoleData.map((q) => ({ id: q.id, role: q.role, source: q.roleSource })),
+    })
+
+    // 기존 인터페이스와 호환되도록 변환
+    questionsWithRole = questionsWithRoleData.map((qwr) => ({
+      id: qwr.id,
+      order_no: questions.find((q: any) => q.id === qwr.id)?.order_no || 0,
+      body: qwr.body,
+      type: qwr.type,
+      options: qwr.options,
+      role: qwr.role,
+    }))
+  } catch (error: any) {
+    console.error('[buildAnalysisPack] 문항 정규화/역할 추정 오류:', error)
+    throw new Error(`문항 처리 실패: ${error.message || '알 수 없는 오류'}`)
+  }
 
   // 3. 응답 조회 (event_survey_entries를 통해)
   const { data: entries, error: entriesError } = await admin
@@ -171,15 +192,40 @@ export async function buildAnalysisPack(
   }
 
   // 4-1. 답변 정규화 (구현 명세서 v1.0)
-  const normalizedAnswers = normalizeAnswers(answers || [])
+  let normalizedAnswers: ReturnType<typeof normalizeAnswers>
+  let answersArray: Answer[]
 
-  // 기존 인터페이스와 호환되도록 변환
-  const answersArray: Answer[] = normalizedAnswers.map((na) => ({
-    submission_id: na.submissionId,
-    question_id: na.questionId,
-    choice_ids: na.choiceIds.length > 0 ? na.choiceIds : undefined,
-    text_answer: na.textAnswer || undefined,
-  }))
+  try {
+    normalizedAnswers = normalizeAnswers(answers || [])
+    console.log('[buildAnalysisPack] 답변 정규화 완료:', {
+      count: normalizedAnswers.length,
+      sample: normalizedAnswers[0] ? {
+        submissionId: normalizedAnswers[0].submissionId,
+        questionId: normalizedAnswers[0].questionId,
+        choiceIdsCount: normalizedAnswers[0].choiceIds.length,
+        hasTextAnswer: !!normalizedAnswers[0].textAnswer,
+      } : null,
+    })
+
+    // 기존 인터페이스와 호환되도록 변환
+    answersArray = normalizedAnswers
+      .filter((na) => na.submissionId && na.questionId) // 빈 값 필터링
+      .map((na) => ({
+        submission_id: na.submissionId,
+        question_id: na.questionId,
+        choice_ids: na.choiceIds.length > 0 ? na.choiceIds : undefined,
+        text_answer: na.textAnswer || undefined,
+      }))
+    
+    console.log('[buildAnalysisPack] 답변 변환 완료:', {
+      originalCount: answers?.length || 0,
+      normalizedCount: normalizedAnswers.length,
+      filteredCount: answersArray.length,
+    })
+  } catch (error: any) {
+    console.error('[buildAnalysisPack] 답변 정규화 오류:', error)
+    throw new Error(`답변 처리 실패: ${error.message || '알 수 없는 오류'}`)
+  }
 
   // 5. 문항별 통계 계산 (정규화된 데이터 사용)
   const questionStats: any[] = []
@@ -251,11 +297,21 @@ export async function buildAnalysisPack(
   // submissions가 null일 수 있으므로 안전하게 처리
   const submissionsArray: Submission[] = (submissions || []).map((s) => ({ id: s.id }))
 
+  console.log('[buildAnalysisPack] 교차표 생성 시작:', {
+    questionsCount: questionsWithRole.length,
+    answersCount: answersArray.length,
+    submissionsCount: submissionsArray.length,
+  })
+
   const crosstabs = buildCrosstabs(
     questionsWithRole,
     answersArray,
     submissionsArray
   )
+
+  console.log('[buildAnalysisPack] 교차표 생성 완료:', {
+    crosstabsCount: crosstabs.length,
+  })
 
   // 7. 교차표 하이라이트 생성
   const crosstabHighlights = buildCrosstabHighlights(crosstabs, submissionIds.length)

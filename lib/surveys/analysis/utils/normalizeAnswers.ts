@@ -53,10 +53,23 @@ export function normalizeTextAnswer(textAnswer: any): string | null {
 /**
  * 답변을 정규화된 형태로 변환
  */
-export function normalizeAnswer(answer: any): NormalizedAnswer {
+export function normalizeAnswer(answer: any): NormalizedAnswer | null {
+  const submissionId = answer.submission_id || answer.submissionId
+  const questionId = answer.question_id || answer.questionId
+
+  // 필수 필드가 없으면 null 반환 (필터링 대상)
+  if (!submissionId || !questionId) {
+    console.warn('[normalizeAnswer] 필수 필드 누락:', {
+      hasSubmissionId: !!submissionId,
+      hasQuestionId: !!questionId,
+      answer: answer,
+    })
+    return null
+  }
+
   return {
-    submissionId: answer.submission_id || answer.submissionId || '',
-    questionId: answer.question_id || answer.questionId || '',
+    submissionId: String(submissionId),
+    questionId: String(questionId),
     choiceIds: normalizeChoiceIds(answer.choice_ids || answer.choiceIds),
     textAnswer: normalizeTextAnswer(answer.text_answer || answer.textAnswer),
   }
@@ -66,5 +79,7 @@ export function normalizeAnswer(answer: any): NormalizedAnswer {
  * 답변 배열을 정규화
  */
 export function normalizeAnswers(answers: any[]): NormalizedAnswer[] {
-  return answers.map((a) => normalizeAnswer(a))
+  return answers
+    .map((a) => normalizeAnswer(a))
+    .filter((na): na is NormalizedAnswer => na !== null) // null 제거
 }

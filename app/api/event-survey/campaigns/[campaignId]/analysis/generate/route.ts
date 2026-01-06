@@ -122,11 +122,23 @@ export async function POST(
 
         // 1. Analysis Pack 생성 (이미 조회한 campaign 정보 전달)
         console.log('[새 파이프라인] Analysis Pack 생성 중...')
-        const analysisPack = await buildAnalysisPack(campaignId, campaign)
-        console.log('[새 파이프라인] Analysis Pack 생성 완료:', {
-          evidenceCount: analysisPack.evidenceCatalog.length,
-          highlightsCount: analysisPack.highlights.length,
-        })
+        let analysisPack: any
+        try {
+          analysisPack = await buildAnalysisPack(campaignId, campaign)
+          console.log('[새 파이프라인] Analysis Pack 생성 완료:', {
+            evidenceCount: analysisPack.evidenceCatalog.length,
+            highlightsCount: analysisPack.highlights.length,
+            questionsCount: analysisPack.questions.length,
+            sampleCount: analysisPack.campaign.sampleCount,
+          })
+        } catch (error: any) {
+          console.error('[새 파이프라인] Analysis Pack 생성 실패:', {
+            message: error.message,
+            stack: error.stack,
+            campaignId,
+          })
+          throw error // Analysis Pack 실패는 치명적이므로 재throw
+        }
 
         // 2. Decision Pack 생성 (재시도 + Linter 통합)
         console.log('[새 파이프라인] Decision Pack 생성 중...')
