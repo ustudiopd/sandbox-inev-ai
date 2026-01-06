@@ -571,7 +571,7 @@ export default function SurveyForm({
 
             {/* 폼 문항 */}
             {form && form.questions && form.questions.length > 0 && (
-              <div className="space-y-10 pt-10">
+              <div className="space-y-12 pt-10">
                 
                 {form.questions.map((question, index) => (
                   <div key={question.id} className="space-y-2">
