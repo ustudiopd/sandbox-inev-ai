@@ -51,16 +51,24 @@ export async function sendWebinarRegistrationEmail(
     // 웨비나 ID 확인 (UUID인지 slug인지 판별)
     const admin = createAdminSupabase()
     let webinarId: string
+    let webinarSlug: string | null = null
     
     // UUID 형식인지 확인 (8-4-4-4-12 형식)
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
     if (uuidRegex.test(webinarIdOrSlug)) {
       webinarId = webinarIdOrSlug
-    } else {
-      // slug인 경우 웨비나 ID 조회
+      // UUID인 경우 slug 조회
       const { data: webinar } = await admin
         .from('webinars')
-        .select('id')
+        .select('slug')
+        .eq('id', webinarId)
+        .single()
+      webinarSlug = webinar?.slug || null
+    } else {
+      // slug인 경우 웨비나 정보 조회
+      const { data: webinar } = await admin
+        .from('webinars')
+        .select('id, slug')
         .eq('slug', webinarIdOrSlug)
         .single()
       
@@ -69,10 +77,12 @@ export async function sendWebinarRegistrationEmail(
         return false
       }
       webinarId = webinar.id
+      webinarSlug = webinar.slug
     }
     
-    // 풀 UUID 주소 사용 (입장 페이지로 이동, 이메일 파라미터 포함)
-    const entryUrl = `${baseUrl}/webinar/${webinarId}?email=${encodeURIComponent(to)}`
+    // slug가 있으면 slug를 사용하고, 없으면 UUID 사용 (입장 페이지로 이동, 이메일 파라미터 포함)
+    const webinarPath = webinarSlug || webinarId
+    const entryUrl = `${baseUrl}/webinar/${webinarPath}?email=${encodeURIComponent(to)}`
     
     // 행사 썸네일 이미지 URL
     const thumbnailUrl = `${supabaseUrl}/storage/v1/object/public/webinar-thumbnails/edm.png`
