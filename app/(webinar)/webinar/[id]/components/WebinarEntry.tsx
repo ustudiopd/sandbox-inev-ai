@@ -634,7 +634,9 @@ export default function WebinarEntry({ webinar }: WebinarEntryProps) {
   
   // 썸네일 이미지 URL
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
-  const thumbnailUrl = supabaseUrl ? `${supabaseUrl}/storage/v1/object/public/webinar-thumbnails/edm.png` : ''
+  // CES 2026 토크쇼 웨비나는 0114.jpg 사용
+  const thumbnailFileName = webinar.slug === 'ces-2026-human-ai-talk-show-special-lecture' ? '0114.jpg' : 'edm.png'
+  const thumbnailUrl = supabaseUrl ? `${supabaseUrl}/storage/v1/object/public/webinar-thumbnails/${thumbnailFileName}` : ''
   
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 flex items-center justify-center p-4">

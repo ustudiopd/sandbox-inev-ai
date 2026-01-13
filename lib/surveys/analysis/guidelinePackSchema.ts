@@ -201,9 +201,7 @@ export function normalizeLegacyRole(role: string): Role {
     'other': 'other',
   }
   return roleMap[role] || 'other'
-}
-
-/**
+}/**
  * 표준 Role을 레거시 Role로 변환 (하위 호환성)
  */
 export function toLegacyRole(role: Role): LegacyRole {
