@@ -140,7 +140,7 @@ ${formattedDateTime}에 시작합니다
             .container { max-width: 600px; margin: 0 auto; padding: 20px; }
             .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
             .content { background: #f9fafb; padding: 30px; border-radius: 0 0 10px 10px; }
-            .button { display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; margin: 20px 0; }
+            .button { display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #ffffff !important; font-weight: 600; padding: 12px 30px; text-decoration: none; border-radius: 5px; margin: 20px 0; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2); }
             .footer { margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb; font-size: 12px; color: #6b7280; text-align: center; }
           </style>
         </head>
@@ -187,7 +187,7 @@ ${formattedDateTime}에 시작합니다
               </div>
               
               <div style="text-align: center; margin: 30px 0;">
-                <a href="${entryUrl}" class="button">웨비나 입장하기</a>
+                <a href="${entryUrl}" class="button" style="color: #ffffff !important; font-weight: 600; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);">웨비나 입장하기</a>
               </div>
               
               <p style="margin-top: 30px; font-size: 14px; color: #6b7280; text-align: center;">
