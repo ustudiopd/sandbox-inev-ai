@@ -21,35 +21,44 @@ export default async function WebinarPage({
     queryValue: query.value
   })
   
-        // 웨비나 정보 조회 (RLS 우회하여 누구나 접근 가능하도록)
-        // 입장 페이지는 public이므로 기본 정보만 조회
-        let queryBuilder = admin
-          .from('webinars')
-          .select(`
-            id,
-            slug,
-            title,
-            description,
-            youtube_url,
-            start_time,
-            end_time,
-            access_policy,
-            email_thumbnail_url,
-            clients:client_id (
-              id,
-              name,
-              logo_url,
-              brand_config
-            )
-          `)
-        
-        const { data: webinar, error } = await queryBuilder
-          .eq(query.column, query.value)
-          .single()
-        
-        if (error || !webinar) {
-          redirect('/')
-        }
+  // 웨비나 정보 조회 (RLS 우회하여 누구나 접근 가능하도록)
+  // 입장 페이지는 public이므로 기본 정보만 조회
+  let queryBuilder = admin
+    .from('webinars')
+    .select(`
+      id,
+      slug,
+      title,
+      description,
+      youtube_url,
+      start_time,
+      end_time,
+      access_policy,
+      email_thumbnail_url,
+      clients:client_id (
+        id,
+        name,
+        logo_url,
+        brand_config
+      )
+    `)
+  
+  const { data: webinar, error } = await queryBuilder
+    .eq(query.column, query.value)
+    .single()
+  
+  if (error || !webinar) {
+    console.error('웨비나 조회 실패:', {
+      id,
+      queryColumn: query.column,
+      queryValue: query.value,
+      error: error?.message || error,
+      code: error?.code,
+      details: error?.details,
+      hint: error?.hint
+    })
+    redirect('/')
+  }
         
         // clients가 배열로 반환될 수 있으므로 단일 객체로 변환
         const webinarData = {

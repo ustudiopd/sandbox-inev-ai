@@ -16,7 +16,7 @@ export async function GET() {
     // 공개 웨비나 중에서 시작 시간이 지난 웨비나 조회
     const { data: webinars, error } = await admin
       .from('webinars')
-      .select('id, title, start_time, end_time, is_public, access_policy')
+      .select('id, slug, title, start_time, end_time, is_public, access_policy')
       .eq('is_public', true)
       .lte('start_time', now)
       .order('start_time', { ascending: false })

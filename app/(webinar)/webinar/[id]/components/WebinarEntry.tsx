@@ -30,6 +30,7 @@ export default function WebinarEntry({ webinar }: WebinarEntryProps) {
   const supabase = createClientSupabase()
   // slug가 있으면 slug를 사용하고, 없으면 id를 사용 (URL용)
   const webinarSlug = webinar.slug || webinar.id
+  const webinarPath = webinar.slug || webinar.id
   const [mode, setMode] = useState<'login' | 'signup' | 'guest' | 'email_auth' | 'register'>(
     webinar.access_policy === 'guest_allowed' ? 'guest' : 
     webinar.access_policy === 'email_auth' ? 'email_auth' : 'login'
@@ -126,8 +127,8 @@ export default function WebinarEntry({ webinar }: WebinarEntryProps) {
               }
             }
             
-            // UUID를 사용하여 라이브 페이지로 이동
-            window.location.href = `/webinar/${webinar.id}/live`
+            // slug 우선 사용하여 라이브 페이지로 이동
+            window.location.href = `/webinar/${webinarPath}/live`
           }
         } catch (err: any) {
           setError(err.message || '자동 로그인 중 오류가 발생했습니다')

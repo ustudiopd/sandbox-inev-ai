@@ -9,6 +9,7 @@ import ShareLinkButton from '@/components/webinar/ShareLinkButton'
 
 interface Webinar {
   id: string
+  slug?: string | null
   title: string
   start_time: string | null
   end_time: string | null
@@ -177,7 +178,7 @@ export default function Home() {
                   </div>
                   <div className="mt-4 flex items-center justify-between">
                     <Link
-                      href={`/webinar/${webinar.id}`}
+                      href={`/webinar/${webinar.slug || webinar.id}`}
                       className="text-blue-600 font-medium hover:underline"
                     >
                       입장하기 →
