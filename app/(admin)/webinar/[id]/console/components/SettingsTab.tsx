@@ -15,6 +15,8 @@ interface SettingsTabProps {
     is_public: boolean
     access_policy: string
     client_id: string
+    email_template_text?: string | null
+    email_thumbnail_url?: string | null
   }
   onWebinarUpdate?: (webinar: any) => void
 }
@@ -31,9 +33,12 @@ export default function SettingsTab({ webinar, onWebinarUpdate }: SettingsTabPro
     isPublic: false,
     accessPolicy: 'auth' as 'auth' | 'guest_allowed' | 'invite_only' | 'email_auth',
     allowedEmails: [] as string[],
+    emailTemplateText: '',
+    emailThumbnailUrl: '',
   })
   const [loading, setLoading] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [uploadingThumbnail, setUploadingThumbnail] = useState(false)
   const [error, setError] = useState('')
 
   useEffect(() => {
@@ -78,6 +83,8 @@ export default function SettingsTab({ webinar, onWebinarUpdate }: SettingsTabPro
           isPublic: webinar.is_public || false,
           accessPolicy: (webinar.access_policy || 'auth') as 'auth' | 'guest_allowed' | 'invite_only' | 'email_auth',
           allowedEmails: emails,
+          emailTemplateText: webinar.email_template_text || '',
+          emailThumbnailUrl: webinar.email_thumbnail_url || '',
         })
       }
       
@@ -108,6 +115,8 @@ export default function SettingsTab({ webinar, onWebinarUpdate }: SettingsTabPro
         isPublic: formData.isPublic,
         accessPolicy: formData.accessPolicy,
         allowedEmails: formData.accessPolicy === 'email_auth' ? formData.allowedEmails : undefined,
+        emailTemplateText: formData.emailTemplateText || null,
+        emailThumbnailUrl: formData.emailThumbnailUrl || null,
       }
 
       const response = await fetch(`/api/webinars/${webinar.id}`, {
@@ -200,6 +209,90 @@ export default function SettingsTab({ webinar, onWebinarUpdate }: SettingsTabPro
             placeholder="웨비나에 대한 설명을 입력하세요"
             rows={3}
           />
+        </div>
+
+        <div className="border-t pt-6 mt-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">이메일 등록 안내 설정</h3>
+          
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              등록 이메일 문구
+            </label>
+            <textarea
+              value={formData.emailTemplateText}
+              onChange={(e) => setFormData({ ...formData, emailTemplateText: e.target.value })}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder={`모두의 특강
+
+${webinar.title}
+
+에 신청해주셔서 감사합니다
+
+해당 라이브는
+
+2026.1.14일 7시에 시작합니다
+
+해당링크를 눌러 접속하시면됩니다`}
+              rows={8}
+            />
+            <p className="mt-1 text-sm text-gray-500">
+              등록 이메일에 포함될 문구를 입력하세요. 비워두면 기본 문구가 사용됩니다.
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              썸네일 이미지
+            </label>
+            {formData.emailThumbnailUrl && (
+              <div className="mb-4">
+                <img 
+                  src={formData.emailThumbnailUrl} 
+                  alt="썸네일 미리보기"
+                  className="max-w-md h-auto rounded-lg border border-gray-300"
+                />
+              </div>
+            )}
+            <input
+              type="file"
+              accept="image/*"
+              onChange={async (e) => {
+                const file = e.target.files?.[0]
+                if (!file) return
+                
+                setUploadingThumbnail(true)
+                setError('')
+                
+                try {
+                  const formDataToUpload = new FormData()
+                  formDataToUpload.append('file', file)
+                  
+                  const response = await fetch(`/api/webinars/${webinar.id}/thumbnail/upload`, {
+                    method: 'POST',
+                    body: formDataToUpload,
+                  })
+                  
+                  const result = await response.json()
+                  
+                  if (!response.ok) {
+                    throw new Error(result.error || '썸네일 업로드 실패')
+                  }
+                  
+                  setFormData({ ...formData, emailThumbnailUrl: result.url })
+                  alert('썸네일이 성공적으로 업로드되었습니다.')
+                } catch (err: any) {
+                  setError(err.message || '썸네일 업로드 중 오류가 발생했습니다')
+                } finally {
+                  setUploadingThumbnail(false)
+                }
+              }}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              disabled={uploadingThumbnail}
+            />
+            <p className="mt-1 text-sm text-gray-500">
+              등록 이메일 및 입장 페이지에 표시될 썸네일 이미지를 업로드하세요. (최대 5MB)
+            </p>
+          </div>
         </div>
 
         <div>

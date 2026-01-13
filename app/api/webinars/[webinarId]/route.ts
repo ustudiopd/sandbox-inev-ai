@@ -5,6 +5,50 @@ import { createServerSupabase } from '@/lib/supabase/server'
 
 export const runtime = 'nodejs'
 
+// 웨비나 조회
+export async function GET(
+  req: Request,
+  { params }: { params: Promise<{ webinarId: string }> }
+) {
+  try {
+    const { webinarId } = await params
+    const { searchParams } = new URL(req.url)
+    const includeThumbnail = searchParams.get('includeThumbnail') === 'true'
+    
+    const admin = createAdminSupabase()
+    
+    // 웨비나 정보 조회
+    let query = admin
+      .from('webinars')
+      .select('*')
+      .eq('id', webinarId)
+      .single()
+    
+    const { data: webinar, error: webinarError } = await query
+    
+    if (webinarError || !webinar) {
+      return NextResponse.json(
+        { error: 'Webinar not found' },
+        { status: 404 }
+      )
+    }
+    
+    // 썸네일 정보가 필요하면 포함
+    if (includeThumbnail) {
+      return NextResponse.json({ webinar })
+    }
+    
+    // 기본 조회는 썸네일 정보 제외 (보안상 이유)
+    const { email_thumbnail_url, email_template_text, ...publicWebinar } = webinar
+    return NextResponse.json({ webinar: publicWebinar })
+  } catch (error: any) {
+    return NextResponse.json(
+      { error: error.message || 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}
+
 // 웨비나 수정
 export async function PUT(
   req: Request,
@@ -21,7 +65,9 @@ export async function PUT(
       maxParticipants,
       isPublic,
       accessPolicy,
-      allowedEmails
+      allowedEmails,
+      emailTemplateText,
+      emailThumbnailUrl
     } = await req.json()
     
     const admin = createAdminSupabase()
@@ -97,6 +143,8 @@ export async function PUT(
     if (maxParticipants !== undefined) updateData.max_participants = maxParticipants || null
     if (isPublic !== undefined) updateData.is_public = isPublic
     if (accessPolicy !== undefined) updateData.access_policy = accessPolicy
+    if (emailTemplateText !== undefined) updateData.email_template_text = emailTemplateText || null
+    if (emailThumbnailUrl !== undefined) updateData.email_thumbnail_url = emailThumbnailUrl || null
     
     const { data: updatedWebinar, error: updateError } = await admin
       .from('webinars')
@@ -274,4 +322,3 @@ export async function DELETE(
     )
   }
 }
-

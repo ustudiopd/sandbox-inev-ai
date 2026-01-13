@@ -13,6 +13,7 @@ interface Webinar {
   start_time?: string
   end_time?: string
   access_policy: string
+  email_thumbnail_url?: string | null
   clients?: {
     id: string
     name: string
@@ -634,9 +635,19 @@ export default function WebinarEntry({ webinar }: WebinarEntryProps) {
   
   // 썸네일 이미지 URL
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
-  // CES 2026 토크쇼 웨비나는 0114.jpg 사용 (slug: 884372 또는 ces-2026-human-ai-talk-show-special-lecture)
-  const thumbnailFileName = (webinar.slug === '884372' || webinar.slug === 'ces-2026-human-ai-talk-show-special-lecture') ? '0114.jpg' : 'edm.png'
-  const thumbnailUrl = supabaseUrl ? `${supabaseUrl}/storage/v1/object/public/webinar-thumbnails/${thumbnailFileName}` : ''
+  // 웨비나 설정에서 썸네일 URL 사용 (없으면 기본값 사용)
+  const getThumbnailUrl = () => {
+    // 웨비나에 설정된 썸네일이 있으면 사용
+    if (webinar.email_thumbnail_url) {
+      return webinar.email_thumbnail_url
+    }
+    
+    // 기본값 설정
+    const defaultFileName = (webinar.slug === '884372' || webinar.slug === 'ces-2026-human-ai-talk-show-special-lecture') ? '0114.jpg' : 'edm.png'
+    return supabaseUrl ? `${supabaseUrl}/storage/v1/object/public/webinar-thumbnails/${defaultFileName}` : ''
+  }
+  
+  const thumbnailUrl = getThumbnailUrl()
   
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 flex items-center justify-center p-4">

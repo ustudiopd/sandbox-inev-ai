@@ -34,6 +34,7 @@ export default async function WebinarPage({
             start_time,
             end_time,
             access_policy,
+            email_thumbnail_url,
             clients:client_id (
               id,
               name,

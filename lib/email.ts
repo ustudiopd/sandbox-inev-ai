@@ -84,11 +84,47 @@ export async function sendWebinarRegistrationEmail(
     const webinarPath = webinarSlug || webinarId
     const entryUrl = `${baseUrl}/webinar/${webinarPath}?email=${encodeURIComponent(to)}`
     
-    // 행사 썸네일 이미지 URL
-    const thumbnailUrl = `${supabaseUrl}/storage/v1/object/public/webinar-thumbnails/edm.png`
+    // 웨비나 설정에서 이메일 템플릿 및 썸네일 조회
+    const { data: webinarSettings } = await admin
+      .from('webinars')
+      .select('email_template_text, email_thumbnail_url, start_time')
+      .eq('id', webinarId)
+      .single()
     
-    // 날짜/시간 고정 텍스트
-    const formattedDateTime = '2025.12.17일 7시'
+    // 썸네일 이미지 URL (설정된 것이 있으면 사용, 없으면 기본값)
+    const thumbnailUrl = webinarSettings?.email_thumbnail_url || 
+      `${supabaseUrl}/storage/v1/object/public/webinar-thumbnails/0114.jpg`
+    
+    // 날짜/시간 포맷팅
+    let formattedDateTime = '2026.1.14일 7시'
+    if (webinarSettings?.start_time) {
+      const startDate = new Date(webinarSettings.start_time)
+      const year = startDate.getFullYear()
+      const month = startDate.getMonth() + 1
+      const day = startDate.getDate()
+      const hours = startDate.getHours()
+      formattedDateTime = `${year}.${month}.${day}일 ${hours}시`
+    } else if (startTime) {
+      const startDate = new Date(startTime)
+      const year = startDate.getFullYear()
+      const month = startDate.getMonth() + 1
+      const day = startDate.getDate()
+      const hours = startDate.getHours()
+      formattedDateTime = `${year}.${month}.${day}일 ${hours}시`
+    }
+    
+    // 이메일 템플릿 문구 (설정된 것이 있으면 사용, 없으면 기본값)
+    const emailTemplate = webinarSettings?.email_template_text || `모두의 특강
+
+${webinarTitle}
+
+에 신청해주셔서 감사합니다
+
+해당 라이브는
+
+${formattedDateTime}에 시작합니다
+
+해당링크를 눌러 접속하시면됩니다`
 
     const mailOptions = {
       from: `"모두의특강" <${process.env.SMTP_USER || 'admin@modoolecture.com'}>`,
@@ -121,13 +157,33 @@ export async function sendWebinarRegistrationEmail(
               ` : ''}
               
               <div style="margin: 30px 0;">
-                <p style="font-size: 18px; font-weight: 600; color: #1f2937; margin-bottom: 15px;">모두의 특강</p>
-                <p style="font-size: 20px; font-weight: 700; color: #4b5563; margin-bottom: 20px; line-height: 1.5;">${webinarTitle}</p>
-                <p style="font-size: 16px; color: #374151; line-height: 1.8; margin-bottom: 20px;">에 신청해주셔서 감사합니다</p>
-                
-                <p style="font-size: 16px; color: #374151; line-height: 1.8; margin-bottom: 10px;">해당 라이브는</p>
-                <p style="font-size: 16px; color: #374151; line-height: 1.8; margin-bottom: 20px; font-weight: 600;">${formattedDateTime}에 시작합니다</p>
-                <p style="font-size: 16px; color: #374151; line-height: 1.8; margin-bottom: 30px;">해당링크를 눌러 접속하시면됩니다</p>
+                ${emailTemplate.split('\n').map((line: string, index: number, lines: string[]) => {
+                  const trimmedLine = line.trim()
+                  if (!trimmedLine) return '<br />'
+                  
+                  // 첫 번째 줄 (모두의 특강)
+                  if (index === 0 || (index === 1 && lines[0].trim() === '')) {
+                    return `<p style="font-size: 18px; font-weight: 600; color: #1f2937; margin-bottom: 15px;">${trimmedLine}</p>`
+                  }
+                  
+                  // 웨비나 제목 (두 번째 또는 세 번째 줄)
+                  if (trimmedLine === webinarTitle || (index === 2 && lines[1].trim() === webinarTitle)) {
+                    return `<p style="font-size: 20px; font-weight: 700; color: #4b5563; margin-bottom: 20px; line-height: 1.5;">${trimmedLine}</p>`
+                  }
+                  
+                  // 시작 시간이 포함된 줄
+                  if (trimmedLine.includes('시작합니다') || trimmedLine.includes('시에')) {
+                    return `<p style="font-size: 16px; color: #374151; line-height: 1.8; margin-bottom: 20px; font-weight: 600;">${trimmedLine}</p>`
+                  }
+                  
+                  // 접속 관련 줄
+                  if (trimmedLine.includes('접속') || trimmedLine.includes('링크')) {
+                    return `<p style="font-size: 16px; color: #374151; line-height: 1.8; margin-bottom: 30px;">${trimmedLine}</p>`
+                  }
+                  
+                  // 일반 텍스트
+                  return `<p style="font-size: 16px; color: #374151; line-height: 1.8; margin-bottom: 10px;">${trimmedLine}</p>`
+                }).join('')}
               </div>
               
               <div style="text-align: center; margin: 30px 0;">
@@ -149,19 +205,11 @@ export async function sendWebinarRegistrationEmail(
         </body>
         </html>
       `,
-      text: `
-모두의 특강
-${webinarTitle}
-에 신청해주셔서 감사합니다
-
-해당 라이브는
-${formattedDateTime}에 시작합니다
-해당링크를 눌러 접속하시면됩니다
+      text: `${emailTemplate}
 
 ${entryUrl}
 
-감사합니다
-      `.trim(),
+감사합니다`.trim(),
     }
 
     const info = await transporter.sendMail(mailOptions)
