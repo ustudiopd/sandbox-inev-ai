@@ -634,8 +634,8 @@ export default function WebinarEntry({ webinar }: WebinarEntryProps) {
   
   // 썸네일 이미지 URL
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
-  // CES 2026 토크쇼 웨비나는 0114.jpg 사용
-  const thumbnailFileName = webinar.slug === 'ces-2026-human-ai-talk-show-special-lecture' ? '0114.jpg' : 'edm.png'
+  // CES 2026 토크쇼 웨비나는 0114.jpg 사용 (slug: 884372 또는 ces-2026-human-ai-talk-show-special-lecture)
+  const thumbnailFileName = (webinar.slug === '884372' || webinar.slug === 'ces-2026-human-ai-talk-show-special-lecture') ? '0114.jpg' : 'edm.png'
   const thumbnailUrl = supabaseUrl ? `${supabaseUrl}/storage/v1/object/public/webinar-thumbnails/${thumbnailFileName}` : ''
   
   return (
