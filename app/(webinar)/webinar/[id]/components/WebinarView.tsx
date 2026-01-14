@@ -793,31 +793,12 @@ export default function WebinarView({ webinar, isAdminMode = false }: WebinarVie
                   >
                     ❓ Q&A
                   </button>
-                  {isAdminMode && (
-                    <button
-                      onClick={() => setActiveTab('participants')}
-                      className={`flex-1 px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-medium transition-colors ${
-                        activeTab === 'participants'
-                          ? 'bg-blue-50 text-blue-600 border-b-2 border-blue-600'
-                          : 'text-gray-600'
-                      }`}
-                    >
-                      👥 접속중
-                    </button>
-                  )}
+                  {/* 모바일에서는 접속중 탭 숨김 */}
                 </div>
                 
                 {/* 탭 컨텐츠 - 모바일 전용 (단일 인스턴스 사용) */}
                 <div className="flex-1 overflow-hidden">
-                  {activeTab === 'chat' ? chatComponent : activeTab === 'qa' ? qaComponent : (
-                    <div className="h-full overflow-y-auto p-4">
-                      <PresenceBar
-                        webinarId={webinar.id}
-                        showTyping={true}
-                        className="text-xs sm:text-sm"
-                      />
-                    </div>
-                  )}
+                  {activeTab === 'chat' ? chatComponent : qaComponent}
                 </div>
               </div>
             </div>

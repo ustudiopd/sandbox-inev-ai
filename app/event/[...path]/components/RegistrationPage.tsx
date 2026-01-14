@@ -383,10 +383,10 @@ export default function RegistrationPage({ campaign, baseUrl }: RegistrationPage
               />
             </div>
             
-            {/* 성함 */}
+            {/* 이름 */}
             <div className="flex items-center gap-4">
               <label className="text-sm font-medium text-gray-700 whitespace-nowrap min-w-[100px]">
-                성함 <span className="text-red-500">*</span>
+                이름 <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
