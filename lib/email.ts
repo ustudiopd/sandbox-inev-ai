@@ -187,7 +187,7 @@ ${formattedDateTime}에 시작합니다
               </div>
               
               <div style="text-align: center; margin: 30px 0;">
-                <a href="${entryUrl}" class="button" style="color: #ffffff !important; font-weight: 600; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);">웨비나 입장하기</a>
+                <a href="${entryUrl}" style="display: inline-block; background-color: #667eea; color: #ffffff !important; font-weight: 700; font-size: 16px; padding: 14px 32px; text-decoration: none; border-radius: 6px; margin: 20px 0; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); text-align: center; min-width: 200px;">웨비나 입장하기</a>
               </div>
               
               <p style="margin-top: 30px; font-size: 14px; color: #6b7280; text-align: center;">
