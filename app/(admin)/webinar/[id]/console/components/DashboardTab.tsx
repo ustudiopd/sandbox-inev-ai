@@ -287,17 +287,70 @@ export default function DashboardTab({ webinarId, webinarSlug }: DashboardTabPro
         </div>
       )}
 
-      {/* 접속 통계 */}
+      {/* 현재 접속 중인 참여자 목록 - 별도 섹션으로 분리 */}
+      {stats.access && (
+        <div className="bg-white rounded-xl shadow-md p-6 mb-6">
+          <h3 className="text-lg font-semibold mb-4">현재 접속 중인 참여자</h3>
+          <div className="mb-4">
+            <div className="text-3xl font-bold text-green-600">
+              {stats.access.currentParticipants !== undefined ? stats.access.currentParticipants : 0}명
+            </div>
+          </div>
+          
+          {stats.access.currentParticipantList && stats.access.currentParticipantList.length > 0 ? (
+            <div className="max-h-64 overflow-y-auto border border-gray-200 rounded-lg">
+              <table className="w-full text-sm">
+                <thead className="bg-gray-50 sticky top-0">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">이름</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">이메일</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">역할</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">마지막 활동</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {stats.access.currentParticipantList.map((participant) => (
+                    <tr key={participant.userId} className="hover:bg-gray-50">
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <div className="text-sm font-medium text-gray-900">{participant.displayName}</div>
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <div className="text-sm text-gray-500">{participant.email || '-'}</div>
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                          participant.role === 'admin' || participant.role === 'moderator'
+                            ? 'bg-purple-100 text-purple-800'
+                            : 'bg-gray-100 text-gray-800'
+                        }`}>
+                          {participant.role === 'admin' ? '관리자' : participant.role === 'moderator' ? '운영자' : '참가자'}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                        {new Date(participant.lastSeenAt).toLocaleTimeString('ko-KR', {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                          second: '2-digit',
+                        })}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="text-center py-8 text-gray-500">
+              현재 접속 중인 참여자가 없습니다.
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* 접속 통계 (타임라인) */}
       {stats.access && accessTimelineData.length > 0 && (
         <div className="bg-white rounded-xl shadow-md p-6 mb-6">
           <h3 className="text-lg font-semibold mb-4">접속 통계</h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-            <div>
-              <div className="text-sm text-gray-600 mb-1">현재 접속자</div>
-              <div className="text-2xl font-bold text-green-600">
-                {stats.access.currentParticipants !== undefined ? stats.access.currentParticipants : '-'}
-              </div>
-            </div>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
             <div>
               <div className="text-sm text-gray-600 mb-1">최대 동시 접속자</div>
               <div className="text-2xl font-bold text-blue-600">{stats.access.maxConcurrentParticipants}</div>
@@ -320,53 +373,6 @@ export default function DashboardTab({ webinarId, webinarSlug }: DashboardTabPro
               </div>
             </div>
           </div>
-
-          {/* 현재 접속 중인 참여자 목록 */}
-          {stats.access.currentParticipantList && stats.access.currentParticipantList.length > 0 && (
-            <div className="mt-6">
-              <h4 className="text-md font-semibold mb-4">현재 접속 중인 참여자 ({stats.access.currentParticipantList.length}명)</h4>
-              <div className="max-h-64 overflow-y-auto border border-gray-200 rounded-lg">
-                <table className="w-full text-sm">
-                  <thead className="bg-gray-50 sticky top-0">
-                    <tr>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">이름</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">이메일</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">역할</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">마지막 활동</th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {stats.access.currentParticipantList.map((participant) => (
-                      <tr key={participant.userId} className="hover:bg-gray-50">
-                        <td className="px-4 py-3 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900">{participant.displayName}</div>
-                        </td>
-                        <td className="px-4 py-3 whitespace-nowrap">
-                          <div className="text-sm text-gray-500">{participant.email || '-'}</div>
-                        </td>
-                        <td className="px-4 py-3 whitespace-nowrap">
-                          <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                            participant.role === 'admin' || participant.role === 'moderator'
-                              ? 'bg-purple-100 text-purple-800'
-                              : 'bg-gray-100 text-gray-800'
-                          }`}>
-                            {participant.role === 'admin' ? '관리자' : participant.role === 'moderator' ? '운영자' : '참가자'}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                          {new Date(participant.lastSeenAt).toLocaleTimeString('ko-KR', {
-                            hour: '2-digit',
-                            minute: '2-digit',
-                            second: '2-digit',
-                          })}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
 
           <div className="mt-6">
             <h4 className="text-md font-semibold mb-4">시간대별 접속자 수 추이</h4>

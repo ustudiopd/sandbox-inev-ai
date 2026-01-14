@@ -114,7 +114,26 @@ export async function sendWebinarRegistrationEmail(
     }
     
     // 이메일 템플릿 문구 (설정된 것이 있으면 사용, 없으면 기본값)
-    const emailTemplate = webinarSettings?.email_template_text || `모두의 특강
+    // 특정 웨비나(884372)에 대한 커스텀 템플릿
+    let emailTemplate: string
+    if (webinarSettings?.email_template_text) {
+      emailTemplate = webinarSettings.email_template_text
+    } else if (webinarSlug === '884372' || webinarId === '1a1eb091-290b-4451-8f74-62cb47ac37ea') {
+      // 884372 웨비나의 커스텀 템플릿
+      emailTemplate = `모두의 특강
+
+${webinarTitle}
+
+에 신청해주셔서 감사합니다
+
+해당 라이브는
+
+2026.1.14일 19시에 시작합니다
+
+해당링크를 눌러 접속하시면됩니다`
+    } else {
+      // 기본 템플릿
+      emailTemplate = `모두의 특강
 
 ${webinarTitle}
 
@@ -125,6 +144,7 @@ ${webinarTitle}
 ${formattedDateTime}에 시작합니다
 
 해당링크를 눌러 접속하시면됩니다`
+    }
 
     const mailOptions = {
       from: `"모두의특강" <${process.env.SMTP_USER || 'admin@modoolecture.com'}>`,
