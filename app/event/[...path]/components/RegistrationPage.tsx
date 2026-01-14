@@ -524,7 +524,7 @@ export default function RegistrationPage({ campaign, baseUrl }: RegistrationPage
                   rel="noopener noreferrer"
                   className="text-[#00B388] hover:underline"
                 >
-                  HPE 개인정보취급방침
+                  HPE 개인정보 취급방침
                 </a>을 참조하시기 바랍니다. 
                 동의한 사항에 대해 언제든지 취소 또는 수정하여 HPE의 마케팅 커뮤니케이션 서비스를 받을 수 있습니다. 
                 이 작업을 수행하려면 HPE 이메일 마케팅 커뮤니케이션 페이지 하단의 옵트아웃 및 환경설정 메커니즘을 사용하거나{' '}
