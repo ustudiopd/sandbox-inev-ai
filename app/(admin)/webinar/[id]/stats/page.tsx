@@ -17,7 +17,7 @@ export default async function StatsPage({
   const query = getWebinarQuery(id)
 
   // 웨비나 정보 조회
-  const { data: webinar, error: webinarError } = await admin
+  let queryBuilder = admin
     .from('webinars')
     .select(`
       *,
@@ -26,8 +26,15 @@ export default async function StatsPage({
         name
       )
     `)
-    .eq(query.column, query.value)
-    .single()
+  
+  if (query.column === 'slug') {
+    // slug는 문자열로 비교 (숫자로 저장되어 있어도 문자열로 변환)
+    queryBuilder = queryBuilder.eq('slug', String(query.value)).not('slug', 'is', null)
+  } else {
+    queryBuilder = queryBuilder.eq(query.column, query.value)
+  }
+  
+  const { data: webinar, error: webinarError } = await queryBuilder.single()
 
   if (webinarError || !webinar) {
     redirect('/')

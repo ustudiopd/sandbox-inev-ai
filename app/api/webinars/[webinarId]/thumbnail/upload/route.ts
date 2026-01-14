@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/auth/guards'
 import { createAdminSupabase } from '@/lib/supabase/admin'
 import { createServerSupabase } from '@/lib/supabase/server'
+import { getWebinarIdFromIdOrSlug } from '@/lib/utils/webinar-query'
 
 export const runtime = 'nodejs'
 
@@ -14,15 +15,25 @@ export async function POST(
   { params }: { params: Promise<{ webinarId: string }> }
 ) {
   try {
-    const { webinarId } = await params
+    const { webinarId: idOrSlug } = await params
     
     const admin = createAdminSupabase()
+    
+    // UUID 또는 slug로 실제 웨비나 ID 조회
+    const actualWebinarId = await getWebinarIdFromIdOrSlug(idOrSlug)
+    
+    if (!actualWebinarId) {
+      return NextResponse.json(
+        { error: 'Webinar not found' },
+        { status: 404 }
+      )
+    }
     
     // 웨비나 정보 조회
     const { data: webinar, error: webinarError } = await admin
       .from('webinars')
       .select('client_id, agency_id')
-      .eq('id', webinarId)
+      .eq('id', actualWebinarId)
       .single()
     
     if (webinarError || !webinar) {
@@ -108,7 +119,7 @@ export async function POST(
     
     // 파일명 생성 (webinarId-thumbnail.확장자)
     const fileExtension = file.name.split('.').pop() || 'jpg'
-    const filePath = `${webinarId}-thumbnail.${fileExtension}`
+    const filePath = `${actualWebinarId}-thumbnail.${fileExtension}`
     
     // Supabase Storage에 업로드 (webinar-thumbnails 버킷)
     const fileBuffer = await file.arrayBuffer()
@@ -141,7 +152,7 @@ export async function POST(
     const { error: updateError } = await admin
       .from('webinars')
       .update({ email_thumbnail_url: publicUrl })
-      .eq('id', webinarId)
+      .eq('id', actualWebinarId)
     
     if (updateError) {
       return NextResponse.json(

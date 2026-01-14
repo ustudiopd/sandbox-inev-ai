@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/auth/guards'
 import { createAdminSupabase } from '@/lib/supabase/admin'
+import { getWebinarIdFromIdOrSlug } from '@/lib/utils/webinar-query'
 
 export const runtime = 'nodejs'
 
@@ -12,9 +13,19 @@ export async function POST(
   { params }: { params: Promise<{ webinarId: string }> }
 ) {
   try {
-    const { webinarId } = await params
+    const { webinarId: idOrSlug } = await params
     const { user } = await requireAuth()
     const admin = createAdminSupabase()
+    
+    // UUID 또는 slug로 실제 웨비나 ID 조회
+    const actualWebinarId = await getWebinarIdFromIdOrSlug(idOrSlug)
+    
+    if (!actualWebinarId) {
+      return NextResponse.json(
+        { error: 'Webinar not found' },
+        { status: 404 }
+      )
+    }
     
     // 요청 본문에서 nickname 추출
     let nickname: string | null = null
@@ -25,25 +36,11 @@ export async function POST(
       // JSON 파싱 실패 시 무시 (하위 호환성)
     }
     
-    // 웨비나 존재 확인
-    const { data: webinar, error: webinarError } = await admin
-      .from('webinars')
-      .select('id')
-      .eq('id', webinarId)
-      .single()
-    
-    if (webinarError || !webinar) {
-      return NextResponse.json(
-        { error: 'Webinar not found' },
-        { status: 404 }
-      )
-    }
-    
     // 이미 등록되어 있는지 확인
     const { data: existingRegistration } = await admin
       .from('registrations')
       .select('webinar_id, user_id, nickname')
-      .eq('webinar_id', webinarId)
+      .eq('webinar_id', actualWebinarId)
       .eq('user_id', user.id)
       .maybeSingle()
     
@@ -53,7 +50,7 @@ export async function POST(
         await admin
           .from('registrations')
           .update({ nickname })
-          .eq('webinar_id', webinarId)
+          .eq('webinar_id', actualWebinarId)
           .eq('user_id', user.id)
       }
       return NextResponse.json({ success: true, alreadyRegistered: true })
@@ -63,7 +60,7 @@ export async function POST(
     const { error: registerError } = await admin
       .from('registrations')
       .insert({
-        webinar_id: webinarId,
+        webinar_id: actualWebinarId,
         user_id: user.id,
         role: 'attendee',
         nickname,

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/auth/guards'
 import { createAdminSupabase } from '@/lib/supabase/admin'
+import { getWebinarIdFromIdOrSlug } from '@/lib/utils/webinar-query'
 
 export const runtime = 'nodejs'
 
@@ -12,7 +13,7 @@ export async function POST(
   { params }: { params: Promise<{ webinarId: string }> }
 ) {
   try {
-    const { webinarId } = await params
+    const { webinarId: idOrSlug } = await params
     const { userIds } = await req.json()
     
     if (!userIds || !Array.isArray(userIds) || userIds.length === 0) {
@@ -25,11 +26,21 @@ export async function POST(
     await requireAuth()
     const admin = createAdminSupabase()
     
+    // UUID 또는 slug로 실제 웨비나 ID 조회
+    const actualWebinarId = await getWebinarIdFromIdOrSlug(idOrSlug)
+    
+    if (!actualWebinarId) {
+      return NextResponse.json(
+        { success: false, error: 'Webinar not found' },
+        { status: 404 }
+      )
+    }
+    
     // 웨비나 정보 조회
     const { data: webinarRaw, error: webinarError } = await admin
       .from('webinars')
       .select('agency_id, client_id')
-      .eq('id', webinarId)
+      .eq('id', actualWebinarId)
       .single()
     
     if (webinarError || !webinarRaw) {

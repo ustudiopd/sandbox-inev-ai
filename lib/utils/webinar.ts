@@ -16,8 +16,11 @@ export function getWebinarQuery(idOrSlug: string) {
     return { column: 'id', value: idOrSlug }
   } else {
     // URL 인코딩된 slug를 디코딩
+    // 숫자 문자열(6자리 slug)은 디코딩 불필요하지만 시도해도 안전
     try {
       const decoded = decodeURIComponent(idOrSlug)
+      // 디코딩 결과가 원본과 같으면(인코딩되지 않은 경우) 원본 사용
+      // 숫자 문자열은 항상 원본과 같음
       return { column: 'slug', value: decoded }
     } catch {
       // 디코딩 실패 시 원본 사용

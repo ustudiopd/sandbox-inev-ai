@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createAdminSupabase } from '@/lib/supabase/admin'
 import { createServerSupabase } from '@/lib/supabase/server'
 import { requireAuth } from '@/lib/auth/guards'
+import { getWebinarIdFromIdOrSlug } from '@/lib/utils/webinar-query'
 
 export const runtime = 'nodejs'
 
@@ -31,11 +32,21 @@ export async function POST(
     const supabase = await createServerSupabase()
     const admin = createAdminSupabase()
     
+    // UUID 또는 slug로 실제 웨비나 ID 조회
+    const actualWebinarId = await getWebinarIdFromIdOrSlug(webinarId)
+    
+    if (!actualWebinarId) {
+      return NextResponse.json(
+        { error: 'Webinar not found' },
+        { status: 404 }
+      )
+    }
+    
     // 웨비나 정보 조회
     const { data: webinar, error: webinarError } = await admin
       .from('webinars')
       .select('agency_id, client_id')
-      .eq('id', webinarId)
+      .eq('id', actualWebinarId)
       .single()
     
     if (webinarError || !webinar) {
@@ -95,7 +106,7 @@ export async function POST(
     const { data: form, error: formError } = await admin
       .from('forms')
       .insert({
-        webinar_id: webinarId,
+        webinar_id: actualWebinarId,
         agency_id: webinar.agency_id,
         client_id: webinar.client_id,
         title: title.trim(),
@@ -148,7 +159,7 @@ export async function POST(
         actor_user_id: user.id,
         agency_id: webinar.agency_id,
         client_id: webinar.client_id,
-        webinar_id: webinarId,
+        webinar_id: actualWebinarId,
         action: 'FORM_CREATE',
         payload: { form_id: form.id, kind },
       })

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/auth/guards'
 import { createAdminSupabase } from '@/lib/supabase/admin'
 import { createServerSupabase } from '@/lib/supabase/server'
+import { getWebinarQuery } from '@/lib/utils/webinar'
 
 export const runtime = 'nodejs'
 
@@ -17,14 +18,21 @@ export async function GET(
     
     const admin = createAdminSupabase()
     
+    // UUID 또는 slug로 웨비나 조회
+    const query = getWebinarQuery(webinarId)
+    
     // 웨비나 정보 조회
-    let query = admin
+    let queryBuilder = admin
       .from('webinars')
       .select('*')
-      .eq('id', webinarId)
-      .single()
     
-    const { data: webinar, error: webinarError } = await query
+    if (query.column === 'slug') {
+      queryBuilder = queryBuilder.eq('slug', String(query.value)).not('slug', 'is', null)
+    } else {
+      queryBuilder = queryBuilder.eq(query.column, query.value)
+    }
+    
+    const { data: webinar, error: webinarError } = await queryBuilder.single()
     
     if (webinarError || !webinar) {
       return NextResponse.json(
@@ -72,12 +80,21 @@ export async function PUT(
     
     const admin = createAdminSupabase()
     
+    // UUID 또는 slug로 웨비나 조회
+    const query = getWebinarQuery(webinarId)
+    
     // 웨비나 정보 조회
-    const { data: webinar, error: webinarError } = await admin
+    let queryBuilder = admin
       .from('webinars')
-      .select('client_id, agency_id')
-      .eq('id', webinarId)
-      .single()
+      .select('client_id, agency_id, id')
+    
+    if (query.column === 'slug') {
+      queryBuilder = queryBuilder.eq('slug', String(query.value)).not('slug', 'is', null)
+    } else {
+      queryBuilder = queryBuilder.eq(query.column, query.value)
+    }
+    
+    const { data: webinar, error: webinarError } = await queryBuilder.single()
     
     if (webinarError || !webinar) {
       return NextResponse.json(
@@ -85,6 +102,9 @@ export async function PUT(
         { status: 404 }
       )
     }
+    
+    // 실제 웨비나 ID 사용 (slug로 조회한 경우에도 실제 ID 필요)
+    const actualWebinarId = webinar.id
     
     // 권한 확인
     const { user } = await requireAuth()
@@ -149,7 +169,7 @@ export async function PUT(
     const { data: updatedWebinar, error: updateError } = await admin
       .from('webinars')
       .update(updateData)
-      .eq('id', webinarId)
+      .eq('id', actualWebinarId)
       .select()
       .single()
     
@@ -167,14 +187,14 @@ export async function PUT(
         await admin
           .from('webinar_allowed_emails')
           .delete()
-          .eq('webinar_id', webinarId)
+          .eq('webinar_id', actualWebinarId)
         
         // 새 이메일 목록 추가
         const emailsToInsert = allowedEmails
           .map((email: string) => email.trim().toLowerCase())
           .filter((email: string) => email && email.includes('@'))
           .map((email: string) => ({
-            webinar_id: webinarId,
+            webinar_id: actualWebinarId,
             email,
             created_by: user.id,
           }))
@@ -193,7 +213,7 @@ export async function PUT(
         await admin
           .from('webinar_allowed_emails')
           .delete()
-          .eq('webinar_id', webinarId)
+          .eq('webinar_id', actualWebinarId)
       }
     }
     
@@ -228,12 +248,21 @@ export async function DELETE(
     
     const admin = createAdminSupabase()
     
+    // UUID 또는 slug로 웨비나 조회
+    const query = getWebinarQuery(webinarId)
+    
     // 웨비나 정보 조회
-    const { data: webinar, error: webinarError } = await admin
+    let queryBuilder = admin
       .from('webinars')
-      .select('client_id, agency_id')
-      .eq('id', webinarId)
-      .single()
+      .select('client_id, agency_id, id')
+    
+    if (query.column === 'slug') {
+      queryBuilder = queryBuilder.eq('slug', String(query.value)).not('slug', 'is', null)
+    } else {
+      queryBuilder = queryBuilder.eq(query.column, query.value)
+    }
+    
+    const { data: webinar, error: webinarError } = await queryBuilder.single()
     
     if (webinarError || !webinar) {
       return NextResponse.json(
@@ -241,6 +270,9 @@ export async function DELETE(
         { status: 404 }
       )
     }
+    
+    // 실제 웨비나 ID 사용 (slug로 조회한 경우에도 실제 ID 필요)
+    const actualWebinarId = webinar.id
     
     // 권한 확인 (owner/admin만 삭제 가능)
     const { user } = await requireAuth()
@@ -289,11 +321,37 @@ export async function DELETE(
       )
     }
     
+    // UUID 또는 slug로 웨비나 조회
+    const deleteQuery = getWebinarQuery(webinarId)
+    
+    // 웨비나 정보 조회
+    let deleteQueryBuilder = admin
+      .from('webinars')
+      .select('client_id, agency_id, id')
+    
+    if (deleteQuery.column === 'slug') {
+      deleteQueryBuilder = deleteQueryBuilder.eq('slug', String(deleteQuery.value)).not('slug', 'is', null)
+    } else {
+      deleteQueryBuilder = deleteQueryBuilder.eq(deleteQuery.column, deleteQuery.value)
+    }
+    
+    const { data: webinarToDelete, error: deleteWebinarError } = await deleteQueryBuilder.single()
+    
+    if (deleteWebinarError || !webinarToDelete) {
+      return NextResponse.json(
+        { error: 'Webinar not found' },
+        { status: 404 }
+      )
+    }
+    
+    // 실제 웨비나 ID 사용
+    const deleteWebinarId = webinarToDelete.id
+    
     // 웨비나 삭제
     const { error: deleteError } = await admin
       .from('webinars')
       .delete()
-      .eq('id', webinarId)
+      .eq('id', deleteWebinarId)
     
     if (deleteError) {
       return NextResponse.json(
@@ -309,9 +367,9 @@ export async function DELETE(
         actor_user_id: user.id,
         agency_id: webinar.agency_id,
         client_id: webinar.client_id,
-        webinar_id: webinarId,
+        webinar_id: actualWebinarId,
         action: 'WEBINAR_DELETE',
-        payload: { webinarId }
+        payload: { webinarId: actualWebinarId }
       })
     
     return NextResponse.json({ success: true })

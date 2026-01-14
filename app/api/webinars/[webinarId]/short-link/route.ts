@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminSupabase } from '@/lib/supabase/admin'
 import { requireAuth } from '@/lib/auth/guards'
+import { getWebinarIdFromIdOrSlug } from '@/lib/utils/webinar-query'
 
 export async function POST(
   req: NextRequest,
@@ -15,8 +16,8 @@ export async function POST(
       )
     }
 
-    const { webinarId } = await params
-    if (!webinarId) {
+    const { webinarId: idOrSlug } = await params
+    if (!idOrSlug) {
       return NextResponse.json(
         { error: 'Webinar ID is required' },
         { status: 400 }
@@ -25,11 +26,21 @@ export async function POST(
 
     const admin = createAdminSupabase()
 
+    // UUID 또는 slug로 실제 웨비나 ID 조회
+    const actualWebinarId = await getWebinarIdFromIdOrSlug(idOrSlug)
+    
+    if (!actualWebinarId) {
+      return NextResponse.json(
+        { error: 'Webinar not found' },
+        { status: 404 }
+      )
+    }
+
     // 웨비나 존재 확인 및 권한 확인
     const { data: webinar, error: webinarError } = await admin
       .from('webinars')
-      .select('id, title, agency_id, client_id, created_by')
-      .eq('id', webinarId)
+      .select('id, title, slug, agency_id, client_id, created_by')
+      .eq('id', actualWebinarId)
       .single()
 
     if (webinarError || !webinar) {
@@ -76,17 +87,18 @@ export async function POST(
     const { data: existingLink } = await admin
       .from('short_links')
       .select('code')
-      .eq('webinar_id', webinarId)
+      .eq('webinar_id', actualWebinarId)
       .order('created_at', { ascending: false })
       .limit(1)
       .single()
 
     if (existingLink) {
+      const webinarPath = webinar.slug || actualWebinarId
       const shortUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://must.ai.kr'}/s/${existingLink.code}`
       return NextResponse.json({
         code: existingLink.code,
         shortUrl,
-        fullUrl: `${process.env.NEXT_PUBLIC_APP_URL || 'https://must.ai.kr'}/webinar/${webinarId}`,
+        fullUrl: `${process.env.NEXT_PUBLIC_APP_URL || 'https://must.ai.kr'}/webinar/${webinarPath}`,
         webinarTitle: webinar.title,
       })
     }
@@ -126,7 +138,7 @@ export async function POST(
       .from('short_links')
       .insert({
         code,
-        webinar_id: webinarId,
+        webinar_id: actualWebinarId,
         created_by: user.id,
       })
       .select('code')
@@ -139,12 +151,13 @@ export async function POST(
       )
     }
 
+    const webinarPath = webinar.slug || actualWebinarId
     const shortUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://must.ai.kr'}/s/${savedLink.code}`
 
     return NextResponse.json({
       code: savedLink.code,
       shortUrl,
-      fullUrl: `${process.env.NEXT_PUBLIC_APP_URL || 'https://must.ai.kr'}/webinar/${webinarId}`,
+      fullUrl: `${process.env.NEXT_PUBLIC_APP_URL || 'https://must.ai.kr'}/webinar/${webinarPath}`,
       webinarTitle: webinar.title,
     })
   } catch (error: any) {

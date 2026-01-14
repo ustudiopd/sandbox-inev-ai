@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createAdminSupabase } from '@/lib/supabase/admin'
 import { sendWebinarRegistrationEmail } from '@/lib/email'
+import { getWebinarIdFromIdOrSlug } from '@/lib/utils/webinar-query'
 
 export const runtime = 'nodejs'
 
@@ -13,7 +14,7 @@ export async function POST(
   { params }: { params: Promise<{ webinarId: string }> }
 ) {
   try {
-    const { webinarId } = await params
+    const { webinarId: idOrSlug } = await params
     const { email, displayName, nickname } = await req.json()
     
     if (!email || !email.trim()) {
@@ -32,11 +33,21 @@ export async function POST(
     
     const admin = createAdminSupabase()
     
+    // UUID 또는 slug로 실제 웨비나 ID 조회
+    const actualWebinarId = await getWebinarIdFromIdOrSlug(idOrSlug)
+    
+    if (!actualWebinarId) {
+      return NextResponse.json(
+        { error: 'Webinar not found' },
+        { status: 404 }
+      )
+    }
+    
     // 웨비나 정보 확인 (slug 포함)
     const { data: webinar, error: webinarError } = await admin
       .from('webinars')
       .select('id, title, access_policy, start_time, slug')
-      .eq('id', webinarId)
+      .eq('id', actualWebinarId)
       .single()
     
     if (webinarError || !webinar) {
@@ -60,7 +71,7 @@ export async function POST(
     const { data: existingEmail } = await admin
       .from('webinar_allowed_emails')
       .select('email')
-      .eq('webinar_id', webinarId)
+      .eq('webinar_id', actualWebinarId)
       .eq('email', emailLower)
       .maybeSingle()
     
@@ -75,7 +86,7 @@ export async function POST(
     const { error: insertError } = await admin
       .from('webinar_allowed_emails')
       .insert({
-        webinar_id: webinarId,
+        webinar_id: actualWebinarId,
         email: emailLower,
         created_by: null, // 인증 없이 등록하므로 null
       })
@@ -88,7 +99,7 @@ export async function POST(
     }
     
     // slug가 있으면 slug를 사용하고, 없으면 id를 사용
-    const webinarSlug = webinar.slug || webinarId
+    const webinarSlug = webinar.slug || actualWebinarId
     
     // 이메일 발송 (실패해도 등록은 성공으로 처리)
     try {

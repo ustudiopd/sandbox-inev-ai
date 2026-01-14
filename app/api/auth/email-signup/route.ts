@@ -75,65 +75,105 @@ export async function POST(req: Request) {
       )
     }
     
-    // 이미 존재하는 사용자인지 확인
-    const { data: existingUser } = await admin.auth.admin.listUsers()
-    const user = existingUser?.users.find(u => u.email?.toLowerCase() === email.trim().toLowerCase())
+    // 임시 비밀번호 생성
+    const tempPassword = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
     
     let userId: string
-    let tempPassword: string
     
-    // 임시 비밀번호 생성
-    tempPassword = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
-    
-    if (user) {
-      // 기존 사용자: 비밀번호 재설정
-      userId = user.id
-      
-      const { error: updateError } = await admin.auth.admin.updateUserById(
-        userId,
-        {
-          password: tempPassword,
-          email_confirm: true, // 이메일 인증 없이 바로 활성화
-        }
-      )
-      
-      if (updateError) {
-        return NextResponse.json(
-          { error: updateError.message },
-          { status: 500 }
-        )
+    // 먼저 사용자 생성 시도 (더 효율적)
+    const { data: newUser, error: createError } = await admin.auth.admin.createUser({
+      email: email.trim(),
+      password: tempPassword,
+      email_confirm: true, // 이메일 인증 없이 바로 활성화
+      user_metadata: {
+        display_name: nickname?.trim() || email.trim().split('@')[0],
+        nickname: nickname?.trim() || null,
+        role: 'participant',
+        webinar_id: webinarId,
       }
-      
-      // 프로필 업데이트 (닉네임이 제공된 경우)
-      if (nickname?.trim()) {
-        await admin
-          .from('profiles')
-          .update({
-            nickname: nickname.trim(),
+    })
+    
+    if (createError) {
+      // 이미 등록된 이메일인 경우
+      if (createError.message.includes('already been registered') || createError.message.includes('User already registered')) {
+        // 페이지네이션을 고려하여 사용자 찾기
+        let foundUser = null
+        let page = 1
+        const perPage = 1000
+        
+        while (!foundUser && page <= 10) { // 최대 10페이지까지 검색
+          const { data: usersData, error: listError } = await admin.auth.admin.listUsers({
+            page,
+            perPage,
           })
-          .eq('id', userId)
-      }
-    } else {
-      // 새 사용자: 계정 생성
-      const { data: newUser, error: createError } = await admin.auth.admin.createUser({
-        email: email.trim(),
-        password: tempPassword,
-        email_confirm: true, // 이메일 인증 없이 바로 활성화
-        user_metadata: {
-          display_name: nickname?.trim() || email.trim().split('@')[0],
-          nickname: nickname?.trim() || null,
-          role: 'participant',
-          webinar_id: webinarId,
+          
+          if (listError) {
+            console.error('사용자 목록 조회 실패:', listError)
+            break
+          }
+          
+          foundUser = usersData?.users.find(u => u.email?.toLowerCase() === emailLower)
+          
+          if (foundUser) {
+            break
+          }
+          
+          // 더 이상 사용자가 없으면 중단
+          if (!usersData?.users || usersData.users.length < perPage) {
+            break
+          }
+          
+          page++
         }
-      })
-      
-      if (createError || !newUser.user) {
+        
+        if (!foundUser) {
+          return NextResponse.json(
+            { error: '이미 등록된 이메일이지만 사용자 계정을 찾을 수 없습니다' },
+            { status: 500 }
+          )
+        }
+        
+        userId = foundUser.id
+        
+        // 비밀번호 재설정
+        const { error: updateError } = await admin.auth.admin.updateUserById(
+          userId,
+          {
+            password: tempPassword,
+            email_confirm: true,
+          }
+        )
+        
+        if (updateError) {
+          console.error('기존 사용자 비밀번호 재설정 실패:', updateError)
+          return NextResponse.json(
+            { error: updateError.message || '비밀번호 재설정에 실패했습니다' },
+            { status: 500 }
+          )
+        }
+        
+        // 프로필 업데이트 (닉네임이 제공된 경우)
+        if (nickname?.trim()) {
+          await admin
+            .from('profiles')
+            .update({
+              nickname: nickname.trim(),
+            })
+            .eq('id', userId)
+        }
+      } else {
         return NextResponse.json(
-          { error: createError?.message || 'Failed to create user' },
+          { error: createError.message || '사용자 생성에 실패했습니다' },
           { status: 500 }
         )
       }
-      
+    } else if (!newUser.user) {
+      return NextResponse.json(
+        { error: '사용자 생성에 실패했습니다' },
+        { status: 500 }
+      )
+    } else {
+      // 새 사용자 생성 성공
       userId = newUser.user.id
       
       // 프로필 생성

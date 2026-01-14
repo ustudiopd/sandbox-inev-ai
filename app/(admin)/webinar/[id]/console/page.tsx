@@ -30,9 +30,14 @@ export default async function ConsolePage({
       )
     `)
   
-  const { data: webinar, error } = await queryBuilder
-    .eq(query.column, query.value)
-    .single()
+  if (query.column === 'slug') {
+    // slug는 문자열로 비교 (숫자로 저장되어 있어도 문자열로 변환)
+    queryBuilder = queryBuilder.eq('slug', String(query.value)).not('slug', 'is', null)
+  } else {
+    queryBuilder = queryBuilder.eq(query.column, query.value)
+  }
+  
+  const { data: webinar, error } = await queryBuilder.single()
   
   if (error || !webinar) {
     // 웨비나를 찾을 수 없으면 입장 페이지로 리다이렉트
