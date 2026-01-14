@@ -37,7 +37,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     }
   }
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://must.ai.kr'
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://eventflow.kr'
   const shortUrl = `${appUrl}/s/${code}`
 
   return {

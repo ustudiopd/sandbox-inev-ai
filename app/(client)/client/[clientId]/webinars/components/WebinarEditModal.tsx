@@ -281,7 +281,7 @@ export default function WebinarEditModal({
                       </label>
                       <div className="space-y-2 max-h-60 overflow-y-auto">
                         {formData.allowedEmails.map((email, index) => {
-                          const accessLink = `${process.env.NEXT_PUBLIC_APP_URL || 'https://must.ai.kr'}/webinar/${webinar.id}?email=${encodeURIComponent(email)}`
+                          const accessLink = `${process.env.NEXT_PUBLIC_APP_URL || 'https://eventflow.kr'}/webinar/${webinar.id}?email=${encodeURIComponent(email)}`
                           return (
                             <div key={index} className="flex items-center gap-2 p-2 bg-white rounded border border-gray-200">
                               <div className="flex-1 min-w-0">
