@@ -61,6 +61,7 @@ interface StatsData {
     maxConcurrentParticipants: number
   }
   access?: {
+    currentParticipants?: number // 실시간 현재 접속자 수
     maxConcurrentParticipants: number
     avgConcurrentParticipants: number
     timeline: Array<{
@@ -173,9 +174,9 @@ export default function DashboardTab({ webinarId, webinarSlug }: DashboardTabPro
           <div className="text-3xl font-bold text-blue-600">{stats.registrants?.totalRegistrants || 0}</div>
         </div>
         <div className="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-xl shadow-md">
-          <div className="text-sm text-gray-600 mb-2">최대 동시 접속자</div>
+          <div className="text-sm text-gray-600 mb-2">현재 접속자</div>
           <div className="text-3xl font-bold text-green-600">
-            {stats.access?.maxConcurrentParticipants || stats.registrants?.maxConcurrentParticipants || 0}
+            {stats.access?.currentParticipants !== undefined ? stats.access.currentParticipants : (stats.access?.maxConcurrentParticipants || stats.registrants?.maxConcurrentParticipants || 0)}
           </div>
         </div>
         <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-6 rounded-xl shadow-md">
@@ -282,14 +283,20 @@ export default function DashboardTab({ webinarId, webinarSlug }: DashboardTabPro
       {stats.access && accessTimelineData.length > 0 && (
         <div className="bg-white rounded-xl shadow-md p-6 mb-6">
           <h3 className="text-lg font-semibold mb-4">접속 통계</h3>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div>
+              <div className="text-sm text-gray-600 mb-1">현재 접속자</div>
+              <div className="text-2xl font-bold text-green-600">
+                {stats.access.currentParticipants !== undefined ? stats.access.currentParticipants : '-'}
+              </div>
+            </div>
             <div>
               <div className="text-sm text-gray-600 mb-1">최대 동시 접속자</div>
-              <div className="text-2xl font-bold text-green-600">{stats.access.maxConcurrentParticipants}</div>
+              <div className="text-2xl font-bold text-blue-600">{stats.access.maxConcurrentParticipants}</div>
             </div>
             <div>
               <div className="text-sm text-gray-600 mb-1">평균 동시 접속자</div>
-              <div className="text-2xl font-bold text-blue-600">
+              <div className="text-2xl font-bold text-purple-600">
                 {Math.round(stats.access.avgConcurrentParticipants)}
               </div>
             </div>

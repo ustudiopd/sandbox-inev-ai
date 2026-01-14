@@ -33,6 +33,19 @@ export async function GET(
       .eq('id', webinarId)
       .single()
 
+    // 현재 접속자 수 조회 (webinar_live_presence에서 실시간 조회)
+    // 활성 기준: last_seen_at >= now() - 3 minutes
+    const activeSince = new Date(Date.now() - 3 * 60 * 1000).toISOString()
+    const { count: currentParticipants, error: presenceError } = await admin
+      .from('webinar_live_presence')
+      .select('*', { count: 'exact', head: true })
+      .eq('webinar_id', webinarId)
+      .gte('last_seen_at', activeSince)
+
+    if (presenceError) {
+      console.error('[Stats Access] 현재 접속자 조회 실패:', presenceError)
+    }
+
     // 쿼리 파라미터 파싱
     const { from, to } = parseStatsParams(
       searchParams,
@@ -89,6 +102,7 @@ export async function GET(
     return NextResponse.json({
       success: true,
       data: {
+        currentParticipants: currentParticipants || 0, // 실시간 현재 접속자 수
         maxConcurrentParticipants,
         avgConcurrentParticipants: Math.round(avgConcurrentParticipants * 100) / 100,
         timeline,
