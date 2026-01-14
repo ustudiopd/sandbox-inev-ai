@@ -134,17 +134,42 @@ export default async function ShortLinkRedirectPage({
 
     // URL 파라미터 유지 (이메일 등)
     const queryParams = new URLSearchParams()
+    
+    // 이메일 파라미터 처리: email 우선, 없으면 e 파라미터 디코딩
+    let emailToPass: string | null = null
+    
     if (searchParamsData?.email) {
       const emailValue = Array.isArray(searchParamsData.email) 
         ? searchParamsData.email[0] 
         : searchParamsData.email
       if (emailValue) {
-        queryParams.set('email', emailValue)
+        emailToPass = emailValue
+      }
+    } else if (searchParamsData?.e) {
+      // Base64 디코딩 방식 (다이렉트샌드 호환)
+      try {
+        const eValue = Array.isArray(searchParamsData.e) 
+          ? searchParamsData.e[0] 
+          : searchParamsData.e
+        if (eValue) {
+          // Node.js 환경에서는 Buffer 사용
+          const decodedEmail = Buffer.from(eValue, 'base64').toString('utf-8')
+          emailToPass = decodedEmail
+        }
+      } catch (error) {
+        console.error('[ShortLink] Base64 이메일 디코딩 실패:', error)
+        // 디코딩 실패 시 무시하고 계속 진행
       }
     }
-    // 다른 파라미터도 유지
+    
+    // 이메일 파라미터 추가
+    if (emailToPass) {
+      queryParams.set('email', emailToPass)
+    }
+    
+    // 다른 파라미터도 유지 (e 파라미터는 제외)
     Object.keys(searchParamsData).forEach(key => {
-      if (key !== 'email' && searchParamsData[key]) {
+      if (key !== 'email' && key !== 'e' && searchParamsData[key]) {
         const value = Array.isArray(searchParamsData[key])
           ? searchParamsData[key][0]
           : searchParamsData[key]

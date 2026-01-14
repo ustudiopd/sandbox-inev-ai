@@ -51,10 +51,29 @@ export default function WebinarEntry({ webinar }: WebinarEntryProps) {
     const type = urlParams.get('type')
     const token = urlParams.get('token')
     const emailParam = urlParams.get('email')
+    const eParam = urlParams.get('e') // Base64 인코딩된 이메일 (다이렉트샌드용)
+    
+    // 이메일 파라미터 처리: email 우선, 없으면 e 파라미터 디코딩
+    let finalEmail: string | null = null
+    
+    if (emailParam) {
+      // 기존 방식: email 파라미터 직접 사용
+      finalEmail = emailParam.toLowerCase().trim()
+    } else if (eParam) {
+      // Base64 디코딩 방식 (다이렉트샌드 호환)
+      try {
+        // 브라우저 환경에서는 atob() 사용
+        const decodedEmail = atob(eParam)
+        finalEmail = decodedEmail.toLowerCase().trim()
+      } catch (error) {
+        console.error('Base64 이메일 디코딩 실패:', error)
+        // 디코딩 실패 시 무시하고 계속 진행
+      }
+    }
     
     // 이메일 파라미터가 있고 email_auth 정책인 경우 자동 로그인 처리
-    if (emailParam && webinar.access_policy === 'email_auth') {
-      const emailLower = emailParam.toLowerCase().trim()
+    if (finalEmail && webinar.access_policy === 'email_auth') {
+      const emailLower = finalEmail
       
       // 관리자 계정은 이메일 인증으로 접속 불가
       const adminEmails = ['pd@ustudio.co.kr']
@@ -75,7 +94,7 @@ export default function WebinarEntry({ webinar }: WebinarEntryProps) {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              email: emailLower,
+              email: finalEmail,
               webinarId: webinar.id,
             }),
           })
