@@ -558,7 +558,7 @@ export default function RegistrationPage({ campaign, baseUrl }: RegistrationPage
                   required
                 />
                 <span className="ml-3 text-sm font-medium text-gray-700">
-                  개인정보취급방침에 동의합니다 <span className="text-red-500">*</span>
+                  개인정보 취급방침에 동의합니다 <span className="text-red-500">*</span>
                 </span>
               </label>
             </div>
