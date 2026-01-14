@@ -45,6 +45,53 @@ export default function WebinarEntry({ webinar }: WebinarEntryProps) {
   const [privacyAgreed, setPrivacyAgreed] = useState(false)
   const [showPrivacyModal, setShowPrivacyModal] = useState(false)
   
+  // 웨비나 접속 페이지 접속 기록
+  useEffect(() => {
+    let intervalId: NodeJS.Timeout | null = null
+
+    const trackAccess = async () => {
+      try {
+        // 세션 ID 가져오기 또는 생성
+        let sessionId = localStorage.getItem(`webinar_session_${webinar.id}`)
+        if (!sessionId) {
+          sessionId = `session_${Date.now()}_${Math.random().toString(36).substring(7)}`
+          localStorage.setItem(`webinar_session_${webinar.id}`, sessionId)
+        }
+
+        // 접속 기록 API 호출
+        await fetch(`/api/webinars/${webinar.id}/access/track`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sessionId }),
+        })
+
+        // 주기적으로 세션 갱신 (5분마다)
+        intervalId = setInterval(async () => {
+          try {
+            await fetch(`/api/webinars/${webinar.id}/access/track`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ sessionId }),
+            })
+          } catch (error) {
+            console.debug('[WebinarEntry] 세션 갱신 실패:', error)
+          }
+        }, 5 * 60 * 1000) // 5분
+      } catch (error) {
+        console.debug('[WebinarEntry] 접속 기록 실패:', error)
+      }
+    }
+
+    trackAccess()
+
+    // cleanup
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId)
+      }
+    }
+  }, [webinar.id])
+  
   useEffect(() => {
     // URL에서 이메일 인증 확인 파라미터 체크
     const urlParams = new URLSearchParams(window.location.search)

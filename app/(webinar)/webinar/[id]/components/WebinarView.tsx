@@ -597,17 +597,28 @@ export default function WebinarView({ webinar, isAdminMode = false }: WebinarVie
                 <div className="prose prose-sm max-w-none">
                   <p className="text-xs sm:text-sm lg:text-base text-gray-700 whitespace-pre-wrap leading-relaxed">
                     {(() => {
+                      // HTML 태그 제거 및 텍스트 추출 (서버 사이드 호환)
+                      const stripHtml = (html: string) => {
+                        // HTML 태그 제거
+                        return html.replace(/<[^>]*>/g, '').trim()
+                      }
+                      
+                      // HTML 태그가 있으면 제거, 없으면 그대로 사용
+                      const cleanDescription = webinar.description.includes('<') 
+                        ? stripHtml(webinar.description) 
+                        : webinar.description
+                      
                       // URL을 감지하고 링크로 변환하는 함수
-                      const urlRegex = /(https?:\/\/[^\s]+)/g
+                      const urlRegex = /(https?:\/\/[^\s<>"']+)/g
                       const parts: string[] = []
                       let lastIndex = 0
                       let match
                       
                       // 정규식으로 모든 URL 찾기
-                      while ((match = urlRegex.exec(webinar.description)) !== null) {
+                      while ((match = urlRegex.exec(cleanDescription)) !== null) {
                         // URL 이전 텍스트 추가
                         if (match.index > lastIndex) {
-                          parts.push(webinar.description.substring(lastIndex, match.index))
+                          parts.push(cleanDescription.substring(lastIndex, match.index))
                         }
                         // URL 추가 (특별한 마커로 표시)
                         parts.push(`__URL__${match[0]}__URL__`)
@@ -615,13 +626,13 @@ export default function WebinarView({ webinar, isAdminMode = false }: WebinarVie
                       }
                       
                       // 마지막 텍스트 추가
-                      if (lastIndex < webinar.description.length) {
-                        parts.push(webinar.description.substring(lastIndex))
+                      if (lastIndex < cleanDescription.length) {
+                        parts.push(cleanDescription.substring(lastIndex))
                       }
                       
                       // URL이 없으면 원본 반환
                       if (parts.length === 0) {
-                        parts.push(webinar.description)
+                        parts.push(cleanDescription)
                       }
                       
                       return parts.map((part, index) => {

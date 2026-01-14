@@ -64,6 +64,21 @@ export async function GET(
     // 현재 접속자 수
     const currentParticipants = activePresences?.length || 0
 
+    // 입장한 사람 수 (webinar_live_presence에 joined_at이 있는 고유 user_id 수)
+    const { data: allAttendees, error: attendeesError } = await admin
+      .from('webinar_live_presence')
+      .select('user_id')
+      .eq('webinar_id', webinarId)
+      .not('joined_at', 'is', null)
+
+    const totalAttendees = allAttendees 
+      ? new Set(allAttendees.map((a: any) => a.user_id)).size 
+      : 0
+
+    if (attendeesError) {
+      console.error('[Stats Access] 입장한 사람 수 조회 실패:', attendeesError)
+    }
+
     // 현재 접속자 목록 가공 (profiles, registrations 별도 조회)
     let currentParticipantList: Array<{
       userId: string
@@ -183,6 +198,7 @@ export async function GET(
       data: {
         currentParticipants: currentParticipants || 0, // 실시간 현재 접속자 수
         currentParticipantList, // 현재 접속 중인 참여자 목록
+        totalAttendees, // 입장한 사람 수 (joined_at이 있는 고유 user_id 수)
         maxConcurrentParticipants,
         avgConcurrentParticipants: Math.round(avgConcurrentParticipants * 100) / 100,
         timeline,
