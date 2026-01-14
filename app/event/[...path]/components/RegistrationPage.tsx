@@ -337,7 +337,7 @@ export default function RegistrationPage({ campaign, baseUrl }: RegistrationPage
         <div className="bg-white rounded-lg shadow-md p-6 sm:p-8 md:p-10">
           {/* 제목 */}
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-6 sm:mb-8 text-gray-900">
-            {campaign.title || 'HPE Networking in Motion'}
+            {campaign.public_path === '/445870' ? 'HPE Networking in Motion' : (campaign.title || 'HPE Networking in Motion')}
           </h1>
           
           <h2 className="text-lg sm:text-xl font-bold mb-4 text-gray-900">
