@@ -33,7 +33,6 @@ export default function RegistrationPage({ campaign, baseUrl }: RegistrationPage
   const [phone1, setPhone1] = useState('010')
   const [phone2, setPhone2] = useState('')
   const [phone3, setPhone3] = useState('')
-  const [customQuestion, setCustomQuestion] = useState('')
   const [consentEmail, setConsentEmail] = useState(false)
   const [consentPhone, setConsentPhone] = useState(false)
   const [privacyConsent, setPrivacyConsent] = useState(false)
@@ -156,7 +155,6 @@ export default function RegistrationPage({ campaign, baseUrl }: RegistrationPage
               lastName: lastName.trim(),
               jobTitle: jobTitle.trim(),
               phoneCountryCode: phoneCountryCode,
-              customQuestion: customQuestion.trim(),
               consentEmail: consentEmail,
               consentPhone: consentPhone,
               privacyConsent: privacyConsent,
@@ -190,7 +188,10 @@ export default function RegistrationPage({ campaign, baseUrl }: RegistrationPage
   
   // 참여 확인 모드
   if (lookupMode) {
-    const headerImageUrl = 'https://yqsayphssjznthrxpgfb.supabase.co/storage/v1/object/public/webinar-thumbnails/edm_header_1600_1.jpg'
+    // 445870 경로는 edm_header_1600_2.jpg 사용
+    const headerImageUrl = campaign.public_path === '/445870'
+      ? 'https://yqsayphssjznthrxpgfb.supabase.co/storage/v1/object/public/webinar-thumbnails/edm_header_1600_2.jpg'
+      : 'https://yqsayphssjznthrxpgfb.supabase.co/storage/v1/object/public/webinar-thumbnails/edm_header_1600_1.jpg'
     
     return (
       <div className="min-h-screen bg-white font-sans text-gray-900 pb-20">
@@ -303,7 +304,10 @@ export default function RegistrationPage({ campaign, baseUrl }: RegistrationPage
   }
   
   // 일반 등록 모드 - 상세 폼
-  const headerImageUrl = 'https://yqsayphssjznthrxpgfb.supabase.co/storage/v1/object/public/webinar-thumbnails/edm_header_1600_1.jpg'
+  // 445870 경로는 edm_header_1600_2.jpg 사용
+  const headerImageUrl = campaign.public_path === '/445870'
+    ? 'https://yqsayphssjznthrxpgfb.supabase.co/storage/v1/object/public/webinar-thumbnails/edm_header_1600_2.jpg'
+    : 'https://yqsayphssjznthrxpgfb.supabase.co/storage/v1/object/public/webinar-thumbnails/edm_header_1600_1.jpg'
   
   return (
     <div className="min-h-screen bg-white font-sans text-gray-900 pb-20">
@@ -333,7 +337,7 @@ export default function RegistrationPage({ campaign, baseUrl }: RegistrationPage
         <div className="bg-white rounded-lg shadow-md p-6 sm:p-8 md:p-10">
           {/* 제목 */}
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-6 sm:mb-8 text-gray-900">
-            {campaign.title || 'HPE Networking Day'}
+            {campaign.title || 'HPE Networking in Motion'}
           </h1>
           
           <h2 className="text-lg sm:text-xl font-bold mb-4 text-gray-900">
@@ -479,27 +483,6 @@ export default function RegistrationPage({ campaign, baseUrl }: RegistrationPage
                   />
                 </div>
               </div>
-            </div>
-            
-            {/* 커스텀 질문 */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                새로워진 HPE Networking에 대한 궁금한 점을 남겨 주세요. 행사 당일 답변드립니다.
-              </label>
-              <textarea
-                value={customQuestion}
-                onChange={(e) => {
-                  setCustomQuestion(e.target.value)
-                  // 자동 높이 조절
-                  e.target.style.height = 'auto'
-                  e.target.style.height = `${e.target.scrollHeight}px`
-                }}
-                className="w-full px-4 py-2.5 border-b-2 border-gray-200 focus:border-[#00B388] outline-none transition-colors bg-white text-gray-900 text-base resize-none overflow-hidden"
-                placeholder="궁금한 점을 입력해주세요"
-                rows={1}
-                disabled={submitting}
-                style={{ minHeight: '2.5rem' }}
-              />
             </div>
             
             {/* 커뮤니케이션 동의 */}

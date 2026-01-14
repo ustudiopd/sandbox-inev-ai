@@ -19,8 +19,11 @@ export default function WelcomePage({ campaign, baseUrl, isDraft = false, campai
     : `${baseUrl}/event${campaign.public_path}/survey?lookup=true`
   
   // 헤더 이미지 URL - 등록 페이지는 사용자 제공 이미지 사용
+  // 445870 경로는 edm_header_1600_2.jpg 사용
   const headerImageUrl = isRegistration
-    ? 'https://yqsayphssjznthrxpgfb.supabase.co/storage/v1/object/public/webinar-thumbnails/edm_header_1600_1.jpg'
+    ? (campaign.public_path === '/445870' 
+        ? 'https://yqsayphssjznthrxpgfb.supabase.co/storage/v1/object/public/webinar-thumbnails/edm_header_1600_2.jpg'
+        : 'https://yqsayphssjznthrxpgfb.supabase.co/storage/v1/object/public/webinar-thumbnails/edm_header_1600_1.jpg')
     : 'https://yqsayphssjznthrxpgfb.supabase.co/storage/v1/object/public/webinar-thumbnails/hpe-booth-header.jpg'
   
   // welcome_schema에서 표시 옵션 읽기 (기본값: true)
@@ -52,7 +55,7 @@ export default function WelcomePage({ campaign, baseUrl, isDraft = false, campai
               />
               {/* 등록 페이지일 때 이미지 위에 등록하기 버튼 오버레이 (장소 텍스트 아래 위치) */}
               {isRegistration && (
-                <div className="absolute inset-0 flex items-end justify-center" style={{ paddingBottom: '8%' }}>
+                <div className="absolute inset-0 flex items-end justify-center" style={{ paddingBottom: 'calc(8% - 30px)' }}>
                   <button
                     onClick={handleRegistrationClick}
                     className="bg-[#00B388] text-white px-6 sm:px-8 py-2.5 sm:py-3 rounded-[2.5rem] text-base sm:text-lg md:text-xl font-bold shadow-2xl hover:bg-[#008f6d] transition-colors duration-200"
