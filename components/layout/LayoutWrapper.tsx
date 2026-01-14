@@ -59,6 +59,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
   
   // 사이드바를 숨겨야 하는 페이지: 공개 페이지, 공개 웨비나 페이지, /admin 페이지, 테스트 페이지, 설문조사 공개 페이지, 수신거부 페이지
   // 관리 웨비나 페이지(콘솔, 등록자, 통계)는 사이드바 표시
+  // 단, 일반 사용자(조직 멤버가 아닌 경우)는 사이드바 숨김
   if (isPublicPage || isPublicWebinarPage || isAdminPage || isTestPage || isSurveyPublicPage || isUnsubscribePage) {
     return <>{children}</>
   }
@@ -66,6 +67,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
   // 나머지 모든 페이지 (관리 페이지, 관리 웨비나 페이지 등)는 사이드바 표시
   // 사이드바가 fixed이므로 flex 레이아웃 불필요
   // 모바일에서는 사이드바가 숨겨지므로 marginLeft를 0으로 설정
+  // Sidebar 컴포넌트 내부에서 organizations 체크를 하므로 여기서는 항상 렌더링
   return (
     <>
       <Sidebar />

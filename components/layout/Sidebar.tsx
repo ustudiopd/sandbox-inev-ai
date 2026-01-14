@@ -91,6 +91,17 @@ export default function Sidebar() {
   const isSuperPage = pathname.includes('/super/')
   if (isPublicPage) return null
   
+  // 일반 사용자(조직 멤버가 아닌 경우)는 사이드바 숨김
+  // 슈퍼 어드민이 아니고, 에이전시/클라이언트 멤버도 아닌 경우
+  const hasNoOrganizations = !organizations || 
+    (!organizations.isSuperAdmin && 
+     (!organizations.agencies || organizations.agencies.length === 0) && 
+     (!organizations.clients || organizations.clients.length === 0))
+  
+  if (hasNoOrganizations) {
+    return null
+  }
+  
   return (
     <>
       {/* 데스크톱 사이드바 - 슈퍼 관리자 페이지는 제외 */}
