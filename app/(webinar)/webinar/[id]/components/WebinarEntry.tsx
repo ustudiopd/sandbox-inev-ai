@@ -103,31 +103,30 @@ export default function WebinarEntry({ webinar }: WebinarEntryProps) {
               return
             }
             
-            // 세션이 설정될 때까지 대기
-            await new Promise(resolve => setTimeout(resolve, 500))
+            // 세션이 설정될 때까지 최소 대기 (100ms로 단축)
+            await new Promise(resolve => setTimeout(resolve, 100))
             
-            // 웨비나 등록 확인 및 등록
-            const { data: { user } } = await supabase.auth.getUser()
-            if (user) {
-              const { data: registration } = await supabase
-                .from('registrations')
-                .select('webinar_id, user_id')
-                .eq('webinar_id', webinar.id)
-                .eq('user_id', user.id)
-                .maybeSingle()
-              
-              if (!registration) {
-                try {
-                  await fetch(`/api/webinars/${webinar.id}/register`, {
-                    method: 'POST',
+            // 웨비나 등록은 비동기로 처리 (await 제거하여 입장 속도 향상)
+            supabase.auth.getUser().then(({ data: { user } }) => {
+              if (user) {
+                supabase
+                  .from('registrations')
+                  .select('webinar_id, user_id')
+                  .eq('webinar_id', webinar.id)
+                  .eq('user_id', user.id)
+                  .maybeSingle()
+                  .then(({ data: registration }) => {
+                    if (!registration) {
+                      // 비동기로 등록 처리 (에러는 무시)
+                      fetch(`/api/webinars/${webinar.id}/register`, {
+                        method: 'POST',
+                      }).catch(() => {})
+                    }
                   })
-                } catch (error) {
-                  console.error('웨비나 등록 오류:', error)
-                }
               }
-            }
+            })
             
-            // slug 우선 사용하여 라이브 페이지로 이동
+            // slug 우선 사용하여 라이브 페이지로 즉시 이동
             window.location.href = `/webinar/${webinarPath}/live`
           }
         } catch (err: any) {
@@ -145,9 +144,9 @@ export default function WebinarEntry({ webinar }: WebinarEntryProps) {
       // 세션 확인 및 자동 로그인
       supabase.auth.getSession().then(async ({ data: { session } }) => {
         if (session) {
-          // 프로필이 생성될 때까지 대기
+          // 프로필 확인을 최적화 (최대 시도 10회, 간격 50ms로 단축)
           const checkProfile = async () => {
-            for (let i = 0; i < 50; i++) {
+            for (let i = 0; i < 10; i++) {
               const { data: profile } = await supabase
                 .from('profiles')
                 .select('id')
@@ -155,28 +154,26 @@ export default function WebinarEntry({ webinar }: WebinarEntryProps) {
                 .maybeSingle()
               
               if (profile) {
-                // 웨비나 등록 확인 및 등록
-                const { data: registration } = await supabase
+                // 웨비나 등록은 비동기로 처리
+                supabase
                   .from('registrations')
                   .select('webinar_id, user_id')
                   .eq('webinar_id', webinar.id)
                   .eq('user_id', session.user.id)
                   .maybeSingle()
-                
-                if (!registration) {
-                  try {
-                    await fetch(`/api/webinars/${webinar.id}/register`, {
-                      method: 'POST',
-                    })
-                  } catch (error) {
-                    console.error('웨비나 등록 오류:', error)
-                  }
-                }
+                  .then(({ data: registration }) => {
+                    if (!registration) {
+                      fetch(`/api/webinars/${webinar.id}/register`, {
+                        method: 'POST',
+                      }).catch(() => {})
+                    }
+                  })
                 
                 window.location.href = `/webinar/${webinar.id}/live`
                 return
               }
-              await new Promise(resolve => setTimeout(resolve, 100))
+              // 간격을 50ms로 단축
+              await new Promise(resolve => setTimeout(resolve, 50))
             }
             // 프로필이 없어도 진행 (트리거가 생성할 것)
             window.location.href = `/webinar/${webinar.id}/live`
@@ -258,37 +255,29 @@ export default function WebinarEntry({ webinar }: WebinarEntryProps) {
       
       // 로그인 성공 시 해당 웨비나에 등록되어 있는지 확인
       if (data.user) {
-        // 세션이 완전히 설정될 때까지 대기
-        await new Promise(resolve => setTimeout(resolve, 500))
+        // 세션이 설정될 때까지 최소 대기 (100ms로 단축)
+        await new Promise(resolve => setTimeout(resolve, 100))
         
-        // 웨비나 등록 확인
-        const { data: registration } = await supabase
+        // 웨비나 등록은 비동기로 처리 (await 제거하여 입장 속도 향상)
+        supabase
           .from('registrations')
           .select('webinar_id, user_id')
           .eq('webinar_id', webinar.id)
           .eq('user_id', data.user.id)
           .maybeSingle()
-        
-        // 등록되어 있지 않으면 등록 API 호출
-        if (!registration) {
-          try {
-            const registerResponse = await fetch(`/api/webinars/${webinar.id}/register`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                nickname: nickname.trim() || null,
-              }),
-            })
-            
-            if (!registerResponse.ok) {
-              console.warn('웨비나 자동 등록 실패:', registerResponse.status)
+          .then(({ data: registration }) => {
+            if (!registration) {
+              fetch(`/api/webinars/${webinar.id}/register`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  nickname: nickname.trim() || null,
+                }),
+              }).catch(() => {})
             }
-          } catch (registerError) {
-            console.error('웨비나 등록 요청 오류:', registerError)
-          }
-        }
+          })
         
-        // 웨비나 라이브 페이지로 직접 이동 (완전한 페이지 리다이렉트)
+        // 웨비나 라이브 페이지로 즉시 이동
         window.location.href = `/webinar/${webinar.id}/live`
       }
     } catch (err: any) {
@@ -360,10 +349,10 @@ export default function WebinarEntry({ webinar }: WebinarEntryProps) {
         
         // 로그인 성공 후 세션 확인
         if (signInData.user) {
-          // 세션이 설정될 때까지 잠시 대기
-          await new Promise(resolve => setTimeout(resolve, 500))
+          // 세션이 설정될 때까지 최소 대기 (100ms로 단축)
+          await new Promise(resolve => setTimeout(resolve, 100))
           
-          // 게스트 계정 생성 및 세션 설정 완료 후 라이브 페이지로 이동
+          // 게스트 계정 생성 및 세션 설정 완료 후 라이브 페이지로 즉시 이동
           window.location.href = `/webinar/${webinar.id}/live`
         } else {
           throw new Error('게스트 로그인 후 사용자 정보를 가져올 수 없습니다')
@@ -426,34 +415,31 @@ export default function WebinarEntry({ webinar }: WebinarEntryProps) {
           throw new Error('로그인에 실패했습니다')
         }
         
-        // 세션이 설정될 때까지 대기
-        await new Promise(resolve => setTimeout(resolve, 500))
+        // 세션이 설정될 때까지 최소 대기 (100ms로 단축)
+        await new Promise(resolve => setTimeout(resolve, 100))
         
-        // 웨비나 등록 확인 및 등록
+        // 웨비나 등록은 비동기로 처리 (await 제거하여 입장 속도 향상)
         if (signInData.user) {
-          const { data: registration } = await supabase
+          supabase
             .from('registrations')
             .select('webinar_id, user_id')
             .eq('webinar_id', webinar.id)
             .eq('user_id', signInData.user.id)
             .maybeSingle()
-          
-          if (!registration) {
-            try {
-              await fetch(`/api/webinars/${webinar.id}/register`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  nickname: nickname.trim() || null,
-                }),
-              })
-            } catch (registerError) {
-              console.error('웨비나 등록 요청 오류:', registerError)
-            }
-          }
+            .then(({ data: registration }) => {
+              if (!registration) {
+                fetch(`/api/webinars/${webinar.id}/register`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    nickname: nickname.trim() || null,
+                  }),
+                }).catch(() => {})
+              }
+            })
         }
         
-        // 웨비나 라이브 페이지로 이동
+        // 웨비나 라이브 페이지로 즉시 이동
         window.location.href = `/webinar/${webinar.id}/live`
       } else {
         throw new Error('로그인 정보를 받지 못했습니다')
