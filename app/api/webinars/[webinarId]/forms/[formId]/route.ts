@@ -235,11 +235,31 @@ export async function GET(
       })
     }
     
+    // options를 JSON에서 파싱 (JSONB가 문자열로 반환될 수 있음)
+    const parsedQuestions = (questions || []).map((q: any) => {
+      let parsedOptions = q.options
+      if (q.options) {
+        // options가 문자열이면 JSON 파싱
+        if (typeof q.options === 'string') {
+          try {
+            parsedOptions = JSON.parse(q.options)
+          } catch (e) {
+            console.warn('Failed to parse options JSON:', e)
+            parsedOptions = null
+          }
+        }
+      }
+      return {
+        ...q,
+        options: parsedOptions,
+      }
+    })
+    
     return NextResponse.json({
       success: true,
       form: {
         ...form,
-        questions: questions || [],
+        questions: parsedQuestions,
         isSubmitted, // 제출 여부 포함
       },
       // 퀴즈이고 이미 제출한 경우 정답 정보 포함

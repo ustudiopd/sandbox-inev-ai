@@ -68,7 +68,27 @@ export default function FormWidget({
           throw new Error(result.error || '폼을 불러올 수 없습니다')
         }
 
-        setForm(result.form)
+        // options가 문자열인 경우 JSON 파싱 (이중 방어)
+        const formWithParsedOptions = {
+          ...result.form,
+          questions: result.form.questions?.map((q: any) => {
+            let parsedOptions = q.options
+            if (q.options && typeof q.options === 'string') {
+              try {
+                parsedOptions = JSON.parse(q.options)
+              } catch (e) {
+                console.warn('Failed to parse options JSON in FormWidget:', e)
+                parsedOptions = null
+              }
+            }
+            return {
+              ...q,
+              options: parsedOptions,
+            }
+          }) || [],
+        }
+        
+        setForm(formWithParsedOptions)
         
         // 퀴즈이고 시간 제한이 있으면 타이머 시작
         if (result.form.kind === 'quiz' && result.form.time_limit_sec) {
@@ -402,7 +422,7 @@ export default function FormWidget({
             </div>
 
             {/* 단일 선택 */}
-            {question.type === 'single' && question.options && question.options.length > 0 && (
+            {question.type === 'single' && question.options && Array.isArray(question.options) && question.options.length > 0 && (
               <div className="space-y-2 mt-3">
                 {question.options.map((option, optIndex) => {
                   // options가 객체 배열인 경우 { id, text } 형태
@@ -462,7 +482,7 @@ export default function FormWidget({
             )}
 
             {/* 다중 선택 */}
-            {question.type === 'multiple' && question.options && question.options.length > 0 && (
+            {question.type === 'multiple' && question.options && Array.isArray(question.options) && question.options.length > 0 && (
               <div className="space-y-2 mt-3">
                 {question.options.map((option, optIndex) => {
                   // options가 객체 배열인 경우 { id, text } 형태
