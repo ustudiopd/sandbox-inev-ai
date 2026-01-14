@@ -293,12 +293,14 @@ export default function SidebarTree({ organizations }: SidebarTreeProps) {
                 }
               ] : (() => {
                 // 해당 클라이언트의 멤버인지 확인
-                const isClientMember = organizations?.isSuperAdmin || 
-                  (organizations?.clients && organizations.clients.some(c => c.id === client.id))
+                // 슈퍼 어드민이거나, 직접 클라이언트 멤버이고 viewer가 아닌 경우에만 관리자 메뉴 표시
+                const clientMember = organizations?.clients?.find(c => c.id === client.id)
+                const isAdmin = organizations?.isSuperAdmin || 
+                  (clientMember && clientMember.role !== 'viewer')
                 
                 const adminMenuItems: TreeNode[] = []
                 
-                if (isClientMember) {
+                if (isAdmin) {
                   adminMenuItems.push(
                     {
                       id: `webinar-${event.id}-console`,
