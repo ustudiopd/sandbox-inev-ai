@@ -33,17 +33,84 @@ export async function GET(
       .eq('id', webinarId)
       .single()
 
-    // 현재 접속자 수 조회 (webinar_live_presence에서 실시간 조회)
+    // 현재 접속자 수 및 목록 조회 (webinar_live_presence에서 실시간 조회)
     // 활성 기준: last_seen_at >= now() - 3 minutes
     const activeSince = new Date(Date.now() - 3 * 60 * 1000).toISOString()
-    const { count: currentParticipants, error: presenceError } = await admin
+    
+    // 현재 접속자 presence 조회
+    const { data: activePresences, error: presenceError } = await admin
       .from('webinar_live_presence')
-      .select('*', { count: 'exact', head: true })
+      .select('user_id, last_seen_at, joined_at')
       .eq('webinar_id', webinarId)
       .gte('last_seen_at', activeSince)
+      .order('last_seen_at', { ascending: false })
 
     if (presenceError) {
       console.error('[Stats Access] 현재 접속자 조회 실패:', presenceError)
+    }
+
+    // 현재 접속자 수
+    const currentParticipants = activePresences?.length || 0
+
+    // 현재 접속자 목록 가공 (profiles, registrations 별도 조회)
+    let currentParticipantList: Array<{
+      userId: string
+      displayName: string
+      email: string | null
+      role: string | null
+      lastSeenAt: string
+      joinedAt: string
+    }> = []
+
+    if (activePresences && activePresences.length > 0) {
+      const userIds = activePresences.map((p: any) => p.user_id)
+
+      // profiles와 registrations 병렬 조회
+      const [profilesResult, registrationsResult] = await Promise.all([
+        admin
+          .from('profiles')
+          .select('id, display_name, email, nickname')
+          .in('id', userIds),
+        admin
+          .from('registrations')
+          .select('user_id, nickname, role')
+          .eq('webinar_id', webinarId)
+          .in('user_id', userIds),
+      ])
+
+      const profilesMap = new Map(
+        (profilesResult.data || []).map((p: any) => [p.id, p])
+      )
+      const registrationsMap = new Map(
+        (registrationsResult.data || []).map((r: any) => [r.user_id, r])
+      )
+
+      // presence 데이터와 매핑
+      currentParticipantList = activePresences.map((presence: any) => {
+        const profile = profilesMap.get(presence.user_id)
+        const registration = registrationsMap.get(presence.user_id)
+
+        // displayName 결정: registrations.nickname > profiles.nickname > display_name > email > '익명'
+        let displayName = '익명'
+        if (registration?.nickname) {
+          displayName = registration.nickname
+        } else if (profile?.nickname) {
+          displayName = profile.nickname
+        } else if (profile?.display_name) {
+          displayName = profile.display_name
+        } else if (profile?.email) {
+          displayName = profile.email
+        }
+
+        return {
+          userId: presence.user_id,
+          displayName,
+          email: profile?.email || null,
+          role: registration?.role || null,
+          lastSeenAt: presence.last_seen_at,
+          joinedAt: presence.joined_at,
+        }
+      })
     }
 
     // 쿼리 파라미터 파싱
@@ -103,6 +170,7 @@ export async function GET(
       success: true,
       data: {
         currentParticipants: currentParticipants || 0, // 실시간 현재 접속자 수
+        currentParticipantList, // 현재 접속 중인 참여자 목록
         maxConcurrentParticipants,
         avgConcurrentParticipants: Math.round(avgConcurrentParticipants * 100) / 100,
         timeline,
