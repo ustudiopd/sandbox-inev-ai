@@ -37,6 +37,12 @@ export async function GET(
     // 활성 기준: last_seen_at >= now() - 3 minutes
     const activeSince = new Date(Date.now() - 3 * 60 * 1000).toISOString()
     
+    console.log('[Stats Access] 현재 접속자 조회 시작:', {
+      webinarId,
+      activeSince,
+      now: new Date().toISOString(),
+    })
+    
     // 현재 접속자 presence 조회
     const { data: activePresences, error: presenceError } = await admin
       .from('webinar_live_presence')
@@ -44,6 +50,12 @@ export async function GET(
       .eq('webinar_id', webinarId)
       .gte('last_seen_at', activeSince)
       .order('last_seen_at', { ascending: false })
+
+    console.log('[Stats Access] 현재 접속자 조회 결과:', {
+      count: activePresences?.length || 0,
+      presences: activePresences,
+      error: presenceError,
+    })
 
     if (presenceError) {
       console.error('[Stats Access] 현재 접속자 조회 실패:', presenceError)

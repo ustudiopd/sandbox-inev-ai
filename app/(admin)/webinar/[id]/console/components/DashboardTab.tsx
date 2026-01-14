@@ -100,6 +100,9 @@ export default function DashboardTab({ webinarId, webinarSlug }: DashboardTabPro
       const result = await response.json()
 
       if (result.success) {
+        console.log('[DashboardTab] 통계 데이터:', result.data)
+        console.log('[DashboardTab] 현재 접속자:', result.data?.access?.currentParticipants)
+        console.log('[DashboardTab] 현재 접속자 목록:', result.data?.access?.currentParticipantList)
         setStats(result.data)
       } else {
         setError(result.error || '통계 조회 실패')
@@ -288,16 +291,15 @@ export default function DashboardTab({ webinarId, webinarSlug }: DashboardTabPro
       )}
 
       {/* 현재 접속 중인 참여자 목록 - 별도 섹션으로 분리 */}
-      {stats.access && (
-        <div className="bg-white rounded-xl shadow-md p-6 mb-6">
-          <h3 className="text-lg font-semibold mb-4">현재 접속 중인 참여자</h3>
-          <div className="mb-4">
-            <div className="text-3xl font-bold text-green-600">
-              {stats.access.currentParticipants !== undefined ? stats.access.currentParticipants : 0}명
-            </div>
+      <div className="bg-white rounded-xl shadow-md p-6 mb-6">
+        <h3 className="text-lg font-semibold mb-4">현재 접속 중인 참여자</h3>
+        <div className="mb-4">
+          <div className="text-3xl font-bold text-green-600">
+            {stats.access?.currentParticipants !== undefined ? stats.access.currentParticipants : 0}명
           </div>
-          
-          {stats.access.currentParticipantList && stats.access.currentParticipantList.length > 0 ? (
+        </div>
+        
+        {stats.access?.currentParticipantList && stats.access.currentParticipantList.length > 0 ? (
             <div className="max-h-64 overflow-y-auto border border-gray-200 rounded-lg">
               <table className="w-full text-sm">
                 <thead className="bg-gray-50 sticky top-0">
@@ -340,11 +342,10 @@ export default function DashboardTab({ webinarId, webinarSlug }: DashboardTabPro
             </div>
           ) : (
             <div className="text-center py-8 text-gray-500">
-              현재 접속 중인 참여자가 없습니다.
+              {stats.access ? '현재 접속 중인 참여자가 없습니다.' : '접속 정보를 불러오는 중...'}
             </div>
           )}
-        </div>
-      )}
+      </div>
 
       {/* 접속 통계 (타임라인) */}
       {stats.access && accessTimelineData.length > 0 && (
