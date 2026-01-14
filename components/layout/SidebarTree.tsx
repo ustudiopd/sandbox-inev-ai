@@ -291,32 +291,44 @@ export default function SidebarTree({ organizations }: SidebarTreeProps) {
                   icon: '🎛️',
                   active: pathname.includes(`/client/${client.id}/surveys/${event.id}`)
                 }
-              ] : [
-                {
-                  id: `webinar-${event.id}-console`,
-                  label: '운영 콘솔',
-                  type: 'page',
-                  href: `/webinar/${event.slug || event.id}/console`,
-                  icon: '🎛️',
-                  active: pathname.includes(`/webinar/${event.slug || event.id}/console`)
-                },
-                {
-                  id: `webinar-${event.id}-registrants`,
-                  label: '등록자',
-                  type: 'page',
-                  href: `/webinar/${event.slug || event.id}/registrants`,
-                  icon: '👥',
-                  active: pathname.includes(`/webinar/${event.slug || event.id}/registrants`)
-                },
-                {
-                  id: `webinar-${event.id}-stats`,
-                  label: '통계',
-                  type: 'page',
-                  href: `/webinar/${event.slug || event.id}/stats`,
-                  icon: '📊',
-                  active: pathname.includes(`/webinar/${event.slug || event.id}/stats`)
+              ] : (() => {
+                // 해당 클라이언트의 멤버인지 확인
+                const isClientMember = organizations?.isSuperAdmin || 
+                  (organizations?.clients && organizations.clients.some(c => c.id === client.id))
+                
+                const adminMenuItems: TreeNode[] = []
+                
+                if (isClientMember) {
+                  adminMenuItems.push(
+                    {
+                      id: `webinar-${event.id}-console`,
+                      label: '운영 콘솔',
+                      type: 'page',
+                      href: `/webinar/${event.slug || event.id}/console`,
+                      icon: '🎛️',
+                      active: pathname.includes(`/webinar/${event.slug || event.id}/console`)
+                    },
+                    {
+                      id: `webinar-${event.id}-registrants`,
+                      label: '등록자',
+                      type: 'page',
+                      href: `/webinar/${event.slug || event.id}/registrants`,
+                      icon: '👥',
+                      active: pathname.includes(`/webinar/${event.slug || event.id}/registrants`)
+                    },
+                    {
+                      id: `webinar-${event.id}-stats`,
+                      label: '통계',
+                      type: 'page',
+                      href: `/webinar/${event.slug || event.id}/stats`,
+                      icon: '📊',
+                      active: pathname.includes(`/webinar/${event.slug || event.id}/stats`)
+                    }
+                  )
                 }
-              ]
+                
+                return adminMenuItems
+              })()
             }
             clientNode.children!.push(eventNode)
           })
@@ -380,32 +392,44 @@ export default function SidebarTree({ organizations }: SidebarTreeProps) {
                     icon: '🎛️',
                     active: pathname.includes(`/client/${client.id}/surveys/${event.id}`)
                   }
-                ] : [
-                  {
-                    id: `webinar-${event.id}-console`,
-                    label: '운영 콘솔',
-                    type: 'page',
-                    href: `/webinar/${event.slug || event.id}/console`,
-                    icon: '🎛️',
-                    active: pathname.includes(`/webinar/${event.slug || event.id}/console`)
-                  },
-                  {
-                    id: `webinar-${event.id}-registrants`,
-                    label: '등록자',
-                    type: 'page',
-                    href: `/webinar/${event.slug || event.id}/registrants`,
-                    icon: '👥',
-                    active: pathname.includes(`/webinar/${event.slug || event.id}/registrants`)
-                  },
-                  {
-                    id: `webinar-${event.id}-stats`,
-                    label: '통계',
-                    type: 'page',
-                    href: `/webinar/${event.slug || event.id}/stats`,
-                    icon: '📊',
-                    active: pathname.includes(`/webinar/${event.slug || event.id}/stats`)
+                ] : (() => {
+                  // 해당 클라이언트의 멤버인지 확인
+                  const isClientMember = organizations?.isSuperAdmin || 
+                    (organizations?.clients && organizations.clients.some(c => c.id === client.id))
+                  
+                  const adminMenuItems: TreeNode[] = []
+                  
+                  if (isClientMember) {
+                    adminMenuItems.push(
+                      {
+                        id: `webinar-${event.id}-console`,
+                        label: '운영 콘솔',
+                        type: 'page',
+                        href: `/webinar/${event.slug || event.id}/console`,
+                        icon: '🎛️',
+                        active: pathname.includes(`/webinar/${event.slug || event.id}/console`)
+                      },
+                      {
+                        id: `webinar-${event.id}-registrants`,
+                        label: '등록자',
+                        type: 'page',
+                        href: `/webinar/${event.slug || event.id}/registrants`,
+                        icon: '👥',
+                        active: pathname.includes(`/webinar/${event.slug || event.id}/registrants`)
+                      },
+                      {
+                        id: `webinar-${event.id}-stats`,
+                        label: '통계',
+                        type: 'page',
+                        href: `/webinar/${event.slug || event.id}/stats`,
+                        icon: '📊',
+                        active: pathname.includes(`/webinar/${event.slug || event.id}/stats`)
+                      }
+                    )
                   }
-                ]
+                  
+                  return adminMenuItems
+                })()
               }
               clientNode.children!.push(eventNode)
             })
