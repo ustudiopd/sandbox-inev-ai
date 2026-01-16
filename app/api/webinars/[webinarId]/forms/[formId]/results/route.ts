@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createAdminSupabase } from '@/lib/supabase/admin'
 import { createServerSupabase } from '@/lib/supabase/server'
 import { requireAuth } from '@/lib/auth/guards'
+import { getWebinarQuery } from '@/lib/utils/webinar'
 
 export const runtime = 'nodejs'
 
@@ -16,12 +17,35 @@ export async function GET(
     const supabase = await createServerSupabase()
     const admin = createAdminSupabase()
     
-    // 폼 조회
+    // UUID 또는 slug로 웨비나 조회
+    const query = getWebinarQuery(webinarId)
+    
+    // 웨비나 조회 (client_id, agency_id 확인용)
+    let webinarQuery = admin
+      .from('webinars')
+      .select('id, client_id, agency_id')
+    
+    if (query.column === 'slug') {
+      webinarQuery = webinarQuery.eq('slug', String(query.value)).not('slug', 'is', null)
+    } else {
+      webinarQuery = webinarQuery.eq(query.column, query.value)
+    }
+    
+    const { data: webinar, error: webinarError } = await webinarQuery.single()
+    
+    if (webinarError || !webinar) {
+      return NextResponse.json(
+        { error: 'Webinar not found' },
+        { status: 404 }
+      )
+    }
+    
+    // 폼 조회 (웨비나 ID는 실제 UUID 사용)
     const { data: form, error: formError } = await admin
       .from('forms')
       .select('*')
       .eq('id', formId)
-      .eq('webinar_id', webinarId)
+      .eq('webinar_id', webinar.id)
       .single()
     
     if (formError || !form) {
@@ -32,6 +56,10 @@ export async function GET(
     }
     
     // 권한 확인 (운영자만 - 클라이언트 operator 이상 또는 에이전시 owner/admin)
+    // form.client_id가 없으면 웨비나의 client_id 사용
+    const clientId = form.client_id || webinar.client_id
+    const agencyId = form.agency_id || webinar.agency_id
+    
     const { data: profile } = await supabase
       .from('profiles')
       .select('is_super_admin')
@@ -44,28 +72,30 @@ export async function GET(
       hasPermission = true
     } else {
       // 클라이언트 멤버십 확인
-      const { data: clientMember } = await supabase
-        .from('client_members')
-        .select('role')
-        .eq('client_id', form.client_id)
-        .eq('user_id', user.id)
-        .maybeSingle()
+      if (clientId) {
+        const { data: clientMember } = await supabase
+          .from('client_members')
+          .select('role')
+          .eq('client_id', clientId)
+          .eq('user_id', user.id)
+          .maybeSingle()
+        
+        if (clientMember && ['owner', 'admin', 'operator', 'analyst'].includes(clientMember.role)) {
+          hasPermission = true
+        }
+      }
       
-      if (clientMember && ['owner', 'admin', 'operator', 'analyst'].includes(clientMember.role)) {
-        hasPermission = true
-      } else {
-        // 에이전시 멤버십 확인 (owner/admin만 결과 조회 가능)
-        if (form.agency_id) {
-          const { data: agencyMember } = await supabase
-            .from('agency_members')
-            .select('role')
-            .eq('agency_id', form.agency_id)
-            .eq('user_id', user.id)
-            .maybeSingle()
-          
-          if (agencyMember && ['owner', 'admin'].includes(agencyMember.role)) {
-            hasPermission = true
-          }
+      // 에이전시 멤버십 확인 (owner/admin만 결과 조회 가능)
+      if (!hasPermission && agencyId) {
+        const { data: agencyMember } = await supabase
+          .from('agency_members')
+          .select('role')
+          .eq('agency_id', agencyId)
+          .eq('user_id', user.id)
+          .maybeSingle()
+        
+        if (agencyMember && ['owner', 'admin'].includes(agencyMember.role)) {
+          hasPermission = true
         }
       }
     }
@@ -117,10 +147,43 @@ export async function GET(
         // 설문 통계 (선택지별 분포)
         if (q.type !== 'text' && q.options) {
           const choiceDistribution: Record<string, number> = {}
-          q.options.forEach((opt: any) => {
-            choiceDistribution[opt.id] = 0
+          
+          // options가 배열인지 확인하고 배열로 변환
+          let optionsArray: Array<{ id: string; text?: string }> = []
+          
+          if (Array.isArray(q.options)) {
+            optionsArray = q.options
+          } else if (typeof q.options === 'string') {
+            // 문자열인 경우 JSON 파싱 시도
+            try {
+              const parsed = JSON.parse(q.options)
+              optionsArray = Array.isArray(parsed) ? parsed : []
+            } catch (e) {
+              console.warn('[results] options JSON 파싱 실패:', e)
+              optionsArray = []
+            }
+          } else if (typeof q.options === 'object' && q.options !== null) {
+            // 객체인 경우 배열로 변환 시도
+            if ('id' in q.options || 'text' in q.options) {
+              // 단일 옵션 객체
+              optionsArray = [q.options as { id: string; text?: string }]
+            } else {
+              // 객체의 키-값 쌍을 옵션으로 변환
+              optionsArray = Object.entries(q.options).map(([key, value]) => ({
+                id: key,
+                text: String(value),
+              }))
+            }
+          }
+          
+          // 선택지별 분포 초기화
+          optionsArray.forEach((opt: any) => {
+            if (opt && opt.id) {
+              choiceDistribution[opt.id] = 0
+            }
           })
           
+          // 답변별로 선택지 카운트
           answers?.forEach((a: any) => {
             if (a.choice_ids && Array.isArray(a.choice_ids)) {
               a.choice_ids.forEach((choiceId: string) => {

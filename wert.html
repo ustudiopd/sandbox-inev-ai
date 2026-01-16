@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wert Tech Summit 26</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+        
+        :root {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #fff;
+            color: #1a1a1a;
+        }
+
+        /* Hero Section */
+        .hero-section {
+            background: linear-gradient(135deg, #4da8da 0%, #46cdcf 50%, #b3e5fc 100%);
+            height: 100vh;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding-left: 8%;
+            position: relative;
+        }
+
+        .main-title {
+            font-size: clamp(3rem, 12vw, 8rem);
+            line-height: 0.9;
+            letter-spacing: -0.05em;
+            color: #000;
+            text-transform: uppercase;
+            font-weight: 900;
+        }
+
+        .sub-title {
+            font-size: clamp(1.5rem, 4vw, 3rem);
+            margin-top: 1.5rem;
+            font-weight: 700;
+            color: #000;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .logo-container {
+            position: absolute;
+            top: 5%;
+            right: 5%;
+            width: 150px;
+        }
+
+        /* Common Section Styles */
+        section {
+            padding: 100px 8%;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .section-label {
+            text-transform: uppercase;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            color: #4da8da;
+            margin-bottom: 20px;
+            display: block;
+        }
+
+        .section-title {
+            font-size: clamp(2rem, 5vw, 3.5rem);
+            font-weight: 900;
+            margin-bottom: 60px;
+            letter-spacing: -0.02em;
+        }
+
+        /* Program List */
+        .program-item {
+            display: grid;
+            grid-template-columns: 150px 1fr;
+            padding: 30px 0;
+            border-top: 1px solid #eee;
+            gap: 20px;
+        }
+
+        .program-time {
+            font-weight: 700;
+            color: #4da8da;
+            font-size: 1.1rem;
+        }
+
+        .program-content h4 {
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .program-content p {
+            color: #666;
+            font-size: 1.05rem;
+        }
+
+        /* Speaker Grid */
+        .speaker-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 40px;
+        }
+
+        .speaker-card img {
+            width: 100%;
+            aspect-ratio: 1/1;
+            object-fit: cover;
+            background-color: #f7f7f7;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+
+        .speaker-info h4 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .speaker-info p {
+            color: #888;
+            font-size: 0.95rem;
+        }
+
+        /* Footer/Venue */
+        .venue-info {
+            background-color: #fafafa;
+            border-radius: 12px;
+            padding: 40px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 40px;
+        }
+
+        .info-block h5 {
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: #4da8da;
+        }
+
+        .scroll-down {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            animation: bounce 2s infinite;
+            cursor: pointer;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {transform: translateY(0) translateX(-50%);}
+            40% {transform: translateY(-10px) translateX(-50%);}
+            60% {transform: translateY(-5px) translateX(-50%);}
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Hero Section -->
+    <section class="hero-section p-0">
+        <div class="logo-container">
+            <img src="https://via.placeholder.com/150x50?text=WERT+LOGO" alt="Wert Logo" class="w-full h-auto">
+        </div>
+
+        <div class="content pl-[8%]">
+            <h1 class="main-title">
+                WERT TECH<br>
+                SUMMIT 26
+            </h1>
+            <div class="sub-title">
+                IP DATA <span class="text-2xl opacity-70">✕</span> AI
+            </div>
+        </div>
+
+        <div class="scroll-down" onclick="document.getElementById('about').scrollIntoView()">
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M7 13l5 5 5-5M7 6l5 5 5-5"/>
+            </svg>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about">
+        <span class="section-label">Overview</span>
+        <h2 class="section-title">국내 최초 IP 데이터 X 버티컬 AI<br>비즈니스 기술 전략 써밋</h2>
+        <p class="text-xl text-gray-600 max-w-3xl leading-relaxed">
+            단순한 기술 공유를 넘어 실제 기업 현장에서 AI가 어떻게 전략화되고 의사결정에 활용되는지, 글로벌 테크 리더들과 함께 그 실체를 공개합니다.
+        </p>
+    </section>
+
+    <!-- Speakers Section -->
+    <section id="speakers">
+        <span class="section-label">Speakers</span>
+        <h2 class="section-title">Lineup</h2>
+        <div class="speaker-grid">
+            <div class="speaker-card">
+                <img src="https://via.placeholder.com/400x400?text=유은성" alt="유은성 상무">
+                <div class="speaker-info">
+                    <h4>유은성</h4>
+                    <p>Qualcomm 상무</p>
+                </div>
+            </div>
+            <div class="speaker-card">
+                <img src="https://via.placeholder.com/400x400?text=김경훈" alt="김경훈 부문장">
+                <div class="speaker-info">
+                    <h4>김경훈</h4>
+                    <p>Kakao AI 부문장</p>
+                </div>
+            </div>
+            <div class="speaker-card">
+                <img src="https://via.placeholder.com/400x400?text=정현기" alt="정현기 총괄">
+                <div class="speaker-info">
+                    <h4>정현기</h4>
+                    <p>AWS 기술총괄</p>
+                </div>
+            </div>
+            <div class="speaker-card">
+                <img src="https://via.placeholder.com/400x400?text=윤정호" alt="윤정호 대표">
+                <div class="speaker-info">
+                    <h4>윤정호</h4>
+                    <p>워트인텔리전스 대표</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Program Section -->
+    <section id="program">
+        <span class="section-label">Timeline</span>
+        <h2 class="section-title">Program</h2>
+        <div class="program-list">
+            <div class="program-item">
+                <div class="program-time">10:00 - 10:10</div>
+                <div class="program-content">
+                    <h4>Opening</h4>
+                    <p>WERT TECH SUMMIT 26 개회 선언</p>
+                </div>
+            </div>
+            <div class="program-item">
+                <div class="program-time">10:10 - 10:50</div>
+                <div class="program-content">
+                    <h4>Keynote: Vertical AI</h4>
+                    <p>글로벌 리더십을 재편하는 게임 체인저 '버티컬 AI' | 퀄컴 유은성 상무</p>
+                </div>
+            </div>
+            <div class="program-item">
+                <div class="program-time">10:50 - 11:30</div>
+                <div class="program-content">
+                    <h4>AI Data Strategy</h4>
+                    <p>기업 경쟁력을 결정짓는 AI 데이터 전략 | 카카오 김경훈 부문장</p>
+                </div>
+            </div>
+            <div class="program-item">
+                <div class="program-time">11:30 - 12:10</div>
+                <div class="program-content">
+                    <h4>AX Transformation</h4>
+                    <p>의사결정권자들이 선택한 기술 데이터 기반 AX 전략 | AWS 정현기 총괄</p>
+                </div>
+            </div>
+            <div class="program-item">
+                <div class="program-time">12:10 - 13:30</div>
+                <div class="program-content">
+                    <h4>Lunch Break</h4>
+                    <p>점심 식사 및 네트워킹</p>
+                </div>
+            </div>
+            <div class="program-item">
+                <div class="program-time">13:30 - 14:10</div>
+                <div class="program-content">
+                    <h4>Global Tech Trend 2030</h4>
+                    <p>데이터로 미리보는 2030년 글로벌 기술 트렌드 | 워트인텔리전스 윤정호 대표</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Venue Section -->
+    <section id="venue">
+        <span class="section-label">Location</span>
+        <h2 class="section-title">Venue</h2>
+        <div class="venue-info">
+            <div class="info-block">
+                <h5>장소</h5>
+                <p>GS타워 아모리스 역삼 (서울 강남구 테헤란로 508)</p>
+            </div>
+            <div class="info-block">
+                <h5>문의</h5>
+                <p>connect@wert.co.kr | 02-521-0110</p>
+            </div>
+            <div class="info-block">
+                <h5>비고</h5>
+                <p>오프라인 현장 참여 및 온라인 라이브 동시 진행</p>
+            </div>
+        </div>
+    </section>
+
+    <footer class="py-20 px-[8%] text-gray-400 text-sm flex justify-between items-center">
+        <p>&copy; 2026 WERT Intelligence. All rights reserved.</p>
+        <div class="flex gap-6">
+            <a href="#" class="hover:text-black transition-colors">Privacy Policy</a>
+            <a href="#" class="hover:text-black transition-colors">Terms of Service</a>
+        </div>
+    </footer>
+
+</body>
+</html>

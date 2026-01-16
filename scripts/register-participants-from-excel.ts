@@ -11,6 +11,7 @@ import { join } from 'path'
 import dotenv from 'dotenv'
 import { createAdminSupabase } from '@/lib/supabase/admin'
 import { sendWebinarRegistrationEmail } from '@/lib/email'
+import { getWebinarIdFromIdOrSlug } from '@/lib/utils/webinar-query'
 
 // .env.local 파일 로드
 dotenv.config({ path: '.env.local' })
@@ -45,48 +46,74 @@ function readParticipantsFromExcel(filePath: string): Participant[] {
     throw new Error('Excel 파일이 비어있습니다.')
   }
   
-  // 헤더 행 찾기 (이메일, 이름 컬럼 찾기)
-  const headerRow = data[0]
+  // 처음 몇 행 출력 (디버깅용)
+  console.log('\n📋 엑셀 파일 처음 5행:')
+  for (let i = 0; i < Math.min(5, data.length); i++) {
+    console.log(`   행 ${i + 1}:`, data[i])
+  }
+  console.log('')
+  
+  // 헤더 행 찾기 (이메일, 이름 컬럼이 있는 행 찾기)
+  let headerRowIndex = -1
   let emailColIndex = -1
   let nameColIndex = -1
   let nicknameColIndex = -1
   
   // 컬럼 이름 패턴 매칭 (다양한 형식 지원)
-  const emailPatterns = ['이메일', 'email', 'e-mail', '메일', 'mail', '이메일주소', '이메일 주소']
-  const namePatterns = ['이름', 'name', '성명', '닉네임', 'nickname', '참가자명']
+  const emailPatterns = ['이메일', 'email', 'e-mail', '메일', 'mail', '이메일주소', '이메일 주소', 'e-mail주소', 'e-mail 주소']
+  const namePatterns = ['이름', 'name', '성명', '닉네임', 'nickname', '참가자명', '성함', '참가자', '참석자']
   const nicknamePatterns = ['닉네임', 'nickname', '별명', '별칭']
   
-  headerRow.forEach((cell: any, index: number) => {
-    const cellValue = String(cell || '').toLowerCase().trim()
+  // 처음 10행까지 헤더 찾기
+  for (let rowIndex = 0; rowIndex < Math.min(10, data.length); rowIndex++) {
+    const row = data[rowIndex]
+    let foundEmail = false
+    let foundName = false
     
-    if (emailColIndex === -1 && emailPatterns.some(pattern => cellValue.includes(pattern.toLowerCase()))) {
-      emailColIndex = index
-      console.log(`✓ 이메일 컬럼 발견: ${cell} (인덱스 ${index})`)
-    }
+    row.forEach((cell: any, colIndex: number) => {
+      const cellValue = String(cell || '').toLowerCase().trim()
+      
+      if (!foundEmail && emailPatterns.some(pattern => cellValue.includes(pattern.toLowerCase()))) {
+        emailColIndex = colIndex
+        foundEmail = true
+      }
+      
+      if (!foundName && namePatterns.some(pattern => cellValue.includes(pattern.toLowerCase()))) {
+        nameColIndex = colIndex
+        foundName = true
+      }
+      
+      if (nicknameColIndex === -1 && nicknamePatterns.some(pattern => cellValue.includes(pattern.toLowerCase()))) {
+        nicknameColIndex = colIndex
+      }
+    })
     
-    if (nameColIndex === -1 && namePatterns.some(pattern => cellValue.includes(pattern.toLowerCase()))) {
-      nameColIndex = index
-      console.log(`✓ 이름 컬럼 발견: ${cell} (인덱스 ${index})`)
+    // 이메일과 이름 컬럼을 모두 찾으면 헤더 행으로 인식
+    if (foundEmail && foundName) {
+      headerRowIndex = rowIndex
+      console.log(`✓ 헤더 행 발견: 행 ${rowIndex + 1}`)
+      console.log(`   - 이메일 컬럼: [${emailColIndex}] ${row[emailColIndex]}`)
+      console.log(`   - 이름 컬럼: [${nameColIndex}] ${row[nameColIndex]}`)
+      if (nicknameColIndex >= 0) {
+        console.log(`   - 닉네임 컬럼: [${nicknameColIndex}] ${row[nicknameColIndex]}`)
+      }
+      console.log('')
+      break
     }
-    
-    if (nicknameColIndex === -1 && nicknamePatterns.some(pattern => cellValue.includes(pattern.toLowerCase()))) {
-      nicknameColIndex = index
-      console.log(`✓ 닉네임 컬럼 발견: ${cell} (인덱스 ${index})`)
-    }
-  })
-  
-  if (emailColIndex === -1) {
-    throw new Error('이메일 컬럼을 찾을 수 없습니다. 헤더 행에 "이메일" 또는 "email" 컬럼이 있어야 합니다.')
   }
   
-  if (nameColIndex === -1) {
-    throw new Error('이름 컬럼을 찾을 수 없습니다. 헤더 행에 "이름" 또는 "name" 컬럼이 있어야 합니다.')
+  if (headerRowIndex === -1 || emailColIndex === -1 || nameColIndex === -1) {
+    console.error('\n❌ 헤더 행을 찾을 수 없습니다.')
+    console.error('이메일과 이름 컬럼을 모두 포함하는 행이 필요합니다.')
+    throw new Error('헤더 행을 찾을 수 없습니다. 이메일과 이름 컬럼이 있는 행을 확인해주세요.')
   }
   
-  // 데이터 행 파싱
+  const headerRow = data[headerRowIndex]
+  
+  // 데이터 행 파싱 (헤더 행 다음부터)
   const participants: Participant[] = []
   
-  for (let i = 1; i < data.length; i++) {
+  for (let i = headerRowIndex + 1; i < data.length; i++) {
     const row = data[i]
     const email = String(row[emailColIndex] || '').trim()
     const name = String(row[nameColIndex] || '').trim()
@@ -111,19 +138,26 @@ function readParticipantsFromExcel(filePath: string): Participant[] {
 }
 
 /**
- * 웨비나 정보 확인
+ * 웨비나 정보 확인 (UUID 또는 slug 지원)
  */
-async function verifyWebinar(webinarId: string) {
+async function verifyWebinar(webinarIdOrSlug: string) {
   const admin = createAdminSupabase()
+  
+  // UUID 또는 slug로 실제 웨비나 ID 조회
+  const actualWebinarId = await getWebinarIdFromIdOrSlug(webinarIdOrSlug)
+  
+  if (!actualWebinarId) {
+    throw new Error(`웨비나를 찾을 수 없습니다: ${webinarIdOrSlug}`)
+  }
   
   const { data: webinar, error } = await admin
     .from('webinars')
     .select('id, title, access_policy, start_time, slug')
-    .eq('id', webinarId)
+    .eq('id', actualWebinarId)
     .single()
   
   if (error || !webinar) {
-    throw new Error(`웨비나를 찾을 수 없습니다: ${webinarId}`)
+    throw new Error(`웨비나를 찾을 수 없습니다: ${webinarIdOrSlug}`)
   }
   
   if (webinar.access_policy !== 'email_auth') {
@@ -131,6 +165,7 @@ async function verifyWebinar(webinarId: string) {
   }
   
   console.log(`✅ 웨비나 확인 완료:`)
+  console.log(`   ID: ${webinar.id}`)
   console.log(`   제목: ${webinar.title}`)
   console.log(`   정책: ${webinar.access_policy}`)
   console.log(`   시작 시간: ${webinar.start_time || '미정'}`)
@@ -214,12 +249,13 @@ async function registerParticipant(
  * 메인 실행 함수
  */
 async function main() {
-  const webinarId = process.argv[2]
+  const webinarIdOrSlug = process.argv[2]
   const excelFilePath = process.argv[3]
   
-  if (!webinarId) {
-    console.error('❌ 사용법: npx tsx scripts/register-participants-from-excel.ts <webinarId> <excelFilePath>')
-    console.error('예시: npx tsx scripts/register-participants-from-excel.ts 7d4ad9e9-2f69-49db-87a9-8d25cb82edee "118138_참가자리스트_데이터다운로드_모두의특강인간지능x인공지능토크쇼2025년AI결산.xlsx"')
+  if (!webinarIdOrSlug) {
+    console.error('❌ 사용법: npx tsx scripts/register-participants-from-excel.ts <webinarIdOrSlug> <excelFilePath>')
+    console.error('예시: npx tsx scripts/register-participants-from-excel.ts 884372 "118605_참가자리스트_데이터다운로드_모두의특강2026CES특집 (2).xlsx"')
+    console.error('또는: npx tsx scripts/register-participants-from-excel.ts 7d4ad9e9-2f69-49db-87a9-8d25cb82edee "118138_참가자리스트_데이터다운로드_모두의특강인간지능x인공지능토크쇼2025년AI결산.xlsx"')
     process.exit(1)
   }
   
@@ -246,8 +282,8 @@ async function main() {
       process.exit(1)
     }
     
-    // 2. 웨비나 확인
-    const webinar = await verifyWebinar(webinarId)
+    // 2. 웨비나 확인 (UUID 또는 slug 지원)
+    const webinar = await verifyWebinar(webinarIdOrSlug)
     
     // 3. 참가자 등록
     console.log(`🚀 ${participants.length}명의 참가자 등록 시작...\n`)
@@ -261,7 +297,7 @@ async function main() {
       
       process.stdout.write(`${progress} ${participant.name} (${participant.email}) 등록 중... `)
       
-      const result = await registerParticipant(admin, webinarId, webinar, participant)
+      const result = await registerParticipant(admin, webinar.id, webinar, participant)
       results.push(result)
       
       if (result.success) {

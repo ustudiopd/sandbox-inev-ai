@@ -918,6 +918,20 @@
   - 공개 대시보드에서는 경품 초기화 X 버튼 제거 (선택만 가능)
   - 운영콘솔에서는 경품 초기화 X 버튼 유지 (관리자 전용)
 
+## [2025-01-XX] 웨비나 콘솔 설문 결과 보기 기능 수정
+- ✅ 설문 결과 조회 API 권한 확인 로직 개선
+  - `app/api/webinars/[webinarId]/forms/[formId]/results/route.ts` 수정
+  - 웨비나 조회 시 `getWebinarQuery` 사용하여 UUID/slug 모두 지원
+  - 폼의 `client_id`가 없을 경우 웨비나의 `client_id`와 `agency_id` 사용
+  - 권한 확인 시 웨비나 정보를 기반으로 클라이언트/에이전시 멤버십 확인
+- ✅ 설문 문항 options 배열 처리 개선
+  - `q.options.forEach is not a function` 오류 해결
+  - options가 배열이 아닌 경우 처리 로직 추가:
+    - 배열인 경우: 그대로 사용
+    - 문자열인 경우: JSON 파싱 시도
+    - 객체인 경우: 단일 옵션 객체 또는 키-값 쌍을 배열로 변환
+  - 안전한 파싱 및 빈 배열 처리로 오류 방지
+
 ## 남은 작업
 
 ### Phase 3 - 웨비나 및 실시간 기능 (대부분 완료)
