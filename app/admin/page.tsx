@@ -107,27 +107,52 @@ export default function AdminPage() {
               <div className="bg-white rounded-xl shadow-lg p-8">
                 <h2 className="text-2xl font-bold mb-4 text-gray-800">플랫폼 소개</h2>
                 <p className="text-lg text-gray-700 mb-6 leading-relaxed">
-                  Enterprise급 웨비나 플랫폼으로, 실시간 상호작용과 멀티테넌시를 지원하는 
-                  B2B2C 솔루션입니다.
+                  Enterprise급 이벤트 행사 관리 플랫폼으로,
+                  행사 등록, 실시간 웨비나 운영, 설문 수집 및 AI 기반 분석을
+                  단일 시스템에서 통합적으로 제공하는 솔루션입니다.
                 </p>
                 
                 <div className="space-y-4">
                   <div className="flex items-start gap-3">
-                    <div className="text-2xl">🎥</div>
+                    <div className="text-2xl">📝</div>
                     <div>
-                      <h3 className="font-semibold text-gray-800 mb-1">실시간 웨비나</h3>
+                      <h3 className="font-semibold text-gray-800 mb-1">등록 시스템</h3>
                       <p className="text-sm text-gray-600">
-                        YouTube 연동을 통한 고품질 라이브 스트리밍과 실시간 채팅, Q&A 기능
+                        이벤트·웨비나·캠페인별 맞춤 등록 페이지 제공<br/>
+                        참여자 정보 수집, 중복 방지, 확인 코드 발급 등 체계적인 등록 관리 지원
                       </p>
                     </div>
                   </div>
                   
                   <div className="flex items-start gap-3">
-                    <div className="text-2xl">💬</div>
+                    <div className="text-2xl">🎥</div>
                     <div>
-                      <h3 className="font-semibold text-gray-800 mb-1">실시간 상호작용</h3>
+                      <h3 className="font-semibold text-gray-800 mb-1">실시간 웨비나</h3>
                       <p className="text-sm text-gray-600">
-                        참여자와의 실시간 채팅, 질문 답변, 참여자 현황 확인 등 다양한 상호작용 기능
+                        YouTube 연동을 통한 안정적인 고품질 라이브 스트리밍<br/>
+                        실시간 채팅, Q&A, 운영 콘솔을 통한 현장 관리까지 완비
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start gap-3">
+                    <div className="text-2xl">📊</div>
+                    <div>
+                      <h3 className="font-semibold text-gray-800 mb-1">설문 시스템</h3>
+                      <p className="text-sm text-gray-600">
+                        행사 중·후 설문, 퀴즈, 폼을 자유롭게 구성<br/>
+                        응답 수집부터 통계 시각화까지 즉시 확인 가능
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start gap-3">
+                    <div className="text-2xl">🤖</div>
+                    <div>
+                      <h3 className="font-semibold text-gray-800 mb-1">AI 분석</h3>
+                      <p className="text-sm text-gray-600">
+                        설문 및 참여 데이터를 기반으로<br/>
+                        인사이트 요약, 의사결정 지원 리포트, 액션 가이드를 자동 생성
                       </p>
                     </div>
                   </div>
@@ -135,20 +160,11 @@ export default function AdminPage() {
                   <div className="flex items-start gap-3">
                     <div className="text-2xl">🏢</div>
                     <div>
-                      <h3 className="font-semibold text-gray-800 mb-1">멀티테넌시</h3>
+                      <h3 className="font-semibold text-gray-800 mb-1">멀티테넌시 & 브랜딩</h3>
                       <p className="text-sm text-gray-600">
-                        Super Admin → Agency → Client → Participant 계층 구조로 
-                        완전한 데이터 격리와 권한 관리
-                      </p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-start gap-3">
-                    <div className="text-2xl">🎨</div>
-                    <div>
-                      <h3 className="font-semibold text-gray-800 mb-1">브랜딩</h3>
-                      <p className="text-sm text-gray-600">
-                        각 클라이언트별 커스텀 브랜딩과 도메인 설정 지원
+                        Super Admin → Agency → Client → Participant 구조의<br/>
+                        완전한 데이터 격리와 권한 관리<br/>
+                        클라이언트별 커스텀 브랜딩과 도메인 설정 지원
                       </p>
                     </div>
                   </div>

@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useSearchParams, useRouter } from 'next/navigation'
 import { QRCodeSVG } from 'qrcode.react'
 
 interface DonePageClientProps {
@@ -11,9 +11,11 @@ interface DonePageClientProps {
 
 export default function DonePageClient({ campaign, baseUrl }: DonePageClientProps) {
   const searchParams = useSearchParams()
+  const router = useRouter()
   const [surveyNo, setSurveyNo] = useState<number | null>(null)
   const [code6, setCode6] = useState<string | null>(null)
   const [isMobile, setIsMobile] = useState(false)
+  const [showRegistrationModal, setShowRegistrationModal] = useState(false)
   
   useEffect(() => {
     const surveyNoParam = searchParams.get('survey_no')
@@ -26,6 +28,11 @@ export default function DonePageClient({ campaign, baseUrl }: DonePageClientProp
       setCode6(code6Param)
     }
     
+    // 웨비나 등록인 경우 팝업 표시
+    if (campaign?.type === 'registration') {
+      setShowRegistrationModal(true)
+    }
+    
     // 모바일 여부 확인
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 640)
@@ -33,11 +40,36 @@ export default function DonePageClient({ campaign, baseUrl }: DonePageClientProp
     checkMobile()
     window.addEventListener('resize', checkMobile)
     return () => window.removeEventListener('resize', checkMobile)
-  }, [searchParams])
+  }, [searchParams, campaign])
   
   // QR 코드 데이터: code6만 사용
   const qrData = code6 || null
   const headerImageUrl = 'https://yqsayphssjznthrxpgfb.supabase.co/storage/v1/object/public/webinar-thumbnails/hpe-booth-header.jpg'
+  
+  const handleGoToMain = () => {
+    router.push(`${baseUrl}/event${campaign.public_path}`)
+  }
+  
+  // 웨비나 등록인 경우 팝업만 표시
+  if (campaign?.type === 'registration' && showRegistrationModal) {
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-8 text-center">
+          <div className="text-6xl mb-4">✓</div>
+          <h2 className="text-2xl font-bold mb-4 text-gray-900">등록이 완료되었습니다</h2>
+          <p className="text-gray-600 mb-6">
+            이벤트 등록이 성공적으로 완료되었습니다.
+          </p>
+          <button
+            onClick={handleGoToMain}
+            className="w-full bg-[#4da8da] text-white py-3 rounded-lg font-medium hover:bg-[#46cdcf] transition-colors"
+          >
+            메인페이지로 돌아가기
+          </button>
+        </div>
+      </div>
+    )
+  }
   
   return (
     <div className="min-h-screen bg-white font-sans text-gray-900 pb-20">

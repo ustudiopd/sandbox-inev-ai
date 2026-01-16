@@ -7,6 +7,7 @@ import SurveyPage from './components/SurveyPage'
 import DonePageClient from './components/DonePageClient'
 import RegistrationPage from './components/RegistrationPage'
 import WelcomePage from './components/WelcomePage'
+import WertSummitPage from './components/WertSummitPage'
 
 /**
  * 이벤트 공개 페이지 catch-all 라우트 (설문조사 + 등록 페이지)
@@ -50,6 +51,11 @@ export default async function SurveyPublicPage({
   
   const subPath = isSubPath ? lastPath : null
   const publicPath = '/' + (isSubPath ? path.slice(0, -1) : path).join('/')
+  
+  // 149403은 WertSummitPage를 보여줌 (캠페인 조회 전에 먼저 체크)
+  if (publicPath === '/149403' && !subPath) {
+    return <WertSummitPage />
+  }
   
   const admin = createAdminSupabase()
   

@@ -188,8 +188,10 @@ export default function RegistrationPage({ campaign, baseUrl }: RegistrationPage
   
   // 참여 확인 모드
   if (lookupMode) {
-    // 445870 경로는 edm_header_1600_2.jpg 사용
-    const headerImageUrl = campaign.public_path === '/445870'
+    // 149403 경로는 wert.png 사용, 445870 경로는 edm_header_1600_2.jpg 사용
+    const headerImageUrl = campaign.public_path === '/149403'
+      ? 'https://yqsayphssjznthrxpgfb.supabase.co/storage/v1/object/public/webinar-thumbnails/wert.png'
+      : campaign.public_path === '/445870'
       ? 'https://yqsayphssjznthrxpgfb.supabase.co/storage/v1/object/public/webinar-thumbnails/edm_header_1600_2.jpg'
       : 'https://yqsayphssjznthrxpgfb.supabase.co/storage/v1/object/public/webinar-thumbnails/edm_header_1600_1.jpg'
     
@@ -304,8 +306,10 @@ export default function RegistrationPage({ campaign, baseUrl }: RegistrationPage
   }
   
   // 일반 등록 모드 - 상세 폼
-  // 445870 경로는 edm_header_1600_2.jpg 사용
-  const headerImageUrl = campaign.public_path === '/445870'
+  // 149403 경로는 wert.png 사용, 445870 경로는 edm_header_1600_2.jpg 사용
+  const headerImageUrl = campaign.public_path === '/149403'
+    ? 'https://yqsayphssjznthrxpgfb.supabase.co/storage/v1/object/public/webinar-thumbnails/wert.png'
+    : campaign.public_path === '/445870'
     ? 'https://yqsayphssjznthrxpgfb.supabase.co/storage/v1/object/public/webinar-thumbnails/edm_header_1600_2.jpg'
     : 'https://yqsayphssjznthrxpgfb.supabase.co/storage/v1/object/public/webinar-thumbnails/edm_header_1600_1.jpg'
   
@@ -337,7 +341,11 @@ export default function RegistrationPage({ campaign, baseUrl }: RegistrationPage
         <div className="bg-white rounded-lg shadow-md p-6 sm:p-8 md:p-10">
           {/* 제목 */}
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-6 sm:mb-8 text-gray-900">
-            {campaign.public_path === '/445870' ? 'HPE Networking in Motion' : (campaign.title || 'HPE Networking in Motion')}
+            {campaign.public_path === '/149403' 
+              ? 'WERT TECH SUMMIT 26'
+              : campaign.public_path === '/445870' 
+              ? 'HPE Networking in Motion' 
+              : (campaign.title || 'HPE Networking in Motion')}
           </h1>
           
           <h2 className="text-lg sm:text-xl font-bold mb-4 text-gray-900">
@@ -488,7 +496,9 @@ export default function RegistrationPage({ campaign, baseUrl }: RegistrationPage
             {/* 커뮤니케이션 동의 */}
             <div className="pt-4 border-t border-gray-200">
               <p className="text-sm font-medium text-gray-700 mb-4">
-                HPE에 대한 맞춤식 커뮤니케이션을 통해 HPE 파트너의 제품, 서비스, 특별 행사 및 이벤트 정보를 선택적으로 받으시겠습니까?
+                {campaign.public_path === '/149403' 
+                  ? 'WERT에 대한 맞춤식 커뮤니케이션을 통해 WERT 파트너의 제품, 서비스, 특별 행사 및 이벤트 정보를 선택적으로 받으시겠습니까?'
+                  : 'HPE에 대한 맞춤식 커뮤니케이션을 통해 HPE 파트너의 제품, 서비스, 특별 행사 및 이벤트 정보를 선택적으로 받으시겠습니까?'}
               </p>
               <div className="space-y-3">
                 <label className="flex items-center cursor-pointer">
@@ -517,17 +527,35 @@ export default function RegistrationPage({ campaign, baseUrl }: RegistrationPage
             {/* 개인정보취급방침 */}
             <div className="pt-4 border-t border-gray-200">
               <p className="text-xs sm:text-sm text-gray-600 mb-4 leading-relaxed">
-                HPE에서 귀하의 정보를 관리, 사용, 보호하는 방법에 대해 자세히 알아보려면{' '}
-                <a 
-                  href="https://www.hpe.com/kr/ko/privacy/ww-privacy-statement.html" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="text-[#00B388] hover:underline"
-                >
-                  HPE 개인정보 취급방침
-                </a>을 참조하시기 바랍니다. 
-                동의한 사항에 대해 언제든지 취소 또는 수정하여 HPE의 마케팅 커뮤니케이션 서비스를 받을 수 있습니다. 
-                이 작업을 수행하려면 HPE 이메일 마케팅 커뮤니케이션 페이지 하단의 옵트아웃 및 환경설정 메커니즘을 사용하거나{' '}
+                {campaign.public_path === '/149403' ? (
+                  <>
+                    WERT에서 귀하의 정보를 관리, 사용, 보호하는 방법에 대해 자세히 알아보려면{' '}
+                    <a 
+                      href="https://www.wertcorp.com/kr/policy" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-[#00B388] hover:underline"
+                    >
+                      WERT 개인정보 취급방침
+                    </a>을 참조하시기 바랍니다. 
+                    동의한 사항에 대해 언제든지 취소 또는 수정하여 WERT의 마케팅 커뮤니케이션 서비스를 받을 수 있습니다. 
+                    이 작업을 수행하려면 WERT 이메일 마케팅 커뮤니케이션 페이지 하단의 옵트아웃 및 환경설정 메커니즘을 사용하거나{' '}
+                  </>
+                ) : (
+                  <>
+                    HPE에서 귀하의 정보를 관리, 사용, 보호하는 방법에 대해 자세히 알아보려면{' '}
+                    <a 
+                      href="https://www.hpe.com/kr/ko/privacy/ww-privacy-statement.html" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-[#00B388] hover:underline"
+                    >
+                      HPE 개인정보 취급방침
+                    </a>을 참조하시기 바랍니다. 
+                    동의한 사항에 대해 언제든지 취소 또는 수정하여 HPE의 마케팅 커뮤니케이션 서비스를 받을 수 있습니다. 
+                    이 작업을 수행하려면 HPE 이메일 마케팅 커뮤니케이션 페이지 하단의 옵트아웃 및 환경설정 메커니즘을 사용하거나{' '}
+                  </>
+                )}
                 <a 
                   href="/unsubscribe" 
                   onClick={(e) => {
