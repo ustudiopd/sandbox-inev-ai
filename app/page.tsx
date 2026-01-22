@@ -1,201 +1,173 @@
-'use client'
+import { createServerSupabase } from "@/lib/supabase/server";
+import Link from "next/link";
+import { ArrowRight, BarChart3, MessageSquare, Settings2, Shield, Users, Building2 } from "lucide-react";
 
-import Link from 'next/link'
-import { createClientSupabase } from '@/lib/supabase/client'
-import { useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
-import { formatTime } from '@/lib/webinar/utils'
-import ShareLinkButton from '@/components/webinar/ShareLinkButton'
+export default async function Home() {
+  const supabase = await createServerSupabase();
 
-interface Webinar {
-  id: string
-  slug?: string | null
-  title: string
-  start_time: string | null
-  end_time: string | null
-  access_policy: string
-}
+  // 로그인한 사용자 확인
+  const { data: { user } } = await supabase.auth.getUser();
 
-export default function Home() {
-  const router = useRouter()
-  const supabase = createClientSupabase()
-  const [checking, setChecking] = useState(true)
-  const [webinars, setWebinars] = useState<Webinar[]>([])
-  const [loadingWebinars, setLoadingWebinars] = useState(true)
-  const [user, setUser] = useState<any>(null)
-  const [isSuperAdmin, setIsSuperAdmin] = useState(false)
-  
-  useEffect(() => {
-    async function checkUserAndRedirect() {
-      try {
-        const { data: { user: currentUser } } = await supabase.auth.getUser()
-        
-        if (!currentUser) {
-          setChecking(false)
-          return
-        }
-        
-        setUser(currentUser)
-        
-        // 슈퍼어드민 여부 확인 (JWT app_metadata 사용 - RLS 재귀 방지)
-        // 클라이언트에서는 직접 DB 조회하지 않고 JWT에서 확인
-        if (currentUser?.app_metadata?.is_super_admin) {
-          setIsSuperAdmin(true)
-        }
-        
-        // 웨비나 관련 경로로 접근한 경우 자동 리다이렉트하지 않음
-        // (콘솔에서 관리자 접속 시 리다이렉트 방지)
-        const currentPath = window.location.pathname
-        if (currentPath.startsWith('/webinar/')) {
-          setChecking(false)
-          return
-        }
-        
-        // API를 통해 대시보드 경로 가져오기 (서버 사이드에서 RLS 정책 적용)
-        const response = await fetch('/api/auth/dashboard')
-        const result = await response.json()
-        const { dashboard } = result
-        
-        if (dashboard) {
-          // 슈퍼어드민인 경우 버튼만 표시 (자동 리다이렉트 제거)
-          if (dashboard === '/super/dashboard') {
-            setIsSuperAdmin(true)
-            setChecking(false)
-            return
-          }
-          // 에이전시/클라이언트 대시보드는 자동 리다이렉트 유지
-          router.push(dashboard)
-          return
-        }
-        
-        setChecking(false)
-      } catch (error) {
-        console.error('리다이렉트 확인 중 오류:', error)
-        setChecking(false)
-      }
-    }
-    
-    checkUserAndRedirect()
-  }, [router, supabase])
-  
-  useEffect(() => {
-    async function loadActiveWebinars() {
-      try {
-        const response = await fetch('/api/webinars/active')
-        if (response.ok) {
-          const { webinars: activeWebinars } = await response.json()
-          setWebinars(activeWebinars || [])
-        }
-      } catch (error) {
-        console.error('진행중인 웨비나 로드 실패:', error)
-      } finally {
-        setLoadingWebinars(false)
-      }
-    }
-    
-    if (!checking) {
-      loadActiveWebinars()
-    }
-  }, [checking])
-  
-  if (checking) {
-    return (
-      <main className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-2xl font-semibold text-gray-700">로딩 중...</div>
-        </div>
-      </main>
-    )
-  }
-  
   return (
-    <main className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-      <div className="container mx-auto px-4 py-20">
-        <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-6xl font-bold mb-6 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-            EventFlow
-          </h1>
-          {isSuperAdmin && (
-            <div className="mt-6">
-              <Link
-                href="/super/dashboard"
-                className="inline-block px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg font-medium hover:from-blue-700 hover:to-purple-700 transition-all shadow-lg hover:shadow-xl"
-              >
-                🎛️ 슈퍼 관리자 대시보드
-              </Link>
-            </div>
-          )}
-        </div>
+    <div className="min-h-screen bg-white">
+      {/* 1. Hero Section: 메인 캐치프레이즈 */}
+      <section className="relative pt-20 pb-32 overflow-hidden">
+        <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-blue-100/50 via-gray-50 to-white" />
         
-        <div className="max-w-6xl mx-auto mt-20">
-          <h2 className="text-3xl font-bold text-gray-800 mb-8 text-center">현재 진행중인 웨비나</h2>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <div className="inline-flex items-center rounded-full px-3 py-1 text-sm font-medium text-blue-600 ring-1 ring-inset ring-blue-200 bg-blue-50 mb-8">
+            <span className="flex h-2 w-2 rounded-full bg-blue-600 mr-2"></span>
+            EventFlow 2.0
+          </div>
           
-          {loadingWebinars ? (
-            <div className="text-center py-12">
-              <div className="text-lg text-gray-600">로딩 중...</div>
-            </div>
-          ) : webinars.length === 0 ? (
-            <div className="text-center py-12">
-              <div className="text-lg text-gray-600">현재 진행중인 웨비나가 없습니다.</div>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {webinars.map((webinar) => (
-                <div
-                  key={webinar.id}
-                  className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-all duration-200"
+          <h1 className="text-5xl md:text-6xl font-extrabold text-gray-900 tracking-tight mb-6 break-keep">
+            B2B 이벤트 관리, <br className="hidden md:block" />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">
+              AI로 스마트하게
+            </span>{" "}
+            하세요
+          </h1>
+          
+          <p className="mt-4 text-xl text-gray-600 max-w-2xl mx-auto mb-10 break-keep">
+            복잡한 웨비나 운영부터 실시간 데이터 분석까지.<br/>
+            EventFlow 하나로 모든 이벤트 경험을 혁신하세요.
+          </p>
+
+          <div className="flex justify-center gap-4">
+            {user ? (
+              <Link
+                href="/api/auth/dashboard"
+                className="px-8 py-3.5 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 transition-colors shadow-lg shadow-blue-200 flex items-center"
+              >
+                대시보드로 이동 <ArrowRight className="ml-2 w-4 h-4" />
+              </Link>
+            ) : (
+              <>
+                <Link
+                  href="/login"
+                  className="px-8 py-3.5 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 transition-colors shadow-lg shadow-blue-200 flex items-center"
                 >
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex-1">
-                      <div className="inline-block px-3 py-1 bg-red-100 text-red-600 rounded-full text-sm font-semibold mb-3">
-                        🔴 LIVE
-                      </div>
-                      <h3 className="text-xl font-semibold text-gray-800 mb-2 line-clamp-2">
-                        {webinar.title}
-                      </h3>
-                    </div>
-                  </div>
-                  {webinar.start_time && (
-                    <div className="text-sm text-gray-500">
-                      시작: {formatTime(webinar.start_time, 'long')}
-                    </div>
-                  )}
-                  {webinar.end_time && (
-                    <div className="text-sm text-gray-500 mt-1">
-                      종료: {formatTime(webinar.end_time, 'long')}
-                    </div>
-                  )}
-                  <div className="mt-3">
-                    {webinar.access_policy === 'guest_allowed' ? (
-                      <div className="inline-block px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">
-                        ✅ 게스트 입장 가능
-                      </div>
-                    ) : (
-                      <div className="inline-block px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
-                        📝 웨비나 등록 필요
-                      </div>
-                    )}
-                  </div>
-                  <div className="mt-4 flex items-center justify-between">
-                    <Link
-                      href={`/webinar/${webinar.slug || webinar.id}`}
-                      className="text-blue-600 font-medium hover:underline"
-                    >
-                      입장하기 →
-                    </Link>
-                    <ShareLinkButton 
-                      webinarId={webinar.id} 
-                      webinarTitle={webinar.title}
-                      className="ml-auto"
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+                  시작하기 <ArrowRight className="ml-2 w-4 h-4" />
+                </Link>
+                <Link
+                  href="/admin"
+                  className="px-8 py-3.5 rounded-lg bg-white text-gray-700 border border-gray-200 font-medium hover:bg-gray-50 transition-colors"
+                >
+                  관리자 접속
+                </Link>
+              </>
+            )}
+          </div>
         </div>
-      </div>
-    </main>
-  )
+      </section>
+
+      {/* 2. Features: 핵심 기능 소개 */}
+      <section className="py-20 bg-gray-50 border-y border-gray-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {/* Feature 1 */}
+            <div className="bg-white p-8 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-6 text-blue-600">
+                <BarChart3 className="w-6 h-6" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">AI 데이터 분석</h3>
+              <p className="text-gray-500 leading-relaxed">
+                참여자의 행동 데이터를 AI가 분석하여 리포트를 제공합니다. 
+                의사결정에 필요한 핵심 인사이트를 놓치지 마세요.
+              </p>
+            </div>
+            {/* Feature 2 */}
+            <div className="bg-white p-8 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+              <div className="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center mb-6 text-indigo-600">
+                <MessageSquare className="w-6 h-6" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">실시간 인터랙션</h3>
+              <p className="text-gray-500 leading-relaxed">
+                끊김 없는 채팅, Q&A, 그리고 실시간 설문까지. 
+                참여자와 진행자 간의 거리를 좁히는 몰입형 경험을 제공합니다.
+              </p>
+            </div>
+            {/* Feature 3 */}
+            <div className="bg-white p-8 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+              <div className="w-12 h-12 bg-teal-100 rounded-lg flex items-center justify-center mb-6 text-teal-600">
+                <Settings2 className="w-6 h-6" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">스마트 운영 콘솔</h3>
+              <p className="text-gray-500 leading-relaxed">
+                복잡한 설정 없이 직관적인 대시보드에서 모든 이벤트를 관리하세요.
+                초대부터 사후 관리까지 간편해집니다.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 3. B2B 플랫폼 안내 섹션 */}
+      <section className="py-24 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">B2B 관리 플랫폼</h2>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              EventFlow는 기업을 위한 전용 이벤트 관리 플랫폼입니다.<br/>
+              로그인하여 대시보드에서 이벤트를 생성하고 관리하세요.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+            {/* 안내 카드 1 */}
+            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-8 rounded-2xl border border-blue-100">
+              <div className="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center mb-6 text-white">
+                <Building2 className="w-6 h-6" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">기업 전용 플랫폼</h3>
+              <p className="text-gray-600 leading-relaxed">
+                기업 고객을 위한 전용 관리 시스템으로 안전하고 체계적인 이벤트 운영이 가능합니다.
+              </p>
+            </div>
+
+            {/* 안내 카드 2 */}
+            <div className="bg-gradient-to-br from-indigo-50 to-purple-50 p-8 rounded-2xl border border-indigo-100">
+              <div className="w-12 h-12 bg-indigo-600 rounded-lg flex items-center justify-center mb-6 text-white">
+                <Users className="w-6 h-6" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">다중 워크스페이스</h3>
+              <p className="text-gray-600 leading-relaxed">
+                에이전시와 클라이언트 구조를 지원하여 여러 조직의 이벤트를 효율적으로 관리할 수 있습니다.
+              </p>
+            </div>
+
+            {/* 안내 카드 3 */}
+            <div className="bg-gradient-to-br from-purple-50 to-pink-50 p-8 rounded-2xl border border-purple-100">
+              <div className="w-12 h-12 bg-purple-600 rounded-lg flex items-center justify-center mb-6 text-white">
+                <Shield className="w-6 h-6" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">보안 및 권한 관리</h3>
+              <p className="text-gray-600 leading-relaxed">
+                세밀한 권한 제어와 보안 기능으로 안전한 이벤트 관리 환경을 제공합니다.
+              </p>
+            </div>
+          </div>
+
+          <div className="text-center mt-12">
+            {user ? (
+              <Link
+                href="/api/auth/dashboard"
+                className="inline-flex items-center px-8 py-3.5 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 transition-colors shadow-lg shadow-blue-200"
+              >
+                대시보드로 이동 <ArrowRight className="ml-2 w-4 h-4" />
+              </Link>
+            ) : (
+              <Link
+                href="/login"
+                className="inline-flex items-center px-8 py-3.5 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 transition-colors shadow-lg shadow-blue-200"
+              >
+                로그인하여 시작하기 <ArrowRight className="ml-2 w-4 h-4" />
+              </Link>
+            )}
+          </div>
+        </div>
+      </section>
+    </div>
+  );
 }
 

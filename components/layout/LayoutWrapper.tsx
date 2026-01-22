@@ -8,8 +8,8 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
   const { sidebarWidth } = useSidebar()
   const pathname = usePathname()
   
-  // 공개 페이지: 홈, 로그인, 회원가입
-  const isPublicPage = pathname === '/' || pathname.startsWith('/login') || pathname.startsWith('/signup')
+  // 공개 페이지: 홈, 로그인, 회원가입, 개인정보처리방침
+  const isPublicPage = pathname === '/' || pathname.startsWith('/login') || pathname.startsWith('/signup') || pathname.startsWith('/privacy')
   
   // /admin 페이지는 사이드바 없음
   const isAdminPage = pathname.startsWith('/admin')
