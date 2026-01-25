@@ -736,7 +736,7 @@ export default function WebinarFormWertPage() {
       {/* Section 4 - About keywert Insight */}
       <section className="w-full relative bg-lime-50 overflow-x-hidden overflow-y-visible py-8 sm:py-12 lg:py-20">
         {/* About keywert Insight Section */}
-        <div className="w-full mx-auto px-4 sm:px-6 lg:px-8 flex flex-col justify-start items-start gap-8 sm:gap-12 lg:gap-16">
+        <div className="w-full mx-auto px-4 sm:px-6 lg:px-8 flex flex-col justify-start items-start gap-8 sm:gap-12 lg:gap-24">
           <div className="self-stretch flex flex-col justify-center items-center gap-2 sm:gap-3">
             <div className="text-center justify-start text-teal-600 font-bold text-base sm:text-lg lg:text-[24px] leading-tight sm:leading-tight lg:leading-[32px]" style={{ fontFamily: 'Figtree, sans-serif' }}>
               ABOUT keywert Insight
@@ -745,7 +745,7 @@ export default function WebinarFormWertPage() {
               AI 특허리서치<br />'키워트 인사이트'
             </div>
           </div>
-          <div className="self-stretch p-4 sm:p-8 lg:p-16 bg-stone-50 rounded-2xl sm:rounded-3xl lg:rounded-[48px] shadow-[0px_4px_48px_-10px_rgba(0,0,0,0.08)] flex flex-col justify-start items-start gap-8 sm:gap-12 lg:gap-16 overflow-hidden">
+          <div className="self-stretch max-w-[856px] mx-auto w-full p-4 sm:p-8 lg:p-16 bg-stone-50 rounded-2xl sm:rounded-3xl lg:rounded-[48px] shadow-[0px_4px_48px_-10px_rgba(0,0,0,0.08)] flex flex-col justify-start items-start gap-8 sm:gap-12 lg:gap-16 overflow-hidden">
             <div className="self-stretch flex flex-col justify-start items-center gap-16">
               <div className="self-stretch flex flex-col justify-start items-start gap-6">
                 <div className="w-40 sm:w-56 lg:w-80 h-5 sm:h-7 lg:h-10 relative overflow-hidden">
@@ -768,11 +768,12 @@ export default function WebinarFormWertPage() {
                   <span className="text-black/80 font-normal" style={{ fontSize: '28px', fontFamily: 'Pretendard, sans-serif', lineHeight: '42px' }}>
                     로 할루시네이션 없이{" "}
                   </span>
+                  <br />
                   <span className="text-black/80 font-bold" style={{ fontSize: '28px', fontFamily: 'Pretendard, sans-serif', lineHeight: '42px' }}>
                     특허검색부터 R&D 전략
                   </span>
                   <span className="text-black/80 font-normal" style={{ fontSize: '28px', fontFamily: 'Pretendard, sans-serif', lineHeight: '42px' }}>
-                    까지 제공하는<span className="sm:hidden"> </span><span className="hidden sm:inline"><br /></span>서비스입니다.
+                    까지 제공하는 서비스입니다.
                   </span>
                 </div>
               </div>
@@ -1039,7 +1040,7 @@ export default function WebinarFormWertPage() {
                     신청자에게는{" "}
                   </span>
                   <span className="text-black/60 font-bold text-sm sm:text-base lg:text-[27px] leading-relaxed sm:leading-relaxed lg:leading-[40px]" style={{ fontFamily: 'Pretendard, sans-serif', letterSpacing: '-0.4px' }}>
-                    2월 4일(수) 및 2월 5일(목)에 리마인드 메일 및 문자가 발송<span className="sm:hidden"> </span><span className="hidden sm:inline"><br /></span>
+                    2월 4일(수) 및 2월 5일(목)에 리마인드 메일 및 문자가 발송<span className="lg:hidden"> </span><span className="hidden lg:inline"> </span><span className="hidden sm:inline lg:hidden"><br /></span>
                   </span>
                   <span className="text-black/60 font-normal text-sm sm:text-base lg:text-[27px] leading-relaxed sm:leading-relaxed lg:leading-[40px]" style={{ fontFamily: 'Pretendard, sans-serif', letterSpacing: '-0.4px' }}>
                     됩니다.
