@@ -30,6 +30,7 @@ export async function generateMetadata({
   
   // 149403 페이지에 대한 메타데이터
   if (publicPath === '/149403' || publicPath === '149403') {
+    const thumbnailUrl = 'https://yqsayphssjznthrxpgfb.supabase.co/storage/v1/object/public/webinar-thumbnails/wert/thumb.png'
     return {
       title: '실제 고객사례로 알아보는 AI 특허리서치 실무 활용 웨비나 | keywert Insight',
       description: '2026년 2월 6일(금) 오후 2시-3시 30분, 온라인 LIVE로 진행되는 무료 웨비나. IP팀·특허사무소·R&D팀의 키워트 인사이트 활용 방식을 실제 고객사례를 통해 알아보세요.',
@@ -41,9 +42,9 @@ export async function generateMetadata({
         siteName: 'keywert Insight',
         images: [
           {
-            url: 'https://yqsayphssjznthrxpgfb.supabase.co/storage/v1/object/public/webinar-thumbnails/wert/image 50-1.png',
-            width: 1000,
-            height: 1488,
+            url: thumbnailUrl,
+            width: 1200,
+            height: 630,
             alt: 'AI 특허리서치 실무 활용 웨비나',
           },
         ],
@@ -52,7 +53,7 @@ export async function generateMetadata({
         card: 'summary_large_image',
         title: '실제 고객사례로 알아보는 AI 특허리서치 실무 활용 웨비나',
         description: '2026년 2월 6일(금) 오후 2시-3시 30분, 온라인 LIVE | 무료 참가',
-        images: ['https://yqsayphssjznthrxpgfb.supabase.co/storage/v1/object/public/webinar-thumbnails/wert/image 50-1.png'],
+        images: [thumbnailUrl],
       },
       alternates: {
         canonical: '/event/149403',

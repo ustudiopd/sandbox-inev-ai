@@ -94,96 +94,15 @@ export default function AdminPage() {
   return (
     <main className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       <div className="container mx-auto px-4 py-20">
-        <div className="max-w-4xl mx-auto text-center mb-20">
-          <h1 className="text-6xl font-bold mb-6 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-            EventFlow
-          </h1>
-        </div>
-        
-        <div className="max-w-[1600px] mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* 왼쪽: EventFlow 소개 */}
-            <div className="flex flex-col justify-center">
-              <div className="bg-white rounded-xl shadow-lg p-8">
-                <h2 className="text-2xl font-bold mb-4 text-gray-800">플랫폼 소개</h2>
-                <p className="text-lg text-gray-700 mb-6 leading-relaxed">
-                  Enterprise급 이벤트 행사 관리 플랫폼으로,
-                  행사 등록, 실시간 웨비나 운영, 설문 수집 및 AI 기반 분석을
-                  단일 시스템에서 통합적으로 제공하는 솔루션입니다.
-                </p>
-                
-                <div className="space-y-4">
-                  <div className="flex items-start gap-3">
-                    <div className="text-2xl">📝</div>
-                    <div>
-                      <h3 className="font-semibold text-gray-800 mb-1">등록 시스템</h3>
-                      <p className="text-sm text-gray-600">
-                        이벤트·웨비나·캠페인별 맞춤 등록 페이지 제공<br/>
-                        참여자 정보 수집, 중복 방지, 확인 코드 발급 등 체계적인 등록 관리 지원
-                      </p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-start gap-3">
-                    <div className="text-2xl">🎥</div>
-                    <div>
-                      <h3 className="font-semibold text-gray-800 mb-1">실시간 웨비나</h3>
-                      <p className="text-sm text-gray-600">
-                        YouTube 연동을 통한 안정적인 고품질 라이브 스트리밍<br/>
-                        실시간 채팅, Q&A, 운영 콘솔을 통한 현장 관리까지 완비
-                      </p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-start gap-3">
-                    <div className="text-2xl">📊</div>
-                    <div>
-                      <h3 className="font-semibold text-gray-800 mb-1">설문 시스템</h3>
-                      <p className="text-sm text-gray-600">
-                        행사 중·후 설문, 퀴즈, 폼을 자유롭게 구성<br/>
-                        응답 수집부터 통계 시각화까지 즉시 확인 가능
-                      </p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-start gap-3">
-                    <div className="text-2xl">🤖</div>
-                    <div>
-                      <h3 className="font-semibold text-gray-800 mb-1">AI 분석</h3>
-                      <p className="text-sm text-gray-600">
-                        설문 및 참여 데이터를 기반으로<br/>
-                        인사이트 요약, 의사결정 지원 리포트, 액션 가이드를 자동 생성
-                      </p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-start gap-3">
-                    <div className="text-2xl">🏢</div>
-                    <div>
-                      <h3 className="font-semibold text-gray-800 mb-1">멀티테넌시 & 브랜딩</h3>
-                      <p className="text-sm text-gray-600">
-                        Super Admin → Agency → Client → Participant 구조의<br/>
-                        완전한 데이터 격리와 권한 관리<br/>
-                        클라이언트별 커스텀 브랜딩과 도메인 설정 지원
-                      </p>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="mt-8 pt-6 border-t border-gray-200">
-                  <Link 
-                    href="/" 
-                    className="text-blue-600 hover:text-blue-700 hover:underline text-sm font-medium"
-                  >
-                    ← 메인 페이지로 돌아가기
-                  </Link>
-                </div>
-              </div>
-            </div>
-            
-            {/* 오른쪽: 로그인/회원가입 폼 */}
-            <div className="flex flex-col justify-center">
-              <div className="bg-white rounded-xl shadow-lg p-8">
+        <div className="max-w-md mx-auto">
+          <div className="text-center mb-8">
+            <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              EventFlow
+            </h1>
+            <p className="text-gray-600">관리자 로그인</p>
+          </div>
+          
+          <div className="bg-white rounded-xl shadow-lg p-8">
                 <div className="flex gap-4 mb-6 border-b border-gray-200">
                 <button
                   onClick={() => {
@@ -300,8 +219,6 @@ export default function AdminPage() {
                   </div>
                 </div>
               )}
-              </div>
-            </div>
           </div>
         </div>
       </div>
