@@ -1174,71 +1174,143 @@ export default function WebinarEntry({ webinar, isWertPage: serverIsWertPage }: 
     
     @media (max-width: 768px) {
       .registration-hero {
-        padding-top: 60px;
+        padding-top: 72px;
         padding-bottom: 40px;
         min-height: auto;
       }
       
       .registration-header {
-        height: 60px;
+        height: 56px;
         padding: 0 16px;
       }
       
       .registration-logo {
-        width: 200px;
-        height: 25px;
+        width: 160px;
+        height: 20px;
       }
       
       .registration-content {
-        padding: 0 20px;
-        gap: 24px;
+        padding: 0 16px;
+        gap: 20px;
+      }
+      
+      .hero-main-content {
+        gap: 24px !important;
+      }
+      
+      .hero-title-section {
+        gap: 20px !important;
       }
       
       .registration-title {
-        font-size: 32px;
-        line-height: 42px;
+        font-size: 28px;
+        line-height: 36px;
       }
       
       .date-badge {
-        font-size: 18px;
+        font-size: 14px;
         padding: 6px 12px;
-        line-height: 24px;
+        line-height: 20px;
+        border-radius: 8px;
       }
       
       .registration-form-section {
-        padding: 40px 20px;
+        padding: 32px 16px;
       }
       
       .registration-form-container {
-        padding: 32px 20px;
-        border-radius: 24px;
+        padding: 24px 16px;
+        border-radius: 20px;
       }
       
       .registration-form-title {
-        font-size: 24px;
-        margin-bottom: 24px;
+        font-size: 20px;
+        margin-bottom: 20px;
       }
       
       .registration-form-label {
-        font-size: 16px;
+        font-size: 14px;
         margin-bottom: 8px;
       }
       
       .registration-form-input {
-        font-size: 16px;
-        padding: 14px 16px;
+        font-size: 14px;
+        padding: 12px 14px;
+        border-radius: 12px;
       }
       
       .registration-form-button {
-        font-size: 18px;
-        padding: 16px 32px;
-        gap: 12px;
+        font-size: 16px;
+        padding: 14px 24px;
+        gap: 8px;
+        border-radius: 100px;
       }
       
       .registration-subtitle {
-        font-size: 20px !important;
-        line-height: 28px !important;
+        font-size: 18px !important;
+        line-height: 26px !important;
       }
+      
+      .mobile-text-sm {
+        font-size: 18px !important;
+        line-height: 26px !important;
+      }
+      
+      .back-to-main-link {
+        font-size: 14px !important;
+        margin-bottom: 24px !important;
+      }
+      
+      .mobile-form-gap {
+        gap: 24px !important;
+      }
+      
+      .registration-header {
+        justify-content: center !important;
+      }
+      
+      .countdown-label {
+        font-size: 16px !important;
+      }
+      
+      .countdown-display {
+        padding: 12px 16px !important;
+        gap: 4px !important;
+      }
+      
+      .countdown-days-label {
+        font-size: 20px !important;
+      }
+      
+      .countdown-days,
+      .countdown-hours,
+      .countdown-minutes,
+      .countdown-seconds {
+        font-size: 24px !important;
+      }
+      
+      .countdown-display span[style*="opacity: 0.7"] {
+        font-size: 18px !important;
+        margin: 0 2px !important;
+      }
+      
+      .mobile-countdown {
+        margin-top: 16px !important;
+        gap: 10px !important;
+      }
+    }
+    
+    .back-to-main-link {
+      color: #666;
+      text-decoration: none;
+      margin-bottom: 40px;
+      display: inline-block;
+      font-size: 18px;
+      transition: color 0.3s ease;
+    }
+    
+    .back-to-main-link:hover {
+      color: #000;
     }
     
     /* 149402용 - 기존 WERT 스타일 (사용 안 함, 149402는 149403 스타일 사용) */
@@ -1486,10 +1558,10 @@ export default function WebinarEntry({ webinar, isWertPage: serverIsWertPage }: 
                 {/* Hero Content */}
                 <div className="registration-hero-content">
                   <div className="registration-content">
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '40px' }}>
-                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '32px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '40px' }} className="hero-main-content">
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '32px' }} className="hero-title-section">
                         {webinar.description && (
-                          <div className="registration-subtitle" style={{ textAlign: 'center', fontSize: '36px', fontWeight: 700, color: '#000' }}>
+                          <div className="registration-subtitle mobile-text-sm" style={{ textAlign: 'center', fontSize: '36px', fontWeight: 700, color: '#000' }}>
                             {webinar.description}
                           </div>
                         )}
@@ -1521,13 +1593,13 @@ export default function WebinarEntry({ webinar, isWertPage: serverIsWertPage }: 
                                 alignItems: 'center', 
                                 gap: '12px',
                                 marginTop: '20px'
-                              }}>
+                              }} className="countdown-container mobile-countdown">
                                 <div style={{ 
                                   fontSize: '20px', 
                                   fontWeight: 600, 
                                   color: '#666',
                                   textAlign: 'center'
-                                }}>
+                                }} className="countdown-label">
                                   웨비나 시작까지
                                 </div>
                                 <div style={{ 
@@ -1540,25 +1612,25 @@ export default function WebinarEntry({ webinar, isWertPage: serverIsWertPage }: 
                                   borderRadius: '12px',
                                   color: '#fff',
                                   justifyContent: 'center'
-                                }}>
+                                }} className="countdown-display">
                                   {countdown.days > 0 && (
                                     <>
-                                      <span style={{ fontSize: '28px', fontWeight: 700 }}>D-</span>
-                                      <span style={{ fontSize: '32px', fontWeight: 700 }}>
+                                      <span style={{ fontSize: '28px', fontWeight: 700 }} className="countdown-days-label">D-</span>
+                                      <span style={{ fontSize: '32px', fontWeight: 700 }} className="countdown-days">
                                         {countdown.days}
                                       </span>
                                       <span style={{ fontSize: '24px', fontWeight: 700, opacity: 0.7, margin: '0 4px' }}>:</span>
                                     </>
                                   )}
-                                  <span style={{ fontSize: '32px', fontWeight: 700 }}>
+                                  <span style={{ fontSize: '32px', fontWeight: 700 }} className="countdown-hours">
                                     {String(countdown.hours).padStart(2, '0')}
                                   </span>
                                   <span style={{ fontSize: '24px', fontWeight: 700, opacity: 0.7, margin: '0 4px' }}>:</span>
-                                  <span style={{ fontSize: '32px', fontWeight: 700 }}>
+                                  <span style={{ fontSize: '32px', fontWeight: 700 }} className="countdown-minutes">
                                     {String(countdown.minutes).padStart(2, '0')}
                                   </span>
                                   <span style={{ fontSize: '24px', fontWeight: 700, opacity: 0.7, margin: '0 4px' }}>:</span>
-                                  <span style={{ fontSize: '32px', fontWeight: 700 }}>
+                                  <span style={{ fontSize: '32px', fontWeight: 700 }} className="countdown-seconds">
                                     {String(countdown.seconds).padStart(2, '0')}
                                   </span>
                                 </div>
@@ -1575,9 +1647,26 @@ export default function WebinarEntry({ webinar, isWertPage: serverIsWertPage }: 
               {/* Form Section - 이름+이메일 로그인 */}
               <section className="registration-form-section">
                 <div className="registration-form-container">
+                  <Link 
+                    href="/event/149403"
+                    className="back-to-main-link"
+                    style={{ 
+                      color: '#666', 
+                      textDecoration: 'none', 
+                      marginBottom: '40px',
+                      display: 'inline-block',
+                      fontSize: '18px',
+                      transition: 'color 0.3s ease'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.color = '#000'}
+                    onMouseLeave={(e) => e.currentTarget.style.color = '#666'}
+                  >
+                    ← 메인페이지로 돌아가기
+                  </Link>
+                  
                   <h1 className="registration-form-title">웨비나 입장</h1>
                   
-                  <form onSubmit={handleNameEmailAuth} style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+                  <form onSubmit={handleNameEmailAuth} style={{ display: 'flex', flexDirection: 'column', gap: '32px' }} className="mobile-form-gap">
                     {error && (
                       <div style={{ padding: '16px', backgroundColor: '#fee', border: '1px solid #fcc', borderRadius: '16px' }}>
                         <p style={{ fontSize: '16px', color: '#c00' }}>{error}</p>

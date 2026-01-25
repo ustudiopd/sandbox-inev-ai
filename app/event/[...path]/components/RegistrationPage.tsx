@@ -387,75 +387,154 @@ export default function RegistrationPage({ campaign, baseUrl }: RegistrationPage
           
             @media (max-width: 768px) {
               .registration-hero {
-                padding-top: 60px;
+                padding-top: 72px;
                 padding-bottom: 40px;
                 min-height: auto;
               }
               
               .registration-header {
-                height: 60px;
+                height: 56px;
                 padding: 0 16px;
               }
               
               .registration-logo {
-                width: 200px;
-                height: 25px;
+                width: 160px;
+                height: 20px;
               }
               
               .registration-content {
-                padding: 0 20px;
-                gap: 24px;
+                padding: 0 16px;
+                gap: 20px;
               }
               
               .registration-title {
-                font-size: 32px;
-                line-height: 42px;
+                font-size: 28px;
+                line-height: 36px;
               }
               
               .date-badge {
-                font-size: 18px;
+                font-size: 14px;
                 padding: 6px 12px;
-                line-height: 24px;
+                line-height: 20px;
+                border-radius: 8px;
               }
               
               .registration-form-section {
-                padding: 40px 20px;
+                padding: 32px 16px;
               }
               
               .registration-form-container {
-                padding: 32px 20px;
-                border-radius: 24px;
+                padding: 24px 16px;
+                border-radius: 20px;
               }
               
               .registration-form-title {
-                font-size: 24px;
-                margin-bottom: 24px;
+                font-size: 20px;
+                margin-bottom: 20px;
               }
               
               .registration-form-label {
-                font-size: 16px;
+                font-size: 14px;
                 margin-bottom: 8px;
               }
               
               .registration-form-input {
-                font-size: 16px;
-                padding: 14px 16px;
+                font-size: 14px;
+                padding: 12px 14px;
+                border-radius: 12px;
               }
               
               .registration-form-button {
-                font-size: 18px;
-                padding: 16px 32px;
-                gap: 12px;
+                font-size: 16px;
+                padding: 14px 24px;
+                gap: 8px;
+                border-radius: 100px;
               }
               
               .secondary-button {
-                font-size: 16px;
-                padding: 14px 28px;
+                font-size: 14px;
+                padding: 12px 24px;
+                border-radius: 100px;
               }
+              
+              .mobile-text-sm {
+                font-size: 18px !important;
+                line-height: 26px !important;
+              }
+              
+              .mobile-form-gap {
+                gap: 24px !important;
+              }
+              
+              .mobile-phone-gap {
+                gap: 6px !important;
+              }
+              
+              .mobile-phone-separator {
+                right: 8px !important;
+                font-size: 12px !important;
+              }
+              
+            .mobile-country-code {
+              width: 60px !important;
+              font-size: 14px !important;
             }
-          `}</style>
+            
+            .phone-first-field {
+              flex: 0 0 60px !important;
+            }
+            
+            .phone-first-input {
+              padding-right: 12px !important;
+            }
+            
+            .phone-second-input {
+              padding-right: 12px !important;
+            }
+            
+            .phone-third-input {
+              padding-right: 12px !important;
+            }
+            
+            .mobile-consent-section {
+              padding-top: 20px !important;
+            }
+            
+            .mobile-consent-text {
+              font-size: 14px !important;
+              line-height: 20px !important;
+              margin-bottom: 12px !important;
+            }
+            
+            .mobile-privacy-text {
+              font-size: 12px !important;
+              line-height: 18px !important;
+              margin-bottom: 12px !important;
+            }
+            
+            .mobile-checkbox-gap {
+              gap: 10px !important;
+            }
+            
+            .mobile-checkbox-label {
+              align-items: flex-start !important;
+            }
+            
+            .mobile-checkbox {
+              width: 18px !important;
+              height: 18px !important;
+              margin-right: 10px !important;
+              margin-top: 2px !important;
+            }
+            
+            .mobile-checkbox-text {
+              font-size: 14px !important;
+              line-height: 20px !important;
+            }
+          }
+        `}</style>
 
-          {/* Header with Logo */}
+        {/* Header with Logo */}
           <div className="registration-header">
             <img
               src={`${supabaseUrl}/storage/v1/object/public/webinar-thumbnails/wert/kewert_logo.png`}
@@ -503,7 +582,7 @@ export default function RegistrationPage({ campaign, baseUrl }: RegistrationPage
                 등록한 성함과 전화번호를 입력해주세요
               </p>
               
-              <form onSubmit={handleLookup} style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+              <form onSubmit={handleLookup} style={{ display: 'flex', flexDirection: 'column', gap: '32px' }} className="mobile-form-gap">
                 {lookupError && (
                   <div style={{ padding: '16px', backgroundColor: '#fee', border: '1px solid #fcc', borderRadius: '16px' }}>
                     <p style={{ fontSize: '16px', color: '#c00' }}>{lookupError}</p>
@@ -524,39 +603,39 @@ export default function RegistrationPage({ campaign, baseUrl }: RegistrationPage
                 
                 <div>
                   <label className="registration-form-label">전화번호</label>
-                  <div style={{ display: 'flex', gap: '8px' }}>
-                    <div style={{ flex: 1, position: 'relative' }}>
+                  <div style={{ display: 'flex', gap: '8px' }} className="mobile-phone-gap">
+                    <div style={{ flex: 1, position: 'relative' }} className="phone-first-field">
                       <input
                         type="tel"
                         value={lookupPhone1}
                         onChange={(e) => setLookupPhone1(e.target.value.replace(/\D/g, '').slice(0, 3))}
-                        className="registration-form-input"
+                        className="registration-form-input phone-first-input"
                         style={{ textAlign: 'center', paddingRight: '32px' }}
                         placeholder="010"
                         maxLength={3}
                         disabled={lookupLoading}
                       />
-                      <span style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', color: '#999', pointerEvents: 'none' }}>-</span>
+                      <span style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', color: '#999', pointerEvents: 'none' }} className="mobile-phone-separator">-</span>
                     </div>
                     <div style={{ flex: 1, position: 'relative' }}>
                       <input
                         type="tel"
                         value={lookupPhone2}
                         onChange={(e) => setLookupPhone2(e.target.value.replace(/\D/g, '').slice(0, 4))}
-                        className="registration-form-input"
+                        className="registration-form-input phone-second-input"
                         style={{ textAlign: 'center', paddingRight: '32px' }}
                         placeholder="1234"
                         maxLength={4}
                         disabled={lookupLoading}
                       />
-                      <span style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', color: '#999', pointerEvents: 'none' }}>-</span>
+                      <span style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', color: '#999', pointerEvents: 'none' }} className="mobile-phone-separator">-</span>
                     </div>
                     <div style={{ flex: 1 }}>
                       <input
                         type="tel"
                         value={lookupPhone3}
                         onChange={(e) => setLookupPhone3(e.target.value.replace(/\D/g, '').slice(0, 4))}
-                        className="registration-form-input"
+                        className="registration-form-input phone-third-input"
                         style={{ textAlign: 'center' }}
                         placeholder="5678"
                         maxLength={4}
@@ -908,48 +987,147 @@ export default function RegistrationPage({ campaign, baseUrl }: RegistrationPage
           
           @media (max-width: 768px) {
             .registration-hero {
-              padding-top: 80px;
-              padding-bottom: 60px;
+              padding-top: 72px;
+              padding-bottom: 40px;
+              min-height: auto;
+            }
+            
+            .registration-header {
+              height: 56px;
+              padding: 0 16px;
+            }
+            
+            .registration-logo {
+              width: 160px;
+              height: 20px;
             }
             
             .registration-content {
-              padding: 0 20px;
+              padding: 0 16px;
+              gap: 20px;
             }
             
             .registration-title {
-              font-size: 48px;
-              line-height: 60px;
+              font-size: 28px;
+              line-height: 36px;
             }
             
             .date-badge {
-              font-size: 24px;
-              padding: 6px 16px;
+              font-size: 14px;
+              padding: 6px 12px;
+              line-height: 20px;
+              border-radius: 8px;
             }
             
             .registration-form-section {
-              padding: 60px 20px;
+              padding: 32px 16px;
             }
             
             .registration-form-container {
-              padding: 40px 24px;
+              padding: 24px 16px;
+              border-radius: 20px;
             }
             
             .registration-form-title {
-              font-size: 28px;
+              font-size: 20px;
+              margin-bottom: 20px;
             }
             
             .registration-form-label {
-              font-size: 18px;
+              font-size: 14px;
+              margin-bottom: 8px;
             }
             
             .registration-form-input {
-              font-size: 16px;
-              padding: 12px 16px;
+              font-size: 14px;
+              padding: 12px 14px;
+              border-radius: 12px;
             }
             
             .registration-form-button {
-              font-size: 20px;
-              padding: 16px 40px;
+              font-size: 16px;
+              padding: 14px 24px;
+              gap: 8px;
+              border-radius: 100px;
+            }
+            
+            .back-link {
+              font-size: 14px;
+              margin-bottom: 24px;
+            }
+            
+            .mobile-text-sm {
+              font-size: 18px !important;
+              line-height: 26px !important;
+            }
+            
+            .mobile-form-gap {
+              gap: 24px !important;
+            }
+            
+            .mobile-phone-gap {
+              gap: 0 !important;
+            }
+            
+            .mobile-phone-separator {
+              display: none !important;
+            }
+            
+            .mobile-country-code {
+              width: 60px !important;
+              font-size: 14px !important;
+            }
+            
+            .phone-first-field {
+              flex: 0 0 60px !important;
+            }
+            
+            .phone-first-input {
+              padding-right: 12px !important;
+            }
+            
+            .phone-second-input {
+              padding-right: 12px !important;
+            }
+            
+            .phone-third-input {
+              padding-right: 12px !important;
+            }
+            
+            .mobile-consent-section {
+              padding-top: 20px !important;
+            }
+            
+            .mobile-consent-text {
+              font-size: 14px !important;
+              line-height: 20px !important;
+              margin-bottom: 12px !important;
+            }
+            
+            .mobile-privacy-text {
+              font-size: 12px !important;
+              line-height: 18px !important;
+              margin-bottom: 12px !important;
+            }
+            
+            .mobile-checkbox-gap {
+              gap: 10px !important;
+            }
+            
+            .mobile-checkbox-label {
+              align-items: flex-start !important;
+            }
+            
+            .mobile-checkbox {
+              width: 18px !important;
+              height: 18px !important;
+              margin-right: 10px !important;
+              margin-top: 2px !important;
+            }
+            
+            .mobile-checkbox-text {
+              font-size: 14px !important;
+              line-height: 20px !important;
             }
           }
         `}</style>
@@ -977,7 +1155,7 @@ export default function RegistrationPage({ campaign, baseUrl }: RegistrationPage
             <div className="registration-content">
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '40px' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '32px' }}>
-                  <div style={{ textAlign: 'center', fontSize: '36px', fontWeight: 700, color: '#000' }}>
+                  <div style={{ textAlign: 'center', fontSize: '36px', fontWeight: 700, color: '#000' }} className="mobile-text-sm">
                     실제 고객사례로 알아보는
                   </div>
                   <h1 className="registration-title">
@@ -1006,7 +1184,7 @@ export default function RegistrationPage({ campaign, baseUrl }: RegistrationPage
             
             <h1 className="registration-form-title">이벤트 등록</h1>
             
-            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '32px' }} className="mobile-form-gap">
               {error && (
                 <div style={{ padding: '16px', backgroundColor: '#fee', border: '1px solid #fcc', borderRadius: '16px' }}>
                   <p style={{ fontSize: '16px', color: '#c00' }}>{error}</p>
@@ -1082,49 +1260,49 @@ export default function RegistrationPage({ campaign, baseUrl }: RegistrationPage
                 <label className="registration-form-label">
                   휴대폰 번호 <span style={{ color: '#f00' }}>*</span>
                 </label>
-                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }} className="mobile-phone-gap">
                   <input
                     type="text"
                     value={phoneCountryCode}
                     onChange={(e) => setPhoneCountryCode(e.target.value)}
-                    className="registration-form-input"
-                    style={{ width: '120px', textAlign: 'center' }}
+                    className="registration-form-input mobile-country-code"
+                    style={{ width: '70px', textAlign: 'center' }}
                     disabled={submitting}
                   />
-                  <div style={{ flex: 1, position: 'relative' }}>
+                  <div style={{ flex: 1, position: 'relative' }} className="phone-first-field">
                     <input
                       type="tel"
                       value={phone1}
                       onChange={(e) => setPhone1(e.target.value.replace(/\D/g, '').slice(0, 3))}
-                      className="registration-form-input"
+                      className="registration-form-input phone-first-input"
                       style={{ textAlign: 'center', paddingRight: '32px' }}
                       placeholder="010"
                       maxLength={3}
                       disabled={submitting}
                       required
                     />
-                    <span style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', color: '#999', pointerEvents: 'none' }}>-</span>
+                    <span style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', color: '#999', pointerEvents: 'none' }} className="mobile-phone-separator">-</span>
                   </div>
                   <div style={{ flex: 1, position: 'relative' }}>
                     <input
                       type="tel"
                       value={phone2}
                       onChange={(e) => setPhone2(e.target.value.replace(/\D/g, '').slice(0, 4))}
-                      className="registration-form-input"
+                      className="registration-form-input phone-second-input"
                       style={{ textAlign: 'center', paddingRight: '32px' }}
                       placeholder="1234"
                       maxLength={4}
                       disabled={submitting}
                       required
                     />
-                    <span style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', color: '#999', pointerEvents: 'none' }}>-</span>
+                    <span style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', color: '#999', pointerEvents: 'none' }} className="mobile-phone-separator">-</span>
                   </div>
                   <div style={{ flex: 1 }}>
                     <input
                       type="tel"
                       value={phone3}
                       onChange={(e) => setPhone3(e.target.value.replace(/\D/g, '').slice(0, 4))}
-                      className="registration-form-input"
+                      className="registration-form-input phone-third-input"
                       style={{ textAlign: 'center' }}
                       placeholder="5678"
                       maxLength={4}
@@ -1136,37 +1314,39 @@ export default function RegistrationPage({ campaign, baseUrl }: RegistrationPage
               </div>
               
               {/* 커뮤니케이션 동의 */}
-              <div style={{ paddingTop: '24px', borderTop: '1px solid #e5e5e5' }}>
-                <p style={{ fontSize: '16px', color: '#666', marginBottom: '16px', lineHeight: '24px' }}>
+              <div style={{ paddingTop: '24px', borderTop: '1px solid #e5e5e5' }} className="mobile-consent-section">
+                <p style={{ fontSize: '16px', color: '#666', marginBottom: '16px', lineHeight: '24px' }} className="mobile-consent-text">
                   WERT에 대한 맞춤식 커뮤니케이션을 통해 WERT 파트너의 제품, 서비스, 특별 행사 및 이벤트 정보를 선택적으로 받으시겠습니까?
                 </p>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                  <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }} className="mobile-checkbox-gap">
+                  <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }} className="mobile-checkbox-label">
                     <input
                       type="checkbox"
                       checked={consentEmail}
                       onChange={(e) => setConsentEmail(e.target.checked)}
                       style={{ width: '20px', height: '20px', marginRight: '12px', accentColor: '#00A08C' }}
+                      className="mobile-checkbox"
                       disabled={submitting}
                     />
-                    <span style={{ fontSize: '16px', color: '#000' }}>이메일</span>
+                    <span style={{ fontSize: '16px', color: '#000' }} className="mobile-checkbox-text">이메일</span>
                   </label>
-                  <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }} className="mobile-checkbox-label">
                     <input
                       type="checkbox"
                       checked={consentPhone}
                       onChange={(e) => setConsentPhone(e.target.checked)}
                       style={{ width: '20px', height: '20px', marginRight: '12px', accentColor: '#00A08C' }}
+                      className="mobile-checkbox"
                       disabled={submitting}
                     />
-                    <span style={{ fontSize: '16px', color: '#000' }}>전화번호</span>
+                    <span style={{ fontSize: '16px', color: '#000' }} className="mobile-checkbox-text">전화번호</span>
                   </label>
                 </div>
               </div>
               
               {/* 개인정보취급방침 */}
-              <div style={{ paddingTop: '24px', borderTop: '1px solid #e5e5e5' }}>
-                <p style={{ fontSize: '14px', color: '#666', marginBottom: '16px', lineHeight: '22px' }}>
+              <div style={{ paddingTop: '24px', borderTop: '1px solid #e5e5e5' }} className="mobile-consent-section">
+                <p style={{ fontSize: '14px', color: '#666', marginBottom: '16px', lineHeight: '22px' }} className="mobile-privacy-text">
                   WERT에서 귀하의 정보를 관리, 사용, 보호하는 방법에 대해 자세히 알아보려면{' '}
                   <a 
                     href="https://www.wertcorp.com/kr/policy" 
@@ -1198,16 +1378,17 @@ export default function RegistrationPage({ campaign, baseUrl }: RegistrationPage
                   </a>를 클릭하시면 됩니다. 
                   마케팅 팀으로부터 전화를 받으실 수 있도록 휴대폰 번호를 제공하신 경우, 로밍 요금이 적용될 수 있음을 알아두시기 바랍니다.
                 </p>
-                <label style={{ display: 'flex', alignItems: 'start', cursor: 'pointer' }}>
+                <label style={{ display: 'flex', alignItems: 'start', cursor: 'pointer' }} className="mobile-checkbox-label">
                   <input
                     type="checkbox"
                     checked={privacyConsent}
                     onChange={(e) => setPrivacyConsent(e.target.checked)}
                     style={{ width: '20px', height: '20px', marginRight: '12px', marginTop: '2px', accentColor: '#00A08C' }}
+                    className="mobile-checkbox"
                     disabled={submitting}
                     required
                   />
-                  <span style={{ fontSize: '16px', color: '#000' }}>
+                  <span style={{ fontSize: '16px', color: '#000' }} className="mobile-checkbox-text">
                     개인정보 취급방침에 동의합니다 <span style={{ color: '#f00' }}>*</span>
                   </span>
                 </label>
