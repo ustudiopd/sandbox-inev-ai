@@ -8,6 +8,60 @@ import DonePageClient from './components/DonePageClient'
 import RegistrationPage from './components/RegistrationPage'
 import WelcomePage from './components/WelcomePage'
 import WebinarFormWertPage from '@/app/webinarform/wert/page'
+import type { Metadata } from 'next'
+
+/**
+ * 메타데이터 생성 함수
+ */
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ path: string[] }>
+}): Promise<Metadata> {
+  const { path } = await params
+  
+  if (!path || path.length === 0) {
+    return {}
+  }
+  
+  const lastPath = path[path.length - 1]
+  const isSubPath = ['survey', 'register', 'done', 'display'].includes(lastPath)
+  const publicPath = '/' + (isSubPath ? path.slice(0, -1) : path).join('/')
+  
+  // 149403 페이지에 대한 메타데이터
+  if (publicPath === '/149403' || publicPath === '149403') {
+    return {
+      title: '실제 고객사례로 알아보는 AI 특허리서치 실무 활용 웨비나 | keywert Insight',
+      description: '2026년 2월 6일(금) 오후 2시-3시 30분, 온라인 LIVE로 진행되는 무료 웨비나. IP팀·특허사무소·R&D팀의 키워트 인사이트 활용 방식을 실제 고객사례를 통해 알아보세요.',
+      keywords: 'AI 특허리서치, 키워트 인사이트, 특허 분석, IP팀, 특허사무소, R&D, 웨비나, keywert Insight',
+      openGraph: {
+        title: '실제 고객사례로 알아보는 AI 특허리서치 실무 활용 웨비나',
+        description: '2026년 2월 6일(금) 오후 2시-3시 30분, 온라인 LIVE | 무료 참가 | IP팀·특허사무소·R&D팀의 키워트 인사이트 활용 방식을 실제 고객사례를 통해 알아보세요.',
+        type: 'website',
+        siteName: 'keywert Insight',
+        images: [
+          {
+            url: 'https://yqsayphssjznthrxpgfb.supabase.co/storage/v1/object/public/webinar-thumbnails/wert/image 50-1.png',
+            width: 1000,
+            height: 1488,
+            alt: 'AI 특허리서치 실무 활용 웨비나',
+          },
+        ],
+      },
+      twitter: {
+        card: 'summary_large_image',
+        title: '실제 고객사례로 알아보는 AI 특허리서치 실무 활용 웨비나',
+        description: '2026년 2월 6일(금) 오후 2시-3시 30분, 온라인 LIVE | 무료 참가',
+        images: ['https://yqsayphssjznthrxpgfb.supabase.co/storage/v1/object/public/webinar-thumbnails/wert/image 50-1.png'],
+      },
+      alternates: {
+        canonical: '/event/149403',
+      },
+    }
+  }
+  
+  return {}
+}
 
 /**
  * 이벤트 공개 페이지 catch-all 라우트 (설문조사 + 등록 페이지)
