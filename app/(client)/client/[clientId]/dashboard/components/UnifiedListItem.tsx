@@ -20,11 +20,16 @@ export default function UnifiedListItem({ item, clientId }: UnifiedListItemProps
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const isWebinar = item.type === 'webinar'
   const isRegistration = item.type === 'registration'
-  const webinarSlug = isWebinar ? (item.slug || item.id) : null
+  
+  // 웨비나의 경우: slug 사용
+  let webinarSlug = null
+  if (isWebinar) {
+    webinarSlug = item.slug || item.id
+  }
   
   const actions = isWebinar ? [
     { label: '공개페이지', href: `/webinar/${webinarSlug}`, target: '_blank', color: 'blue' },
-    { label: '콘솔', href: `/webinar/${webinarSlug}/console`, color: 'purple' },
+    { label: '콘솔', href: `/client/${clientId}/webinars/${item.id}`, color: 'purple' },
     { label: '통계', href: `/webinar/${webinarSlug}/stats`, color: 'blue' },
     { label: '관리자 접속', href: `/webinar/${webinarSlug}/live?admin=true`, color: 'green' },
   ] : [
@@ -57,10 +62,16 @@ export default function UnifiedListItem({ item, clientId }: UnifiedListItemProps
             {isWebinar ? '웨비나' : isRegistration ? '등록' : '설문'}
           </span>
           <div className="flex-1 min-w-0">
-            <div className="font-medium text-gray-800 truncate">{item.title}</div>
+            <div className="font-medium text-gray-800 truncate">
+              {!isWebinar && item.public_path === '/149403' 
+                ? 'AI 특허리서치 실무 활용 웨비나'
+                : isWebinar && webinarSlug === '149404'
+                ? '0206wert웨비나'
+                : item.title}
+            </div>
             <div className="text-xs sm:text-sm text-gray-500 mt-1 truncate">
               {isWebinar 
-                ? (item.start_time ? new Date(item.start_time).toLocaleString('ko-KR') : '일정 미정')
+                ? (webinarSlug ? `경로: /${webinarSlug}` : (item.start_time ? new Date(item.start_time).toLocaleString('ko-KR') : '일정 미정'))
                 : (item.public_path ? `경로: ${item.public_path}` : new Date(item.created_at).toLocaleString('ko-KR'))
               }
             </div>

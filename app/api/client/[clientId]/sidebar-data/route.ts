@@ -26,43 +26,50 @@ export async function GET(
       .eq('id', clientId)
       .single()
 
-    // 클라이언트 이름으로 웨비나/설문조사 구분
-    // "HPE" 또는 "hpe"로 시작하는 클라이언트는 설문조사, 나머지는 웨비나
-    const isSurveyClient = client?.name?.toLowerCase().includes('hpe') || false
-
-    let events: any[] = []
-
-    if (isSurveyClient) {
+    // 웨비나와 등록 페이지 캠페인을 모두 조회
+    const [webinarsResult, campaignsResult] = await Promise.all([
+      // 웨비나 목록 (최근 20개)
+      admin
+        .from('webinars')
+        .select('id, title, slug, created_at')
+        .eq('client_id', clientId)
+        .order('created_at', { ascending: false })
+        .limit(20),
       // 설문조사 및 등록 페이지 캠페인 목록 (최근 20개)
-      const { data: campaigns } = await admin
+      admin
         .from('event_survey_campaigns')
         .select('id, title, public_path, type, created_at')
         .eq('client_id', clientId)
         .order('created_at', { ascending: false })
         .limit(20)
+    ])
 
-      events = (campaigns || []).map((c: any) => ({
-        id: c.id,
-        title: c.title,
-        slug: c.public_path, // public_path를 slug로 사용
-        type: c.type || 'survey', // 기본값은 'survey'
-      }))
-    } else {
-      // 웨비나 목록 (최근 20개)
-      const { data: webinars } = await admin
-        .from('webinars')
-        .select('id, title, slug, created_at')
-        .eq('client_id', clientId)
-        .order('created_at', { ascending: false })
-        .limit(20)
+    const webinars = webinarsResult.data || []
+    const campaigns = campaignsResult.data || []
 
-      events = (webinars || []).map((w: any) => ({
+    // 웨비나와 캠페인을 합쳐서 정렬
+    const allEvents = [
+      ...webinars.map((w: any) => ({
         id: w.id,
         title: w.title,
         slug: w.slug,
-        type: 'webinar',
+        type: 'webinar' as const,
+        created_at: w.created_at,
+      })),
+      ...campaigns.map((c: any) => ({
+        id: c.id,
+        title: c.title,
+        slug: c.public_path, // public_path를 slug로 사용
+        public_path: c.public_path,
+        type: (c.type || 'survey') as 'survey' | 'registration',
+        created_at: c.created_at,
       }))
-    }
+    ]
+
+    // 생성일 기준으로 정렬 (최신순)
+    const events = allEvents.sort((a, b) => 
+      new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    ).slice(0, 20) // 최대 20개만 반환
 
     return NextResponse.json({
       workspace: {

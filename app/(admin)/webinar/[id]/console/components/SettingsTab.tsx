@@ -32,7 +32,7 @@ export default function SettingsTab({ webinar, onWebinarUpdate }: SettingsTabPro
     endTime: '',
     maxParticipants: '',
     isPublic: false,
-    accessPolicy: 'auth' as 'auth' | 'guest_allowed' | 'invite_only' | 'email_auth',
+    accessPolicy: 'auth' as 'auth' | 'guest_allowed' | 'invite_only' | 'email_auth' | 'name_email_auth',
     allowedEmails: [] as string[],
     emailTemplateText: '',
     emailThumbnailUrl: '',
@@ -359,12 +359,13 @@ ${webinar.title}
             onChange={(e) => setFormData({ ...formData, accessPolicy: e.target.value as any })}
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
-            <option value="auth">인증 필요 (로그인 필수)</option>
+            <option value="auth">인증필요 (로그인 필수)</option>
             <option value="email_auth">인증필요 (이메일)</option>
+            <option value="name_email_auth">인증필요 (이름+이메일)</option>
             <option value="guest_allowed">게스트 허용</option>
             <option value="invite_only">초대 전용</option>
           </select>
-          {formData.accessPolicy === 'email_auth' && (
+          {(formData.accessPolicy === 'email_auth' || formData.accessPolicy === 'name_email_auth') && (
             <div className="mt-4 space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">

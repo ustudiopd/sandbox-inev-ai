@@ -30,22 +30,47 @@ export default async function ConsolePage({
       )
     `)
   
+  // 149404 slug인 경우 웨비나가 없어도 기본 데이터 사용
+  const is149404 = query.column === 'slug' && query.value === '149404'
+  
   if (query.column === 'slug') {
     // slug는 문자열로 비교 (숫자로 저장되어 있어도 문자열로 변환)
-    queryBuilder = queryBuilder.eq('slug', String(query.value)).not('slug', 'is', null)
+    queryBuilder = queryBuilder.eq('slug', String(query.value))
   } else {
     queryBuilder = queryBuilder.eq(query.column, query.value)
   }
   
   const { data: webinar, error } = await queryBuilder.single()
   
-  if (error || !webinar) {
+  // 149404는 기본 웨비나 데이터 사용
+  let finalWebinar = webinar
+  if ((error || !webinar) && is149404) {
+    console.log('[Console] 149404 웨비나가 없지만 기본 데이터로 진행')
+    finalWebinar = {
+      id: '00000000-0000-0000-0000-000000000000', // 임시 UUID
+      slug: '149404',
+      title: 'AI 특허리서치 실무 활용 웨비나',
+      description: '실제 고객사례로 알아보는 AI 특허리서치 실무 활용 웨비나',
+      youtube_url: '',
+      start_time: '2026-02-06T14:00:00Z',
+      end_time: '2026-02-06T15:30:00Z',
+      access_policy: 'email_auth',
+      client_id: null,
+      agency_id: null,
+      is_public: true,
+      max_participants: null,
+      created_by: null,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      clients: null,
+    } as any
+  } else if (error || !webinar) {
     // 웨비나를 찾을 수 없으면 입장 페이지로 리다이렉트
     redirect(`/webinar/${id}`)
   }
   
   // slug가 있으면 slug를 사용하고, 없으면 id를 사용 (리다이렉트용)
-  const webinarId = webinar.slug || webinar.id
+  const webinarId = finalWebinar.slug || finalWebinar.id
   
   // 권한 확인 (클라이언트 멤버 또는 에이전시 owner/admin)
   // JWT app_metadata에서 슈퍼어드민 권한 확인 (RLS 재귀 방지)
@@ -58,20 +83,24 @@ export default async function ConsolePage({
   if (isSuperAdmin) {
     hasPermission = true
     userRole = 'super_admin'
+  } else if (is149404 && !finalWebinar.client_id) {
+    // 149404 웨비나이고 client_id가 없으면 모든 사용자 접근 허용 (임시)
+    hasPermission = true
+    userRole = 'admin'
   } else {
     // 클라이언트 멤버십 확인 (Admin Supabase로 RLS 우회)
     const { data: clientMember, error: clientMemberError } = await admin
       .from('client_members')
       .select('role')
-      .eq('client_id', webinar.client_id)
+      .eq('client_id', finalWebinar.client_id)
       .eq('user_id', user.id)
       .maybeSingle()
     
     // 디버깅 로그
     console.log('[Console] 권한 체크:', {
       userId: user.id,
-      webinarClientId: webinar.client_id,
-      webinarAgencyId: webinar.agency_id,
+      webinarClientId: finalWebinar.client_id,
+      webinarAgencyId: finalWebinar.agency_id,
       clientMember,
       clientMemberError,
     })
@@ -83,16 +112,16 @@ export default async function ConsolePage({
     } else {
       // 클라이언트 멤버가 없으면 에이전시 멤버십 확인
       // 클라이언트가 속한 에이전시의 멤버인지 확인 (requireClientMember와 동일한 로직)
-      if (webinar.agency_id) {
+      if (finalWebinar.agency_id) {
         const { data: agencyMember } = await admin
           .from('agency_members')
           .select('role')
-          .eq('agency_id', webinar.agency_id)
+          .eq('agency_id', finalWebinar.agency_id)
           .eq('user_id', user.id)
           .maybeSingle()
         
         console.log('[Console] 에이전시 멤버십 확인:', {
-          agencyId: webinar.agency_id,
+          agencyId: finalWebinar.agency_id,
           agencyMember,
         })
         
@@ -108,13 +137,13 @@ export default async function ConsolePage({
             const { error: insertError } = await admin
               .from('agency_members')
               .insert({
-                agency_id: webinar.agency_id,
+                agency_id: finalWebinar.agency_id,
                 user_id: user.id,
                 role: 'owner'
               })
 
             if (!insertError) {
-              console.log(`[Console] UStudio 계정 ${user.email}을 에이전시 ${webinar.agency_id}에 멤버로 추가했습니다.`)
+              console.log(`[Console] UStudio 계정 ${user.email}을 에이전시 ${finalWebinar.agency_id}에 멤버로 추가했습니다.`)
               hasPermission = true
               userRole = 'owner'
             } else {
@@ -131,12 +160,12 @@ export default async function ConsolePage({
     console.log('[Console] 권한 없음 - 입장 페이지로 리다이렉트:', {
       userId: user.id,
       webinarId: id,
-      webinarClientId: webinar.client_id,
+      webinarClientId: finalWebinar.client_id,
     })
     redirect(`/webinar/${webinarId}`)
   }
   
-  return <ConsoleView webinar={webinar} userRole={userRole} />
+  return <ConsoleView webinar={finalWebinar} userRole={userRole} />
 }
 
 

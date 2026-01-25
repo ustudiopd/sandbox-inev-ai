@@ -32,16 +32,20 @@ export default function SurveyCampaignDetailView({ campaign, clientId }: SurveyC
             <div className="flex-1 min-w-0">
               <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-2">
                 <Link
-                  href={`/client/${clientId}/surveys`}
+                  href={`/client/${clientId}/dashboard`}
                   className="text-blue-600 hover:text-blue-700 hover:underline text-xs sm:text-sm flex-shrink-0"
                 >
-                  ← 설문조사 목록으로
+                  ← 메인 대시보드로
                 </Link>
                 <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                   운영 콘솔
                 </h1>
               </div>
-              <p className="text-sm sm:text-base text-gray-600 truncate">{campaignData.title}</p>
+              <p className="text-sm sm:text-base text-gray-600 truncate">
+                {campaignData.public_path === '/149403' 
+                  ? 'AI 특허리서치 실무 활용 웨비나'
+                  : campaignData.title}
+              </p>
             </div>
             <div className="flex items-center gap-3 flex-shrink-0">
               <Link

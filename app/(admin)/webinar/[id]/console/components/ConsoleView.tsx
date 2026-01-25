@@ -58,10 +58,10 @@ export default function ConsoleView({ webinar, userRole }: ConsoleViewProps) {
               <div>
                 <div className="flex items-center gap-3 mb-2">
                   <Link 
-                    href={`/webinar/${webinarSlug}`}
+                    href={`/client/${webinar.client_id}/dashboard`}
                     className="text-blue-600 hover:text-blue-700 hover:underline text-sm"
                   >
-                    ← 시청 페이지로
+                    ← 메인 대시보드로
                   </Link>
                   <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                     운영 콘솔

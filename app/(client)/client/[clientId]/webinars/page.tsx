@@ -135,10 +135,12 @@ export default function WebinarsPage() {
                   <tbody className="bg-white divide-y divide-gray-200">
                     {webinars.map((webinar) => {
                       const status = getWebinarStatus(webinar)
+                      const webinarSlug = webinar.slug || webinar.id
+                      const displayTitle = webinarSlug === '149404' ? '0206wert웨비나' : webinar.title
                       return (
                         <tr key={webinar.id} className="hover:bg-gray-50 transition-colors">
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm font-medium text-gray-900">{webinar.title}</div>
+                            <div className="text-sm font-medium text-gray-900">{displayTitle}</div>
                             {webinar.description && (
                               <div className="text-sm text-gray-500 mt-1 line-clamp-1">{webinar.description}</div>
                             )}
@@ -173,7 +175,7 @@ export default function WebinarsPage() {
                               </Link>
                               <ShareLinkButton 
                                 webinarId={webinar.id} 
-                                webinarTitle={webinar.title}
+                                webinarTitle={displayTitle}
                               />
                               <Link 
                                       href={`/webinar/${webinarSlug}/live?admin=true`}
@@ -182,7 +184,7 @@ export default function WebinarsPage() {
                                 관리자 접속
                               </Link>
                               <Link 
-                                      href={`/webinar/${webinarSlug}/console`}
+                                      href={`/client/${clientId}/webinars/${webinar.id}`}
                                 className="text-purple-600 hover:text-purple-800 font-medium hover:underline"
                               >
                                 콘솔

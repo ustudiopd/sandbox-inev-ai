@@ -34,8 +34,8 @@ export async function POST(req: Request) {
       )
     }
     
-    // email_auth 정책인지 확인
-    if (webinar.access_policy !== 'email_auth') {
+    // email_auth 또는 name_email_auth 정책인지 확인
+    if (webinar.access_policy !== 'email_auth' && webinar.access_policy !== 'name_email_auth') {
       return NextResponse.json(
         { error: 'This webinar does not use email authentication' },
         { status: 400 }

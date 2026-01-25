@@ -269,22 +269,32 @@ export default function SidebarTree({ organizations }: SidebarTreeProps) {
             ]
           }
 
-          // 해당 클라이언트의 웨비나/설문조사 목록
+          // 해당 클라이언트의 웨비나/설문조사/등록 페이지 목록
           const clientEvents = webinars.get(client.id) || []
           clientEvents.forEach(event => {
             const isSurvey = event.type === 'survey'
+            const isRegistration = event.type === 'registration'
+            
+            // 제목 표시: 149404 웨비나는 "0206wert웨비나"로 표시
+            let displayTitle = event.title
+            if (event.type === 'webinar' && event.slug === '149404') {
+              displayTitle = '0206wert웨비나'
+            } else if (isRegistration && event.slug === '/149403') {
+              displayTitle = 'AI 특허리서치 실무 활용 웨비나'
+            }
+            
             const eventNode: TreeNode = {
-              id: `${isSurvey ? 'survey' : 'webinar'}-${event.id}`,
-              label: event.title,
+              id: `${isSurvey ? 'survey' : isRegistration ? 'registration' : 'webinar'}-${event.id}`,
+              label: displayTitle,
               type: isSurvey ? 'webinar' : 'webinar', // TreeNode 타입은 webinar로 통일
-              icon: isSurvey ? '📋' : '🎥',
-              expanded: expandedNodes.has(`${isSurvey ? 'survey' : 'webinar'}-${event.id}`),
-              active: isSurvey 
+              icon: isSurvey ? '📋' : isRegistration ? '📝' : '🎥',
+              expanded: expandedNodes.has(`${isSurvey ? 'survey' : isRegistration ? 'registration' : 'webinar'}-${event.id}`),
+              active: isSurvey || isRegistration
                 ? pathname.includes(`/client/${client.id}/surveys/${event.id}`)
                 : pathname.includes(`/webinar/${event.slug || event.id}/`),
-              children: isSurvey ? [
+              children: isSurvey || isRegistration ? [
                 {
-                  id: `survey-${event.id}-console`,
+                  id: `${isSurvey ? 'survey' : 'registration'}-${event.id}-console`,
                   label: '콘솔',
                   type: 'page',
                   href: `/client/${client.id}/surveys/${event.id}`,
@@ -376,9 +386,18 @@ export default function SidebarTree({ organizations }: SidebarTreeProps) {
             clientEvents.forEach(event => {
               const isSurvey = event.type === 'survey'
               const isRegistration = event.type === 'registration'
+              
+              // 제목 표시: 149404 웨비나는 "0206wert웨비나"로 표시
+              let displayTitle = event.title
+              if (event.type === 'webinar' && event.slug === '149404') {
+                displayTitle = '0206wert웨비나'
+              } else if (isRegistration && event.slug === '/149403') {
+                displayTitle = 'AI 특허리서치 실무 활용 웨비나'
+              }
+              
               const eventNode: TreeNode = {
                 id: `${isSurvey ? 'survey' : isRegistration ? 'registration' : 'webinar'}-${event.id}`,
-                label: event.title,
+                label: displayTitle,
                 type: 'webinar', // TreeNode 타입은 webinar로 통일
                 icon: isSurvey ? '📋' : isRegistration ? '📝' : '🎥',
                 expanded: expandedNodes.has(`${isSurvey ? 'survey' : isRegistration ? 'registration' : 'webinar'}-${event.id}`),
@@ -486,9 +505,18 @@ export default function SidebarTree({ organizations }: SidebarTreeProps) {
           clientEvents.forEach(event => {
             const isSurvey = event.type === 'survey'
             const isRegistration = event.type === 'registration'
+            
+            // 제목 표시: 149404 웨비나는 "0206wert웨비나"로 표시
+            let displayTitle = event.title
+            if (event.type === 'webinar' && event.slug === '149404') {
+              displayTitle = '0206wert웨비나'
+            } else if (isRegistration && event.slug === '/149403') {
+              displayTitle = 'AI 특허리서치 실무 활용 웨비나'
+            }
+            
             const eventNode: TreeNode = {
               id: `${isSurvey ? 'survey' : isRegistration ? 'registration' : 'webinar'}-${event.id}`,
-              label: event.title,
+              label: displayTitle,
               type: 'webinar', // TreeNode 타입은 webinar로 통일
               icon: isSurvey ? '📋' : isRegistration ? '📝' : '🎥',
               expanded: expandedNodes.has(`${isSurvey ? 'survey' : isRegistration ? 'registration' : 'webinar'}-${event.id}`),

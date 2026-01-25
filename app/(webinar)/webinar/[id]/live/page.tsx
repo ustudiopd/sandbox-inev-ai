@@ -40,6 +40,7 @@ export default async function WebinarLivePage({
         brand_config
       )
     `)
+    // slug 필드 명시적으로 포함
   
   if (query.column === 'slug') {
     // slug는 문자열로 비교 (숫자로 저장되어 있어도 문자열로 변환)
@@ -177,6 +178,12 @@ export default async function WebinarLivePage({
         // 등록되지 않은 이메일이면 입장 페이지로 리다이렉트
         redirect(`/webinar/${webinarId}`)
       }
+    }
+    
+    // name_email_auth 정책: 등록 페이지 캠페인에서 등록 확인 (이름+이메일)
+    if (webinar.access_policy === 'name_email_auth' && user && webinar.registration_campaign_id) {
+      // 등록 페이지 캠페인에 등록된 사용자인지 확인은 WebinarEntry에서 이미 처리됨
+      // 여기서는 추가 검증이 필요하면 구현
     }
   }
   

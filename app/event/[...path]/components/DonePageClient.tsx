@@ -15,7 +15,8 @@ export default function DonePageClient({ campaign, baseUrl }: DonePageClientProp
   const [surveyNo, setSurveyNo] = useState<number | null>(null)
   const [code6, setCode6] = useState<string | null>(null)
   const [isMobile, setIsMobile] = useState(false)
-  const [showRegistrationModal, setShowRegistrationModal] = useState(false)
+  // 등록 타입인 경우 초기값을 true로 설정하여 모달만 표시
+  const [showRegistrationModal, setShowRegistrationModal] = useState(campaign?.type === 'registration')
   
   useEffect(() => {
     const surveyNoParam = searchParams.get('survey_no')
@@ -28,7 +29,7 @@ export default function DonePageClient({ campaign, baseUrl }: DonePageClientProp
       setCode6(code6Param)
     }
     
-    // 웨비나 등록인 경우 팝업 표시
+    // 웨비나 등록인 경우 팝업 표시 (이미 초기값으로 설정되어 있지만 확실히 하기 위해)
     if (campaign?.type === 'registration') {
       setShowRegistrationModal(true)
     }
@@ -50,8 +51,8 @@ export default function DonePageClient({ campaign, baseUrl }: DonePageClientProp
     router.push(`${baseUrl}/event${campaign.public_path}`)
   }
   
-  // 웨비나 등록인 경우 팝업만 표시
-  if (campaign?.type === 'registration' && showRegistrationModal) {
+  // 웨비나 등록인 경우 팝업만 표시 (설문 완료 페이지는 표시하지 않음)
+  if (campaign?.type === 'registration') {
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
         <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-8 text-center">

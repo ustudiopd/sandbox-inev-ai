@@ -25,7 +25,7 @@ export async function generateMetadata({
   // dashboard_code로 캠페인 조회
   const { data: campaign } = await admin
     .from('event_survey_campaigns')
-    .select('title')
+    .select('title, public_path')
     .eq('dashboard_code', code.toUpperCase())
     .eq('status', 'published')
     .maybeSingle()
@@ -36,8 +36,11 @@ export async function generateMetadata({
     }
   }
   
-  const title = `${campaign.title} 대시보드`
-  const description = `${campaign.title} 설문조사 통계 대시보드`
+  const displayTitle = campaign.public_path === '/149403' 
+    ? 'AI 특허리서치 실무 활용 웨비나'
+    : campaign.title
+  const title = `${displayTitle} 대시보드`
+  const description = `${displayTitle} 설문조사 통계 대시보드`
   
   return {
     title,

@@ -156,18 +156,17 @@ export async function POST(
         )
       }
       
-      // 웨비나 연동: 등록 데이터에 이메일이 있으면 같은 클라이언트의 웨비나에도 등록
+      // 웨비나 연동: 등록 데이터에 이메일이 있으면 이 캠페인과 연동된 웨비나에도 등록
       if (registration_data?.email) {
         try {
           const emailLower = registration_data.email.trim().toLowerCase()
           
-          // 같은 클라이언트의 웨비나 찾기 (특히 wert-summit-26)
+          // 이 캠페인과 연동된 웨비나 찾기 (registration_campaign_id로 연결된 웨비나)
           const { data: webinars } = await admin
             .from('webinars')
             .select('id, slug, access_policy')
-            .eq('client_id', campaign.client_id)
+            .eq('registration_campaign_id', campaignId)
             .eq('access_policy', 'email_auth')
-            .in('slug', ['wert-summit-26'])
           
           if (webinars && webinars.length > 0) {
             for (const webinar of webinars) {
@@ -189,7 +188,7 @@ export async function POST(
                     created_by: null,
                   })
                 
-                console.log(`웨비나 연동: ${emailLower}를 웨비나 ${webinar.slug}에 등록했습니다`)
+                console.log(`웨비나 연동: ${emailLower}를 웨비나 ${webinar.slug || webinar.id}에 등록했습니다`)
               }
             }
           }
@@ -210,6 +209,15 @@ export async function POST(
     const code6 = String(surveyNo).padStart(6, '0')
     
     // 등록자 정보 저장 (설문 답변 없이)
+    // registration_data의 이메일을 소문자로 정규화
+    let normalizedRegistrationData = registration_data
+    if (normalizedRegistrationData?.email) {
+      normalizedRegistrationData = {
+        ...normalizedRegistrationData,
+        email: normalizedRegistrationData.email.trim().toLowerCase(),
+      }
+    }
+    
     const { data: entry, error: entryError } = await admin
       .from('event_survey_entries')
       .insert({
@@ -220,7 +228,7 @@ export async function POST(
         survey_no: surveyNo,
         code6: code6,
         completed_at: new Date().toISOString(),
-        registration_data: registration_data || null,
+        registration_data: normalizedRegistrationData || null,
       })
       .select('survey_no, code6')
       .single()
@@ -233,18 +241,17 @@ export async function POST(
       )
     }
     
-    // 웨비나 연동: 등록 데이터에 이메일이 있으면 같은 클라이언트의 웨비나에도 등록
+    // 웨비나 연동: 등록 데이터에 이메일이 있으면 이 캠페인과 연동된 웨비나에도 등록
     if (registration_data?.email) {
       try {
         const emailLower = registration_data.email.trim().toLowerCase()
         
-        // 같은 클라이언트의 웨비나 찾기 (특히 wert-summit-26)
+        // 이 캠페인과 연동된 웨비나 찾기 (registration_campaign_id로 연결된 웨비나)
         const { data: webinars } = await admin
           .from('webinars')
           .select('id, slug, access_policy')
-          .eq('client_id', campaign.client_id)
+          .eq('registration_campaign_id', campaignId)
           .eq('access_policy', 'email_auth')
-          .in('slug', ['wert-summit-26'])
         
         if (webinars && webinars.length > 0) {
           for (const webinar of webinars) {
@@ -266,7 +273,7 @@ export async function POST(
                   created_by: null,
                 })
               
-              console.log(`웨비나 연동: ${emailLower}를 웨비나 ${webinar.slug}에 등록했습니다`)
+              console.log(`웨비나 연동: ${emailLower}를 웨비나 ${webinar.slug || webinar.id}에 등록했습니다`)
             }
           }
         }

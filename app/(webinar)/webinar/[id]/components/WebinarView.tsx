@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef, useMemo } from 'react'
 import { createPortal } from 'react-dom'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import { createClientSupabase } from '@/lib/supabase/client'
 import YouTubePlayer from '@/components/webinar/YouTubePlayer'
 import Chat from '@/components/webinar/Chat'
@@ -17,6 +18,7 @@ import { usePresencePing } from '@/components/webinar/hooks/usePresencePing'
 interface Webinar {
   id: string
   title: string
+  slug?: string | null
   description?: string
   youtube_url: string
   start_time?: string
@@ -40,10 +42,67 @@ interface WebinarViewProps {
  * 웨비나 시청 페이지 메인 컴포넌트
  * 모듈화된 컴포넌트들을 조합하여 구성
  */
+// 세션 데이터 (149404 웨비나용)
+const wertSessions = [
+  {
+    label: "SESSION 1",
+    duration: "약 40분",
+    title: "고객사례로 알아보는 AI 특허리서치 활용법",
+    bullets: [
+      "IP·R&D·특허사무소별 키워트 인사이트 활용사례",
+      "조직 간 커뮤니케이션 및 의사결정 개선 사례",
+    ],
+    speaker: {
+      name: "조은비 시니어 매니저",
+      role: "워트인텔리전스\n글로벌마켓매니지먼트팀",
+      avatar: "https://yqsayphssjznthrxpgfb.supabase.co/storage/v1/object/public/webinar-thumbnails/wert/jo.png",
+    },
+  },
+  {
+    label: "SESSION 2",
+    duration: "약 20분",
+    title: "키워트 인사이트가 가장 많이 받는 질문들",
+    bullets: [
+      "고객 데이터가 AI 학습에 사용되지 않나요?",
+      "키워트 인사이트의 보안 구조는 어떻게 되어 있나요?",
+      "키워트 인사이트는 ChatGPT·Gemini 같은 범용 AI와\n무엇이 다른가요?",
+    ],
+    speaker: {
+      name: "조경식 팀장",
+      role: "워트인텔리전스\n글로벌마켓매니지먼트팀",
+      avatar: "https://yqsayphssjznthrxpgfb.supabase.co/storage/v1/object/public/webinar-thumbnails/wert/jo2.png",
+    },
+  },
+  {
+    label: "SESSION 3",
+    duration: "약 20분",
+    title: "키워트 인사이트 바로 써보기",
+    bullets: [
+      "회원가입 및 기본 기능 안내",
+      "실무에서 바로 쓰는 핵심 기능 소개",
+    ],
+    speaker: null,
+  },
+  {
+    label: "SESSION 4",
+    duration: "약 10분",
+    title: "QnA",
+    bullets: [
+      "좋은 질문을 해주신 분들 중 추첨으로 선물을 드립니다.",
+    ],
+    note: "*아래 이벤트 항목 참고",
+    speaker: null,
+  },
+]
+
 export default function WebinarView({ webinar, isAdminMode = false }: WebinarViewProps) {
   const [activeTab, setActiveTab] = useState<'chat' | 'qa' | 'participants'>('chat')
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [mounted, setMounted] = useState(false)
+  const [expandedSession, setExpandedSession] = useState<string | null>(null)
+  
+  // 149404 웨비나는 /event/149403 페이지와 같은 톤앤매너 적용
+  const isWertWebinar = webinar.slug === '149404' || webinar.id === '344c1459-3d4c-483f-9ec7-fcf4af776d2b'
   const [openForms, setOpenForms] = useState<any[]>([])
   const [openGiveaways, setOpenGiveaways] = useState<any[]>([])
   const [files, setFiles] = useState<any[]>([])
@@ -522,21 +581,58 @@ export default function WebinarView({ webinar, isAdminMode = false }: WebinarVie
           </div>
         </div>
       )}
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 w-full overflow-x-hidden">
+      {/* 149404 웨비나는 /event/149403 페이지와 같은 톤앤매너 적용 */}
+      {webinar.slug === '149404' || webinar.id === '344c1459-3d4c-483f-9ec7-fcf4af776d2b' ? (
+        <style jsx global>{`
+          @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css');
+          
+          html, body {
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+            background-color: #fff;
+            margin: 0;
+            padding: 0;
+          }
+        `}</style>
+      ) : null}
+      <div className={`min-h-screen w-full overflow-x-hidden ${
+        webinar.slug === '149404' || webinar.id === '344c1459-3d4c-483f-9ec7-fcf4af776d2b'
+          ? 'bg-white'
+          : 'bg-gradient-to-br from-gray-50 to-blue-50'
+      }`}>
       {/* 헤더 */}
-      <header className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-40 w-full">
+      <header className={`border-b sticky top-0 z-40 w-full ${
+        webinar.slug === '149404' || webinar.id === '344c1459-3d4c-483f-9ec7-fcf4af776d2b'
+          ? 'bg-white/60 backdrop-blur-[2px] border-gray-200/50'
+          : 'bg-white border-gray-200 shadow-sm'
+      }`}>
         <div className="w-full max-w-[1600px] mx-auto px-2 sm:px-3 lg:px-4 py-2 sm:py-3 lg:py-4">
           <div className="flex items-center justify-between w-full">
             <div className="flex-1 min-w-0">
-              <h1 
-                onClick={() => router.push(`/webinar/${webinar.id}`)}
-                className="text-base sm:text-lg lg:text-2xl font-bold text-gray-900 truncate cursor-pointer hover:text-blue-600 transition-colors"
-                title="웨비나 입장 페이지로 이동"
-              >
-                {webinar.title}
-              </h1>
-              {webinar.description && (
-                <p className="text-xs lg:text-sm text-gray-600 mt-0.5 sm:mt-1 line-clamp-1">{webinar.description}</p>
+              {/* 149404 웨비나는 로고 표시, 제목 숨김 */}
+              {webinar.slug === '149404' || webinar.id === '344c1459-3d4c-483f-9ec7-fcf4af776d2b' ? (
+                <div className="flex items-center">
+                  <Image
+                    src="https://yqsayphssjznthrxpgfb.supabase.co/storage/v1/object/public/webinar-thumbnails/wert/kewert_logo.png"
+                    alt="keywert Insight"
+                    width={200}
+                    height={25}
+                    className="h-6 sm:h-8 lg:h-10 w-auto"
+                    priority
+                  />
+                </div>
+              ) : (
+                <>
+                  <h1 
+                    onClick={() => router.push(`/webinar/${webinar.id}`)}
+                    className="text-base sm:text-lg lg:text-2xl font-bold text-gray-900 truncate cursor-pointer hover:text-blue-600 transition-colors"
+                    title="웨비나 입장 페이지로 이동"
+                  >
+                    {webinar.title}
+                  </h1>
+                  {webinar.description && (
+                    <p className="text-xs lg:text-sm text-gray-600 mt-0.5 sm:mt-1 line-clamp-1">{webinar.description}</p>
+                  )}
+                </>
               )}
             </div>
             <div className="flex items-center gap-3 ml-4">
@@ -565,14 +661,19 @@ export default function WebinarView({ webinar, isAdminMode = false }: WebinarVie
           {/* 메인 영역 - YouTube 플레이어 */}
           <div className="lg:col-span-2 space-y-2 sm:space-y-3 lg:space-y-4">
             {/* YouTube 플레이어 */}
-            <div className="bg-white rounded-lg sm:rounded-xl shadow-lg overflow-hidden w-full relative group">
+            <div className={`bg-white overflow-hidden w-full relative group ${
+              isWertWebinar 
+                ? 'rounded-lg' 
+                : 'rounded-lg sm:rounded-xl shadow-lg'
+            }`}>
               <div className="relative w-full pb-[56.25%] bg-black">
                 <div className="absolute top-0 left-0 w-full h-full">
                   <YouTubePlayer
                     url={webinar.youtube_url}
                     width="100%"
                     height="100%"
-                    autoplay={false}
+                    autoplay={true}
+                    muted={true}
                     className="w-full h-full"
                   />
                 </div>
@@ -591,9 +692,206 @@ export default function WebinarView({ webinar, isAdminMode = false }: WebinarVie
             </div>
             
             {/* 세션 소개 - 모바일에서도 표시 */}
-            <div className="bg-white rounded-lg sm:rounded-xl shadow-lg p-3 sm:p-4 lg:p-6">
+            <div className={`bg-white p-3 sm:p-4 lg:p-6 ${
+              isWertWebinar 
+                ? 'rounded-lg border border-gray-200' 
+                : 'rounded-lg sm:rounded-xl shadow-lg'
+            }`}>
               <h3 className="text-sm sm:text-base lg:text-lg font-semibold text-gray-900 mb-2 sm:mb-3 lg:mb-4">세션 소개</h3>
-              {webinar.description ? (
+              
+              {/* 149404 웨비나는 세션 카드 표시 */}
+              {isWertWebinar ? (
+                <>
+                  {/* PC: 4개 카드를 1줄로 나란히 표시 */}
+                  <div className="hidden lg:grid lg:grid-cols-4 gap-4 mb-4">
+                    {wertSessions.map((session, index) => (
+                      <button
+                        key={session.label}
+                        onClick={() => setExpandedSession(expandedSession === session.label ? null : session.label)}
+                        className="p-4 bg-gray-50 rounded-lg border border-gray-200 hover:border-teal-500 hover:shadow-md transition-all text-left"
+                        style={{ fontFamily: 'Pretendard, sans-serif' }}
+                      >
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="px-2 py-1 bg-teal-500 rounded-lg">
+                            <span className="text-white font-bold text-xs">{session.label}</span>
+                          </div>
+                          <div className="px-2 py-1 bg-teal-500/10 rounded-lg">
+                            <span className="text-teal-500 font-bold text-xs">{session.duration}</span>
+                          </div>
+                        </div>
+                        <h4 className="text-sm font-bold text-gray-900 mb-2 line-clamp-2">{session.title}</h4>
+                        {session.speaker && (
+                          <div className="mt-3 pt-3 border-t border-gray-200">
+                            <div className="text-xs font-semibold text-gray-900">{session.speaker.name}</div>
+                            <div className="text-xs text-gray-600 mt-1 line-clamp-1">{session.speaker.role.split('\n')[0]}</div>
+                          </div>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* 모바일: 기존 세로 배치 */}
+                  <div className="lg:hidden space-y-4">
+                    {wertSessions.map((session, index) => (
+                      <div 
+                        key={session.label}
+                        className="p-4 bg-gray-50 rounded-lg border border-gray-200"
+                        style={{ fontFamily: 'Pretendard, sans-serif' }}
+                      >
+                        <div className="flex items-center gap-2 mb-3">
+                          <div className="px-3 py-1 bg-teal-500 rounded-lg">
+                            <span className="text-white font-bold text-sm">{session.label}</span>
+                          </div>
+                          <div className="px-3 py-1 bg-teal-500/10 rounded-lg">
+                            <span className="text-teal-500 font-bold text-sm">{session.duration}</span>
+                          </div>
+                        </div>
+                        <h4 className="text-base sm:text-lg font-bold text-gray-900 mb-3">{session.title}</h4>
+                        <ul className="space-y-2 mb-3">
+                          {session.bullets.map((bullet, bulletIndex) => {
+                            const isMultiLine = bullet.includes('\n')
+                            const parts = bullet.split('\n')
+                            return (
+                              <li key={bulletIndex} className="flex items-start gap-2">
+                                <Image
+                                  src="https://yqsayphssjznthrxpgfb.supabase.co/storage/v1/object/public/webinar-thumbnails/wert/check_icon.png"
+                                  alt="check"
+                                  width={20}
+                                  height={20}
+                                  className="w-5 h-5 flex-shrink-0 mt-0.5"
+                                />
+                                <div className="flex-1">
+                                  {isMultiLine ? (
+                                    parts.map((part, partIndex) => (
+                                      <div key={partIndex} className="text-sm sm:text-base text-gray-700">
+                                        {partIndex > 0 && <br />}
+                                        {part}
+                                      </div>
+                                    ))
+                                  ) : (
+                                    <div className="text-sm sm:text-base text-gray-700">{bullet}</div>
+                                  )}
+                                </div>
+                              </li>
+                            )
+                          })}
+                        </ul>
+                        {session.note && (
+                          <p className="text-xs text-gray-500 mt-2">{session.note}</p>
+                        )}
+                        {session.speaker && (
+                          <div className="mt-4 pt-4 border-t border-gray-200 flex items-center gap-4">
+                            <div className="w-16 h-16 relative flex-shrink-0">
+                              <Image
+                                src={session.speaker.avatar}
+                                alt={session.speaker.name}
+                                width={64}
+                                height={64}
+                                className="w-full h-full object-contain"
+                              />
+                            </div>
+                            <div>
+                              <div className="text-xs text-gray-600 whitespace-pre-line mb-1">{session.speaker.role}</div>
+                              <div className="text-sm font-bold text-gray-900">{session.speaker.name}</div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* PC: 세션 상세 모달 */}
+                  {expandedSession && mounted && createPortal(
+                    <div 
+                      className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+                      onClick={() => setExpandedSession(null)}
+                    >
+                      <div 
+                        className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6"
+                        onClick={(e) => e.stopPropagation()}
+                        style={{ fontFamily: 'Pretendard, sans-serif' }}
+                      >
+                        {wertSessions.find(s => s.label === expandedSession) && (() => {
+                          const session = wertSessions.find(s => s.label === expandedSession)!
+                          return (
+                            <>
+                              <div className="flex items-center justify-between mb-4">
+                                <div className="flex items-center gap-2">
+                                  <div className="px-3 py-1 bg-teal-500 rounded-lg">
+                                    <span className="text-white font-bold text-sm">{session.label}</span>
+                                  </div>
+                                  <div className="px-3 py-1 bg-teal-500/10 rounded-lg">
+                                    <span className="text-teal-500 font-bold text-sm">{session.duration}</span>
+                                  </div>
+                                </div>
+                                <button
+                                  onClick={() => setExpandedSession(null)}
+                                  className="text-gray-400 hover:text-gray-600 text-2xl font-bold"
+                                >
+                                  ×
+                                </button>
+                              </div>
+                              <h4 className="text-xl font-bold text-gray-900 mb-4">{session.title}</h4>
+                              <ul className="space-y-3 mb-4">
+                                {session.bullets.map((bullet, bulletIndex) => {
+                                  const isMultiLine = bullet.includes('\n')
+                                  const parts = bullet.split('\n')
+                                  return (
+                                    <li key={bulletIndex} className="flex items-start gap-2">
+                                      <Image
+                                        src="https://yqsayphssjznthrxpgfb.supabase.co/storage/v1/object/public/webinar-thumbnails/wert/check_icon.png"
+                                        alt="check"
+                                        width={20}
+                                        height={20}
+                                        className="w-5 h-5 flex-shrink-0 mt-0.5"
+                                      />
+                                      <div className="flex-1">
+                                        {isMultiLine ? (
+                                          parts.map((part, partIndex) => (
+                                            <div key={partIndex} className="text-base text-gray-700">
+                                              {partIndex > 0 && <br />}
+                                              {part}
+                                            </div>
+                                          ))
+                                        ) : (
+                                          <div className="text-base text-gray-700">{bullet}</div>
+                                        )}
+                                      </div>
+                                    </li>
+                                  )
+                                })}
+                              </ul>
+                              {session.note && (
+                                <p className="text-sm text-gray-500 mt-4">{session.note}</p>
+                              )}
+                              {session.speaker && (
+                                <div className="mt-6 pt-6 border-t border-gray-200 flex items-center gap-4">
+                                  <div className="w-20 h-20 relative flex-shrink-0">
+                                    <Image
+                                      src={session.speaker.avatar}
+                                      alt={session.speaker.name}
+                                      width={80}
+                                      height={80}
+                                      className="w-full h-full object-contain"
+                                    />
+                                  </div>
+                                  <div>
+                                    <div className="text-sm text-gray-600 whitespace-pre-line mb-1">{session.speaker.role}</div>
+                                    <div className="text-base font-bold text-gray-900">{session.speaker.name}</div>
+                                  </div>
+                                </div>
+                              )}
+                            </>
+                          )
+                        })()}
+                      </div>
+                    </div>,
+                    document.body
+                  )}
+                </>
+              ) : (
+                <>
+                  {webinar.description ? (
                 <div className="prose prose-sm max-w-none">
                   <p className="text-xs sm:text-sm lg:text-base text-gray-700 whitespace-pre-wrap leading-relaxed">
                     {(() => {
@@ -767,6 +1065,8 @@ export default function WebinarView({ webinar, isAdminMode = false }: WebinarVie
                   )}
                 </div>
               </div>
+                </>
+              )}
             </div>
             
             {/* Presence Bar - 관리자만 표시 */}
@@ -781,7 +1081,11 @@ export default function WebinarView({ webinar, isAdminMode = false }: WebinarVie
             
             {/* 모바일 채팅/Q&A - 영상 아래 순서대로 */}
             <div className="lg:hidden">
-              <div className="bg-white rounded-lg sm:rounded-xl shadow-lg overflow-hidden h-[50vh] min-h-[350px] max-h-[500px] flex flex-col">
+              <div className={`bg-white overflow-hidden h-[50vh] min-h-[350px] max-h-[500px] flex flex-col ${
+                isWertWebinar 
+                  ? 'rounded-lg border border-gray-200' 
+                  : 'rounded-lg sm:rounded-xl shadow-lg'
+              }`}>
                 {/* 탭 */}
                 <div className="border-b border-gray-200 flex flex-shrink-0">
                   <button
@@ -817,7 +1121,11 @@ export default function WebinarView({ webinar, isAdminMode = false }: WebinarVie
           
           {/* 사이드바 - 채팅/Q&A (데스크톱) */}
           <div className="hidden lg:block lg:col-span-1">
-            <div className="bg-white rounded-xl shadow-lg overflow-hidden h-[calc(100vh-200px)] flex flex-col w-full max-w-[400px]">
+            <div className={`bg-white overflow-hidden h-[calc(100vh-200px)] flex flex-col w-full max-w-[400px] ${
+              isWertWebinar 
+                ? 'rounded-lg border border-gray-200' 
+                : 'rounded-xl shadow-lg'
+            }`}>
               {/* 탭 */}
               <div className="border-b border-gray-200 flex">
                 <button

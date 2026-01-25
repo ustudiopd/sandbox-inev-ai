@@ -10,16 +10,18 @@ interface WebinarListItemProps {
     title: string
     start_time: string | null
   }
+  clientId: string
 }
 
-export default function WebinarListItem({ webinar }: WebinarListItemProps) {
+export default function WebinarListItem({ webinar, clientId }: WebinarListItemProps) {
   // slug가 있으면 slug를 사용하고, 없으면 id를 사용 (URL용)
   const webinarSlug = webinar.slug || webinar.id
+  const displayTitle = webinarSlug === '149404' ? '0206wert웨비나' : webinar.title
   
   return (
     <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
       <div>
-        <div className="font-medium text-gray-800">{webinar.title}</div>
+        <div className="font-medium text-gray-800">{displayTitle}</div>
         <div className="text-sm text-gray-500 mt-1">
           {webinar.start_time ? new Date(webinar.start_time).toLocaleString('ko-KR') : '일정 미정'}
         </div>
@@ -27,7 +29,7 @@ export default function WebinarListItem({ webinar }: WebinarListItemProps) {
       <div className="flex gap-2 items-center">
         <ShareLinkButton 
           webinarId={webinar.id} 
-          webinarTitle={webinar.title}
+          webinarTitle={displayTitle}
           className="flex-shrink-0"
         />
         <Link 
@@ -37,7 +39,7 @@ export default function WebinarListItem({ webinar }: WebinarListItemProps) {
           웨비나링크
         </Link>
         <Link 
-          href={`/webinar/${webinarSlug}/console`}
+          href={`/client/${clientId}/webinars/${webinar.id}`}
           className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium whitespace-nowrap"
         >
           콘솔

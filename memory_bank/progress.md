@@ -953,6 +953,51 @@
 - ✅ 패키지 설치
   - `lucide-react` 패키지 추가 (아이콘 사용)
 
+## [2026-01-25] 웨비나 및 등록 페이지 통합 및 UI 개선
+- ✅ 데이터베이스 마이그레이션 (`054_add_email_template_to_webinars.sql`)
+  - `webinars` 테이블에 `email_template_text`, `email_thumbnail_url` 컬럼 추가
+  - 웨비나 등록 이메일 템플릿 및 썸네일 설정 기능
+- ✅ 데이터베이스 마이그레이션 (`055_add_registration_campaign_to_webinars.sql`)
+  - `webinars` 테이블에 `registration_campaign_id` 컬럼 추가
+  - 웨비나와 등록 페이지 캠페인 연동 지원
+  - 웨비나 입장 시 등록 페이지 캠페인의 등록 정보 확인 기능
+- ✅ 사이드바 통합 개선
+  - `app/api/client/[clientId]/sidebar-data/route.ts`: 웨비나와 설문/등록 캠페인 모두 조회
+  - 모든 클라이언트에 대해 웨비나와 캠페인 통합 목록 제공
+  - 생성일 기준 정렬로 최신순 표시
+- ✅ 사이드바 표시 개선 (`components/layout/SidebarTree.tsx`)
+  - 웨비나와 등록 페이지 모두 표시
+  - 특정 웨비나/등록 페이지 제목 매핑 (149404 → "0206wert웨비나", /149403 → "AI 특허리서치 실무 활용 웨비나")
+  - 타입별 아이콘 구분 (웨비나: 🎥, 설문: 📋, 등록: 📝)
+- ✅ 웨비나 라이브 페이지 UI 개선 (`app/(webinar)/webinar/[id]/components/WebinarView.tsx`)
+  - 특정 웨비나(149404)에 대한 커스텀 테마 적용
+  - 헤더에 로고 표시 (kewert_logo.png), 제목 숨김
+  - 전체 페이지 배경 흰색, Pretendard 폰트 적용
+  - 세션 소개 섹션: PC에서 4개 카드를 1줄로 가로 배치
+  - 세션 카드 클릭 시 모달로 상세 내용 표시
+  - 채팅창 테두리 추가
+- ✅ YouTube 플레이어 개선 (`components/webinar/YouTubePlayer.tsx`)
+  - 자동 재생 기능 (autoplay=true, muted=true)
+  - 썸네일 미리보기 표시 개선
+- ✅ 접근 정책 확장 (`056_add_name_email_auth_policy.sql`)
+  - `name_email_auth` 정책 추가 (이름+이메일 인증)
+  - 기존 `email_auth` 정책 유지 (이메일만)
+  - 웨비나 입장 페이지에 이름+이메일 입력 폼 추가
+- ✅ 접근 정책 텍스트 수정
+  - "인증 필요 (로그인 필수)" → "인증필요 (로그인 필수)"
+  - 모든 설정 페이지에 일관된 텍스트 적용
+- ✅ 운영콘솔 네비게이션 개선
+  - 웨비나 운영콘솔: "← 시청 페이지로" → "← 메인 대시보드로"
+  - 등록페이지 운영콘솔: "← 설문조사 목록으로" → "← 메인 대시보드로"
+  - 클라이언트 메인 대시보드로 통일된 네비게이션
+- ✅ 참여자 관리 탭 개선 (`app/(client)/client/[clientId]/surveys/[campaignId]/components/tabs/ParticipantsTab.tsx`)
+  - 이메일 컬럼 추가 (`registration_data.email` 표시)
+  - 스캔일시 컬럼 제거 (`verified_at` 제거)
+  - 경품 컬럼 제거 (`prize_label` 관련 UI 및 함수 제거)
+  - 마지막 로그인 정보 추가 (`last_login_at` 표시)
+  - API에서 auth.users 조회하여 마지막 로그인 정보 가져오기
+  - 모달에도 이메일 및 마지막 로그인 정보 표시
+
 ## 남은 작업
 
 ### Phase 3 - 웨비나 및 실시간 기능 (대부분 완료)

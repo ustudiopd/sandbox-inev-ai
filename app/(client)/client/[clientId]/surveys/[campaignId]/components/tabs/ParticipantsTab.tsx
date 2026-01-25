@@ -10,7 +10,6 @@ interface ParticipantsTabProps {
 export default function ParticipantsTab({ campaignId, entries }: ParticipantsTabProps) {
   const [selectedEntry, setSelectedEntry] = useState<any>(null)
   const [localEntries, setLocalEntries] = useState<any[]>(entries)
-  const [updatingPrize, setUpdatingPrize] = useState<string | null>(null)
   const [refreshingEntries, setRefreshingEntries] = useState(false)
   
   // entries가 변경되면 localEntries도 업데이트
@@ -42,43 +41,6 @@ export default function ParticipantsTab({ campaignId, entries }: ParticipantsTab
     setSelectedEntry(null)
   }
 
-  const updatePrize = async (entryId: string, prizeLabel: string | null, e: React.MouseEvent) => {
-    e.stopPropagation() // 테이블 행 클릭 이벤트 방지
-    
-    // Optimistic update: UI를 먼저 업데이트
-    setLocalEntries((prev) =>
-      prev.map((entry) =>
-        entry.id === entryId ? { ...entry, prize_label: prizeLabel } : entry
-      )
-    )
-    
-    setUpdatingPrize(entryId)
-    try {
-      const response = await fetch(`/api/event-survey/campaigns/${campaignId}/entries/${entryId}/prize`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ prize_label: prizeLabel }),
-      })
-
-      const result = await response.json()
-
-      if (!result.success) {
-        // 실패 시 원래대로 되돌리기
-        setLocalEntries(entries)
-        alert('경품 기록 업데이트에 실패했습니다: ' + (result.error || '알 수 없는 오류'))
-      }
-    } catch (error) {
-      console.error('경품 기록 업데이트 오류:', error)
-      // 실패 시 원래대로 되돌리기
-      setLocalEntries(entries)
-      alert('경품 기록 업데이트 중 오류가 발생했습니다.')
-    } finally {
-      setUpdatingPrize(null)
-    }
-  }
-  
   // entries에 포함된 answers를 questions 형식으로 변환
   const getAnswersForEntry = (entry: any) => {
     if (!entry.answers || entry.answers.length === 0) {
@@ -135,11 +97,11 @@ export default function ParticipantsTab({ campaignId, entries }: ParticipantsTab
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">완료번호</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">확인코드</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">이름</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">이메일</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">회사명</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">전화번호</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">완료일시</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">스캔일시</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">경품</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">마지막 로그인</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
@@ -170,6 +132,12 @@ export default function ParticipantsTab({ campaignId, entries }: ParticipantsTab
                       className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 cursor-pointer"
                       onClick={() => handleEntryClick(entry)}
                     >
+                      {entry.registration_data?.email || '-'}
+                    </td>
+                    <td 
+                      className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 cursor-pointer"
+                      onClick={() => handleEntryClick(entry)}
+                    >
                       {entry.company || '-'}
                     </td>
                     <td 
@@ -188,51 +156,7 @@ export default function ParticipantsTab({ campaignId, entries }: ParticipantsTab
                       className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 cursor-pointer"
                       onClick={() => handleEntryClick(entry)}
                     >
-                      {entry.verified_at ? new Date(entry.verified_at).toLocaleString('ko-KR') : '-'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
-                      <div className="flex items-center gap-4">
-                        <label className="flex items-center gap-2 cursor-pointer">
-                          <input
-                            type="radio"
-                            name={`prize-${entry.id}`}
-                            checked={entry.prize_label === '우산'}
-                            onClick={(e) => updatePrize(entry.id, '우산', e)}
-                            disabled={updatingPrize === entry.id}
-                            className="w-4 h-4 text-blue-600 focus:ring-blue-500"
-                            readOnly
-                          />
-                          <span className="text-sm text-gray-700">우산</span>
-                        </label>
-                        <label className="flex items-center gap-2 cursor-pointer">
-                          <input
-                            type="radio"
-                            name={`prize-${entry.id}`}
-                            checked={entry.prize_label === '워시백'}
-                            onClick={(e) => updatePrize(entry.id, '워시백', e)}
-                            disabled={updatingPrize === entry.id}
-                            className="w-4 h-4 text-blue-600 focus:ring-blue-500"
-                            readOnly
-                          />
-                          <span className="text-sm text-gray-700">워시백</span>
-                        </label>
-                        <div className="flex items-center gap-2 w-20 justify-end">
-                          {updatingPrize === entry.id ? (
-                            <span className="text-xs text-gray-500">저장 중...</span>
-                          ) : entry.prize_label ? (
-                            <button
-                              onClick={(e) => updatePrize(entry.id, null, e)}
-                              disabled={updatingPrize === entry.id}
-                              className="text-gray-400 hover:text-red-600 disabled:text-gray-300 transition-colors"
-                              title="경품 초기화"
-                            >
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                              </svg>
-                            </button>
-                          ) : null}
-                        </div>
-                      </div>
+                      {entry.last_login_at ? new Date(entry.last_login_at).toLocaleString('ko-KR') : '-'}
                     </td>
                   </tr>
                 ))}
@@ -275,6 +199,10 @@ export default function ParticipantsTab({ campaignId, entries }: ParticipantsTab
                     <span className="ml-2 text-sm font-medium text-gray-900">{selectedEntry.name || '-'}</span>
                   </div>
                   <div>
+                    <span className="text-sm text-gray-600">이메일:</span>
+                    <span className="ml-2 text-sm font-medium text-gray-900">{selectedEntry.registration_data?.email || '-'}</span>
+                  </div>
+                  <div>
                     <span className="text-sm text-gray-600">회사명:</span>
                     <span className="ml-2 text-sm font-medium text-gray-900">{selectedEntry.company || '-'}</span>
                   </div>
@@ -285,6 +213,12 @@ export default function ParticipantsTab({ campaignId, entries }: ParticipantsTab
                   <div>
                     <span className="text-sm text-gray-600">완료번호:</span>
                     <span className="ml-2 text-sm font-medium text-gray-900">{selectedEntry.survey_no}</span>
+                  </div>
+                  <div>
+                    <span className="text-sm text-gray-600">마지막 로그인:</span>
+                    <span className="ml-2 text-sm font-medium text-gray-900">
+                      {selectedEntry.last_login_at ? new Date(selectedEntry.last_login_at).toLocaleString('ko-KR') : '-'}
+                    </span>
                   </div>
                 </div>
               </div>

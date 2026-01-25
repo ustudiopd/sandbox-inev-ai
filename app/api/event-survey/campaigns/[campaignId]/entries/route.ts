@@ -135,15 +135,77 @@ export async function GET(
       answersBySubmission.get(answer.submission_id)!.push(answer)
     })
     
+    // registration_data에서 이메일 추출 및 마지막 로그인 정보 조회
+    const emails = (entries || [])
+      .map((e: any) => e.registration_data?.email)
+      .filter(Boolean)
+      .map((email: string) => email.toLowerCase().trim())
+    
+    // 이메일별 마지막 로그인 정보 조회
+    const lastLoginMap = new Map<string, string | null>()
+    if (emails.length > 0) {
+      try {
+        // auth.users에서 모든 사용자 조회 (페이지네이션 처리)
+        let allUsers: any[] = []
+        let page = 1
+        const perPage = 1000
+        
+        while (true) {
+          const { data: authUsers, error: listError } = await admin.auth.admin.listUsers({
+            page,
+            perPage,
+          })
+          
+          if (listError) {
+            console.error('사용자 목록 조회 오류:', listError)
+            break
+          }
+          
+          if (!authUsers?.users || authUsers.users.length === 0) {
+            break
+          }
+          
+          allUsers = allUsers.concat(authUsers.users)
+          
+          // 더 이상 페이지가 없으면 종료
+          if (authUsers.users.length < perPage) {
+            break
+          }
+          
+          page++
+        }
+        
+        // 이메일별로 매핑
+        for (const email of emails) {
+          const user = allUsers.find((u: any) => u.email?.toLowerCase() === email)
+          if (user?.last_sign_in_at) {
+            lastLoginMap.set(email, user.last_sign_in_at)
+          }
+        }
+      } catch (error) {
+        console.error('마지막 로그인 정보 조회 오류:', error)
+      }
+    }
+    
     // 각 참여자의 설문 답변 매핑
     const entriesWithAnswers = (entries || []).map((entry: any) => {
       if (!entry.form_submission_id || questions.length === 0) {
-        return { ...entry, answers: [] }
+        const email = entry.registration_data?.email?.toLowerCase()?.trim()
+        return { 
+          ...entry, 
+          answers: [],
+          last_login_at: email ? lastLoginMap.get(email) || null : null
+        }
       }
       
       const answers = answersBySubmission.get(entry.form_submission_id) || []
       if (answers.length === 0) {
-        return { ...entry, answers: [] }
+        const email = entry.registration_data?.email?.toLowerCase()?.trim()
+        return { 
+          ...entry, 
+          answers: [],
+          last_login_at: email ? lastLoginMap.get(email) || null : null
+        }
       }
       
       // 문항별 답변 매핑
@@ -176,9 +238,11 @@ export async function GET(
         }
       })
       
+      const email = entry.registration_data?.email?.toLowerCase()?.trim()
       return {
         ...entry,
         answers: detailedAnswers,
+        last_login_at: email ? lastLoginMap.get(email) || null : null
       }
     })
     

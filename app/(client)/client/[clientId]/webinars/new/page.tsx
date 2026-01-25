@@ -214,7 +214,7 @@ export default function NewWebinarPage() {
                 onChange={(e) => setFormData({ ...formData, accessPolicy: e.target.value as any })}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
               >
-                <option value="auth">인증 필요 (로그인 필수)</option>
+                <option value="auth">인증필요 (로그인 필수)</option>
                 <option value="email_auth">인증필요 (이메일)</option>
                 <option value="guest_allowed">게스트 허용</option>
                 <option value="invite_only">초대 전용</option>

@@ -7,7 +7,7 @@ import SurveyPage from './components/SurveyPage'
 import DonePageClient from './components/DonePageClient'
 import RegistrationPage from './components/RegistrationPage'
 import WelcomePage from './components/WelcomePage'
-import WertSummitPage from './components/WertSummitPage'
+import WebinarFormWertPage from '@/app/webinarform/wert/page'
 
 /**
  * 이벤트 공개 페이지 catch-all 라우트 (설문조사 + 등록 페이지)
@@ -52,10 +52,6 @@ export default async function SurveyPublicPage({
   const subPath = isSubPath ? lastPath : null
   const publicPath = '/' + (isSubPath ? path.slice(0, -1) : path).join('/')
   
-  // 149403은 WertSummitPage를 보여줌 (캠페인 조회 전에 먼저 체크)
-  if (publicPath === '/149403' && !subPath) {
-    return <WertSummitPage />
-  }
   
   const admin = createAdminSupabase()
   
@@ -234,6 +230,7 @@ export default async function SurveyPublicPage({
     }
   }
   
+  // 캠페인을 찾지 못한 경우 404
   if (campaignError || !campaign) {
     const errorInfo = {
       publicPath,
@@ -263,9 +260,20 @@ export default async function SurveyPublicPage({
   
   // subPath에 따라 다른 페이지 렌더링
   if (!subPath) {
-    // 149403은 WertSummitPage를 보여줌 (이미 위에서 처리되지만, 캠페인 조회 후에도 확인)
-    if (publicPath === '/149403') {
-      return <WertSummitPage />
+    // 149403은 WebinarFormWertPage를 보여줌 (캠페인 조회 실패해도 표시)
+    if (publicPath === '/149403' || publicPath === '149403') {
+      return (
+        <Suspense fallback={
+          <div className="min-h-screen bg-white flex items-center justify-center">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#4da8da] mx-auto mb-4"></div>
+              <p className="text-gray-600">로딩 중...</p>
+            </div>
+          </div>
+        }>
+          <WebinarFormWertPage />
+        </Suspense>
+      )
     }
     
     // 445870는 WelcomePage를 보여주고, 345870만 설문 페이지로 리다이렉트

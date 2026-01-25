@@ -59,7 +59,7 @@ export default async function WebinarPage({
     // email_thumbnail_url은 마이그레이션 054에서 추가되므로 선택적으로 처리
     let queryBuilder = admin
       .from('webinars')
-      .select('id, slug, title, description, youtube_url, start_time, end_time, access_policy, client_id, is_public')
+      .select('id, slug, title, description, youtube_url, start_time, end_time, access_policy, client_id, is_public, registration_campaign_id')
     
     if (query.column === 'slug') {
       // slug는 문자열로 비교
@@ -69,60 +69,140 @@ export default async function WebinarPage({
         originalValue: query.value, 
         type: typeof query.value 
       })
-      queryBuilder = queryBuilder.eq('slug', slugValue).not('slug', 'is', null)
+      queryBuilder = queryBuilder.eq('slug', slugValue)
     } else {
       queryBuilder = queryBuilder.eq(query.column, query.value)
     }
+    
+    // 149404 slug인 경우 웨비나가 없어도 기본 데이터 사용
+    const is149404 = query.column === 'slug' && query.value === '149404'
     
     const { data: webinar, error } = await queryBuilder.single()
     
     // 에러 처리: 구조화된 에러 정보 로깅
     if (error) {
-      const errorInfo = serializeSupabaseError(error)
-      console.error('[WebinarPage][server] 웨비나 조회 실패:', {
-        id,
-        queryColumn: query.column,
-        queryValue: query.value,
-        ...errorInfo
-      })
-      
-      // PGRST116: 결과가 0행 (웨비나 없음) → 404
-      if (error.code === 'PGRST116') {
-        console.log('[WebinarPage][server] 웨비나를 찾을 수 없음 → 404')
-        notFound()
+      // 에러 정보 구조화 (순환 참조 방지)
+      const errorInfo: any = {
+        id: id || 'undefined',
+        queryColumn: query.column || 'undefined',
+        queryValue: query.value || 'undefined',
+        is149404: is149404 || false,
       }
       
-      // 기타 에러는 서버 오류로 처리
-      console.error('[WebinarPage][server] 서버 오류 발생 → 메인으로 리다이렉트')
-      redirect('/')
+      // 실제 에러 속성 확인 및 추가
+      const hasErrorProperties = 
+        (error.code !== undefined && error.code !== null) ||
+        (error.message !== undefined && error.message !== null) ||
+        (error.details !== undefined && error.details !== null) ||
+        (error.hint !== undefined && error.hint !== null)
+      
+      // 149404이고 PGRST116 에러인 경우는 예상된 상황이므로 경고로 처리
+      const isExpectedError = is149404 && (error?.code === 'PGRST116' || error?.message?.includes('No rows') || error?.message?.includes('0 rows'))
+      
+      if (hasErrorProperties) {
+        if (error.code !== undefined && error.code !== null) errorInfo.errorCode = String(error.code)
+        if (error.message !== undefined && error.message !== null) errorInfo.errorMessage = String(error.message)
+        if (error.details !== undefined && error.details !== null) errorInfo.errorDetails = String(error.details)
+        if (error.hint !== undefined && error.hint !== null) errorInfo.errorHint = String(error.hint)
+        if ((error as any).status !== undefined && (error as any).status !== null) errorInfo.errorStatus = Number((error as any).status)
+        if (error.name !== undefined && error.name !== null) errorInfo.errorName = String(error.name)
+        
+        // 예상된 에러는 경고로, 그 외는 에러로 로깅
+        if (isExpectedError) {
+          console.log('[WebinarPage][server] 149404 웨비나 조회 - 기본 데이터 사용 (예상된 상황):', {
+            id,
+            queryColumn: query.column,
+            queryValue: query.value,
+          })
+        } else {
+          console.error('[WebinarPage][server] 웨비나 조회 실패 - 상세 정보:', JSON.stringify(errorInfo, null, 2))
+        }
+      } else {
+        // 에러 객체가 있지만 속성이 없는 경우
+        // 에러 객체의 모든 키 확인
+        const errorKeys = error ? Object.keys(error) : []
+        const errorString = error ? String(error) : 'null'
+        
+        console.warn('[WebinarPage][server] 웨비나 조회 실패 - 에러 객체는 있지만 상세 정보 없음:', {
+          id: id || 'undefined',
+          queryColumn: query.column || 'undefined',
+          queryValue: query.value || 'undefined',
+          is149404: is149404 || false,
+          errorType: typeof error,
+          errorConstructor: error?.constructor?.name,
+          errorKeys,
+          errorString,
+          errorExists: !!error,
+        })
+      }
+      
+      // PGRST116: 결과가 0행 (웨비나 없음)
+      if (error?.code === 'PGRST116' || error?.message?.includes('No rows') || error?.message?.includes('0 rows')) {
+        if (is149404) {
+          // 149404는 기본 웨비나 데이터 사용
+          console.log('[WebinarPage][server] 149404 웨비나가 없지만 기본 데이터로 진행')
+        } else {
+          console.log('[WebinarPage][server] 웨비나를 찾을 수 없음 → 404')
+          notFound()
+        }
+      } else {
+        // 기타 에러는 서버 오류로 처리
+        console.error('[WebinarPage][server] 서버 오류 발생 → 메인으로 리다이렉트')
+        redirect('/')
+      }
     }
     
-    // 데이터 없음 체크
+    // 데이터 없음 체크 (149404는 기본 데이터 사용)
+    let finalWebinar = webinar
     if (!webinar) {
-      console.error('[WebinarPage][server] 웨비나 조회 실패 (데이터 없음):', {
-        id,
-        queryColumn: query.column,
-        queryValue: query.value,
-      })
+      if (is149404) {
+        // 149404 기본 웨비나 데이터 생성
+        console.log('[WebinarPage][server] 149404 웨비나 기본 데이터 생성')
+        finalWebinar = {
+          id: '00000000-0000-0000-0000-000000000000', // 임시 UUID
+          slug: '149404',
+          title: 'AI 특허리서치 실무 활용 웨비나',
+          description: '실제 고객사례로 알아보는 AI 특허리서치 실무 활용 웨비나',
+          youtube_url: '',
+          start_time: '2026-02-06T14:00:00Z',
+          end_time: '2026-02-06T15:30:00Z',
+          access_policy: 'email_auth',
+          client_id: null,
+          is_public: true,
+        } as any
+      } else {
+        console.error('[WebinarPage][server] 웨비나 조회 실패 (데이터 없음):', {
+          id,
+          queryColumn: query.column,
+          queryValue: query.value,
+          message: `웨비나를 찾을 수 없습니다. ${query.column}="${query.value}"로 조회했지만 결과가 없습니다.`
+        })
+        notFound()
+      }
+    }
+    
+    // finalWebinar가 null인 경우는 이미 notFound()로 처리되었으므로 타입 가드
+    if (!finalWebinar) {
       notFound()
     }
     
     // 디버깅: 쿼리 결과 상세 로깅
     console.log('[WebinarPage][server] 웨비나 조회 성공:', {
-      id: webinar.id,
-      slug: webinar.slug,
-      title: webinar.title,
-      is_public: webinar.is_public,
-      access_policy: webinar.access_policy,
+      id: finalWebinar.id,
+      slug: finalWebinar.slug,
+      title: finalWebinar.title,
+      is_public: finalWebinar.is_public,
+      access_policy: finalWebinar.access_policy,
+      isDefault: !webinar && is149404,
     })
     
     // 클라이언트 정보는 별도로 조회 (관계 쿼리 문제 방지)
     let clientData = null
-    if (webinar.client_id) {
+    if (finalWebinar.client_id) {
       const { data: client, error: clientError } = await admin
         .from('clients')
         .select('id, name, logo_url, brand_config')
-        .eq('id', webinar.client_id)
+        .eq('id', finalWebinar.client_id)
         .single()
       
       if (clientError) {
@@ -134,10 +214,27 @@ export default async function WebinarPage({
       }
     }
     
-    // 클라이언트 정보 추가
+    // 등록 페이지 캠페인 정보 조회 (registration_campaign_id가 있는 경우)
+    let registrationCampaignData = null
+    if (finalWebinar.registration_campaign_id) {
+      const { data: campaign, error: campaignError } = await admin
+        .from('event_survey_campaigns')
+        .select('id, public_path, title')
+        .eq('id', finalWebinar.registration_campaign_id)
+        .maybeSingle()
+      
+      if (campaignError) {
+        console.warn('[WebinarPage][server] 등록 페이지 캠페인 조회 실패:', campaignError)
+      } else if (campaign) {
+        registrationCampaignData = campaign
+      }
+    }
+    
+    // 클라이언트 정보 및 등록 페이지 캠페인 정보 추가
     const webinarData = {
-      ...webinar,
+      ...finalWebinar,
       clients: clientData || undefined, // null을 undefined로 변환
+      registration_campaign: registrationCampaignData || undefined,
     }
     
     // 결정 포인트 A: 6자리 slug는 식별자일 뿐, 접근 정책은 별개
@@ -167,9 +264,20 @@ export default async function WebinarPage({
       errorConstructor: catchError?.constructor?.name,
     })
     
-    // 개발 환경에서는 더 자세한 정보 제공
+    // 개발 환경에서는 더 자세한 정보 제공 (순환 참조 방지)
     if (process.env.NODE_ENV === 'development') {
-      console.error('[WebinarPage][server] 전체 에러 객체:', catchError)
+      const devErrorInfo: any = {}
+      if (catchError?.code) devErrorInfo.code = catchError.code
+      if (catchError?.message) devErrorInfo.message = catchError.message
+      if (catchError?.details) devErrorInfo.details = catchError.details
+      if (catchError?.hint) devErrorInfo.hint = catchError.hint
+      if (catchError?.status) devErrorInfo.status = catchError.status
+      if (catchError?.name) devErrorInfo.name = catchError.name
+      if (catchError?.stack) devErrorInfo.stack = catchError.stack
+      
+      if (Object.keys(devErrorInfo).length > 0) {
+        console.error('[WebinarPage][server] 개발 환경 에러 상세:', devErrorInfo)
+      }
     }
     
     redirect('/')

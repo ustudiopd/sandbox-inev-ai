@@ -1,6 +1,7 @@
 import { createServerSupabase } from "@/lib/supabase/server";
 import Link from "next/link";
 import { ArrowRight, BarChart3, MessageSquare, Settings2, Shield, Users, Building2 } from "lucide-react";
+import DashboardButton from "./components/DashboardButton";
 
 export default async function Home() {
   const supabase = await createServerSupabase();
@@ -35,12 +36,7 @@ export default async function Home() {
 
           <div className="flex justify-center gap-4">
             {user ? (
-              <Link
-                href="/api/auth/dashboard"
-                className="px-8 py-3.5 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 transition-colors shadow-lg shadow-blue-200 flex items-center"
-              >
-                대시보드로 이동 <ArrowRight className="ml-2 w-4 h-4" />
-              </Link>
+              <DashboardButton />
             ) : (
               <>
                 <Link
@@ -150,12 +146,7 @@ export default async function Home() {
 
           <div className="text-center mt-12">
             {user ? (
-              <Link
-                href="/api/auth/dashboard"
-                className="inline-flex items-center px-8 py-3.5 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 transition-colors shadow-lg shadow-blue-200"
-              >
-                대시보드로 이동 <ArrowRight className="ml-2 w-4 h-4" />
-              </Link>
+              <DashboardButton />
             ) : (
               <Link
                 href="/login"

@@ -1368,7 +1368,11 @@ export default function PublicDashboardClient({ campaign }: PublicDashboardClien
       <div className="max-w-7xl mx-auto px-2 sm:px-4 md:px-6 lg:px-8">
         {/* 헤더 */}
         <div className="bg-white rounded-xl shadow-lg p-3 sm:p-4 md:p-6 mb-4 sm:mb-6 md:mb-8">
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">{campaign.title}</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
+            {campaign.public_path === '/149403' 
+              ? 'AI 특허리서치 실무 활용 웨비나'
+              : campaign.title}
+          </h1>
           {campaign.host && (
             <p className="text-gray-600 text-sm">주최: {campaign.host}</p>
           )}

@@ -1,6 +1,7 @@
 import { requireClientMember } from '@/lib/auth/guards'
 import { createServerSupabase } from '@/lib/supabase/server'
 import { createAdminSupabase } from '@/lib/supabase/admin'
+import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import UnifiedListItem from './components/UnifiedListItem'
 
@@ -9,48 +10,162 @@ export default async function ClientDashboard({
 }: {
   params: Promise<{ clientId: string }>
 }) {
-  const { clientId } = await params
-  const { user, role } = await requireClientMember(clientId)
-  const supabase = await createServerSupabase()
-  
-  // 프로필 정보 조회
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('display_name, email')
-    .eq('id', user.id)
-    .single()
-  
-  // 역할 한글명 매핑
-  const roleNames: Record<string, string> = {
-    owner: '소유자',
-    admin: '관리자',
-    operator: '운영자',
-    analyst: '분석가',
-    viewer: '조회자',
-    member: '멤버',
-  }
-  
-  const { data: client } = await supabase
-    .from('clients')
-    .select('*')
-    .eq('id', clientId)
-    .single()
-  
-  const admin = createAdminSupabase()
-  
-  // 웨비나 목록 조회
-  const { data: webinars } = await admin
-    .from('webinars')
-    .select('*')
-    .eq('client_id', clientId)
-    .order('created_at', { ascending: false })
-  
-  // 설문조사 캠페인 목록 조회
-  const { data: campaigns } = await admin
-    .from('event_survey_campaigns')
-    .select('*')
-    .eq('client_id', clientId)
-    .order('created_at', { ascending: false })
+  try {
+    const { clientId } = await params
+    
+    if (!clientId) {
+      console.error('[ClientDashboard] clientId가 없습니다')
+      redirect('/')
+    }
+    
+    const { user, role, profile } = await requireClientMember(clientId)
+    const supabase = await createServerSupabase()
+    
+    // requireClientMember에서 이미 프로필 정보를 반환하므로 재조회 불필요
+    // RLS 무한 재귀 문제를 방지하기 위해 Admin Supabase로 조회하거나 이미 반환된 프로필 사용
+    // 프로필이 없는 경우에만 Admin Supabase로 조회 (RLS 우회)
+    let finalProfile = profile
+    if (!finalProfile) {
+      const admin = createAdminSupabase()
+      const { data: adminProfile, error: profileError } = await admin
+        .from('profiles')
+        .select('display_name, email, is_super_admin')
+        .eq('id', user.id)
+        .maybeSingle()
+      
+      if (profileError) {
+        const hasErrorInfo = 
+          (profileError.code !== undefined && profileError.code !== null) ||
+          (profileError.message !== undefined && profileError.message !== null) ||
+          (profileError.details !== undefined && profileError.details !== null) ||
+          (profileError.hint !== undefined && profileError.hint !== null)
+        
+        if (hasErrorInfo) {
+          const errorInfo: any = {}
+          if (profileError.code !== undefined && profileError.code !== null) errorInfo.code = String(profileError.code)
+          if (profileError.message !== undefined && profileError.message !== null) errorInfo.message = String(profileError.message)
+          if (profileError.details !== undefined && profileError.details !== null) errorInfo.details = String(profileError.details)
+          if (profileError.hint !== undefined && profileError.hint !== null) errorInfo.hint = String(profileError.hint)
+          
+          console.error('[ClientDashboard] 프로필 조회 오류 (Admin):', JSON.stringify(errorInfo, null, 2))
+        }
+      } else {
+        finalProfile = adminProfile || null
+      }
+    }
+    
+    // 역할 한글명 매핑
+    const roleNames: Record<string, string> = {
+      owner: '소유자',
+      admin: '관리자',
+      operator: '운영자',
+      analyst: '분석가',
+      viewer: '조회자',
+      member: '멤버',
+    }
+    
+    // 클라이언트 정보 조회 (에러 발생 시에도 계속 진행)
+    const { data: client, error: clientError } = await supabase
+      .from('clients')
+      .select('*')
+      .eq('id', clientId)
+      .maybeSingle()
+    
+    // 실제 에러가 있는 경우에만 로그 출력
+    if (clientError) {
+      const hasErrorInfo = 
+        (clientError.code !== undefined && clientError.code !== null) ||
+        (clientError.message !== undefined && clientError.message !== null) ||
+        (clientError.details !== undefined && clientError.details !== null) ||
+        (clientError.hint !== undefined && clientError.hint !== null)
+      
+      if (hasErrorInfo) {
+        const errorInfo: any = {}
+        if (clientError.code !== undefined && clientError.code !== null) errorInfo.code = String(clientError.code)
+        if (clientError.message !== undefined && clientError.message !== null) errorInfo.message = String(clientError.message)
+        if (clientError.details !== undefined && clientError.details !== null) errorInfo.details = String(clientError.details)
+        if (clientError.hint !== undefined && clientError.hint !== null) errorInfo.hint = String(clientError.hint)
+        
+        console.error('[ClientDashboard] 클라이언트 조회 오류:', JSON.stringify(errorInfo, null, 2))
+      } else {
+        console.warn('[ClientDashboard] 클라이언트 조회 - 에러 객체는 있지만 상세 정보 없음:', {
+          clientId,
+          errorType: typeof clientError,
+          errorExists: !!clientError,
+        })
+      }
+    }
+    
+    if (!client) {
+      console.error('[ClientDashboard] 클라이언트를 찾을 수 없습니다:', clientId)
+      redirect('/')
+    }
+    
+    const admin = createAdminSupabase()
+    
+    // 웨비나 목록 조회
+    const { data: webinars, error: webinarsError } = await admin
+      .from('webinars')
+      .select('*')
+      .eq('client_id', clientId)
+      .order('created_at', { ascending: false })
+    
+    // 실제 에러가 있는 경우에만 로그 출력
+    if (webinarsError) {
+      const hasErrorInfo = 
+        (webinarsError.code !== undefined && webinarsError.code !== null) ||
+        (webinarsError.message !== undefined && webinarsError.message !== null) ||
+        (webinarsError.details !== undefined && webinarsError.details !== null) ||
+        (webinarsError.hint !== undefined && webinarsError.hint !== null)
+      
+      if (hasErrorInfo) {
+        const errorInfo: any = {}
+        if (webinarsError.code !== undefined && webinarsError.code !== null) errorInfo.code = String(webinarsError.code)
+        if (webinarsError.message !== undefined && webinarsError.message !== null) errorInfo.message = String(webinarsError.message)
+        if (webinarsError.details !== undefined && webinarsError.details !== null) errorInfo.details = String(webinarsError.details)
+        if (webinarsError.hint !== undefined && webinarsError.hint !== null) errorInfo.hint = String(webinarsError.hint)
+        
+        console.error('[ClientDashboard] 웨비나 목록 조회 오류:', JSON.stringify(errorInfo, null, 2))
+      } else {
+        console.warn('[ClientDashboard] 웨비나 목록 조회 - 에러 객체는 있지만 상세 정보 없음:', {
+          clientId,
+          errorType: typeof webinarsError,
+          errorExists: !!webinarsError,
+        })
+      }
+    }
+    
+    // 설문조사 캠페인 목록 조회
+    const { data: campaigns, error: campaignsError } = await admin
+      .from('event_survey_campaigns')
+      .select('*')
+      .eq('client_id', clientId)
+      .order('created_at', { ascending: false })
+    
+    // 실제 에러가 있는 경우에만 로그 출력
+    if (campaignsError) {
+      const hasErrorInfo = 
+        (campaignsError.code !== undefined && campaignsError.code !== null) ||
+        (campaignsError.message !== undefined && campaignsError.message !== null) ||
+        (campaignsError.details !== undefined && campaignsError.details !== null) ||
+        (campaignsError.hint !== undefined && campaignsError.hint !== null)
+      
+      if (hasErrorInfo) {
+        const errorInfo: any = {}
+        if (campaignsError.code !== undefined && campaignsError.code !== null) errorInfo.code = String(campaignsError.code)
+        if (campaignsError.message !== undefined && campaignsError.message !== null) errorInfo.message = String(campaignsError.message)
+        if (campaignsError.details !== undefined && campaignsError.details !== null) errorInfo.details = String(campaignsError.details)
+        if (campaignsError.hint !== undefined && campaignsError.hint !== null) errorInfo.hint = String(campaignsError.hint)
+        
+        console.error('[ClientDashboard] 캠페인 목록 조회 오류:', JSON.stringify(errorInfo, null, 2))
+      } else {
+        console.warn('[ClientDashboard] 캠페인 목록 조회 - 에러 객체는 있지만 상세 정보 없음:', {
+          clientId,
+          errorType: typeof campaignsError,
+          errorExists: !!campaignsError,
+        })
+      }
+    }
   
   // 웨비나, 설문조사, 등록 페이지를 통합 리스트로 변환
   const unifiedItems = [
@@ -89,7 +204,7 @@ export default async function ClientDashboard({
               <div className="flex items-center justify-between">
                 <div className="flex-1 min-w-0">
                   <div className="text-xs sm:text-sm text-gray-600">접속 계정</div>
-                  <div className="font-semibold text-gray-900 truncate">{profile?.display_name || profile?.email || user.email}</div>
+                  <div className="font-semibold text-gray-900 truncate">{finalProfile?.display_name || finalProfile?.email || user.email}</div>
                   <div className="text-xs text-blue-600 mt-1">클라이언트 {roleNames[role] || role}</div>
                 </div>
                 <Link
@@ -189,6 +304,15 @@ export default async function ClientDashboard({
         </div>
       </div>
     </div>
-  )
+    )
+  } catch (error: any) {
+    console.error('[ClientDashboard] 대시보드 로드 오류:', error)
+    console.error('[ClientDashboard] 에러 상세:', {
+      message: error?.message,
+      stack: error?.stack,
+      name: error?.name,
+    })
+    redirect('/')
+  }
 }
 

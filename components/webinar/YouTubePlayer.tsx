@@ -70,14 +70,26 @@ export default function YouTubePlayer({
     // YouTube 임베드 URL 생성
     // 라이브 스트림이 시작되지 않았을 때도 썸네일과 대기 화면이 표시되도록 설정
     const params = new URLSearchParams()
-    if (autoplay) params.append('autoplay', '1')
-    if (muted) params.append('mute', '1')
-    // rel=0은 관련 동영상 숨김, 라이브 스트림 대기 화면 표시를 위해 제거
+    
+    // autoplay를 사용할 때는 반드시 mute도 함께 설정해야 함 (YouTube 정책)
+    const shouldAutoplay = autoplay
+    const shouldMute = muted || autoplay // autoplay가 true면 자동으로 muted도 true
+    
+    if (shouldAutoplay) {
+      params.append('autoplay', '1')
+    }
+    if (shouldMute) {
+      params.append('mute', '1')
+    }
+    
+    // 썸네일 표시를 위한 파라미터
     params.append('modestbranding', '1')
     params.append('enablejsapi', '1')
     params.append('origin', window.location.origin)
     // 라이브 스트림 대기 화면 표시를 위한 파라미터
     params.append('playsinline', '1')
+    // 썸네일이 제대로 표시되도록 설정
+    params.append('rel', '0') // 관련 동영상 숨김
     
     const embedUrl = `https://www.youtube.com/embed/${videoId}?${params.toString()}`
     

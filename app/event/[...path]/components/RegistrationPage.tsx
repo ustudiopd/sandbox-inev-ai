@@ -25,8 +25,7 @@ export default function RegistrationPage({ campaign, baseUrl }: RegistrationPage
   
   // 등록 폼 필드
   const [email, setEmail] = useState('')
-  const [firstName, setFirstName] = useState('')
-  const [lastName, setLastName] = useState('')
+  const [name, setName] = useState('')
   const [jobTitle, setJobTitle] = useState('')
   const [company, setCompany] = useState('')
   const [phoneCountryCode, setPhoneCountryCode] = useState('+82')
@@ -48,7 +47,7 @@ export default function RegistrationPage({ campaign, baseUrl }: RegistrationPage
     e.preventDefault()
     
     if (!lookupName.trim()) {
-      setLookupError('이름을 입력해주세요.')
+      setLookupError('성함을 입력해주세요.')
       return
     }
     
@@ -102,13 +101,8 @@ export default function RegistrationPage({ campaign, baseUrl }: RegistrationPage
       return
     }
     
-    if (!firstName.trim()) {
-      setError('이름을 입력해주세요.')
-      return
-    }
-    
-    if (!lastName.trim()) {
-      setError('성을 입력해주세요.')
+    if (!name.trim()) {
+      setError('성함을 입력해주세요.')
       return
     }
     
@@ -134,7 +128,6 @@ export default function RegistrationPage({ campaign, baseUrl }: RegistrationPage
     
     const phone = `${phone1}-${phone2}-${phone3}`
     const phoneNorm = phone.replace(/\D/g, '')
-    const fullName = `${lastName}${firstName}`.trim()
     
     setSubmitting(true)
     setError(null)
@@ -145,14 +138,13 @@ export default function RegistrationPage({ campaign, baseUrl }: RegistrationPage
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name: fullName,
+          name: name.trim(),
           company: company.trim(),
           phone: phone,
           phone_norm: phoneNorm,
             registration_data: {
               email: email.trim(),
-              firstName: firstName.trim(),
-              lastName: lastName.trim(),
+              name: name.trim(),
               jobTitle: jobTitle.trim(),
               phoneCountryCode: phoneCountryCode,
               consentEmail: consentEmail,
@@ -188,7 +180,398 @@ export default function RegistrationPage({ campaign, baseUrl }: RegistrationPage
   
   // 참여 확인 모드
   if (lookupMode) {
-    // 149403 경로는 wert.png 사용, 445870 경로는 edm_header_1600_2.jpg 사용
+    const isWertSummit = campaign.public_path === '/149403'
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
+    
+    if (isWertSummit) {
+      return (
+        <>
+          <style jsx global>{`
+            @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css');
+            
+            html, body {
+              font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+              background-color: #fff;
+              margin: 0;
+              padding: 0;
+            }
+            
+            .registration-hero {
+              width: 100%;
+              max-width: 1000px;
+              margin: 0 auto;
+              position: relative;
+              background: white;
+              min-height: 600px;
+              padding-top: 112px;
+              padding-bottom: 80px;
+              overflow: hidden;
+            }
+            
+            .registration-hero-bg {
+              width: 1972px;
+              height: 1109px;
+              position: absolute;
+              left: -34px;
+              top: 1530px;
+              transform-origin: top left;
+              transform: rotate(-90deg);
+              filter: blur(40px);
+              opacity: 0.3;
+              z-index: 0;
+            }
+            
+            .registration-hero-content {
+              position: relative;
+              z-index: 1;
+            }
+            
+            .registration-header {
+              width: 100%;
+              max-width: 1000px;
+              height: 112px;
+              position: absolute;
+              top: 0;
+              left: 50%;
+              transform: translateX(-50%);
+              background: rgba(255, 255, 255, 0.6);
+              backdrop-filter: blur(2px);
+              z-index: 10;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+            }
+            
+            .registration-logo {
+              width: 320px;
+              height: 40px;
+            }
+            
+            .registration-content {
+              max-width: 856px;
+              margin: 0 auto;
+              padding: 0 72px;
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              gap: 40px;
+            }
+          
+            .registration-title {
+              text-align: center;
+              font-size: 96px;
+              font-weight: 700;
+              line-height: 117.6px;
+              color: #000;
+              margin: 0;
+            }
+          
+            .registration-date-badges {
+              display: flex;
+              gap: 8px;
+              align-items: center;
+            }
+          
+            .date-badge {
+              padding: 8px 24px;
+              background-color: #000;
+              border-radius: 16px;
+              color: #fff;
+              font-size: 36px;
+              font-weight: 700;
+              line-height: 54px;
+            }
+          
+            .registration-form-section {
+              width: 100%;
+              max-width: 1000px;
+              margin: 0 auto;
+              padding: 80px 72px;
+              background: white;
+            }
+          
+            .registration-form-container {
+              max-width: 856px;
+              margin: 0 auto;
+              background: #f5f5f5;
+              border-radius: 48px;
+              padding: 64px;
+              box-shadow: 0px 4px 48px -10px rgba(0, 0, 0, 0.08);
+            }
+          
+            .registration-form-title {
+              font-size: 36px;
+              font-weight: 700;
+              color: #000;
+              margin-bottom: 40px;
+              text-align: center;
+            }
+          
+            .registration-form-label {
+              font-size: 20px;
+              font-weight: 600;
+              color: #000;
+              margin-bottom: 12px;
+              display: block;
+            }
+          
+            .registration-form-input {
+              width: 100%;
+              padding: 16px 20px;
+              background: #fff;
+              border: 2px solid #e5e5e5;
+              border-radius: 16px;
+              font-size: 18px;
+              color: #000;
+              font-family: 'Pretendard', sans-serif;
+              transition: all 0.3s ease;
+            }
+          
+            .registration-form-input:focus {
+              outline: none;
+              border-color: #00A08C;
+              background-color: #fff;
+            }
+          
+            .registration-form-input::placeholder {
+              color: #999;
+            }
+          
+            .registration-form-button {
+              width: 100%;
+              padding: 20px 48px;
+              background-color: #00A08C;
+              color: #fff;
+              border: none;
+              border-radius: 200px;
+              font-size: 24px;
+              font-weight: 700;
+              line-height: 36px;
+              cursor: pointer;
+              transition: all 0.3s ease;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              gap: 16px;
+            }
+          
+            .registration-form-button:hover {
+              background-color: #008f7a;
+              transform: translateY(-2px);
+              box-shadow: 0 8px 16px rgba(0, 160, 140, 0.3);
+            }
+          
+            .registration-form-button:disabled {
+              opacity: 0.5;
+              cursor: not-allowed;
+            }
+          
+            .secondary-button {
+              width: 100%;
+              padding: 16px 40px;
+              background-color: transparent;
+              color: #00A08C;
+              border: 2px solid #00A08C;
+              border-radius: 200px;
+              font-size: 20px;
+              font-weight: 700;
+              cursor: pointer;
+              transition: all 0.3s ease;
+              margin-top: 16px;
+            }
+          
+            .secondary-button:hover {
+              background-color: #00A08C;
+              color: #fff;
+            }
+          
+            @media (max-width: 768px) {
+              .registration-hero {
+                padding-top: 80px;
+                padding-bottom: 60px;
+              }
+              
+              .registration-content {
+                padding: 0 20px;
+              }
+              
+              .registration-title {
+                font-size: 48px;
+                line-height: 60px;
+              }
+              
+              .date-badge {
+                font-size: 24px;
+                padding: 6px 16px;
+              }
+              
+              .registration-form-section {
+                padding: 60px 20px;
+              }
+              
+              .registration-form-container {
+                padding: 40px 24px;
+              }
+              
+              .registration-form-title {
+                font-size: 28px;
+              }
+              
+              .registration-form-label {
+                font-size: 18px;
+              }
+              
+              .registration-form-input {
+                font-size: 16px;
+                padding: 12px 16px;
+              }
+              
+              .registration-form-button {
+                font-size: 20px;
+                padding: 16px 40px;
+              }
+              
+              .secondary-button {
+                font-size: 18px;
+                padding: 14px 32px;
+              }
+            }
+          `}</style>
+
+          {/* Header with Logo */}
+          <div className="registration-header">
+            <img
+              src={`${supabaseUrl}/storage/v1/object/public/webinar-thumbnails/wert/kewert_logo.png`}
+              alt="keywert Insight"
+              className="registration-logo"
+            />
+          </div>
+
+          {/* Hero Section */}
+          <section className="registration-hero">
+            {/* Background Image - Rotated and Blurred */}
+            <div className="registration-hero-bg">
+              <img
+                src={`${supabaseUrl}/storage/v1/object/public/webinar-thumbnails/wert/image 50-1.png`}
+                alt=""
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+              />
+            </div>
+            <div className="registration-hero-content">
+              <div className="registration-content">
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '40px' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '32px' }}>
+                    <div style={{ textAlign: 'center', fontSize: '36px', fontWeight: 700, color: '#000' }}>
+                      실제 고객사례로 알아보는
+                    </div>
+                    <h1 className="registration-title">
+                      AI 특허리서치<br />
+                      <span style={{ whiteSpace: 'nowrap' }}>실무 활용 웨비나</span>
+                    </h1>
+                    <div className="registration-date-badges">
+                      <div className="date-badge">2026. 02. 06</div>
+                      <div className="date-badge">14:00</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Form Section */}
+          <section className="registration-form-section">
+            <div className="registration-form-container">
+              <h1 className="registration-form-title">등록 확인하기</h1>
+              <p style={{ fontSize: '16px', color: '#666', textAlign: 'center', marginBottom: '32px' }}>
+                등록한 성함과 전화번호를 입력해주세요
+              </p>
+              
+              <form onSubmit={handleLookup} style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+                {lookupError && (
+                  <div style={{ padding: '16px', backgroundColor: '#fee', border: '1px solid #fcc', borderRadius: '16px' }}>
+                    <p style={{ fontSize: '16px', color: '#c00' }}>{lookupError}</p>
+                  </div>
+                )}
+                
+                <div>
+                  <label className="registration-form-label">성함</label>
+                  <input
+                    type="text"
+                    value={lookupName}
+                    onChange={(e) => setLookupName(e.target.value)}
+                    className="registration-form-input"
+                    placeholder="성함을 입력하세요"
+                    disabled={lookupLoading}
+                  />
+                </div>
+                
+                <div>
+                  <label className="registration-form-label">전화번호</label>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <div style={{ flex: 1, position: 'relative' }}>
+                      <input
+                        type="tel"
+                        value={lookupPhone1}
+                        onChange={(e) => setLookupPhone1(e.target.value.replace(/\D/g, '').slice(0, 3))}
+                        className="registration-form-input"
+                        style={{ textAlign: 'center', paddingRight: '32px' }}
+                        placeholder="010"
+                        maxLength={3}
+                        disabled={lookupLoading}
+                      />
+                      <span style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', color: '#999', pointerEvents: 'none' }}>-</span>
+                    </div>
+                    <div style={{ flex: 1, position: 'relative' }}>
+                      <input
+                        type="tel"
+                        value={lookupPhone2}
+                        onChange={(e) => setLookupPhone2(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                        className="registration-form-input"
+                        style={{ textAlign: 'center', paddingRight: '32px' }}
+                        placeholder="1234"
+                        maxLength={4}
+                        disabled={lookupLoading}
+                      />
+                      <span style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', color: '#999', pointerEvents: 'none' }}>-</span>
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <input
+                        type="tel"
+                        value={lookupPhone3}
+                        onChange={(e) => setLookupPhone3(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                        className="registration-form-input"
+                        style={{ textAlign: 'center' }}
+                        placeholder="5678"
+                        maxLength={4}
+                        disabled={lookupLoading}
+                      />
+                    </div>
+                  </div>
+                </div>
+                
+                <button
+                  type="submit"
+                  disabled={lookupLoading}
+                  className="registration-form-button"
+                >
+                  {lookupLoading ? '확인 중...' : '등록 확인하기'}
+                </button>
+                
+                <button
+                  type="button"
+                  onClick={() => setLookupMode(false)}
+                  className="secondary-button"
+                >
+                  등록하기로 돌아가기
+                </button>
+              </form>
+            </div>
+          </section>
+        </>
+      )
+    }
+    
+    // 기존 디자인 (다른 경로용)
     const headerImageUrl = campaign.public_path === '/149403'
       ? 'https://yqsayphssjznthrxpgfb.supabase.co/storage/v1/object/public/webinar-thumbnails/wert.png'
       : campaign.public_path === '/445870'
@@ -216,7 +599,7 @@ export default function RegistrationPage({ campaign, baseUrl }: RegistrationPage
               등록 확인하기
             </h1>
             <p className="text-sm sm:text-base text-gray-600 text-center mb-6">
-              등록한 이름과 전화번호를 입력해주세요
+              등록한 성함과 전화번호를 입력해주세요
             </p>
             
             <form onSubmit={handleLookup} className="space-y-4 sm:space-y-5">
@@ -228,14 +611,14 @@ export default function RegistrationPage({ campaign, baseUrl }: RegistrationPage
               
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  이름
+                  성함
                 </label>
                 <input
                   type="text"
                   value={lookupName}
                   onChange={(e) => setLookupName(e.target.value)}
                   className="w-full px-4 py-2.5 border-b-2 border-gray-200 focus:border-[#00B388] outline-none transition-colors bg-white text-gray-900 text-base"
-                  placeholder="이름을 입력하세요"
+                  placeholder="성함을 입력하세요"
                   disabled={lookupLoading}
                 />
               </div>
@@ -306,7 +689,538 @@ export default function RegistrationPage({ campaign, baseUrl }: RegistrationPage
   }
   
   // 일반 등록 모드 - 상세 폼
-  // 149403 경로는 wert.png 사용, 445870 경로는 edm_header_1600_2.jpg 사용
+  // 149403 경로는 WebinarFormWertPage와 같은 디자인 사용
+  const isWertSummit = campaign.public_path === '/149403'
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
+  
+  if (isWertSummit) {
+    return (
+      <>
+        <style jsx global>{`
+          @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css');
+          
+          html, body {
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+            background-color: #fff;
+            margin: 0;
+            padding: 0;
+          }
+          
+          .registration-hero {
+            width: 100%;
+            max-width: 1000px;
+            margin: 0 auto;
+            position: relative;
+            background: white;
+            min-height: 600px;
+            padding-top: 112px;
+            padding-bottom: 80px;
+            overflow: hidden;
+          }
+          
+          .registration-hero-bg {
+            width: 1972px;
+            height: 1109px;
+            position: absolute;
+            left: -34px;
+            top: 1530px;
+            transform-origin: top left;
+            transform: rotate(-90deg);
+            filter: blur(40px);
+            opacity: 0.3;
+            z-index: 0;
+          }
+          
+          .registration-hero-content {
+            position: relative;
+            z-index: 1;
+          }
+          
+          .registration-header {
+            width: 100%;
+            max-width: 1000px;
+            height: 112px;
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(2px);
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          }
+          
+          .registration-logo {
+            width: 320px;
+            height: 40px;
+          }
+          
+          .registration-content {
+            max-width: 856px;
+            margin: 0 auto;
+            padding: 0 72px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 40px;
+          }
+          
+          .registration-title {
+            text-align: center;
+            font-size: 96px;
+            font-weight: 700;
+            line-height: 117.6px;
+            color: #000;
+            margin: 0;
+          }
+          
+          .registration-date-badges {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+          }
+          
+          .date-badge {
+            padding: 8px 24px;
+            background-color: #000;
+            border-radius: 16px;
+            color: #fff;
+            font-size: 36px;
+            font-weight: 700;
+            line-height: 54px;
+          }
+          
+          .registration-form-section {
+            width: 100%;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 80px 72px;
+            background: white;
+          }
+          
+          .registration-form-container {
+            max-width: 856px;
+            margin: 0 auto;
+            background: #f5f5f5;
+            border-radius: 48px;
+            padding: 64px;
+            box-shadow: 0px 4px 48px -10px rgba(0, 0, 0, 0.08);
+          }
+          
+          .registration-form-title {
+            font-size: 36px;
+            font-weight: 700;
+            color: #000;
+            margin-bottom: 40px;
+            text-align: center;
+          }
+          
+          .registration-form-label {
+            font-size: 20px;
+            font-weight: 600;
+            color: #000;
+            margin-bottom: 12px;
+            display: block;
+          }
+          
+          .registration-form-input {
+            width: 100%;
+            padding: 16px 20px;
+            background: #fff;
+            border: 2px solid #e5e5e5;
+            border-radius: 16px;
+            font-size: 18px;
+            color: #000;
+            font-family: 'Pretendard', sans-serif;
+            transition: all 0.3s ease;
+          }
+          
+          .registration-form-input:focus {
+            outline: none;
+            border-color: #00A08C;
+            background-color: #fff;
+          }
+          
+          .registration-form-input::placeholder {
+            color: #999;
+          }
+          
+          .registration-form-button {
+            width: 100%;
+            padding: 20px 48px;
+            background-color: #00A08C;
+            color: #fff;
+            border: none;
+            border-radius: 200px;
+            font-size: 24px;
+            font-weight: 700;
+            line-height: 36px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+          }
+          
+          .registration-form-button:hover {
+            background-color: #008f7a;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(0, 160, 140, 0.3);
+          }
+          
+          .registration-form-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+          }
+          
+          .back-link {
+            color: #666;
+            text-decoration: none;
+            margin-bottom: 40px;
+            display: inline-block;
+            font-size: 18px;
+            transition: color 0.3s ease;
+          }
+          
+          .back-link:hover {
+            color: #000;
+          }
+          
+          @media (max-width: 768px) {
+            .registration-hero {
+              padding-top: 80px;
+              padding-bottom: 60px;
+            }
+            
+            .registration-content {
+              padding: 0 20px;
+            }
+            
+            .registration-title {
+              font-size: 48px;
+              line-height: 60px;
+            }
+            
+            .date-badge {
+              font-size: 24px;
+              padding: 6px 16px;
+            }
+            
+            .registration-form-section {
+              padding: 60px 20px;
+            }
+            
+            .registration-form-container {
+              padding: 40px 24px;
+            }
+            
+            .registration-form-title {
+              font-size: 28px;
+            }
+            
+            .registration-form-label {
+              font-size: 18px;
+            }
+            
+            .registration-form-input {
+              font-size: 16px;
+              padding: 12px 16px;
+            }
+            
+            .registration-form-button {
+              font-size: 20px;
+              padding: 16px 40px;
+            }
+          }
+        `}</style>
+
+        {/* Header with Logo */}
+        <div className="registration-header">
+          <img
+            src={`${supabaseUrl}/storage/v1/object/public/webinar-thumbnails/wert/kewert_logo.png`}
+            alt="keywert Insight"
+            className="registration-logo"
+          />
+        </div>
+
+        {/* Hero Section */}
+        <section className="registration-hero">
+          {/* Background Image - Rotated and Blurred */}
+          <div className="registration-hero-bg">
+            <img
+              src={`${supabaseUrl}/storage/v1/object/public/webinar-thumbnails/wert/image 50-1.png`}
+              alt=""
+              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+            />
+          </div>
+          <div className="registration-hero-content">
+            <div className="registration-content">
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '40px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '32px' }}>
+                  <div style={{ textAlign: 'center', fontSize: '36px', fontWeight: 700, color: '#000' }}>
+                    실제 고객사례로 알아보는
+                  </div>
+                  <h1 className="registration-title">
+                    AI 특허리서치<br />
+                    <span style={{ whiteSpace: 'nowrap' }}>실무 활용 웨비나</span>
+                  </h1>
+                  <div className="registration-date-badges">
+                    <div className="date-badge">2026. 02. 06</div>
+                    <div className="date-badge">14:00</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Form Section */}
+        <section className="registration-form-section">
+          <div className="registration-form-container">
+            <Link 
+              href={`${baseUrl}/event${campaign.public_path}`}
+              className="back-link"
+            >
+              ← 메인페이지로 돌아가기
+            </Link>
+            
+            <h1 className="registration-form-title">이벤트 등록</h1>
+            
+            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+              {error && (
+                <div style={{ padding: '16px', backgroundColor: '#fee', border: '1px solid #fcc', borderRadius: '16px' }}>
+                  <p style={{ fontSize: '16px', color: '#c00' }}>{error}</p>
+                </div>
+              )}
+              
+              {/* 회사명 */}
+              <div>
+                <label className="registration-form-label">
+                  회사명 <span style={{ color: '#f00' }}>*</span>
+                </label>
+                <input
+                  type="text"
+                  value={company}
+                  onChange={(e) => setCompany(e.target.value)}
+                  className="registration-form-input"
+                  placeholder="회사명을 입력하세요"
+                  disabled={submitting}
+                  required
+                />
+              </div>
+              
+              {/* 이메일 주소 */}
+              <div>
+                <label className="registration-form-label">
+                  이메일 주소 <span style={{ color: '#f00' }}>*</span>
+                </label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="registration-form-input"
+                  placeholder="이메일을 입력하세요"
+                  disabled={submitting}
+                  required
+                />
+              </div>
+              
+              {/* 성함 */}
+              <div>
+                <label className="registration-form-label">
+                  성함 <span style={{ color: '#f00' }}>*</span>
+                </label>
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="registration-form-input"
+                  placeholder="성함을 입력하세요"
+                  disabled={submitting}
+                  required
+                />
+              </div>
+              
+              {/* 직급 */}
+              <div>
+                <label className="registration-form-label">
+                  직급 <span style={{ color: '#f00' }}>*</span>
+                </label>
+                <input
+                  type="text"
+                  value={jobTitle}
+                  onChange={(e) => setJobTitle(e.target.value)}
+                  className="registration-form-input"
+                  placeholder="직급을 입력하세요"
+                  disabled={submitting}
+                  required
+                />
+              </div>
+              
+              {/* 휴대폰 번호 */}
+              <div>
+                <label className="registration-form-label">
+                  휴대폰 번호 <span style={{ color: '#f00' }}>*</span>
+                </label>
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                  <input
+                    type="text"
+                    value={phoneCountryCode}
+                    onChange={(e) => setPhoneCountryCode(e.target.value)}
+                    className="registration-form-input"
+                    style={{ width: '120px', textAlign: 'center' }}
+                    disabled={submitting}
+                  />
+                  <div style={{ flex: 1, position: 'relative' }}>
+                    <input
+                      type="tel"
+                      value={phone1}
+                      onChange={(e) => setPhone1(e.target.value.replace(/\D/g, '').slice(0, 3))}
+                      className="registration-form-input"
+                      style={{ textAlign: 'center', paddingRight: '32px' }}
+                      placeholder="010"
+                      maxLength={3}
+                      disabled={submitting}
+                      required
+                    />
+                    <span style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', color: '#999', pointerEvents: 'none' }}>-</span>
+                  </div>
+                  <div style={{ flex: 1, position: 'relative' }}>
+                    <input
+                      type="tel"
+                      value={phone2}
+                      onChange={(e) => setPhone2(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                      className="registration-form-input"
+                      style={{ textAlign: 'center', paddingRight: '32px' }}
+                      placeholder="1234"
+                      maxLength={4}
+                      disabled={submitting}
+                      required
+                    />
+                    <span style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', color: '#999', pointerEvents: 'none' }}>-</span>
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <input
+                      type="tel"
+                      value={phone3}
+                      onChange={(e) => setPhone3(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                      className="registration-form-input"
+                      style={{ textAlign: 'center' }}
+                      placeholder="5678"
+                      maxLength={4}
+                      disabled={submitting}
+                      required
+                    />
+                  </div>
+                </div>
+              </div>
+              
+              {/* 커뮤니케이션 동의 */}
+              <div style={{ paddingTop: '24px', borderTop: '1px solid #e5e5e5' }}>
+                <p style={{ fontSize: '16px', color: '#666', marginBottom: '16px', lineHeight: '24px' }}>
+                  WERT에 대한 맞춤식 커뮤니케이션을 통해 WERT 파트너의 제품, 서비스, 특별 행사 및 이벤트 정보를 선택적으로 받으시겠습니까?
+                </p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+                    <input
+                      type="checkbox"
+                      checked={consentEmail}
+                      onChange={(e) => setConsentEmail(e.target.checked)}
+                      style={{ width: '20px', height: '20px', marginRight: '12px', accentColor: '#00A08C' }}
+                      disabled={submitting}
+                    />
+                    <span style={{ fontSize: '16px', color: '#000' }}>이메일</span>
+                  </label>
+                  <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+                    <input
+                      type="checkbox"
+                      checked={consentPhone}
+                      onChange={(e) => setConsentPhone(e.target.checked)}
+                      style={{ width: '20px', height: '20px', marginRight: '12px', accentColor: '#00A08C' }}
+                      disabled={submitting}
+                    />
+                    <span style={{ fontSize: '16px', color: '#000' }}>전화번호</span>
+                  </label>
+                </div>
+              </div>
+              
+              {/* 개인정보취급방침 */}
+              <div style={{ paddingTop: '24px', borderTop: '1px solid #e5e5e5' }}>
+                <p style={{ fontSize: '14px', color: '#666', marginBottom: '16px', lineHeight: '22px' }}>
+                  WERT에서 귀하의 정보를 관리, 사용, 보호하는 방법에 대해 자세히 알아보려면{' '}
+                  <a 
+                    href="https://www.wertcorp.com/kr/policy" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    style={{ color: '#00A08C', textDecoration: 'underline' }}
+                  >
+                    WERT 개인정보 취급방침
+                  </a>을 참조하시기 바랍니다. 
+                  동의한 사항에 대해 언제든지 취소 또는 수정하여 WERT의 마케팅 커뮤니케이션 서비스를 받을 수 있습니다. 
+                  이 작업을 수행하려면 WERT 이메일 마케팅 커뮤니케이션 페이지 하단의 옵트아웃 및 환경설정 메커니즘을 사용하거나{' '}
+                  <a 
+                    href="/unsubscribe" 
+                    onClick={(e) => {
+                      e.preventDefault()
+                      const width = 600
+                      const height = 700
+                      const left = (window.screen.width - width) / 2
+                      const top = (window.screen.height - height) / 2
+                      window.open(
+                        '/unsubscribe',
+                        'unsubscribe',
+                        `width=${width},height=${height},left=${left},top=${top},toolbar=no,menubar=no,location=no,status=no,scrollbars=yes,resizable=yes`
+                      )
+                    }}
+                    style={{ color: '#00A08C', textDecoration: 'underline', cursor: 'pointer' }}
+                  >
+                    이 링크
+                  </a>를 클릭하시면 됩니다. 
+                  마케팅 팀으로부터 전화를 받으실 수 있도록 휴대폰 번호를 제공하신 경우, 로밍 요금이 적용될 수 있음을 알아두시기 바랍니다.
+                </p>
+                <label style={{ display: 'flex', alignItems: 'start', cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={privacyConsent}
+                    onChange={(e) => setPrivacyConsent(e.target.checked)}
+                    style={{ width: '20px', height: '20px', marginRight: '12px', marginTop: '2px', accentColor: '#00A08C' }}
+                    disabled={submitting}
+                    required
+                  />
+                  <span style={{ fontSize: '16px', color: '#000' }}>
+                    개인정보 취급방침에 동의합니다 <span style={{ color: '#f00' }}>*</span>
+                  </span>
+                </label>
+              </div>
+              
+              {/* 제출 버튼 */}
+              <div style={{ marginTop: '32px' }}>
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="registration-form-button"
+                >
+                  {submitting ? '등록 중...' : '웨비나 등록하기'}
+                  <img
+                    src={`${supabaseUrl}/storage/v1/object/public/webinar-thumbnails/wert/symbol1.png`}
+                    alt=""
+                    width={14}
+                    height={20}
+                    style={{ width: '14px', height: '20px', objectFit: 'contain' }}
+                  />
+                </button>
+              </div>
+            </form>
+          </div>
+        </section>
+      </>
+    )
+  }
+  
+  // 기존 디자인 (다른 경로용)
   const headerImageUrl = campaign.public_path === '/149403'
     ? 'https://yqsayphssjznthrxpgfb.supabase.co/storage/v1/object/public/webinar-thumbnails/wert.png'
     : campaign.public_path === '/445870'
@@ -342,7 +1256,7 @@ export default function RegistrationPage({ campaign, baseUrl }: RegistrationPage
           {/* 제목 */}
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-6 sm:mb-8 text-gray-900">
             {campaign.public_path === '/149403' 
-              ? 'WERT TECH SUMMIT 26'
+              ? 'AI 특허리서치 실무 활용 웨비나'
               : campaign.public_path === '/445870' 
               ? 'HPE Networking in Motion' 
               : (campaign.title || 'HPE Networking in Motion')}
@@ -391,33 +1305,17 @@ export default function RegistrationPage({ campaign, baseUrl }: RegistrationPage
               />
             </div>
             
-            {/* 이름 */}
+            {/* 성함 */}
             <div className="flex items-center gap-4">
               <label className="text-sm font-medium text-gray-700 whitespace-nowrap min-w-[100px]">
-                이름 <span className="text-red-500">*</span>
+                성함 <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
-                value={firstName}
-                onChange={(e) => setFirstName(e.target.value)}
+                value={name}
+                onChange={(e) => setName(e.target.value)}
                 className="flex-1 px-4 py-2.5 border-b-2 border-gray-200 focus:border-[#00B388] outline-none transition-colors bg-white text-gray-900 text-base"
-                placeholder="이름을 입력하세요"
-                disabled={submitting}
-                required
-              />
-            </div>
-            
-            {/* 성 */}
-            <div className="flex items-center gap-4">
-              <label className="text-sm font-medium text-gray-700 whitespace-nowrap min-w-[100px]">
-                성 <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                value={lastName}
-                onChange={(e) => setLastName(e.target.value)}
-                className="flex-1 px-4 py-2.5 border-b-2 border-gray-200 focus:border-[#00B388] outline-none transition-colors bg-white text-gray-900 text-base"
-                placeholder="성을 입력하세요"
+                placeholder="성함을 입력하세요"
                 disabled={submitting}
                 required
               />
