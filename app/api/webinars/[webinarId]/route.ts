@@ -70,6 +70,7 @@ export async function PUT(
       youtubeUrl,
       startTime,
       endTime,
+      webinarStartTime,
       maxParticipants,
       isPublic,
       accessPolicy,
@@ -160,6 +161,7 @@ export async function PUT(
     if (youtubeUrl !== undefined) updateData.youtube_url = youtubeUrl
     if (startTime !== undefined) updateData.start_time = startTime || null
     if (endTime !== undefined) updateData.end_time = endTime || null
+    if (webinarStartTime !== undefined) updateData.webinar_start_time = webinarStartTime || null
     if (maxParticipants !== undefined) updateData.max_participants = maxParticipants || null
     if (isPublic !== undefined) updateData.is_public = isPublic
     if (accessPolicy !== undefined) updateData.access_policy = accessPolicy

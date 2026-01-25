@@ -22,12 +22,20 @@ export async function checkWebinarStatsPermission(webinarId: string) {
   // UUID 또는 slug로 웨비나 조회
   const query = getWebinarQuery(webinarId)
   
+  // 웨비나 조회 쿼리 빌더
+  let queryBuilder = admin
+    .from('webinars')
+    .select('id, agency_id, client_id, registration_campaign_id')
+  
+  if (query.column === 'slug') {
+    // slug는 문자열로 비교 (숫자로 저장되어 있어도 문자열로 변환)
+    queryBuilder = queryBuilder.eq('slug', String(query.value)).not('slug', 'is', null)
+  } else {
+    queryBuilder = queryBuilder.eq(query.column, query.value)
+  }
+  
   if (isSuperAdmin) {
-    const { data: webinar } = await admin
-      .from('webinars')
-      .select('id, agency_id, client_id, registration_campaign_id')
-      .eq(query.column, query.value)
-      .single()
+    const { data: webinar } = await queryBuilder.single()
 
     if (!webinar) {
       return { hasPermission: false, webinar: null }
@@ -37,11 +45,7 @@ export async function checkWebinarStatsPermission(webinarId: string) {
   }
 
   // 웨비나 정보 조회 (UUID 또는 slug로 조회)
-  const { data: webinar, error: webinarError } = await admin
-    .from('webinars')
-    .select('id, agency_id, client_id, registration_campaign_id')
-    .eq(query.column, query.value)
-    .single()
+  const { data: webinar, error: webinarError } = await queryBuilder.single()
 
   if (webinarError || !webinar) {
     return { hasPermission: false, webinar: null }

@@ -59,7 +59,7 @@ export default async function WebinarPage({
     // email_thumbnail_url은 마이그레이션 054에서 추가되므로 선택적으로 처리
     let queryBuilder = admin
       .from('webinars')
-      .select('id, slug, title, description, youtube_url, start_time, end_time, access_policy, client_id, is_public, registration_campaign_id, email_template_text, email_thumbnail_url')
+      .select('id, slug, title, description, youtube_url, start_time, end_time, webinar_start_time, access_policy, client_id, is_public, registration_campaign_id, email_template_text, email_thumbnail_url')
     
     if (query.column === 'slug') {
       // slug는 문자열로 비교
@@ -74,10 +74,9 @@ export default async function WebinarPage({
       queryBuilder = queryBuilder.eq(query.column, query.value)
     }
     
-    // 149404, 149405 slug인 경우 등록 캠페인에서 데이터 가져오기
-    const is149404 = query.column === 'slug' && query.value === '149404'
-    const is149405 = query.column === 'slug' && query.value === '149405'
-    const isWertSlug = is149404 || is149405
+    // 149402 slug인 경우 등록 캠페인에서 데이터 가져오기
+    const is149402 = query.column === 'slug' && query.value === '149402'
+    const isWertSlug = is149402
     
     const { data: webinar, error } = await queryBuilder.single()
     
@@ -93,8 +92,6 @@ export default async function WebinarPage({
       console.log('[WebinarPage][server] webinars 테이블 조회 결과:', {
         errorCode: error.code,
         errorMessage: error.message,
-        is149404: is149404,
-        is149405: is149405,
         willUseCampaign: isWertSlug,
       })
     }
@@ -106,7 +103,6 @@ export default async function WebinarPage({
         id: id || 'undefined',
         queryColumn: query.column || 'undefined',
         queryValue: query.value || 'undefined',
-        is149404: is149404 || false,
       }
       
       // 실제 에러 속성 확인 및 추가
@@ -116,7 +112,7 @@ export default async function WebinarPage({
         (error.details !== undefined && error.details !== null) ||
         (error.hint !== undefined && error.hint !== null)
       
-      // 149404, 149405이고 PGRST116 에러인 경우는 등록 캠페인에서 데이터 가져오기
+      // 149402이고 PGRST116 에러인 경우는 등록 캠페인에서 데이터 가져오기
       const isExpectedError = isWertSlug && (error?.code === 'PGRST116' || error?.message?.includes('No rows') || error?.message?.includes('0 rows'))
       
       if (hasErrorProperties) {
@@ -146,7 +142,6 @@ export default async function WebinarPage({
           id: id || 'undefined',
           queryColumn: query.column || 'undefined',
           queryValue: query.value || 'undefined',
-          is149404: is149404 || false,
           errorType: typeof error,
           errorConstructor: error?.constructor?.name,
           errorKeys,
@@ -161,7 +156,7 @@ export default async function WebinarPage({
           console.log('[WebinarPage][server] 웨비나를 찾을 수 없음 → 404')
           notFound()
         }
-        // 149404, 149405는 등록 캠페인에서 데이터 가져오기 (아래에서 처리)
+        // 149402는 등록 캠페인에서 데이터 가져오기 (아래에서 처리)
       } else {
         // 기타 에러는 서버 오류로 처리
         console.error('[WebinarPage][server] 서버 오류 발생 → 메인으로 리다이렉트')
@@ -169,53 +164,8 @@ export default async function WebinarPage({
       }
     }
     
-    // 데이터 없음 체크: 149402, 149404, 149405는 등록 캠페인에서 데이터 가져오기
-    let finalWebinar = webinar
-    if (!webinar && isWertSlug) {
-      // 149402는 /149402 등록 캠페인에서, 149404는 /149403 등록 캠페인에서, 149405는 /149405 등록 캠페인에서 데이터 가져오기
-      const is149402 = String(id) === '149402' || id === '149402'
-      const campaignPath = is149402 ? '/149402' : is149404 ? '/149403' : '/149405'
-      const slugValue = is149402 ? '149402' : is149404 ? '149404' : '149405'
-      console.log(`[WebinarPage][server] ${slugValue} 웨비나가 없음 - ${campaignPath} 등록 캠페인에서 데이터 가져오기`)
-      
-      const { data: campaign, error: campaignError } = await admin
-        .from('event_survey_campaigns')
-        .select('id, title, client_id, agency_id, public_path, type')
-        .eq('public_path', campaignPath)
-        .eq('type', 'registration')
-        .maybeSingle()
-      
-      if (campaignError || !campaign) {
-        console.error(`[WebinarPage][server] ${campaignPath} 등록 캠페인 조회 실패:`, campaignError)
-        notFound()
-      }
-      
-      // 등록 캠페인 정보로 웨비나 데이터 구성
-      finalWebinar = {
-        id: '00000000-0000-0000-0000-000000000000', // 임시 UUID
-        slug: slugValue,
-        title: campaign.title || '웨비나',
-        description: '',
-        youtube_url: '',
-        start_time: '2026-02-06T14:00:00Z',
-        end_time: '2026-02-06T15:30:00Z',
-        access_policy: 'name_email_auth',
-        client_id: campaign.client_id,
-        agency_id: campaign.agency_id,
-        registration_campaign_id: campaign.id,
-        is_public: true,
-        email_template_text: null,
-        email_thumbnail_url: null,
-      } as any
-      
-      if (finalWebinar) {
-        console.log('[WebinarPage][server] 등록 캠페인에서 웨비나 데이터 구성 완료:', {
-          slug: finalWebinar.slug,
-          title: finalWebinar.title,
-          registration_campaign_id: finalWebinar.registration_campaign_id,
-        })
-      }
-    } else if (!webinar) {
+    // 데이터 없음 체크
+    if (!webinar) {
       console.error('[WebinarPage][server] 웨비나 조회 실패 (데이터 없음):', {
         id,
         queryColumn: query.column,
@@ -225,31 +175,25 @@ export default async function WebinarPage({
       notFound()
     }
     
-    // finalWebinar가 null인 경우는 이미 notFound()로 처리되었으므로 타입 가드
-    if (!finalWebinar) {
-      notFound()
-    }
-    
     // 디버깅: 쿼리 결과 상세 로깅
     console.log('[WebinarPage][server] 웨비나 조회 성공:', {
-      id: finalWebinar.id,
-      slug: finalWebinar.slug,
-      title: finalWebinar.title,
-      is_public: finalWebinar.is_public,
-      access_policy: finalWebinar.access_policy,
-      registration_campaign_id: finalWebinar.registration_campaign_id,
-      client_id: finalWebinar.client_id,
-      isTemporaryUUID: finalWebinar.id === '00000000-0000-0000-0000-000000000000',
-      source: finalWebinar.id === '00000000-0000-0000-0000-000000000000' ? '등록 캠페인에서 생성' : 'webinars 테이블에서 조회',
+      id: webinar.id,
+      slug: webinar.slug,
+      title: webinar.title,
+      is_public: webinar.is_public,
+      access_policy: webinar.access_policy,
+      registration_campaign_id: webinar.registration_campaign_id,
+      client_id: webinar.client_id,
+      source: 'webinars 테이블에서 조회',
     })
     
     // 클라이언트 정보는 별도로 조회 (관계 쿼리 문제 방지)
     let clientData = null
-    if (finalWebinar.client_id) {
+    if (webinar.client_id) {
       const { data: client, error: clientError } = await admin
         .from('clients')
         .select('id, name, logo_url, brand_config')
-        .eq('id', finalWebinar.client_id)
+        .eq('id', webinar.client_id)
         .single()
       
       if (clientError) {
@@ -261,13 +205,13 @@ export default async function WebinarPage({
       }
     }
     
-    // 등록 페이지 캠페인 정보 조회 (registration_campaign_id가 있는 경우 또는 WERT slug인 경우)
+    // 등록 페이지 캠페인 정보 조회 (registration_campaign_id가 있는 경우)
     let registrationCampaignData = null
-    if (finalWebinar.registration_campaign_id) {
+    if (webinar.registration_campaign_id) {
       const { data: campaign, error: campaignError } = await admin
         .from('event_survey_campaigns')
         .select('id, public_path, title, client_id, agency_id')
-        .eq('id', finalWebinar.registration_campaign_id)
+        .eq('id', webinar.registration_campaign_id)
         .maybeSingle()
       
       if (campaignError) {
@@ -275,29 +219,11 @@ export default async function WebinarPage({
       } else if (campaign) {
         registrationCampaignData = campaign
       }
-    } else if (isWertSlug) {
-      // 149402, 149404, 149405인데 registration_campaign_id가 없으면 등록 캠페인 조회
-      const is149402 = String(finalWebinar.slug) === '149402' || finalWebinar.slug === 149402
-      const is149404 = String(finalWebinar.slug) === '149404' || finalWebinar.slug === 149404
-      const is149405 = String(finalWebinar.slug) === '149405' || finalWebinar.slug === 149405
-      const campaignPath = is149402 ? '/149402' : is149404 ? '/149403' : '/149405'
-      const { data: campaign, error: campaignError } = await admin
-        .from('event_survey_campaigns')
-        .select('id, public_path, title, client_id, agency_id')
-        .eq('public_path', campaignPath)
-        .eq('type', 'registration')
-        .maybeSingle()
-      
-      if (!campaignError && campaign) {
-        registrationCampaignData = campaign
-        // 웨비나에 registration_campaign_id 설정 (다음 조회를 위해)
-        finalWebinar.registration_campaign_id = campaign.id
-      }
     }
     
     // 클라이언트 정보 및 등록 페이지 캠페인 정보 추가
     const webinarData = {
-      ...finalWebinar,
+      ...webinar,
       clients: clientData || undefined, // null을 undefined로 변환
       registration_campaign: registrationCampaignData || undefined,
     }
@@ -307,7 +233,7 @@ export default async function WebinarPage({
     // 실제 접근 제어는 WebinarEntry 컴포넌트에서 access_policy에 따라 처리
     
     // 서버 사이드에서 WERT 페이지 여부 확인하여 SSR/CSR 일치 보장
-    const isWertPage = String(webinarData.slug) === '149402' || webinarData.slug === 149402 || String(webinarData.slug) === '149404' || webinarData.slug === 149404 || String(webinarData.slug) === '149405' || webinarData.slug === 149405 || !!webinarData.registration_campaign_id
+    const isWertPage = String(webinarData.slug) === '149402' || webinarData.slug === 149402 || !!webinarData.registration_campaign_id
     
     return <WebinarEntry webinar={webinarData} isWertPage={isWertPage} />
   } catch (catchError: any) {

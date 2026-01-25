@@ -43,7 +43,7 @@ interface WebinarViewProps {
  * 웨비나 시청 페이지 메인 컴포넌트
  * 모듈화된 컴포넌트들을 조합하여 구성
  */
-// 세션 데이터 (149404 웨비나용)
+// 세션 데이터 (웨비나용)
 const wertSessions = [
   {
     label: "SESSION 1",
@@ -102,8 +102,8 @@ export default function WebinarView({ webinar, isAdminMode = false }: WebinarVie
   const [mounted, setMounted] = useState(false)
   const [expandedSession, setExpandedSession] = useState<string | null>(null)
   
-  // slug가 '149404', '149405'이거나 registration_campaign_id가 있으면 등록 페이지와 연동된 웨비나로 간주
-  const isWertWebinar = webinar.slug === '149402' || webinar.slug === '149404' || webinar.slug === '149405' || !!webinar.registration_campaign_id
+  // slug가 '149402'이거나 registration_campaign_id가 있으면 등록 페이지와 연동된 웨비나로 간주
+  const isWertWebinar = webinar.slug === '149402' || !!webinar.registration_campaign_id
   const [openForms, setOpenForms] = useState<any[]>([])
   const [openGiveaways, setOpenGiveaways] = useState<any[]>([])
   const [files, setFiles] = useState<any[]>([])
@@ -582,8 +582,8 @@ export default function WebinarView({ webinar, isAdminMode = false }: WebinarVie
           </div>
         </div>
       )}
-      {/* slug가 '149404', '149405'이거나 registration_campaign_id가 있으면 등록 페이지와 같은 톤앤매너 적용 */}
-      {(isWertWebinar || webinar.slug === '149402' || webinar.slug === '149404' || webinar.slug === '149405') ? (
+      {/* slug가 '149402'이거나 registration_campaign_id가 있으면 등록 페이지와 같은 톤앤매너 적용 */}
+      {(isWertWebinar || webinar.slug === '149402') ? (
         <style jsx global>{`
           @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css');
           
@@ -600,7 +600,7 @@ export default function WebinarView({ webinar, isAdminMode = false }: WebinarVie
         `}</style>
       ) : null}
       <div className={`min-h-screen w-full overflow-x-hidden ${
-        isWertWebinar || webinar.slug === '149402' || webinar.slug === '149404' || webinar.slug === '149405'
+        isWertWebinar || webinar.slug === '149402'
           ? 'bg-white'
           : 'bg-gradient-to-br from-gray-50 to-blue-50'
       }`}>
@@ -697,12 +697,12 @@ export default function WebinarView({ webinar, isAdminMode = false }: WebinarVie
             </div>
             
             {/* 세션 소개 - 모바일에서도 표시 */}
-            <div className={`bg-white p-3 sm:p-4 lg:p-6 ${
+            <div className={`bg-white p-4 sm:p-4 lg:p-6 ${
               isWertWebinar 
                 ? 'rounded-lg border border-gray-200' 
                 : 'rounded-lg sm:rounded-xl shadow-lg'
             }`}>
-              <h3 className="text-sm sm:text-base lg:text-lg font-semibold text-gray-900 mb-2 sm:mb-3 lg:mb-4">세션 소개</h3>
+              <h3 className="text-base sm:text-base lg:text-lg font-semibold text-gray-900 mb-3 sm:mb-3 lg:mb-4">세션 소개</h3>
               
               {/* registration_campaign_id가 있으면 세션 카드 표시 */}
               {isWertWebinar ? (
@@ -713,7 +713,7 @@ export default function WebinarView({ webinar, isAdminMode = false }: WebinarVie
                       <button
                         key={session.label}
                         onClick={() => setExpandedSession(expandedSession === session.label ? null : session.label)}
-                        className="p-4 bg-gray-50 rounded-lg border border-gray-200 hover:border-teal-500 hover:shadow-md transition-all text-left"
+                        className="p-4 bg-gray-50 rounded-lg border border-gray-200 hover:border-teal-500 hover:shadow-md transition-all text-left flex flex-col items-start h-full"
                         style={{ fontFamily: 'Pretendard, sans-serif' }}
                       >
                         <div className="flex items-center gap-2 mb-2">

@@ -21,6 +21,7 @@ export default function WebinarEditModal({
     youtubeUrl: '',
     startTime: '',
     endTime: '',
+    webinarStartTime: '',
     maxParticipants: '',
     isPublic: false,
     accessPolicy: 'auth' as 'auth' | 'guest_allowed' | 'invite_only' | 'email_auth',
@@ -68,6 +69,7 @@ export default function WebinarEditModal({
         youtubeUrl: webinar.youtube_url || '',
         startTime: formatDateTime(webinar.start_time),
         endTime: formatDateTime(webinar.end_time),
+        webinarStartTime: formatDateTime(webinar.webinar_start_time),
         maxParticipants: webinar.max_participants ? String(webinar.max_participants) : '',
         isPublic: webinar.is_public || false,
         accessPolicy: webinar.access_policy || 'auth',
@@ -101,6 +103,7 @@ export default function WebinarEditModal({
         youtubeUrl: formData.youtubeUrl,
         startTime: convertToUTC(formData.startTime),
         endTime: convertToUTC(formData.endTime),
+        webinarStartTime: convertToUTC(formData.webinarStartTime),
         maxParticipants: formData.maxParticipants ? parseInt(formData.maxParticipants) : null,
         isPublic: formData.isPublic,
         accessPolicy: formData.accessPolicy,
@@ -198,29 +201,53 @@ export default function WebinarEditModal({
               />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  시작 시간
-                </label>
-                <input
-                  type="datetime-local"
-                  value={formData.startTime}
-                  onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
+            <div className="border-t pt-4 mt-4">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">캠페인 기간</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    시작 시간
+                  </label>
+                  <input
+                    type="datetime-local"
+                    value={formData.startTime}
+                    onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
 
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    종료 시간
+                  </label>
+                  <input
+                    type="datetime-local"
+                    value={formData.endTime}
+                    onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+              </div>
+              <p className="mt-2 text-sm text-gray-500">
+                캠페인 등록 기간을 설정합니다.
+              </p>
+            </div>
+
+            <div className="border-t pt-4 mt-4">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">웨비나 시작 설정</h3>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  종료 시간
+                  웨비나 시작 시간
                 </label>
                 <input
                   type="datetime-local"
-                  value={formData.endTime}
-                  onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
+                  value={formData.webinarStartTime}
+                  onChange={(e) => setFormData({ ...formData, webinarStartTime: e.target.value })}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
+                <p className="mt-1 text-sm text-gray-500">
+                  설정하면 입장 페이지에 날짜와 카운트다운이 표시됩니다. 비워두면 즉시 입장 가능합니다.
+                </p>
               </div>
             </div>
 

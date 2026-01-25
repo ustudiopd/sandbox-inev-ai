@@ -63,6 +63,9 @@ export default function ParticipantsTab({ webinarId }: ParticipantsTabProps) {
     attendee: '참가자',
     host: '호스트',
     moderator: '모더레이터',
+    관리자: '관리자',
+    운영자: '운영자',
+    분석가: '분석가',
   }
   
   if (loading) {

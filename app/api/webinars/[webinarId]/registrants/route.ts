@@ -3,6 +3,7 @@ import { requireAuth } from '@/lib/auth/guards'
 import { createAdminSupabase } from '@/lib/supabase/admin'
 import { createServerSupabase } from '@/lib/supabase/server'
 import { checkWebinarStatsPermission } from '@/lib/stats/permissions'
+import { getWebinarQuery } from '@/lib/utils/webinar'
 
 export const runtime = 'nodejs'
 
@@ -28,64 +29,89 @@ export async function GET(
     
     const admin = createAdminSupabase()
     
-    // 웨비나 등록자 조회
-    const { data: registrations, error: registrationsError } = await admin
-      .from('registrations')
-      .select('user_id, nickname, role, registered_via, created_at')
-      .eq('webinar_id', webinarId)
-      .order('created_at', { ascending: false })
+    // 디버깅: 웨비나 정보 로그
+    console.log('[registrants API] 웨비나 정보:', {
+      webinarId,
+      webinarId_type: typeof webinar.id,
+      registration_campaign_id: webinar.registration_campaign_id,
+      registration_campaign_id_type: typeof webinar.registration_campaign_id,
+    })
     
-    if (registrationsError) {
-      return NextResponse.json(
-        { success: false, error: registrationsError.message },
-        { status: 500 }
-      )
-    }
-    
-    // 등록 페이지 캠페인 참여자도 조회 (registration_campaign_id가 있는 경우)
+    let registrations: any[] = []
     let registrationEntries: any[] = []
+    
+    // registration_campaign_id가 있으면 등록 캠페인 데이터만 사용
     if (webinar.registration_campaign_id) {
+      console.log('[registrants API] 등록 캠페인 데이터 사용:', webinar.registration_campaign_id)
       const { data: entries, error: entriesError } = await admin
         .from('event_survey_entries')
         .select('id, name, registration_data, completed_at, created_at')
         .eq('campaign_id', webinar.registration_campaign_id)
         .order('completed_at', { ascending: false })
       
-      if (!entriesError && entries) {
-        registrationEntries = entries
+      if (entriesError) {
+        return NextResponse.json(
+          { success: false, error: entriesError.message },
+          { status: 500 }
+        )
       }
-    }
-    
-    // 사용자 ID 수집 (웨비나 등록자)
-    const userIds = (registrations || []).map((r: any) => r.user_id).filter(Boolean)
-    
-    // 프로필 정보 조회
-    let profilesMap = new Map<string, any>()
-    if (userIds.length > 0) {
-      const { data: profiles, error: profilesError } = await admin
-        .from('profiles')
-        .select('id, display_name, email')
-        .in('id', userIds)
       
-      if (!profilesError && profiles) {
-        profiles.forEach((p: any) => {
-          profilesMap.set(p.id, p)
-        })
+      registrationEntries = entries || []
+      console.log('[registrants API] 등록 캠페인 참여자 수:', registrationEntries.length)
+    } else {
+      // registration_campaign_id가 없으면 registrations 테이블 조회
+      console.log('[registrants API] registrations 테이블 사용 (registration_campaign_id 없음)')
+      const { data: webinarRegistrations, error: registrationsError } = await admin
+        .from('registrations')
+        .select('user_id, nickname, role, registered_via, created_at')
+        .eq('webinar_id', webinar.id)
+        .order('created_at', { ascending: false })
+      
+      if (registrationsError) {
+        return NextResponse.json(
+          { success: false, error: registrationsError.message },
+          { status: 500 }
+        )
       }
+      
+      registrations = webinarRegistrations || []
+      console.log('[registrants API] registrations 테이블 참여자 수:', registrations.length)
     }
     
-    // 등록 페이지 참여자의 이메일 수집
-    const registrationEmails = registrationEntries
-      .map((e: any) => e.registration_data?.email)
-      .filter(Boolean)
-      .map((email: string) => email.toLowerCase().trim())
+    // 이메일 수집 (registration_campaign_id가 있으면 registrationEntries만, 없으면 registrations만)
+    let allEmails: string[] = []
     
-    // 모든 이메일 수집 (웨비나 등록자 + 등록 페이지 참여자)
-    const allEmails = Array.from(profilesMap.values())
-      .map((p: any) => p.email)
-      .filter(Boolean)
-      .map((email: string) => email.toLowerCase().trim())
-      .concat(registrationEmails)
+    if (webinar.registration_campaign_id) {
+      // 등록 페이지 참여자의 이메일만 수집
+      allEmails = registrationEntries
+        .map((e: any) => e.registration_data?.email)
+        .filter(Boolean)
+        .map((email: string) => email.toLowerCase().trim())
+    } else {
+      // 웨비나 등록자의 사용자 ID 수집
+      const userIds = (registrations || []).map((r: any) => r.user_id).filter(Boolean)
+      
+      // 프로필 정보 조회
+      let profilesMap = new Map<string, any>()
+      if (userIds.length > 0) {
+        const { data: profiles, error: profilesError } = await admin
+          .from('profiles')
+          .select('id, display_name, email')
+          .in('id', userIds)
+        
+        if (!profilesError && profiles) {
+          profiles.forEach((p: any) => {
+            profilesMap.set(p.id, p)
+          })
+        }
+      }
+      
+      // 웨비나 등록자의 이메일 수집
+      allEmails = Array.from(profilesMap.values())
+        .map((p: any) => p.email)
+        .filter(Boolean)
+        .map((email: string) => email.toLowerCase().trim())
+    }
     
     // 중복 제거
     const uniqueEmails = Array.from(new Set(allEmails))
@@ -136,74 +162,410 @@ export async function GET(
       }
     }
     
-    // 웨비나 등록자 데이터 포맷팅
-    const webinarRegistrants = (registrations || []).map((reg: any) => {
-      const profile = profilesMap.get(reg.user_id) || {}
-      const email = profile.email?.toLowerCase()?.trim()
+    // registration_campaign_id가 있으면 등록 페이지 참여자만, 없으면 웨비나 등록자만 사용
+    let registrants: any[] = []
+    
+    if (webinar.registration_campaign_id) {
+      // 등록 페이지 참여자의 이메일 수집
+      const entryEmails = registrationEntries
+        .map((e: any) => e.registration_data?.email?.toLowerCase()?.trim())
+        .filter(Boolean)
       
-      return {
-        id: reg.user_id || `reg-${reg.user_id}`,
-        name: reg.nickname || profile.display_name || profile.email || '익명',
-        email: profile.email || null,
-        role: reg.role || 'attendee',
-        registered_via: reg.registered_via || 'webinar',
-        registered_at: reg.created_at,
-        last_login_at: email ? lastLoginMap.get(email) || null : null,
-        source: 'webinar' as const,
-      }
-    })
-    
-    // 등록 페이지 참여자 데이터 포맷팅
-    const registrationRegistrants = registrationEntries.map((entry: any) => {
-      const email = entry.registration_data?.email?.toLowerCase()?.trim()
-      const name = entry.name || entry.registration_data?.name || entry.registration_data?.firstName || '익명'
+      // 웨비나의 클라이언트/에이전시 멤버십 정보 조회 (역할 확인용)
+      const memberRolesMap = new Map<string, string>()
       
-      return {
-        id: `entry-${entry.id}`,
-        name: name,
-        email: entry.registration_data?.email || null,
-        role: 'attendee',
-        registered_via: 'registration_page',
-        registered_at: entry.completed_at || entry.created_at,
-        last_login_at: email ? lastLoginMap.get(email) || null : null,
-        source: 'registration' as const,
-      }
-    })
-    
-    // 두 목록 합치기 (중복 제거: 이메일 기준)
-    const registrantsMap = new Map<string, any>()
-    
-    // 등록 페이지 참여자 먼저 추가
-    registrationRegistrants.forEach((reg: any) => {
-      if (reg.email) {
-        registrantsMap.set(reg.email.toLowerCase(), reg)
-      } else {
-        registrantsMap.set(reg.id, reg)
-      }
-    })
-    
-    // 웨비나 등록자 추가 (이메일이 같으면 웨비나 등록 정보 우선)
-    webinarRegistrants.forEach((reg: any) => {
-      if (reg.email) {
-        const existing = registrantsMap.get(reg.email.toLowerCase())
-        if (existing) {
-          // 이미 있으면 웨비나 등록 정보로 업데이트 (더 상세한 정보)
-          registrantsMap.set(reg.email.toLowerCase(), reg)
-        } else {
-          registrantsMap.set(reg.email.toLowerCase(), reg)
+      // 클라이언트 멤버 조회
+      if (webinar.client_id) {
+        const { data: clientMembers } = await admin
+          .from('client_members')
+          .select('user_id, role')
+          .eq('client_id', webinar.client_id)
+        
+        if (clientMembers) {
+          // 이메일로 매핑하기 위해 프로필 조회
+          const memberUserIds = clientMembers.map((m: any) => m.user_id)
+          if (memberUserIds.length > 0) {
+            const { data: memberProfiles } = await admin
+              .from('profiles')
+              .select('id, email')
+              .in('id', memberUserIds)
+            
+            if (memberProfiles) {
+              const profileMap = new Map(memberProfiles.map((p: any) => [p.id, p.email?.toLowerCase()?.trim()]))
+              clientMembers.forEach((member: any) => {
+                const email = profileMap.get(member.user_id)
+                if (email) {
+                  // 가장 높은 역할로 저장 (owner > admin > operator > analyst > viewer)
+                  const rolePriority: Record<string, number> = {
+                    owner: 5,
+                    admin: 4,
+                    operator: 3,
+                    analyst: 2,
+                    viewer: 1,
+                  }
+                  const currentPriority = rolePriority[memberRolesMap.get(email) || ''] || 0
+                  const newPriority = rolePriority[member.role] || 0
+                  if (newPriority > currentPriority) {
+                    memberRolesMap.set(email, member.role)
+                  }
+                }
+              })
+            }
+          }
         }
-      } else {
-        registrantsMap.set(reg.id, reg)
       }
-    })
-    
-    const registrants = Array.from(registrantsMap.values())
-      .sort((a, b) => {
-        // 등록일시 기준 내림차순 정렬
-        const dateA = new Date(a.registered_at || 0).getTime()
-        const dateB = new Date(b.registered_at || 0).getTime()
-        return dateB - dateA
+      
+      // 에이전시 멤버 조회
+      let agencyId = webinar.agency_id
+      if (!agencyId && webinar.client_id) {
+        const { data: client } = await admin
+          .from('clients')
+          .select('agency_id')
+          .eq('id', webinar.client_id)
+          .maybeSingle()
+        if (client?.agency_id) {
+          agencyId = client.agency_id
+        }
+      }
+      
+      if (agencyId) {
+        const { data: agencyMembers } = await admin
+          .from('agency_members')
+          .select('user_id, role')
+          .eq('agency_id', agencyId)
+        
+        if (agencyMembers) {
+          const memberUserIds = agencyMembers.map((m: any) => m.user_id)
+          if (memberUserIds.length > 0) {
+            const { data: memberProfiles } = await admin
+              .from('profiles')
+              .select('id, email')
+              .in('id', memberUserIds)
+            
+            if (memberProfiles) {
+              const profileMap = new Map(memberProfiles.map((p: any) => [p.id, p.email?.toLowerCase()?.trim()]))
+              agencyMembers.forEach((member: any) => {
+                const email = profileMap.get(member.user_id)
+                if (email) {
+                  // 가장 높은 역할로 저장 (owner > admin > analyst)
+                  const rolePriority: Record<string, number> = {
+                    owner: 5,
+                    admin: 4,
+                    analyst: 2,
+                  }
+                  const currentPriority = rolePriority[memberRolesMap.get(email) || ''] || 0
+                  const newPriority = rolePriority[member.role] || 0
+                  if (newPriority > currentPriority) {
+                    memberRolesMap.set(email, member.role)
+                  }
+                }
+              })
+            }
+          }
+        }
+      }
+      
+      // 슈퍼 관리자 확인
+      const { data: superAdmins } = await admin
+        .from('profiles')
+        .select('email, is_super_admin')
+        .eq('is_super_admin', true)
+      
+      if (superAdmins) {
+        superAdmins.forEach((admin: any) => {
+          const email = admin.email?.toLowerCase()?.trim()
+          if (email) {
+            memberRolesMap.set(email, 'super_admin')
+          }
+        })
+      }
+      
+      // 등록 페이지 참여자 데이터 포맷팅
+      registrants = registrationEntries.map((entry: any) => {
+        const email = entry.registration_data?.email?.toLowerCase()?.trim()
+        // 이름 우선순위: entry.name > registration_data.name > registration_data.firstName + lastName > firstName
+        let name = entry.name
+        if (!name && entry.registration_data) {
+          if (entry.registration_data.name) {
+            name = entry.registration_data.name
+          } else if (entry.registration_data.firstName && entry.registration_data.lastName) {
+            name = `${entry.registration_data.lastName}${entry.registration_data.firstName}`
+          } else if (entry.registration_data.firstName) {
+            name = entry.registration_data.firstName
+          } else if (entry.registration_data.lastName) {
+            name = entry.registration_data.lastName
+          }
+        }
+        name = name || '익명'
+        
+        // 역할 결정: 멤버십이 있으면 해당 역할, 없으면 attendee
+        const memberRole = email ? memberRolesMap.get(email) : null
+        let role = 'attendee'
+        if (memberRole === 'super_admin') {
+          role = '관리자'
+        } else if (memberRole === 'owner' || memberRole === 'admin') {
+          role = '관리자'
+        } else if (memberRole === 'operator') {
+          role = '운영자'
+        } else if (memberRole === 'analyst') {
+          role = '분석가'
+        }
+        
+        return {
+          id: `entry-${entry.id}`,
+          name: name,
+          email: entry.registration_data?.email || null,
+          role: role,
+          registered_via: 'registration_page',
+          registered_at: entry.completed_at || entry.created_at,
+          last_login_at: email ? lastLoginMap.get(email) || null : null,
+          source: 'registration' as const,
+        }
       })
+      
+      // registrations 테이블의 관리자도 추가 (등록 캠페인에는 없지만 관리자인 경우)
+      const { data: adminRegistrations } = await admin
+        .from('registrations')
+        .select('user_id, nickname, role, registered_via, created_at')
+        .eq('webinar_id', webinar.id)
+      
+      if (adminRegistrations && adminRegistrations.length > 0) {
+        const adminUserIds = adminRegistrations.map((r: any) => r.user_id).filter(Boolean)
+        if (adminUserIds.length > 0) {
+          const { data: adminProfiles } = await admin
+            .from('profiles')
+            .select('id, email, display_name')
+            .in('id', adminUserIds)
+          
+          if (adminProfiles) {
+            const profileMap = new Map(adminProfiles.map((p: any) => [p.id, p]))
+            
+            adminRegistrations.forEach((reg: any) => {
+              const profile = profileMap.get(reg.user_id)
+              if (profile) {
+                const email = profile.email?.toLowerCase()?.trim()
+                // 등록 캠페인에 이미 있으면 스킵
+                if (email && entryEmails.includes(email)) {
+                  return
+                }
+                
+                // DB에 저장된 role을 우선 사용, 없으면 멤버십 기반으로 계산
+                let role = reg.role || null
+                
+                // DB에 role이 없을 때만 멤버십 기반으로 계산
+                if (!role) {
+                  const memberRole = email ? memberRolesMap.get(email) : null
+                  if (memberRole === 'super_admin') {
+                    role = '관리자'
+                  } else if (memberRole === 'owner' || memberRole === 'admin') {
+                    role = '관리자'
+                  } else if (memberRole === 'operator') {
+                    role = '운영자'
+                  } else if (memberRole === 'analyst') {
+                    role = '분석가'
+                  } else {
+                    role = 'attendee'
+                  }
+                }
+                
+                // manual 등록은 항상 관리자로 표시 (DB 값보다 우선)
+                if (reg.registered_via === 'manual') {
+                  role = '관리자'
+                  console.log(`[registrants API] manual 등록 감지: ${email} → 역할을 "관리자"로 설정`)
+                }
+                
+                registrants.push({
+                  id: reg.user_id || `reg-${reg.user_id}`,
+                  name: reg.nickname || profile.display_name || profile.email || '익명',
+                  email: profile.email || null,
+                  role: role,
+                  registered_via: reg.registered_via || 'webinar',
+                  registered_at: reg.created_at,
+                  last_login_at: email ? lastLoginMap.get(email) || null : null,
+                  source: 'webinar' as const,
+                })
+              }
+            })
+          }
+        }
+      }
+    } else {
+      // 웨비나 등록자 사용자 ID 수집
+      const userIds = (registrations || []).map((r: any) => r.user_id).filter(Boolean)
+      
+      // 프로필 정보 조회
+      let profilesMap = new Map<string, any>()
+      if (userIds.length > 0) {
+        const { data: profiles, error: profilesError } = await admin
+          .from('profiles')
+          .select('id, display_name, email')
+          .in('id', userIds)
+        
+        if (!profilesError && profiles) {
+          profiles.forEach((p: any) => {
+            profilesMap.set(p.id, p)
+          })
+        }
+      }
+      
+      // 웨비나의 클라이언트/에이전시 멤버십 정보 조회 (역할 확인용)
+      const memberRolesMap = new Map<string, string>()
+      
+      // 클라이언트 멤버 조회
+      if (webinar.client_id) {
+        const { data: clientMembers } = await admin
+          .from('client_members')
+          .select('user_id, role')
+          .eq('client_id', webinar.client_id)
+        
+        if (clientMembers) {
+          // 이메일로 매핑하기 위해 프로필 조회
+          const memberUserIds = clientMembers.map((m: any) => m.user_id)
+          if (memberUserIds.length > 0) {
+            const { data: memberProfiles } = await admin
+              .from('profiles')
+              .select('id, email')
+              .in('id', memberUserIds)
+            
+            if (memberProfiles) {
+              const profileMap = new Map(memberProfiles.map((p: any) => [p.id, p.email?.toLowerCase()?.trim()]))
+              clientMembers.forEach((member: any) => {
+                const email = profileMap.get(member.user_id)
+                if (email) {
+                  // 가장 높은 역할로 저장 (owner > admin > operator > analyst > viewer)
+                  const rolePriority: Record<string, number> = {
+                    owner: 5,
+                    admin: 4,
+                    operator: 3,
+                    analyst: 2,
+                    viewer: 1,
+                  }
+                  const currentPriority = rolePriority[memberRolesMap.get(email) || ''] || 0
+                  const newPriority = rolePriority[member.role] || 0
+                  if (newPriority > currentPriority) {
+                    memberRolesMap.set(email, member.role)
+                  }
+                }
+              })
+            }
+          }
+        }
+      }
+      
+      // 에이전시 멤버 조회
+      let agencyId = webinar.agency_id
+      if (!agencyId && webinar.client_id) {
+        const { data: client } = await admin
+          .from('clients')
+          .select('agency_id')
+          .eq('id', webinar.client_id)
+          .maybeSingle()
+        if (client?.agency_id) {
+          agencyId = client.agency_id
+        }
+      }
+      
+      if (agencyId) {
+        const { data: agencyMembers } = await admin
+          .from('agency_members')
+          .select('user_id, role')
+          .eq('agency_id', agencyId)
+        
+        if (agencyMembers) {
+          const memberUserIds = agencyMembers.map((m: any) => m.user_id)
+          if (memberUserIds.length > 0) {
+            const { data: memberProfiles } = await admin
+              .from('profiles')
+              .select('id, email')
+              .in('id', memberUserIds)
+            
+            if (memberProfiles) {
+              const profileMap = new Map(memberProfiles.map((p: any) => [p.id, p.email?.toLowerCase()?.trim()]))
+              agencyMembers.forEach((member: any) => {
+                const email = profileMap.get(member.user_id)
+                if (email) {
+                  // 가장 높은 역할로 저장 (owner > admin > analyst)
+                  const rolePriority: Record<string, number> = {
+                    owner: 5,
+                    admin: 4,
+                    analyst: 2,
+                  }
+                  const currentPriority = rolePriority[memberRolesMap.get(email) || ''] || 0
+                  const newPriority = rolePriority[member.role] || 0
+                  if (newPriority > currentPriority) {
+                    memberRolesMap.set(email, member.role)
+                  }
+                }
+              })
+            }
+          }
+        }
+      }
+      
+      // 슈퍼 관리자 확인
+      const { data: superAdmins } = await admin
+        .from('profiles')
+        .select('email, is_super_admin')
+        .eq('is_super_admin', true)
+      
+      if (superAdmins) {
+        superAdmins.forEach((admin: any) => {
+          const email = admin.email?.toLowerCase()?.trim()
+          if (email) {
+            memberRolesMap.set(email, 'super_admin')
+          }
+        })
+      }
+      
+      // 웨비나 등록자 데이터 포맷팅
+      registrants = (registrations || []).map((reg: any) => {
+        const profile = profilesMap.get(reg.user_id) || {}
+        const email = profile.email?.toLowerCase()?.trim()
+        
+        // DB에 저장된 role을 우선 사용, 없으면 멤버십 기반으로 계산
+        let role = reg.role || null
+        
+        // DB에 role이 없을 때만 멤버십 기반으로 계산
+        if (!role) {
+          const memberRole = email ? memberRolesMap.get(email) : null
+          if (memberRole === 'super_admin') {
+            role = '관리자'
+          } else if (memberRole === 'owner' || memberRole === 'admin') {
+            role = '관리자'
+          } else if (memberRole === 'operator') {
+            role = '운영자'
+          } else if (memberRole === 'analyst') {
+            role = '분석가'
+          } else {
+            role = 'attendee'
+          }
+        }
+        
+        // manual 등록은 항상 관리자로 표시 (DB 값보다 우선)
+        if (reg.registered_via === 'manual') {
+          role = '관리자'
+          console.log(`[registrants API] manual 등록 감지: ${email} → 역할을 "관리자"로 설정`)
+        }
+        
+        return {
+          id: reg.user_id || `reg-${reg.user_id}`,
+          name: reg.nickname || profile.display_name || profile.email || '익명',
+          email: profile.email || null,
+          role: role,
+          registered_via: reg.registered_via || 'webinar',
+          registered_at: reg.created_at,
+          last_login_at: email ? lastLoginMap.get(email) || null : null,
+          source: 'webinar' as const,
+        }
+      })
+    }
+    
+    // 등록일시 기준 내림차순 정렬
+    registrants.sort((a, b) => {
+      const dateA = new Date(a.registered_at || 0).getTime()
+      const dateB = new Date(b.registered_at || 0).getTime()
+      return dateB - dateA
+    })
     
     return NextResponse.json({
       success: true,

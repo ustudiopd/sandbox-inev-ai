@@ -387,53 +387,70 @@ export default function RegistrationPage({ campaign, baseUrl }: RegistrationPage
           
             @media (max-width: 768px) {
               .registration-hero {
-                padding-top: 80px;
-                padding-bottom: 60px;
+                padding-top: 60px;
+                padding-bottom: 40px;
+                min-height: auto;
+              }
+              
+              .registration-header {
+                height: 60px;
+                padding: 0 16px;
+              }
+              
+              .registration-logo {
+                width: 200px;
+                height: 25px;
               }
               
               .registration-content {
                 padding: 0 20px;
+                gap: 24px;
               }
               
               .registration-title {
-                font-size: 48px;
-                line-height: 60px;
+                font-size: 32px;
+                line-height: 42px;
               }
               
               .date-badge {
-                font-size: 24px;
-                padding: 6px 16px;
+                font-size: 18px;
+                padding: 6px 12px;
+                line-height: 24px;
               }
               
               .registration-form-section {
-                padding: 60px 20px;
+                padding: 40px 20px;
               }
               
               .registration-form-container {
-                padding: 40px 24px;
+                padding: 32px 20px;
+                border-radius: 24px;
               }
               
               .registration-form-title {
-                font-size: 28px;
+                font-size: 24px;
+                margin-bottom: 24px;
               }
               
               .registration-form-label {
-                font-size: 18px;
+                font-size: 16px;
+                margin-bottom: 8px;
               }
               
               .registration-form-input {
                 font-size: 16px;
-                padding: 12px 16px;
+                padding: 14px 16px;
               }
               
               .registration-form-button {
-                font-size: 20px;
-                padding: 16px 40px;
+                font-size: 18px;
+                padding: 16px 32px;
+                gap: 12px;
               }
               
               .secondary-button {
-                font-size: 18px;
-                padding: 14px 32px;
+                font-size: 16px;
+                padding: 14px 28px;
               }
             }
           `}</style>

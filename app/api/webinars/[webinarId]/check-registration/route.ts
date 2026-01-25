@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createAdminSupabase } from '@/lib/supabase/admin'
+import { getWebinarQuery } from '@/lib/utils/webinar'
 
 /**
  * 웨비나에 연동된 등록 페이지 캠페인에 등록된 사용자인지 확인하는 API
@@ -23,12 +24,21 @@ export async function POST(
     
     const admin = createAdminSupabase()
     
+    // UUID 또는 slug로 웨비나 조회
+    const query = getWebinarQuery(webinarId)
+    
     // 웨비나 조회 (registration_campaign_id 포함)
-    const { data: webinar, error: webinarError } = await admin
+    let queryBuilder = admin
       .from('webinars')
-      .select('id, registration_campaign_id')
-      .eq('id', webinarId)
-      .maybeSingle()
+      .select('id, slug, registration_campaign_id')
+    
+    if (query.column === 'slug') {
+      queryBuilder = queryBuilder.eq('slug', String(query.value))
+    } else {
+      queryBuilder = queryBuilder.eq(query.column, query.value)
+    }
+    
+    const { data: webinar, error: webinarError } = await queryBuilder.maybeSingle()
     
     if (webinarError) {
       console.error('웨비나 조회 오류:', webinarError)
@@ -38,6 +48,7 @@ export async function POST(
       )
     }
     
+    // 웨비나가 없거나 registration_campaign_id가 없는 경우 처리
     if (!webinar) {
       return NextResponse.json(
         { error: 'Webinar not found' },

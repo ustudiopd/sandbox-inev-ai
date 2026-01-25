@@ -13,6 +13,7 @@ interface Webinar {
   youtube_url: string
   start_time?: string
   end_time?: string
+  webinar_start_time?: string | null
   access_policy: string
   email_thumbnail_url?: string | null
   registration_campaign_id?: string | null
@@ -40,19 +41,15 @@ export default function WebinarEntry({ webinar, isWertPage: serverIsWertPage }: 
   const webinarSlug = webinar.slug || webinar.id
   const webinarPath = webinar.slug || webinar.id
   
-  // 149402, 149404, 149405인지 즉시 확인 (서버 prop 우선, 없으면 webinar.slug 확인)
+  // 149402인지 즉시 확인 (서버 prop 우선, 없으면 webinar.slug 확인)
   // slugValue는 나중에 정의되므로 여기서는 직접 비교
   const isSlug149402 = String(webinar.slug) === '149402' || webinarSlug === '149402'
-  const isSlug149404 = String(webinar.slug) === '149404' || webinarSlug === '149404'
-  const isSlug149405 = String(webinar.slug) === '149405' || webinarSlug === '149405'
-  const isSlug149404Immediate = 
+  const isSlug149402Immediate = 
     serverIsWertPage === true ||
-    isSlug149402 ||
-    isSlug149404 ||
-    isSlug149405
+    isSlug149402
   
-  // slug가 '149402', '149404' 또는 '149405'이면 항상 name_email_auth 모드로 시작
-  const initialMode = isSlug149404Immediate ? 'name_email_auth' : 
+  // slug가 '149402'이면 항상 name_email_auth 모드로 시작
+  const initialMode = isSlug149402Immediate ? 'name_email_auth' : 
     webinar.access_policy === 'guest_allowed' ? 'guest' : 
     webinar.access_policy === 'email_auth' ? 'email_auth' :
     webinar.access_policy === 'name_email_auth' ? 'name_email_auth' : 'login'
@@ -66,6 +63,57 @@ export default function WebinarEntry({ webinar, isWertPage: serverIsWertPage }: 
   const [showEmailVerification, setShowEmailVerification] = useState(false)
   const [privacyAgreed, setPrivacyAgreed] = useState(false)
   const [showPrivacyModal, setShowPrivacyModal] = useState(false)
+  
+  // 카운트다운 상태
+  const [countdown, setCountdown] = useState<{
+    days: number
+    hours: number
+    minutes: number
+    seconds: number
+  } | null>(null)
+  const [isWebinarStarted, setIsWebinarStarted] = useState(false)
+  
+  // 카운트다운 계산
+  useEffect(() => {
+    if (!webinar.webinar_start_time) {
+      setIsWebinarStarted(true)
+      return
+    }
+    
+    const startTime = new Date(webinar.webinar_start_time).getTime()
+    const now = Date.now()
+    
+    if (now >= startTime) {
+      setIsWebinarStarted(true)
+      setCountdown(null)
+      return
+    }
+    
+    setIsWebinarStarted(false)
+    
+    const updateCountdown = () => {
+      const now = Date.now()
+      const diff = startTime - now
+      
+      if (diff <= 0) {
+        setIsWebinarStarted(true)
+        setCountdown(null)
+        return
+      }
+      
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24))
+      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000)
+      
+      setCountdown({ days, hours, minutes, seconds })
+    }
+    
+    updateCountdown()
+    const interval = setInterval(updateCountdown, 1000)
+    
+    return () => clearInterval(interval)
+  }, [webinar.webinar_start_time])
   
   // 웨비나 접속 페이지 접속 기록
   useEffect(() => {
@@ -550,12 +598,8 @@ export default function WebinarEntry({ webinar, isWertPage: serverIsWertPage }: 
             })
         }
         
-        // 149402인 경우 등록 페이지로 리다이렉트, 그 외는 웨비나 라이브 페이지로 이동
-        if (isSlug149402) {
-          window.location.href = '/event/149403'
-        } else {
-          window.location.href = `/webinar/${webinar.id}/live`
-        }
+        // 웨비나 라이브 페이지로 이동
+        window.location.href = `/webinar/${webinarPath}/live`
       } else {
         throw new Error('로그인 정보를 받지 못했습니다')
       }
@@ -564,7 +608,7 @@ export default function WebinarEntry({ webinar, isWertPage: serverIsWertPage }: 
       setLoading(false)
     }
   }
-
+  
   const handleNameEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
@@ -592,7 +636,8 @@ export default function WebinarEntry({ webinar, isWertPage: serverIsWertPage }: 
     
     try {
       // 웨비나에 연동된 등록 페이지 캠페인에 등록된 사용자인지 확인
-      if (webinar.registration_campaign_id) {
+      // 149402는 항상 등록 캠페인 확인 필요
+      if (webinar.registration_campaign_id || isSlug149402) {
         const checkResponse = await fetch(`/api/webinars/${webinar.id}/check-registration`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -663,12 +708,8 @@ export default function WebinarEntry({ webinar, isWertPage: serverIsWertPage }: 
             })
         }
         
-        // 149402인 경우 등록 페이지로 리다이렉트, 그 외는 웨비나 라이브 페이지로 이동
-        if (isSlug149402) {
-          window.location.href = '/event/149403'
-        } else {
-          window.location.href = `/webinar/${webinar.id}/live`
-        }
+        // 웨비나 라이브 페이지로 이동
+        window.location.href = `/webinar/${webinarPath}/live`
       } else {
         throw new Error('로그인 정보를 받지 못했습니다')
       }
@@ -869,14 +910,14 @@ export default function WebinarEntry({ webinar, isWertPage: serverIsWertPage }: 
   const thumbnailUrl = getThumbnailUrl()
   // registration_campaign_id가 있으면 등록 페이지와 연동된 웨비나로 간주
   const hasRegistrationCampaign = !!webinar.registration_campaign_id
-  // slug가 '149404'이거나 registration_campaign_id가 있으면 WERT 스타일 적용
+  // slug가 '149402'이거나 registration_campaign_id가 있으면 WERT 스타일 적용
   // 초기 렌더링 시에도 슬러그를 확인하여 즉시 WERT 스타일 적용
   // 서버 사이드에서 전달된 webinar.slug를 우선 확인 (초기 렌더링 보장)
   // 숫자로 저장된 경우도 문자열로 변환하여 비교
   const slugValue = String(webinar.slug || webinarSlug || '')
   // 서버에서 전달된 slug를 우선 확인 (초기 렌더링 보장)
-  // isSlug149402, isSlug149404, isSlug149405는 이미 위에서 정의됨
-  const isWertSlug = isSlug149402 || isSlug149404 || isSlug149405
+  // isSlug149402는 이미 위에서 정의됨
+  const isWertSlug = isSlug149402
   const isWertSummit = isWertSlug || hasRegistrationCampaign
   const wertLogoUrl = supabaseUrl 
     ? `${supabaseUrl}/storage/v1/object/public/webinar-thumbnails/wert.png`
@@ -888,35 +929,25 @@ export default function WebinarEntry({ webinar, isWertPage: serverIsWertPage }: 
   // 서버 사이드에서 전달된 데이터를 우선 사용하여 SSR/CSR 일치 보장
   // window.location.pathname은 클라이언트에서만 사용 가능하므로 제외
   // 서버와 클라이언트에서 동일한 조건 평가를 보장하기 위해 서버 데이터만 사용
-  const isSlug149404Strict = 
+  const isSlug149402Strict = 
     serverIsWertPage === true ||
     String(webinar.slug) === '149402' || 
     slugValue === '149402' || 
     webinarSlug === '149402' || 
     webinar.slug === '149402' ||
-    String(webinar.slug) === '149404' || 
-    slugValue === '149404' || 
-    webinarSlug === '149404' || 
-    webinar.slug === '149404' ||
-    String(webinar.slug) === '149405' || 
-    slugValue === '149405' || 
-    webinarSlug === '149405' || 
-    webinar.slug === '149405' ||
     isSlug149402 ||
-    isSlug149404 ||
-    isSlug149405 ||
     isWertSlug
   
   // shouldShowWertStyle은 서버에서 전달된 prop을 우선 사용하고, 없으면 클라이언트에서 계산
-  // 149404는 항상 WERT 스타일 강제 적용 (기본 UI 제거)
+  // 149402는 항상 WERT 스타일 강제 적용 (기본 UI 제거)
   const shouldShowWertStyle = serverIsWertPage !== undefined 
     ? serverIsWertPage 
-    : (isSlug149404Strict || isWertSummit || hasRegistrationCampaign)
+    : (isSlug149402Strict || isWertSummit || hasRegistrationCampaign)
   
-  // 149402, 149404, 149405인 경우 강제로 WERT 스타일 적용 (기본 UI 완전 제거)
-  // 서버 prop이 true이거나 slug가 149402, 149404 또는 149405이면 항상 true
+  // 149402인 경우 강제로 WERT 스타일 적용 (기본 UI 완전 제거)
+  // 서버 prop이 true이거나 slug가 149402이면 항상 true
   // 초기 렌더링 시에도 즉시 판단 가능하도록 서버 데이터만 사용
-  const finalShouldShowWertStyle = (serverIsWertPage === true || isSlug149404Strict || String(webinar.slug) === '149402' || webinarSlug === '149402' || String(webinar.slug) === '149404' || webinarSlug === '149404' || String(webinar.slug) === '149405' || webinarSlug === '149405') ? true : shouldShowWertStyle
+  const finalShouldShowWertStyle = (serverIsWertPage === true || isSlug149402Strict || String(webinar.slug) === '149402' || webinarSlug === '149402') ? true : shouldShowWertStyle
   
   // 디버깅: 초기 렌더링 시 값 확인
   if (typeof window !== 'undefined') {
@@ -924,7 +955,7 @@ export default function WebinarEntry({ webinar, isWertPage: serverIsWertPage }: 
       serverIsWertPage,
       'webinar.slug': webinar.slug,
       webinarSlug,
-      isSlug149404Strict,
+      isSlug149402Strict,
       shouldShowWertStyle,
       finalShouldShowWertStyle,
     })
@@ -1043,6 +1074,8 @@ export default function WebinarEntry({ webinar, isWertPage: serverIsWertPage }: 
       display: flex;
       gap: 8px;
       align-items: center;
+      flex-wrap: wrap;
+      justify-content: center;
     }
     
     .date-badge {
@@ -1141,52 +1174,74 @@ export default function WebinarEntry({ webinar, isWertPage: serverIsWertPage }: 
     
     @media (max-width: 768px) {
       .registration-hero {
-        padding-top: 80px;
-        padding-bottom: 60px;
+        padding-top: 60px;
+        padding-bottom: 40px;
+        min-height: auto;
+      }
+      
+      .registration-header {
+        height: 60px;
+        padding: 0 16px;
+      }
+      
+      .registration-logo {
+        width: 200px;
+        height: 25px;
       }
       
       .registration-content {
         padding: 0 20px;
+        gap: 24px;
       }
       
       .registration-title {
-        font-size: 48px;
-        line-height: 60px;
+        font-size: 32px;
+        line-height: 42px;
       }
       
       .date-badge {
-        font-size: 24px;
-        padding: 6px 16px;
+        font-size: 18px;
+        padding: 6px 12px;
+        line-height: 24px;
       }
       
       .registration-form-section {
-        padding: 60px 20px;
+        padding: 40px 20px;
       }
       
       .registration-form-container {
-        padding: 40px 24px;
+        padding: 32px 20px;
+        border-radius: 24px;
       }
       
       .registration-form-title {
-        font-size: 28px;
+        font-size: 24px;
+        margin-bottom: 24px;
       }
       
       .registration-form-label {
-        font-size: 18px;
+        font-size: 16px;
+        margin-bottom: 8px;
       }
       
       .registration-form-input {
         font-size: 16px;
-        padding: 12px 16px;
+        padding: 14px 16px;
       }
       
       .registration-form-button {
-        font-size: 20px;
-        padding: 16px 40px;
+        font-size: 18px;
+        padding: 16px 32px;
+        gap: 12px;
+      }
+      
+      .registration-subtitle {
+        font-size: 20px !important;
+        line-height: 28px !important;
       }
     }
     
-    /* 149404, 149405용 - 기존 WERT 스타일 */
+    /* 149402용 - 기존 WERT 스타일 (사용 안 함, 149402는 149403 스타일 사용) */
     .hero-section {
       width: 100%;
       max-width: 1000px;
@@ -1400,10 +1455,10 @@ export default function WebinarEntry({ webinar, isWertPage: serverIsWertPage }: 
       <style jsx global>{allStyles}</style>
       <div className="bg-white min-h-screen" style={{ backgroundColor: '#fff', background: '#fff', position: 'relative', zIndex: 0 }}>
       
-      {/* 웨비나 입장 페이지 UI - 149402, 149404, 149405는 항상 WERT 스타일만 렌더링 (기본 UI 완전 제거) */}
+      {/* 웨비나 입장 페이지 UI - 149402는 항상 WERT 스타일만 렌더링 (기본 UI 완전 제거) */}
       {/* 서버에서 전달된 prop 또는 webinar.slug로 즉시 판단하여 SSR/CSR 일치 보장 */}
-      {/* 149402는 149403 스타일 참고, 149404/149405는 기존 WERT 스타일 */}
-      {(serverIsWertPage === true || String(webinar.slug) === '149402' || webinarSlug === '149402' || String(webinar.slug) === '149404' || webinarSlug === '149404' || String(webinar.slug) === '149405' || webinarSlug === '149405' || finalShouldShowWertStyle) ? (
+      {/* 149402는 149403 스타일 참고 */}
+      {(serverIsWertPage === true || String(webinar.slug) === '149402' || webinarSlug === '149402' || finalShouldShowWertStyle) ? (
         <>
           {/* 149402는 149403 등록 페이지 스타일 참고 */}
           {isSlug149402 ? (
@@ -1434,30 +1489,82 @@ export default function WebinarEntry({ webinar, isWertPage: serverIsWertPage }: 
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '40px' }}>
                       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '32px' }}>
                         {webinar.description && (
-                          <div style={{ textAlign: 'center', fontSize: '36px', fontWeight: 700, color: '#000' }}>
+                          <div className="registration-subtitle" style={{ textAlign: 'center', fontSize: '36px', fontWeight: 700, color: '#000' }}>
                             {webinar.description}
                           </div>
                         )}
                         <h1 className="registration-title">
                           {webinar.title}
                         </h1>
-                        {webinar.start_time && (
-                          <div className="registration-date-badges">
-                            <div className="date-badge">
-                              {new Date(webinar.start_time).toLocaleDateString('ko-KR', {
-                                year: 'numeric',
-                                month: '2-digit',
-                                day: '2-digit'
-                              }).replace(/\. /g, '.').replace(/\.$/, '')}
+                        {webinar.webinar_start_time && (
+                          <>
+                            <div className="registration-date-badges">
+                              <div className="date-badge">
+                                {new Date(webinar.webinar_start_time).toLocaleDateString('ko-KR', {
+                                  year: 'numeric',
+                                  month: '2-digit',
+                                  day: '2-digit'
+                                }).replace(/\. /g, '.').replace(/\.$/, '')}
+                              </div>
+                              <div className="date-badge">
+                                {new Date(webinar.webinar_start_time).toLocaleTimeString('ko-KR', {
+                                  hour: '2-digit',
+                                  minute: '2-digit',
+                                  hour12: false
+                                })}
+                              </div>
                             </div>
-                            <div className="date-badge">
-                              {new Date(webinar.start_time).toLocaleTimeString('ko-KR', {
-                                hour: '2-digit',
-                                minute: '2-digit',
-                                hour12: false
-                              })}
-                            </div>
-                          </div>
+                            {!isWebinarStarted && countdown && (
+                              <div style={{ 
+                                display: 'flex', 
+                                flexDirection: 'column', 
+                                alignItems: 'center', 
+                                gap: '12px',
+                                marginTop: '20px'
+                              }}>
+                                <div style={{ 
+                                  fontSize: '20px', 
+                                  fontWeight: 600, 
+                                  color: '#666',
+                                  textAlign: 'center'
+                                }}>
+                                  웨비나 시작까지
+                                </div>
+                                <div style={{ 
+                                  display: 'flex', 
+                                  flexDirection: 'row',
+                                  alignItems: 'center',
+                                  gap: '8px',
+                                  padding: '16px 24px',
+                                  backgroundColor: '#00A08C',
+                                  borderRadius: '12px',
+                                  color: '#fff',
+                                  justifyContent: 'center'
+                                }}>
+                                  {countdown.days > 0 && (
+                                    <>
+                                      <span style={{ fontSize: '28px', fontWeight: 700 }}>D-</span>
+                                      <span style={{ fontSize: '32px', fontWeight: 700 }}>
+                                        {countdown.days}
+                                      </span>
+                                      <span style={{ fontSize: '24px', fontWeight: 700, opacity: 0.7, margin: '0 4px' }}>:</span>
+                                    </>
+                                  )}
+                                  <span style={{ fontSize: '32px', fontWeight: 700 }}>
+                                    {String(countdown.hours).padStart(2, '0')}
+                                  </span>
+                                  <span style={{ fontSize: '24px', fontWeight: 700, opacity: 0.7, margin: '0 4px' }}>:</span>
+                                  <span style={{ fontSize: '32px', fontWeight: 700 }}>
+                                    {String(countdown.minutes).padStart(2, '0')}
+                                  </span>
+                                  <span style={{ fontSize: '24px', fontWeight: 700, opacity: 0.7, margin: '0 4px' }}>:</span>
+                                  <span style={{ fontSize: '32px', fontWeight: 700 }}>
+                                    {String(countdown.seconds).padStart(2, '0')}
+                                  </span>
+                                </div>
+                              </div>
+                            )}
+                          </>
                         )}
                       </div>
                     </div>
@@ -1532,7 +1639,7 @@ export default function WebinarEntry({ webinar, isWertPage: serverIsWertPage }: 
             </>
           ) : (
             <>
-              {/* WERT 스타일 UI - 149404, 149405인 경우 렌더링 */}
+              {/* WERT 스타일 UI - 사용 안 함 (149402는 149403 스타일 사용) */}
               <section className="hero-section">
             {/* Background Image - Rotated and Blurred */}
             <div className="hero-section-bg">
@@ -1564,23 +1671,75 @@ export default function WebinarEntry({ webinar, isWertPage: serverIsWertPage }: 
                   <h1 className="hero-title">
                     {webinar.title}
                   </h1>
-                  {webinar.start_time && (
-                    <div className="hero-date-badges">
-                      <div className="hero-date-badge">
-                        {new Date(webinar.start_time).toLocaleDateString('ko-KR', {
-                          year: 'numeric',
-                          month: '2-digit',
-                          day: '2-digit'
-                        }).replace(/\. /g, '.').replace(/\.$/, '')}
+                  {webinar.webinar_start_time && (
+                    <>
+                      <div className="hero-date-badges">
+                        <div className="hero-date-badge">
+                          {new Date(webinar.webinar_start_time).toLocaleDateString('ko-KR', {
+                            year: 'numeric',
+                            month: '2-digit',
+                            day: '2-digit'
+                          }).replace(/\. /g, '.').replace(/\.$/, '')}
+                        </div>
+                        <div className="hero-date-badge">
+                          {new Date(webinar.webinar_start_time).toLocaleTimeString('ko-KR', {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            hour12: false
+                          })}
+                        </div>
                       </div>
-                      <div className="hero-date-badge">
-                        {new Date(webinar.start_time).toLocaleTimeString('ko-KR', {
-                          hour: '2-digit',
-                          minute: '2-digit',
-                          hour12: false
-                        })}
-                      </div>
-                    </div>
+                      {!isWebinarStarted && countdown && (
+                        <div style={{ 
+                          display: 'flex', 
+                          flexDirection: 'column', 
+                          alignItems: 'center', 
+                          gap: '12px',
+                          marginTop: '20px'
+                        }}>
+                          <div style={{ 
+                            fontSize: '20px', 
+                            fontWeight: 600, 
+                            color: '#666',
+                            textAlign: 'center'
+                          }}>
+                            웨비나 시작까지
+                          </div>
+                          <div style={{ 
+                            display: 'flex', 
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            gap: '8px',
+                            padding: '16px 24px',
+                            backgroundColor: '#00A08C',
+                            borderRadius: '12px',
+                            color: '#fff',
+                            justifyContent: 'center'
+                          }}>
+                            {countdown.days > 0 && (
+                              <>
+                                <span style={{ fontSize: '28px', fontWeight: 700 }}>D-</span>
+                                <span style={{ fontSize: '32px', fontWeight: 700 }}>
+                                  {countdown.days}
+                                </span>
+                                <span style={{ fontSize: '24px', fontWeight: 700, opacity: 0.7, margin: '0 4px' }}>:</span>
+                              </>
+                            )}
+                            <span style={{ fontSize: '32px', fontWeight: 700 }}>
+                              {String(countdown.hours).padStart(2, '0')}
+                            </span>
+                            <span style={{ fontSize: '24px', fontWeight: 700, opacity: 0.7, margin: '0 4px' }}>:</span>
+                            <span style={{ fontSize: '32px', fontWeight: 700 }}>
+                              {String(countdown.minutes).padStart(2, '0')}
+                            </span>
+                            <span style={{ fontSize: '24px', fontWeight: 700, opacity: 0.7, margin: '0 4px' }}>:</span>
+                            <span style={{ fontSize: '32px', fontWeight: 700 }}>
+                              {String(countdown.seconds).padStart(2, '0')}
+                            </span>
+                          </div>
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
               </div>

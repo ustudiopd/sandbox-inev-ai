@@ -49,21 +49,19 @@ export default async function WebinarLivePage({
     queryBuilder = queryBuilder.eq(query.column, query.value)
   }
   
-  // 149402, 149404, 149405 slug인 경우 등록 캠페인에서 데이터 가져오기
+  // 149402 slug인 경우 등록 캠페인에서 데이터 가져오기
   const is149402 = query.column === 'slug' && query.value === '149402'
-  const is149404 = query.column === 'slug' && query.value === '149404'
-  const is149405 = query.column === 'slug' && query.value === '149405'
-  const isWertSlug = is149402 || is149404 || is149405
+  const isWertSlug = is149402
   
   const { data: webinar, error } = await queryBuilder.single()
   
   let finalWebinar = webinar
   
-  // 웨비나가 없고 149402, 149404, 149405인 경우 등록 캠페인에서 데이터 가져오기
+  // 웨비나가 없고 149402인 경우 등록 캠페인에서 데이터 가져오기
   if ((error || !webinar) && isWertSlug) {
-    // 149402는 /149402 등록 캠페인에서, 149404는 /149403 등록 캠페인에서, 149405는 /149405 등록 캠페인에서 데이터 가져오기
-    const campaignPath = is149402 ? '/149402' : is149404 ? '/149403' : '/149405'
-    const slugValue = is149402 ? '149402' : is149404 ? '149404' : '149405'
+    // 149402는 /149403 등록 캠페인에서 데이터 가져오기
+    const campaignPath = '/149403'
+    const slugValue = '149402'
     console.log(`[WebinarLivePage] ${slugValue} 웨비나가 없음 - ${campaignPath} 등록 캠페인에서 데이터 가져오기`)
     
     // 등록 캠페인 조회

@@ -1017,6 +1017,29 @@
   - `app/(webinar)/webinar/[id]/page.tsx`: is149402 변수 정의 추가
   - 중복 정의된 isSlug149402 변수 제거
 
+## [2026-01-26] 웨비나 시작 시간 분리 및 참여자 역할 관리 개선
+- ✅ 웨비나 시작 시간 분리 기능 구현
+  - `supabase/migrations/057_add_webinar_start_time.sql`: `webinar_start_time` 컬럼 추가
+  - 캠페인 기간(`start_time`/`end_time`)과 웨비나 시작 시간(`webinar_start_time`) 분리
+  - `app/(admin)/webinar/[id]/console/components/SettingsTab.tsx`: 웨비나 시작 설정 UI 추가
+  - `app/(webinar)/webinar/[id]/components/WebinarEntry.tsx`: 카운트다운 타이머 구현
+  - 웨비나 시작 시간 설정 시 입장 페이지에 날짜 표시 및 실시간 카운트다운
+- ✅ 참여자 역할 관리 개선
+  - `supabase/migrations/058_add_role_and_registered_via_to_registrations.sql`: `role`, `registered_via` 컬럼 추가
+  - `supabase/migrations/059_fix_registrations_role_constraint.sql`: 역할 제약조건 확장 ('관리자', '운영자', '분석가' 추가)
+  - `app/api/webinars/[webinarId]/registrants/route.ts`: DB의 `role` 값을 우선 사용하도록 수정
+  - `app/(admin)/webinar/[id]/registrants/page.tsx`: DB의 `role` 값을 우선 사용하도록 수정
+  - `app/api/webinars/[webinarId]/access/track/route.ts`: `manual` 등록 시 `role`을 '관리자'로 저장
+  - `scripts/update-manual-registrations-role.ts`: 기존 `manual` 등록 408개의 `role`을 '관리자'로 일괄 업데이트
+- ✅ 참여자 관리 탭 추가
+  - `app/(admin)/webinar/[id]/console/components/ParticipantsTab.tsx`: 콘솔에 참여자 관리 탭 추가
+  - `app/(webinar)/webinar/[id]/console/components/ParticipantsTab.tsx`: 웨비나 콘솔에도 참여자 관리 탭 추가
+  - 역할 매핑에 '관리자', '운영자', '분석가' 추가
+- ✅ 데이터 정합성 개선
+  - `registration_campaign_id`가 있는 웨비나는 등록 캠페인 데이터를 우선 사용
+  - `manual` 등록은 항상 '관리자' 역할로 표시 및 저장
+  - DB에 저장된 `role` 값을 우선 사용, 없을 때만 멤버십 기반으로 계산
+
 ## 남은 작업
 
 ### Phase 3 - 웨비나 및 실시간 기능 (대부분 완료)

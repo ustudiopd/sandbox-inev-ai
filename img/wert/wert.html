@@ -23,17 +23,23 @@
         /* Hero Section */
         .hero-section {
             background: linear-gradient(135deg, #4da8da 0%, #46cdcf 50%, #b3e5fc 100%);
-            height: 100vh;
+            min-height: 100vh;
             width: 100%;
             display: flex;
             flex-direction: column;
             justify-content: center;
-            padding-left: 8%;
+            padding: 20px 5% 20px 5%;
             position: relative;
         }
 
+        @media (min-width: 768px) {
+            .hero-section {
+                padding-left: 8%;
+            }
+        }
+
         .main-title {
-            font-size: clamp(3rem, 12vw, 8rem);
+            font-size: clamp(2rem, 12vw, 8rem);
             line-height: 0.9;
             letter-spacing: -0.05em;
             color: #000;
@@ -42,26 +48,39 @@
         }
 
         .sub-title {
-            font-size: clamp(1.5rem, 4vw, 3rem);
+            font-size: clamp(1rem, 4vw, 3rem);
             margin-top: 1.5rem;
             font-weight: 700;
             color: #000;
             display: flex;
             align-items: center;
             gap: 0.75rem;
+            flex-wrap: wrap;
         }
 
         .logo-container {
             position: absolute;
             top: 5%;
             right: 5%;
-            width: 150px;
+            width: 120px;
+        }
+
+        @media (min-width: 768px) {
+            .logo-container {
+                width: 150px;
+            }
         }
 
         /* Common Section Styles */
         section {
-            padding: 100px 8%;
+            padding: 60px 5%;
             border-bottom: 1px solid #f0f0f0;
+        }
+
+        @media (min-width: 768px) {
+            section {
+                padding: 100px 8%;
+            }
         }
 
         .section-label {
@@ -83,34 +102,74 @@
         /* Program List */
         .program-item {
             display: grid;
-            grid-template-columns: 150px 1fr;
-            padding: 30px 0;
+            grid-template-columns: 1fr;
+            padding: 20px 0;
             border-top: 1px solid #eee;
-            gap: 20px;
+            gap: 10px;
+        }
+
+        @media (min-width: 768px) {
+            .program-item {
+                grid-template-columns: 150px 1fr;
+                padding: 30px 0;
+                gap: 20px;
+            }
         }
 
         .program-time {
             font-weight: 700;
             color: #4da8da;
-            font-size: 1.1rem;
+            font-size: 0.95rem;
+        }
+
+        @media (min-width: 768px) {
+            .program-time {
+                font-size: 1.1rem;
+            }
         }
 
         .program-content h4 {
-            font-size: 1.4rem;
+            font-size: 1.2rem;
             font-weight: 700;
             margin-bottom: 8px;
         }
 
+        @media (min-width: 768px) {
+            .program-content h4 {
+                font-size: 1.4rem;
+            }
+        }
+
         .program-content p {
             color: #666;
-            font-size: 1.05rem;
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        @media (min-width: 768px) {
+            .program-content p {
+                font-size: 1.05rem;
+            }
         }
 
         /* Speaker Grid */
         .speaker-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 40px;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 30px;
+        }
+
+        @media (min-width: 640px) {
+            .speaker-grid {
+                grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+                gap: 40px;
+            }
+        }
+
+        @media (min-width: 1024px) {
+            .speaker-grid {
+                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            }
         }
 
         .speaker-card img {
@@ -137,10 +196,19 @@
         .venue-info {
             background-color: #fafafa;
             border-radius: 12px;
-            padding: 40px;
+            padding: 30px 20px;
             display: flex;
+            flex-direction: column;
             flex-wrap: wrap;
-            gap: 40px;
+            gap: 25px;
+        }
+
+        @media (min-width: 768px) {
+            .venue-info {
+                flex-direction: row;
+                padding: 40px;
+                gap: 40px;
+            }
         }
 
         .info-block h5 {
@@ -173,13 +241,13 @@
             <img src="https://via.placeholder.com/150x50?text=WERT+LOGO" alt="Wert Logo" class="w-full h-auto">
         </div>
 
-        <div class="content pl-[8%]">
+        <div class="content pl-0 md:pl-[8%]">
             <h1 class="main-title">
                 WERT TECH<br>
                 SUMMIT 26
             </h1>
             <div class="sub-title">
-                IP DATA <span class="text-2xl opacity-70">✕</span> AI
+                IP DATA <span class="text-xl md:text-2xl opacity-70">✕</span> AI
             </div>
         </div>
 
@@ -194,7 +262,7 @@
     <section id="about">
         <span class="section-label">Overview</span>
         <h2 class="section-title">국내 최초 IP 데이터 X 버티컬 AI<br>비즈니스 기술 전략 써밋</h2>
-        <p class="text-xl text-gray-600 max-w-3xl leading-relaxed">
+        <p class="text-base md:text-xl text-gray-600 max-w-3xl leading-relaxed">
             단순한 기술 공유를 넘어 실제 기업 현장에서 AI가 어떻게 전략화되고 의사결정에 활용되는지, 글로벌 테크 리더들과 함께 그 실체를 공개합니다.
         </p>
     </section>
@@ -305,9 +373,9 @@
         </div>
     </section>
 
-    <footer class="py-20 px-[8%] text-gray-400 text-sm flex justify-between items-center">
+    <footer class="py-12 md:py-20 px-[5%] md:px-[8%] text-gray-400 text-xs md:text-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4 md:gap-0">
         <p>&copy; 2026 WERT Intelligence. All rights reserved.</p>
-        <div class="flex gap-6">
+        <div class="flex flex-col md:flex-row gap-4 md:gap-6">
             <a href="#" class="hover:text-black transition-colors">Privacy Policy</a>
             <a href="#" class="hover:text-black transition-colors">Terms of Service</a>
         </div>

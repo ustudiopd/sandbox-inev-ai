@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createAdminSupabase } from '@/lib/supabase/admin'
+import { getWebinarQuery } from '@/lib/utils/webinar'
 
 export const runtime = 'nodejs'
 
@@ -9,7 +10,7 @@ export const runtime = 'nodejs'
  */
 export async function POST(req: Request) {
   try {
-    const { email, nickname, webinarId } = await req.json()
+    const { email, nickname, webinarId, displayName } = await req.json()
     
     if (!email || !webinarId) {
       return NextResponse.json(
@@ -20,12 +21,21 @@ export async function POST(req: Request) {
     
     const admin = createAdminSupabase()
     
+    // UUID 또는 slug로 웨비나 조회
+    const query = getWebinarQuery(webinarId)
+    
     // 웨비나 정보 확인
-    const { data: webinar, error: webinarError } = await admin
+    let queryBuilder = admin
       .from('webinars')
-      .select('id, access_policy')
-      .eq('id', webinarId)
-      .single()
+      .select('id, slug, access_policy, registration_campaign_id')
+    
+    if (query.column === 'slug') {
+      queryBuilder = queryBuilder.eq('slug', String(query.value))
+    } else {
+      queryBuilder = queryBuilder.eq(query.column, query.value)
+    }
+    
+    const { data: webinar, error: webinarError } = await queryBuilder.maybeSingle()
     
     if (webinarError || !webinar) {
       return NextResponse.json(
@@ -54,10 +64,11 @@ export async function POST(req: Request) {
       )
     }
     
+    // 1. webinar_allowed_emails 테이블에서 확인
     const { data: allowedEmail, error: emailCheckError } = await admin
       .from('webinar_allowed_emails')
       .select('email')
-      .eq('webinar_id', webinarId)
+      .eq('webinar_id', webinar.id)
       .eq('email', emailLower)
       .maybeSingle()
     
@@ -68,11 +79,33 @@ export async function POST(req: Request) {
       )
     }
     
-    if (!allowedEmail) {
-      return NextResponse.json(
-        { error: '이 이메일 주소는 이 웨비나에 등록되지 않았습니다.' },
-        { status: 403 }
-      )
+      // 2. webinar_allowed_emails에 없으면 등록 캠페인에서 확인
+      if (!allowedEmail) {
+        const campaignId = webinar.registration_campaign_id
+      
+      // 등록 캠페인이 있으면 이메일 확인
+      if (campaignId) {
+        const { data: entry } = await admin
+          .from('event_survey_entries')
+          .select('id')
+          .eq('campaign_id', campaignId)
+          .eq('registration_data->>email', emailLower)
+          .maybeSingle()
+        
+        if (!entry) {
+          return NextResponse.json(
+            { error: '이 이메일 주소는 이 웨비나에 등록되지 않았습니다.' },
+            { status: 403 }
+          )
+        }
+        // 등록 캠페인에서 찾았으면 통과
+      } else {
+        // 등록 캠페인도 없고 webinar_allowed_emails에도 없으면 에러
+        return NextResponse.json(
+          { error: '이 이메일 주소는 이 웨비나에 등록되지 않았습니다.' },
+          { status: 403 }
+        )
+      }
     }
     
     // 임시 비밀번호 생성

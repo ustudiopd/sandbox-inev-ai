@@ -49,14 +49,14 @@ export async function POST(
         .eq('user_id', user.id)
         .maybeSingle()
 
-      // 등록되어 있지 않으면 자동 등록
+      // 등록되어 있지 않으면 자동 등록 (manual 등록은 관리자로 저장)
       if (!registration) {
         await admin
           .from('registrations')
           .insert({
             webinar_id: webinarId,
             user_id: user.id,
-            role: 'attendee',
+            role: '관리자',
             registered_via: 'manual',
           })
       }
