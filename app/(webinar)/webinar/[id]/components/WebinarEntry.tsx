@@ -30,19 +30,33 @@ interface Webinar {
 
 interface WebinarEntryProps {
   webinar: Webinar
+  isWertPage?: boolean // 서버에서 계산된 WERT 페이지 여부 (SSR/CSR 일치 보장)
 }
 
-export default function WebinarEntry({ webinar }: WebinarEntryProps) {
+export default function WebinarEntry({ webinar, isWertPage: serverIsWertPage }: WebinarEntryProps) {
   const router = useRouter()
   const supabase = createClientSupabase()
   // slug가 있으면 slug를 사용하고, 없으면 id를 사용 (URL용)
   const webinarSlug = webinar.slug || webinar.id
   const webinarPath = webinar.slug || webinar.id
-  const [mode, setMode] = useState<'login' | 'signup' | 'guest' | 'email_auth' | 'name_email_auth' | 'register'>(
+  
+  // 149402, 149404, 149405인지 즉시 확인 (서버 prop 우선, 없으면 webinar.slug 확인)
+  // slugValue는 나중에 정의되므로 여기서는 직접 비교
+  const isSlug149402 = String(webinar.slug) === '149402' || webinarSlug === '149402'
+  const isSlug149404 = String(webinar.slug) === '149404' || webinarSlug === '149404'
+  const isSlug149405 = String(webinar.slug) === '149405' || webinarSlug === '149405'
+  const isSlug149404Immediate = 
+    serverIsWertPage === true ||
+    isSlug149402 ||
+    isSlug149404 ||
+    isSlug149405
+  
+  // slug가 '149402', '149404' 또는 '149405'이면 항상 name_email_auth 모드로 시작
+  const initialMode = isSlug149404Immediate ? 'name_email_auth' : 
     webinar.access_policy === 'guest_allowed' ? 'guest' : 
     webinar.access_policy === 'email_auth' ? 'email_auth' :
     webinar.access_policy === 'name_email_auth' ? 'name_email_auth' : 'login'
-  )
+  const [mode, setMode] = useState<'login' | 'signup' | 'guest' | 'email_auth' | 'name_email_auth' | 'register'>(initialMode)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [displayName, setDisplayName] = useState('')
@@ -489,7 +503,7 @@ export default function WebinarEntry({ webinar }: WebinarEntryProps) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           email: email.trim(),
-          displayName: isWertSummit ? (displayName.trim() || null) : null,
+          displayName: finalShouldShowWertStyle ? (displayName.trim() || null) : null,
           nickname: nickname.trim() || null,
           webinarId: webinar.id,
         }),
@@ -536,8 +550,12 @@ export default function WebinarEntry({ webinar }: WebinarEntryProps) {
             })
         }
         
-        // 웨비나 라이브 페이지로 즉시 이동
-        window.location.href = `/webinar/${webinar.id}/live`
+        // 149402인 경우 등록 페이지로 리다이렉트, 그 외는 웨비나 라이브 페이지로 이동
+        if (isSlug149402) {
+          window.location.href = '/event/149403'
+        } else {
+          window.location.href = `/webinar/${webinar.id}/live`
+        }
       } else {
         throw new Error('로그인 정보를 받지 못했습니다')
       }
@@ -645,8 +663,12 @@ export default function WebinarEntry({ webinar }: WebinarEntryProps) {
             })
         }
         
-        // 웨비나 라이브 페이지로 즉시 이동
-        window.location.href = `/webinar/${webinar.id}/live`
+        // 149402인 경우 등록 페이지로 리다이렉트, 그 외는 웨비나 라이브 페이지로 이동
+        if (isSlug149402) {
+          window.location.href = '/event/149403'
+        } else {
+          window.location.href = `/webinar/${webinar.id}/live`
+        }
       } else {
         throw new Error('로그인 정보를 받지 못했습니다')
       }
@@ -847,8 +869,15 @@ export default function WebinarEntry({ webinar }: WebinarEntryProps) {
   const thumbnailUrl = getThumbnailUrl()
   // registration_campaign_id가 있으면 등록 페이지와 연동된 웨비나로 간주
   const hasRegistrationCampaign = !!webinar.registration_campaign_id
-  // 하위 호환성을 위해 slug도 확인 (기존 149404 웨비나)
-  const isWertSummit = webinarSlug === '149404' || hasRegistrationCampaign
+  // slug가 '149404'이거나 registration_campaign_id가 있으면 WERT 스타일 적용
+  // 초기 렌더링 시에도 슬러그를 확인하여 즉시 WERT 스타일 적용
+  // 서버 사이드에서 전달된 webinar.slug를 우선 확인 (초기 렌더링 보장)
+  // 숫자로 저장된 경우도 문자열로 변환하여 비교
+  const slugValue = String(webinar.slug || webinarSlug || '')
+  // 서버에서 전달된 slug를 우선 확인 (초기 렌더링 보장)
+  // isSlug149402, isSlug149404, isSlug149405는 이미 위에서 정의됨
+  const isWertSlug = isSlug149402 || isSlug149404 || isSlug149405
+  const isWertSummit = isWertSlug || hasRegistrationCampaign
   const wertLogoUrl = supabaseUrl 
     ? `${supabaseUrl}/storage/v1/object/public/webinar-thumbnails/wert.png`
     : '/img/wert.png'
@@ -856,221 +885,655 @@ export default function WebinarEntry({ webinar }: WebinarEntryProps) {
     ? `${supabaseUrl}/storage/v1/object/public/webinar-thumbnails/wert1.png`
     : '/img/wert1.png'
   
+  // 서버 사이드에서 전달된 데이터를 우선 사용하여 SSR/CSR 일치 보장
+  // window.location.pathname은 클라이언트에서만 사용 가능하므로 제외
+  // 서버와 클라이언트에서 동일한 조건 평가를 보장하기 위해 서버 데이터만 사용
+  const isSlug149404Strict = 
+    serverIsWertPage === true ||
+    String(webinar.slug) === '149402' || 
+    slugValue === '149402' || 
+    webinarSlug === '149402' || 
+    webinar.slug === '149402' ||
+    String(webinar.slug) === '149404' || 
+    slugValue === '149404' || 
+    webinarSlug === '149404' || 
+    webinar.slug === '149404' ||
+    String(webinar.slug) === '149405' || 
+    slugValue === '149405' || 
+    webinarSlug === '149405' || 
+    webinar.slug === '149405' ||
+    isSlug149402 ||
+    isSlug149404 ||
+    isSlug149405 ||
+    isWertSlug
+  
+  // shouldShowWertStyle은 서버에서 전달된 prop을 우선 사용하고, 없으면 클라이언트에서 계산
+  // 149404는 항상 WERT 스타일 강제 적용 (기본 UI 제거)
+  const shouldShowWertStyle = serverIsWertPage !== undefined 
+    ? serverIsWertPage 
+    : (isSlug149404Strict || isWertSummit || hasRegistrationCampaign)
+  
+  // 149402, 149404, 149405인 경우 강제로 WERT 스타일 적용 (기본 UI 완전 제거)
+  // 서버 prop이 true이거나 slug가 149402, 149404 또는 149405이면 항상 true
+  // 초기 렌더링 시에도 즉시 판단 가능하도록 서버 데이터만 사용
+  const finalShouldShowWertStyle = (serverIsWertPage === true || isSlug149404Strict || String(webinar.slug) === '149402' || webinarSlug === '149402' || String(webinar.slug) === '149404' || webinarSlug === '149404' || String(webinar.slug) === '149405' || webinarSlug === '149405') ? true : shouldShowWertStyle
+  
+  // 디버깅: 초기 렌더링 시 값 확인
+  if (typeof window !== 'undefined') {
+    console.log('[WebinarEntry] 초기 렌더링 값:', {
+      serverIsWertPage,
+      'webinar.slug': webinar.slug,
+      webinarSlug,
+      isSlug149404Strict,
+      shouldShowWertStyle,
+      finalShouldShowWertStyle,
+    })
+  }
+  
+  // 기본 스타일 - 항상 흰 배경 적용 (초기 페인트 시점부터 보장)
+  const baseStyles = `
+    html {
+      background-color: #fff !important;
+      background: #fff !important;
+    }
+    body {
+      background-color: #fff !important;
+      background: #fff !important;
+    }
+    #__next {
+      background-color: #fff !important;
+      background: #fff !important;
+    }
+    /* 루트 레이아웃 래퍼도 흰 배경 보장 */
+    body > div {
+      background-color: #fff !important;
+      background: #fff !important;
+    }
+  `
+  
+  // WERT 스타일 (조건부) - finalShouldShowWertStyle이 true일 때만 적용
+  const wertStylesOnly = finalShouldShowWertStyle ? `
+    @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css');
+    
+    html, body {
+      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+      background-color: #fff !important;
+      background: #fff !important;
+      margin: 0;
+      padding: 0;
+    }
+    
+    #__next {
+      background-color: #fff !important;
+      background: #fff !important;
+    }
+    
+    /* 149402용 - 149403 등록 페이지 스타일 참고 */
+    .registration-hero {
+      width: 100%;
+      max-width: 1000px;
+      margin: 0 auto;
+      position: relative;
+      background: white;
+      min-height: 600px;
+      padding-top: 112px;
+      padding-bottom: 80px;
+      overflow: hidden;
+    }
+    
+    .registration-hero-bg {
+      width: 1972px;
+      height: 1109px;
+      position: absolute;
+      left: -34px;
+      top: 1530px;
+      transform-origin: top left;
+      transform: rotate(-90deg);
+      filter: blur(40px);
+      opacity: 0.3;
+      z-index: 0;
+    }
+    
+    .registration-hero-content {
+      position: relative;
+      z-index: 1;
+    }
+    
+    .registration-header {
+      width: 100%;
+      max-width: 1000px;
+      height: 112px;
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(255, 255, 255, 0.6);
+      backdrop-filter: blur(2px);
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .registration-logo {
+      width: 320px;
+      height: 40px;
+    }
+    
+    .registration-content {
+      max-width: 856px;
+      margin: 0 auto;
+      padding: 0 72px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 40px;
+    }
+    
+    .registration-title {
+      text-align: center;
+      font-size: 96px;
+      font-weight: 700;
+      line-height: 117.6px;
+      color: #000;
+      margin: 0;
+    }
+    
+    .registration-date-badges {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    
+    .date-badge {
+      padding: 8px 24px;
+      background-color: #000;
+      border-radius: 16px;
+      color: #fff;
+      font-size: 36px;
+      font-weight: 700;
+      line-height: 54px;
+    }
+    
+    .registration-form-section {
+      width: 100%;
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 80px 72px;
+      background: white;
+    }
+    
+    .registration-form-container {
+      max-width: 856px;
+      margin: 0 auto;
+      background: #f5f5f5;
+      border-radius: 48px;
+      padding: 64px;
+      box-shadow: 0px 4px 48px -10px rgba(0, 0, 0, 0.08);
+    }
+    
+    .registration-form-title {
+      font-size: 36px;
+      font-weight: 700;
+      color: #000;
+      margin-bottom: 40px;
+      text-align: center;
+    }
+    
+    .registration-form-label {
+      font-size: 20px;
+      font-weight: 600;
+      color: #000;
+      margin-bottom: 12px;
+      display: block;
+    }
+    
+    .registration-form-input {
+      width: 100%;
+      padding: 16px 20px;
+      background: #fff;
+      border: 2px solid #e5e5e5;
+      border-radius: 16px;
+      font-size: 18px;
+      color: #000;
+      font-family: 'Pretendard', sans-serif;
+      transition: all 0.3s ease;
+    }
+    
+    .registration-form-input:focus {
+      outline: none;
+      border-color: #00A08C;
+      background-color: #fff;
+    }
+    
+    .registration-form-input::placeholder {
+      color: #999;
+    }
+    
+    .registration-form-button {
+      width: 100%;
+      padding: 20px 48px;
+      background-color: #00A08C;
+      color: #fff;
+      border: none;
+      border-radius: 200px;
+      font-size: 24px;
+      font-weight: 700;
+      line-height: 36px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+    }
+    
+    .registration-form-button:hover {
+      background-color: #008f7a;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 16px rgba(0, 160, 140, 0.3);
+    }
+    
+    .registration-form-button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    
+    @media (max-width: 768px) {
+      .registration-hero {
+        padding-top: 80px;
+        padding-bottom: 60px;
+      }
+      
+      .registration-content {
+        padding: 0 20px;
+      }
+      
+      .registration-title {
+        font-size: 48px;
+        line-height: 60px;
+      }
+      
+      .date-badge {
+        font-size: 24px;
+        padding: 6px 16px;
+      }
+      
+      .registration-form-section {
+        padding: 60px 20px;
+      }
+      
+      .registration-form-container {
+        padding: 40px 24px;
+      }
+      
+      .registration-form-title {
+        font-size: 28px;
+      }
+      
+      .registration-form-label {
+        font-size: 18px;
+      }
+      
+      .registration-form-input {
+        font-size: 16px;
+        padding: 12px 16px;
+      }
+      
+      .registration-form-button {
+        font-size: 20px;
+        padding: 16px 40px;
+      }
+    }
+    
+    /* 149404, 149405용 - 기존 WERT 스타일 */
+    .hero-section {
+      width: 100%;
+      max-width: 1000px;
+      margin: 0 auto;
+      position: relative;
+      background: white;
+      min-height: 600px;
+      padding-top: 112px;
+      padding-bottom: 80px;
+      overflow: hidden;
+    }
+    
+    .hero-section-bg {
+      width: 1972px;
+      height: 1109px;
+      position: absolute;
+      left: -34px;
+      top: 1530px;
+      transform-origin: top left;
+      transform: rotate(-90deg);
+      filter: blur(40px);
+      opacity: 0.3;
+      z-index: 0;
+    }
+    
+    .hero-header {
+      width: 100%;
+      max-width: 1000px;
+      height: 112px;
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(255, 255, 255, 0.6);
+      backdrop-filter: blur(2px);
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .hero-logo {
+      width: 320px;
+      height: 40px;
+    }
+    
+    .hero-content {
+      position: relative;
+      z-index: 1;
+      max-width: 856px;
+      margin: 0 auto;
+      padding: 0 72px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 40px;
+    }
+    
+    .hero-title {
+      text-align: center;
+      font-size: 96px;
+      font-weight: 700;
+      line-height: 117.6px;
+      color: #000;
+      margin: 0;
+    }
+    
+    .hero-subtitle {
+      text-align: center;
+      font-size: 36px;
+      font-weight: 700;
+      color: #000;
+      margin: 0;
+    }
+    
+    .hero-date-badges {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    
+    .hero-date-badge {
+      padding: 8px 24px;
+      background-color: #000;
+      border-radius: 16px;
+      color: #fff;
+      font-size: 36px;
+      font-weight: 700;
+      line-height: 54px;
+    }
+    
+    .login-form-container {
+      margin-top: 40px;
+      max-width: 600px;
+      width: 100%;
+    }
+    
+    .login-form-label {
+      font-size: 20px;
+      font-weight: 600;
+      color: #000;
+      margin-bottom: 12px;
+      display: block;
+    }
+    
+    .login-form-input {
+      width: 100%;
+      padding: 16px 20px;
+      background: #fff;
+      border: 2px solid #e5e5e5;
+      border-radius: 16px;
+      font-size: 18px;
+      color: #000;
+      font-family: 'Pretendard', sans-serif;
+      transition: all 0.3s ease;
+    }
+    
+    .login-form-input:focus {
+      outline: none;
+      border-color: #00A08C;
+      background-color: #fff;
+    }
+    
+    .login-form-input::placeholder {
+      color: #999;
+    }
+    
+    .login-form-button {
+      width: 100%;
+      padding: 20px 48px;
+      background-color: #00A08C;
+      color: #fff;
+      border: none;
+      border-radius: 200px;
+      font-size: 24px;
+      font-weight: 700;
+      line-height: 36px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      margin-top: 24px;
+    }
+    
+    .login-form-button:hover {
+      background-color: #008f7a;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 16px rgba(0, 160, 140, 0.3);
+    }
+    
+    .login-form-button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    
+    @media (max-width: 768px) {
+      .hero-section {
+        padding-top: 80px;
+        padding-bottom: 60px;
+      }
+      
+      .hero-content {
+        padding: 0 20px;
+      }
+      
+      .hero-title {
+        font-size: 48px;
+        line-height: 60px;
+      }
+      
+      .hero-subtitle {
+        font-size: 24px;
+      }
+      
+      .hero-date-badge {
+        font-size: 24px;
+        padding: 6px 16px;
+      }
+      
+      .login-form-label {
+        font-size: 18px;
+      }
+      
+      .login-form-input {
+        font-size: 16px;
+        padding: 12px 16px;
+      }
+      
+      .login-form-button {
+        font-size: 20px;
+        padding: 16px 40px;
+      }
+    }
+  ` : ''
+  
+  // 전체 스타일 통합 - 항상 baseStyles 적용 (흰 배경 보장)
+  const allStyles = baseStyles + wertStylesOnly
+
   return (
     <>
-      {isWertSummit && (
-        <style jsx global>{`
-          @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css');
-          
-          html, body {
-            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-            background-color: #fff;
-            margin: 0;
-            padding: 0;
-          }
-          
-          .hero-section {
-            width: 100%;
-            max-width: 1000px;
-            margin: 0 auto;
-            position: relative;
-            background: white;
-            min-height: 600px;
-            padding-top: 112px;
-            padding-bottom: 80px;
-            overflow: hidden;
-          }
-          
-          .hero-section-bg {
-            width: 1972px;
-            height: 1109px;
-            position: absolute;
-            left: -34px;
-            top: 1530px;
-            transform-origin: top left;
-            transform: rotate(-90deg);
-            filter: blur(40px);
-            opacity: 0.3;
-            z-index: 0;
-          }
-          
-          .hero-header {
-            width: 100%;
-            max-width: 1000px;
-            height: 112px;
-            position: absolute;
-            top: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(255, 255, 255, 0.6);
-            backdrop-filter: blur(2px);
-            z-index: 10;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-          }
-          
-          .hero-logo {
-            width: 320px;
-            height: 40px;
-          }
-          
-          .hero-content {
-            position: relative;
-            z-index: 1;
-            max-width: 856px;
-            margin: 0 auto;
-            padding: 0 72px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 40px;
-          }
-          
-          .hero-title {
-            text-align: center;
-            font-size: 96px;
-            font-weight: 700;
-            line-height: 117.6px;
-            color: #000;
-            margin: 0;
-          }
-          
-          .hero-subtitle {
-            text-align: center;
-            font-size: 36px;
-            font-weight: 700;
-            color: #000;
-            margin: 0;
-          }
-          
-          .hero-date-badges {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-          }
-          
-          .hero-date-badge {
-            padding: 8px 24px;
-            background-color: #000;
-            border-radius: 16px;
-            color: #fff;
-            font-size: 36px;
-            font-weight: 700;
-            line-height: 54px;
-          }
-          
-          .login-form-container {
-            margin-top: 40px;
-            max-width: 600px;
-            width: 100%;
-          }
-          
-          .login-form-label {
-            font-size: 20px;
-            font-weight: 600;
-            color: #000;
-            margin-bottom: 12px;
-            display: block;
-          }
-          
-          .login-form-input {
-            width: 100%;
-            padding: 16px 20px;
-            background: #fff;
-            border: 2px solid #e5e5e5;
-            border-radius: 16px;
-            font-size: 18px;
-            color: #000;
-            font-family: 'Pretendard', sans-serif;
-            transition: all 0.3s ease;
-          }
-          
-          .login-form-input:focus {
-            outline: none;
-            border-color: #00A08C;
-            background-color: #fff;
-          }
-          
-          .login-form-input::placeholder {
-            color: #999;
-          }
-          
-          .login-form-button {
-            width: 100%;
-            padding: 20px 48px;
-            background-color: #00A08C;
-            color: #fff;
-            border: none;
-            border-radius: 200px;
-            font-size: 24px;
-            font-weight: 700;
-            line-height: 36px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 16px;
-            margin-top: 24px;
-          }
-          
-          .login-form-button:hover {
-            background-color: #008f7a;
-            transform: translateY(-2px);
-            box-shadow: 0 8px 16px rgba(0, 160, 140, 0.3);
-          }
-          
-          .login-form-button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-          }
-          
-          @media (max-width: 768px) {
-            .hero-section {
-              padding-top: 80px;
-              padding-bottom: 60px;
-            }
-            
-            .hero-content {
-              padding: 0 20px;
-            }
-            
-            .hero-title {
-              font-size: 48px;
-              line-height: 60px;
-            }
-            
-            .hero-subtitle {
-              font-size: 24px;
-            }
-            
-            .hero-date-badge {
-              font-size: 24px;
-              padding: 6px 16px;
-            }
-            
-            .login-form-label {
-              font-size: 18px;
-            }
-            
-            .login-form-input {
-              font-size: 16px;
-              padding: 12px 16px;
-            }
-            
-            .login-form-button {
-              font-size: 20px;
-              padding: 16px 40px;
-            }
-          }
-        `}</style>
+      {/* Pretendard 폰트 - WERT 스타일일 때만 적용 */}
+      {finalShouldShowWertStyle && (
+        <link
+          rel="stylesheet"
+          href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css"
+        />
       )}
+      {/* 스타일 적용 - baseStyles는 항상 적용되어 흰 배경 보장 (최우선 적용) */}
+      <style jsx global>{allStyles}</style>
+      <div className="bg-white min-h-screen" style={{ backgroundColor: '#fff', background: '#fff', position: 'relative', zIndex: 0 }}>
       
-      {isWertSummit ? (
+      {/* 웨비나 입장 페이지 UI - 149402, 149404, 149405는 항상 WERT 스타일만 렌더링 (기본 UI 완전 제거) */}
+      {/* 서버에서 전달된 prop 또는 webinar.slug로 즉시 판단하여 SSR/CSR 일치 보장 */}
+      {/* 149402는 149403 스타일 참고, 149404/149405는 기존 WERT 스타일 */}
+      {(serverIsWertPage === true || String(webinar.slug) === '149402' || webinarSlug === '149402' || String(webinar.slug) === '149404' || webinarSlug === '149404' || String(webinar.slug) === '149405' || webinarSlug === '149405' || finalShouldShowWertStyle) ? (
         <>
-          {/* 히어로 섹션 */}
-          <section className="hero-section">
+          {/* 149402는 149403 등록 페이지 스타일 참고 */}
+          {isSlug149402 ? (
+            <>
+              {/* 149403 스타일 참고 - 등록 페이지와 유사한 디자인 */}
+              <section className="registration-hero">
+                {/* Background Image - Rotated and Blurred */}
+                <div className="registration-hero-bg">
+                  <img
+                    src={`${supabaseUrl}/storage/v1/object/public/webinar-thumbnails/wert/image 50-1.png`}
+                    alt=""
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  />
+                </div>
+                
+                {/* Header with Logo */}
+                <div className="registration-header">
+                  <img
+                    src={`${supabaseUrl}/storage/v1/object/public/webinar-thumbnails/wert/kewert_logo.png`}
+                    alt="keywert Insight"
+                    className="registration-logo"
+                  />
+                </div>
+                
+                {/* Hero Content */}
+                <div className="registration-hero-content">
+                  <div className="registration-content">
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '40px' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '32px' }}>
+                        {webinar.description && (
+                          <div style={{ textAlign: 'center', fontSize: '36px', fontWeight: 700, color: '#000' }}>
+                            {webinar.description}
+                          </div>
+                        )}
+                        <h1 className="registration-title">
+                          {webinar.title}
+                        </h1>
+                        {webinar.start_time && (
+                          <div className="registration-date-badges">
+                            <div className="date-badge">
+                              {new Date(webinar.start_time).toLocaleDateString('ko-KR', {
+                                year: 'numeric',
+                                month: '2-digit',
+                                day: '2-digit'
+                              }).replace(/\. /g, '.').replace(/\.$/, '')}
+                            </div>
+                            <div className="date-badge">
+                              {new Date(webinar.start_time).toLocaleTimeString('ko-KR', {
+                                hour: '2-digit',
+                                minute: '2-digit',
+                                hour12: false
+                              })}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </section>
+              
+              {/* Form Section - 이름+이메일 로그인 */}
+              <section className="registration-form-section">
+                <div className="registration-form-container">
+                  <h1 className="registration-form-title">웨비나 입장</h1>
+                  
+                  <form onSubmit={handleNameEmailAuth} style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+                    {error && (
+                      <div style={{ padding: '16px', backgroundColor: '#fee', border: '1px solid #fcc', borderRadius: '16px' }}>
+                        <p style={{ fontSize: '16px', color: '#c00' }}>{error}</p>
+                      </div>
+                    )}
+                    
+                    {/* 이름 */}
+                    <div>
+                      <label className="registration-form-label">
+                        이름 <span style={{ color: '#f00' }}>*</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={displayName}
+                        onChange={(e) => setDisplayName(e.target.value)}
+                        className="registration-form-input"
+                        placeholder="이름을 입력하세요"
+                        required
+                        disabled={loading}
+                      />
+                    </div>
+                    
+                    {/* 이메일 */}
+                    <div>
+                      <label className="registration-form-label">
+                        이메일 주소 <span style={{ color: '#f00' }}>*</span>
+                      </label>
+                      <input
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="registration-form-input"
+                        placeholder="이메일을 입력하세요"
+                        required
+                        disabled={loading}
+                      />
+                    </div>
+                    
+                    {/* 입장 버튼 */}
+                    <div style={{ marginTop: '32px' }}>
+                      <button
+                        type="submit"
+                        disabled={loading}
+                        className="registration-form-button"
+                      >
+                        {loading ? '입장 중...' : '웨비나 입장'}
+                        <img
+                          src={`${supabaseUrl}/storage/v1/object/public/webinar-thumbnails/wert/symbol1.png`}
+                          alt=""
+                          width={14}
+                          height={20}
+                          style={{ width: '14px', height: '20px', objectFit: 'contain' }}
+                        />
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </section>
+            </>
+          ) : (
+            <>
+              {/* WERT 스타일 UI - 149404, 149405인 경우 렌더링 */}
+              <section className="hero-section">
             {/* Background Image - Rotated and Blurred */}
             <div className="hero-section-bg">
               <img
@@ -1093,12 +1556,13 @@ export default function WebinarEntry({ webinar }: WebinarEntryProps) {
             <div className="hero-content">
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '40px' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '32px' }}>
-                  <div className="hero-subtitle">
-                    실제 고객사례로 알아보는
-                  </div>
+                  {webinar.description && (
+                    <div className="hero-subtitle">
+                      {webinar.description}
+                    </div>
+                  )}
                   <h1 className="hero-title">
-                    AI 특허리서치<br />
-                    <span style={{ whiteSpace: 'nowrap' }}>실무 활용 웨비나</span>
+                    {webinar.title}
                   </h1>
                   {webinar.start_time && (
                     <div className="hero-date-badges">
@@ -1171,505 +1635,13 @@ export default function WebinarEntry({ webinar }: WebinarEntryProps) {
               </div>
             </div>
           </section>
+            </>
+          )}
         </>
-      ) : (
-        <div className="bg-black min-h-screen p-0">
-          <div className="px-4 md:px-8 pb-8">
-            <div className="max-w-2xl mx-auto">
-              {/* 로그인/등록/게스트 폼 */}
-              <div className="bg-black border border-gray-800 rounded-xl shadow-lg p-8">
-          {webinar.access_policy === 'guest_allowed' && !isWertSummit && (
-            <div className={`flex gap-4 mb-6 border-b ${isWertSummit ? 'border-gray-700' : 'border-gray-200'}`}>
-              <button
-                onClick={() => {
-                  setMode('guest')
-                  setError('')
-                }}
-                className={`flex-1 py-3 text-center font-medium transition-colors ${
-                  mode === 'guest'
-                    ? `${isWertSummit ? 'text-[#4da8da] border-b-2 border-[#4da8da]' : 'text-blue-600 border-b-2 border-blue-600'}`
-                    : `${isWertSummit ? 'text-gray-400 hover:text-gray-300' : 'text-gray-500 hover:text-gray-700'}`
-                }`}
-              >
-                게스트 입장
-              </button>
-              <button
-                onClick={() => {
-                  setMode('login')
-                  setError('')
-                }}
-                className={`flex-1 py-3 text-center font-medium transition-colors ${
-                  mode === 'login'
-                    ? `${isWertSummit ? 'text-[#4da8da] border-b-2 border-[#4da8da]' : 'text-blue-600 border-b-2 border-blue-600'}`
-                    : `${isWertSummit ? 'text-gray-400 hover:text-gray-300' : 'text-gray-500 hover:text-gray-700'}`
-                }`}
-              >
-                로그인
-              </button>
-              <button
-                onClick={() => {
-                  setMode('signup')
-                  setError('')
-                }}
-                className={`flex-1 py-3 text-center font-medium transition-colors ${
-                  mode === 'signup'
-                    ? `${isWertSummit ? 'text-[#4da8da] border-b-2 border-[#4da8da]' : 'text-blue-600 border-b-2 border-blue-600'}`
-                    : `${isWertSummit ? 'text-gray-400 hover:text-gray-300' : 'text-gray-500 hover:text-gray-700'}`
-                }`}
-              >
-                웨비나 등록
-              </button>
-            </div>
-          )}
-          {isWertSummit && webinar.registration_campaign?.public_path && (
-            <div className="mb-6 text-center">
-              <Link 
-                href={`/event${webinar.registration_campaign.public_path}`}
-                className={`inline-block px-6 py-3 ${isWertSummit ? 'bg-[#4da8da] hover:bg-[#46cdcf] text-white' : 'bg-blue-600 hover:bg-blue-700 text-white'} rounded-lg font-medium transition-all shadow-lg hover:shadow-xl`}
-              >
-                메인페이지로 돌아가기
-              </Link>
-            </div>
-          )}
-          {webinar.access_policy === 'email_auth' && !isWertSummit && (
-            <div className={`flex gap-4 mb-6 border-b ${isWertSummit ? 'border-gray-700' : 'border-gray-200'}`}>
-              <button
-                onClick={() => {
-                  setMode('email_auth')
-                  setError('')
-                }}
-                className={`flex-1 py-3 text-center font-medium transition-colors ${
-                  mode === 'email_auth'
-                    ? `${isWertSummit ? 'text-[#4da8da] border-b-2 border-[#4da8da]' : 'text-blue-600 border-b-2 border-blue-600'}`
-                    : `${isWertSummit ? 'text-gray-400 hover:text-gray-300' : 'text-gray-500 hover:text-gray-700'}`
-                }`}
-              >
-                웨비나 입장
-              </button>
-              <button
-                onClick={() => {
-                  setMode('register')
-                  setError('')
-                  setPrivacyAgreed(false)
-                }}
-                className={`flex-1 py-3 text-center font-medium transition-colors ${
-                  mode === 'register'
-                    ? `${isWertSummit ? 'text-[#4da8da] border-b-2 border-[#4da8da]' : 'text-blue-600 border-b-2 border-blue-600'}`
-                    : `${isWertSummit ? 'text-gray-400 hover:text-gray-300' : 'text-gray-500 hover:text-gray-700'}`
-                }`}
-              >
-                웨비나 등록
-              </button>
-            </div>
-          )}
-          {webinar.access_policy === 'name_email_auth' && !isWertSummit && (
-            <div className={`flex gap-4 mb-6 border-b ${isWertSummit ? 'border-gray-700' : 'border-gray-200'}`}>
-              <button
-                onClick={() => {
-                  setMode('name_email_auth')
-                  setError('')
-                }}
-                className={`flex-1 py-3 text-center font-medium transition-colors ${
-                  mode === 'name_email_auth'
-                    ? `${isWertSummit ? 'text-[#4da8da] border-b-2 border-[#4da8da]' : 'text-blue-600 border-b-2 border-blue-600'}`
-                    : `${isWertSummit ? 'text-gray-400 hover:text-gray-300' : 'text-gray-500 hover:text-gray-700'}`
-                }`}
-              >
-                웨비나 입장
-              </button>
-              <button
-                onClick={() => {
-                  setMode('register')
-                  setError('')
-                  setPrivacyAgreed(false)
-                }}
-                className={`flex-1 py-3 text-center font-medium transition-colors ${
-                  mode === 'register'
-                    ? `${isWertSummit ? 'text-[#4da8da] border-b-2 border-[#4da8da]' : 'text-blue-600 border-b-2 border-blue-600'}`
-                    : `${isWertSummit ? 'text-gray-400 hover:text-gray-300' : 'text-gray-500 hover:text-gray-700'}`
-                }`}
-              >
-                웨비나 등록
-              </button>
-            </div>
-          )}
-          {webinar.access_policy !== 'guest_allowed' && webinar.access_policy !== 'email_auth' && webinar.access_policy !== 'name_email_auth' && !isWertSummit && (
-            <div className={`flex gap-4 mb-6 border-b ${isWertSummit ? 'border-gray-700' : 'border-gray-200'}`}>
-              <button
-                onClick={() => {
-                  setMode('login')
-                  setError('')
-                }}
-                className={`flex-1 py-3 text-center font-medium transition-colors ${
-                  mode === 'login'
-                    ? `${isWertSummit ? 'text-[#4da8da] border-b-2 border-[#4da8da]' : 'text-blue-600 border-b-2 border-blue-600'}`
-                    : `${isWertSummit ? 'text-gray-400 hover:text-gray-300' : 'text-gray-500 hover:text-gray-700'}`
-                }`}
-              >
-                로그인
-              </button>
-              <button
-                onClick={() => {
-                  setMode('signup')
-                  setError('')
-                }}
-                className={`flex-1 py-3 text-center font-medium transition-colors ${
-                  mode === 'signup'
-                    ? `${isWertSummit ? 'text-[#4da8da] border-b-2 border-[#4da8da]' : 'text-blue-600 border-b-2 border-blue-600'}`
-                    : `${isWertSummit ? 'text-gray-400 hover:text-gray-300' : 'text-gray-500 hover:text-gray-700'}`
-                }`}
-              >
-                웨비나 등록
-              </button>
-            </div>
-          )}
-          
-          {error && (
-            <div className={`mb-4 p-4 ${isWertSummit ? 'bg-red-900/30 border-l-4 border-red-500 text-red-300' : 'bg-red-50 border-l-4 border-red-500 text-red-700'} rounded-lg`}>
-              {error}
-            </div>
-          )}
-          
-          {mode === 'guest' ? (
-            <form onSubmit={handleGuestEntry} className="space-y-5">
-              <div>
-                <label className={`block text-sm font-medium mb-2 ${isWertSummit ? 'text-gray-300' : 'text-gray-700'}`}>닉네임</label>
-                <input
-                  type="text"
-                  value={nickname}
-                  onChange={(e) => setNickname(e.target.value)}
-                  className={`w-full px-4 py-3 ${isWertSummit ? 'bg-gray-900 text-white border-gray-700 focus:ring-[#4da8da]' : 'bg-white text-gray-900 border-gray-300 focus:ring-blue-500'} border rounded-lg focus:ring-2 focus:border-transparent transition-all`}
-                  placeholder="닉네임을 입력하세요"
-                  required
-                  disabled={loading}
-                  maxLength={20}
-                />
-                <p className={`mt-1 text-sm ${isWertSummit ? 'text-gray-400' : 'text-gray-500'}`}>닉네임만 입력하면 바로 입장할 수 있습니다</p>
-              </div>
-              <button
-                type="submit"
-                disabled={loading}
-                className={`w-full ${isWertSummit ? 'bg-[#4da8da] hover:bg-[#46cdcf]' : 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700'} text-white py-3 rounded-lg font-medium disabled:opacity-50 transition-all shadow-lg hover:shadow-xl`}
-              >
-                {loading ? '입장 중...' : '게스트로 입장하기'}
-              </button>
-            </form>
-          ) : mode === 'login' ? (
-            <form onSubmit={handleLogin} className="space-y-5">
-              <div>
-                <label className={`block text-sm font-medium mb-2 ${isWertSummit ? 'text-gray-300' : 'text-gray-700'}`}>이메일</label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className={`w-full px-4 py-3 ${isWertSummit ? 'bg-gray-900 text-white border-gray-700 focus:ring-[#4da8da]' : 'bg-white text-gray-900 border-gray-300 focus:ring-blue-500'} border rounded-lg focus:ring-2 focus:border-transparent transition-all`}
-                  placeholder="your@email.com"
-                  required
-                  disabled={loading}
-                />
-              </div>
-              <div>
-                <label className={`block text-sm font-medium mb-2 ${isWertSummit ? 'text-gray-300' : 'text-gray-700'}`}>비밀번호</label>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className={`w-full px-4 py-3 ${isWertSummit ? 'bg-gray-900 text-white border-gray-700 focus:ring-[#4da8da]' : 'bg-white text-gray-900 border-gray-300 focus:ring-blue-500'} border rounded-lg focus:ring-2 focus:border-transparent transition-all`}
-                  placeholder="••••••••"
-                  required
-                  disabled={loading}
-                />
-              </div>
-              <div>
-                <label className={`block text-sm font-medium mb-2 ${isWertSummit ? 'text-gray-300' : 'text-gray-700'}`}>
-                  닉네임 <span className={`text-xs ${isWertSummit ? 'text-gray-400' : 'text-gray-400'}`}>(선택사항)</span>
-                </label>
-                <input
-                  type="text"
-                  value={nickname}
-                  onChange={(e) => setNickname(e.target.value)}
-                  className={`w-full px-4 py-3 ${isWertSummit ? 'bg-gray-900 text-white border-gray-700 focus:ring-[#4da8da]' : 'bg-white text-gray-900 border-gray-300 focus:ring-blue-500'} border rounded-lg focus:ring-2 focus:border-transparent transition-all`}
-                  placeholder="채팅에 표시될 닉네임 (미입력 시 이름 사용)"
-                  disabled={loading}
-                  maxLength={20}
-                />
-                <p className={`mt-1 text-sm ${isWertSummit ? 'text-gray-400' : 'text-gray-500'}`}>닉네임을 입력하지 않으면 이름이 표시됩니다</p>
-              </div>
-              <button
-                type="submit"
-                disabled={loading}
-                className={`w-full ${isWertSummit ? 'bg-[#4da8da] hover:bg-[#46cdcf]' : 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700'} text-white py-3 rounded-lg font-medium disabled:opacity-50 transition-all shadow-lg hover:shadow-xl`}
-              >
-                {loading ? '로그인 중...' : '웨비나 입장'}
-              </button>
-            </form>
-          ) : mode === 'email_auth' ? (
-            <form onSubmit={handleEmailAuth} className="space-y-5">
-              <div>
-                <label className={`block text-sm font-medium mb-2 ${isWertSummit ? 'text-gray-300' : 'text-gray-700'}`}>이메일 <span className="text-red-500">*</span></label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className={`w-full px-4 py-3 ${isWertSummit ? 'bg-gray-900 text-white border-gray-700 focus:ring-[#4da8da]' : 'bg-white text-gray-900 border-gray-300 focus:ring-blue-500'} border rounded-lg focus:ring-2 focus:border-transparent transition-all`}
-                  placeholder="등록된 이메일 주소를 입력하세요"
-                  required
-                  disabled={loading}
-                />
-                <p className={`mt-1 text-sm ${isWertSummit ? 'text-gray-400' : 'text-gray-500'}`}>
-                  등록된 이메일 주소로 바로 입장할 수 있습니다.
-                </p>
-              </div>
-              <div>
-                <label className={`block text-sm font-medium mb-2 ${isWertSummit ? 'text-gray-300' : 'text-gray-700'}`}>
-                  닉네임 <span className={`text-xs font-normal ${isWertSummit ? 'text-gray-400' : 'text-gray-500'}`}>(선택사항)</span>
-                </label>
-                <input
-                  type="text"
-                  value={nickname}
-                  onChange={(e) => setNickname(e.target.value)}
-                  className={`w-full px-4 py-3 ${isWertSummit ? 'bg-gray-900 text-white border-gray-700 focus:ring-[#4da8da]' : 'bg-white text-gray-900 border-gray-300 focus:ring-blue-500'} border rounded-lg focus:ring-2 focus:border-transparent transition-all`}
-                  placeholder="닉네임을 입력하세요 (선택사항)"
-                  disabled={loading}
-                  maxLength={20}
-                />
-                <p className={`mt-1 text-xs ${isWertSummit ? 'text-gray-400' : 'text-gray-500'}`}>
-                  닉네임을 지정하지 않으면 이메일 주소로 표기됩니다.
-                </p>
-              </div>
-              <button
-                type="submit"
-                disabled={loading}
-                className={`w-full ${isWertSummit ? 'bg-[#4da8da] hover:bg-[#46cdcf]' : 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700'} text-white py-3 rounded-lg font-medium disabled:opacity-50 transition-all shadow-lg hover:shadow-xl`}
-              >
-                {loading ? '입장 중...' : '웨비나 입장'}
-              </button>
-              <div className={`mt-4 p-4 ${isWertSummit ? 'bg-gray-900 border-gray-700' : 'bg-gray-50 border-gray-200'} border rounded-lg`}>
-                <p className={`text-xs leading-relaxed ${isWertSummit ? 'text-gray-400' : 'text-gray-600'}`}>
-                  입장 확인을 위해 이벤터스로부터 제공받은 최소한의 정보(이메일)만을 활용하며, 해당 정보는 <strong>모두의특강((주)유스튜디오)</strong>의 개인정보 처리방침에 따라 안전하게 보호됩니다.
-                </p>
-              </div>
-            </form>
-          ) : mode === 'name_email_auth' ? (
-            <form onSubmit={handleNameEmailAuth} className="space-y-5">
-              <div>
-                <label className={`block text-sm font-medium mb-2 ${isWertSummit ? 'text-gray-300' : 'text-gray-700'}`}>이름 <span className="text-red-500">*</span></label>
-                <input
-                  type="text"
-                  value={displayName}
-                  onChange={(e) => setDisplayName(e.target.value)}
-                  className={`w-full px-4 py-3 ${isWertSummit ? 'bg-gray-900 text-white border-gray-700 focus:ring-[#4da8da]' : 'bg-white text-gray-900 border-gray-300 focus:ring-blue-500'} border rounded-lg focus:ring-2 focus:border-transparent transition-all`}
-                  placeholder="등록 시 사용한 이름을 입력하세요"
-                  required
-                  disabled={loading}
-                />
-                <p className={`mt-1 text-sm ${isWertSummit ? 'text-gray-400' : 'text-gray-500'}`}>
-                  등록 페이지에서 입력한 이름과 일치해야 합니다.
-                </p>
-              </div>
-              <div>
-                <label className={`block text-sm font-medium mb-2 ${isWertSummit ? 'text-gray-300' : 'text-gray-700'}`}>이메일 <span className="text-red-500">*</span></label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className={`w-full px-4 py-3 ${isWertSummit ? 'bg-gray-900 text-white border-gray-700 focus:ring-[#4da8da]' : 'bg-white text-gray-900 border-gray-300 focus:ring-blue-500'} border rounded-lg focus:ring-2 focus:border-transparent transition-all`}
-                  placeholder="등록된 이메일 주소를 입력하세요"
-                  required
-                  disabled={loading}
-                />
-                <p className={`mt-1 text-sm ${isWertSummit ? 'text-gray-400' : 'text-gray-500'}`}>
-                  등록된 이메일 주소로 바로 입장할 수 있습니다.
-                </p>
-              </div>
-              <div>
-                <label className={`block text-sm font-medium mb-2 ${isWertSummit ? 'text-gray-300' : 'text-gray-700'}`}>
-                  닉네임 <span className={`text-xs font-normal ${isWertSummit ? 'text-gray-400' : 'text-gray-500'}`}>(선택사항)</span>
-                </label>
-                <input
-                  type="text"
-                  value={nickname}
-                  onChange={(e) => setNickname(e.target.value)}
-                  className={`w-full px-4 py-3 ${isWertSummit ? 'bg-gray-900 text-white border-gray-700 focus:ring-[#4da8da]' : 'bg-white text-gray-900 border-gray-300 focus:ring-blue-500'} border rounded-lg focus:ring-2 focus:border-transparent transition-all`}
-                  placeholder="닉네임을 입력하세요 (선택사항)"
-                  disabled={loading}
-                  maxLength={20}
-                />
-                <p className={`mt-1 text-xs ${isWertSummit ? 'text-gray-400' : 'text-gray-500'}`}>
-                  닉네임을 지정하지 않으면 이름으로 표기됩니다.
-                </p>
-              </div>
-              <button
-                type="submit"
-                disabled={loading}
-                className={`w-full ${isWertSummit ? 'bg-[#4da8da] hover:bg-[#46cdcf]' : 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700'} text-white py-3 rounded-lg font-medium disabled:opacity-50 transition-all shadow-lg hover:shadow-xl`}
-              >
-                {loading ? '입장 중...' : '웨비나 입장'}
-              </button>
-              <div className={`mt-4 p-4 ${isWertSummit ? 'bg-gray-900 border-gray-700' : 'bg-gray-50 border-gray-200'} border rounded-lg`}>
-                <p className={`text-xs leading-relaxed ${isWertSummit ? 'text-gray-400' : 'text-gray-600'}`}>
-                  입장 확인을 위해 이벤터스로부터 제공받은 최소한의 정보(이름, 이메일)만을 활용하며, 해당 정보는 <strong>모두의특강((주)유스튜디오)</strong>의 개인정보 처리방침에 따라 안전하게 보호됩니다.
-                </p>
-              </div>
-            </form>
-          ) : mode === 'register' && !isWertSummit ? (
-            <form onSubmit={handleRegister} className="space-y-5">
-              <div className={`mb-4 p-3 ${isWertSummit ? 'bg-[#4da8da]/20 border-[#4da8da]/30' : 'bg-blue-50 border-blue-200'} border rounded-lg`}>
-                <p className={`text-sm ${isWertSummit ? 'text-[#4da8da]' : 'text-blue-800'}`}>
-                  <strong>웨비나 등록 신청</strong><br />
-                  등록 신청 후 이메일 인증을 통해 입장할 수 있습니다.
-                </p>
-              </div>
-              <div>
-                <label className={`block text-sm font-medium mb-2 ${isWertSummit ? 'text-gray-300' : 'text-gray-700'}`}>이메일 <span className="text-red-500">*</span></label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className={`w-full px-4 py-3 ${isWertSummit ? 'bg-gray-900 text-white border-gray-700 focus:ring-[#4da8da]' : 'bg-white text-gray-900 border-gray-300 focus:ring-blue-500'} border rounded-lg focus:ring-2 focus:border-transparent transition-all`}
-                  placeholder="your@email.com"
-                  required
-                  disabled={loading}
-                />
-              </div>
-              <div>
-                <label className={`block text-sm font-medium mb-2 ${isWertSummit ? 'text-gray-300' : 'text-gray-700'}`}>이름 <span className="text-red-500">*</span></label>
-                <input
-                  type="text"
-                  value={displayName}
-                  onChange={(e) => setDisplayName(e.target.value)}
-                  className={`w-full px-4 py-3 ${isWertSummit ? 'bg-gray-900 text-white border-gray-700 focus:ring-[#4da8da]' : 'bg-white text-gray-900 border-gray-300 focus:ring-blue-500'} border rounded-lg focus:ring-2 focus:border-transparent transition-all`}
-                  placeholder="이름을 입력하세요"
-                  required
-                  disabled={loading}
-                />
-              </div>
-              <div>
-                <label className={`block text-sm font-medium mb-2 ${isWertSummit ? 'text-gray-300' : 'text-gray-700'}`}>
-                  닉네임 <span className={`text-xs font-normal ${isWertSummit ? 'text-gray-400' : 'text-gray-500'}`}>(선택사항)</span>
-                </label>
-                <input
-                  type="text"
-                  value={nickname}
-                  onChange={(e) => setNickname(e.target.value)}
-                  className={`w-full px-4 py-3 ${isWertSummit ? 'bg-gray-900 text-white border-gray-700 focus:ring-[#4da8da]' : 'bg-white text-gray-900 border-gray-300 focus:ring-blue-500'} border rounded-lg focus:ring-2 focus:border-transparent transition-all`}
-                  placeholder="닉네임을 입력하세요 (선택사항)"
-                  disabled={loading}
-                  maxLength={20}
-                />
-                <p className={`mt-1 text-xs ${isWertSummit ? 'text-gray-400' : 'text-gray-500'}`}>
-                  닉네임을 지정하지 않으면 이름으로 표기됩니다.
-                </p>
-              </div>
-              <div className="flex items-start gap-2">
-                <input
-                  type="checkbox"
-                  id="privacy-agree"
-                  checked={privacyAgreed}
-                  onChange={(e) => setPrivacyAgreed(e.target.checked)}
-                  className={`mt-1 w-4 h-4 ${isWertSummit ? 'text-[#4da8da] border-gray-700 focus:ring-[#4da8da]' : 'text-blue-600 border-gray-300 focus:ring-blue-500'} rounded`}
-                  disabled={loading}
-                />
-                <label htmlFor="privacy-agree" className={`text-sm cursor-pointer ${isWertSummit ? 'text-gray-300' : 'text-gray-700'}`}>
-                  [필수] <button
-                    type="button"
-                    onClick={() => setShowPrivacyModal(true)}
-                    className={`${isWertSummit ? 'text-[#4da8da] hover:text-[#46cdcf]' : 'text-blue-600 hover:text-blue-800'} underline`}
-                  >
-                    개인정보 수집 및 이용
-                  </button>에 동의합니다.
-                </label>
-              </div>
-              <button
-                type="submit"
-                disabled={loading || !privacyAgreed}
-                className={`w-full ${isWertSummit ? 'bg-[#4da8da] hover:bg-[#46cdcf]' : 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700'} text-white py-3 rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-xl`}
-              >
-                {loading ? '등록 중...' : '웨비나 등록 및 입장하기'}
-              </button>
-            </form>
-          ) : mode === 'signup' && !isWertSummit ? (
-            <form onSubmit={handleSignup} className="space-y-5">
-              <div className={`mb-4 p-3 ${isWertSummit ? 'bg-[#4da8da]/20 border-[#4da8da]/30' : 'bg-blue-50 border-blue-200'} border rounded-lg`}>
-                <p className={`text-sm ${isWertSummit ? 'text-[#4da8da]' : 'text-blue-800'}`}>
-                  <strong>웨비나 등록</strong><br />
-                  이 웨비나에만 등록되며, 다른 웨비나에는 별도로 등록해야 합니다.
-                </p>
-              </div>
-              <div>
-                <label className={`block text-sm font-medium mb-2 ${isWertSummit ? 'text-gray-300' : 'text-gray-700'}`}>이름 <span className="text-red-500">*</span></label>
-                <input
-                  type="text"
-                  value={displayName}
-                  onChange={(e) => setDisplayName(e.target.value)}
-                  className={`w-full px-4 py-3 ${isWertSummit ? 'bg-gray-900 text-white border-gray-700 focus:ring-[#4da8da]' : 'bg-white text-gray-900 border-gray-300 focus:ring-blue-500'} border rounded-lg focus:ring-2 focus:border-transparent transition-all`}
-                  placeholder="이름을 입력하세요"
-                  required
-                  disabled={loading}
-                />
-              </div>
-              <div>
-                <label className={`block text-sm font-medium mb-2 ${isWertSummit ? 'text-gray-300' : 'text-gray-700'}`}>
-                  닉네임 <span className={`text-xs font-normal ${isWertSummit ? 'text-gray-400' : 'text-gray-500'}`}>(선택사항)</span>
-                </label>
-                <input
-                  type="text"
-                  value={nickname}
-                  onChange={(e) => setNickname(e.target.value)}
-                  className={`w-full px-4 py-3 ${isWertSummit ? 'bg-gray-900 text-white border-gray-700 focus:ring-[#4da8da]' : 'bg-white text-gray-900 border-gray-300 focus:ring-blue-500'} border rounded-lg focus:ring-2 focus:border-transparent transition-all`}
-                  placeholder="닉네임을 입력하세요 (선택사항)"
-                  disabled={loading}
-                  maxLength={20}
-                />
-                <p className={`mt-1 text-xs ${isWertSummit ? 'text-gray-400' : 'text-gray-500'}`}>
-                  닉네임을 지정하지 않으면 이름으로 표기됩니다.
-                </p>
-              </div>
-              <div>
-                <label className={`block text-sm font-medium mb-2 ${isWertSummit ? 'text-gray-300' : 'text-gray-700'}`}>이메일 <span className="text-red-500">*</span></label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className={`w-full px-4 py-3 ${isWertSummit ? 'bg-gray-900 text-white border-gray-700 focus:ring-[#4da8da]' : 'bg-white text-gray-900 border-gray-300 focus:ring-blue-500'} border rounded-lg focus:ring-2 focus:border-transparent transition-all`}
-                  placeholder="your@email.com"
-                  required
-                  disabled={loading}
-                />
-              </div>
-              <div>
-                <label className={`block text-sm font-medium mb-2 ${isWertSummit ? 'text-gray-300' : 'text-gray-700'}`}>비밀번호 <span className="text-red-500">*</span></label>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className={`w-full px-4 py-3 ${isWertSummit ? 'bg-gray-900 text-white border-gray-700 focus:ring-[#4da8da]' : 'bg-white text-gray-900 border-gray-300 focus:ring-blue-500'} border rounded-lg focus:ring-2 focus:border-transparent transition-all`}
-                  placeholder="•••••••• (최소 6자)"
-                  required
-                  minLength={6}
-                  disabled={loading}
-                />
-              </div>
-              <button
-                type="submit"
-                disabled={loading}
-                className={`w-full ${isWertSummit ? 'bg-[#4da8da] hover:bg-[#46cdcf]' : 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700'} text-white py-3 rounded-lg font-medium disabled:opacity-50 transition-all shadow-lg hover:shadow-xl`}
-              >
-                {loading ? '등록 중...' : '웨비나 등록하고 입장하기'}
-              </button>
-            </form>
-          ) : isWertSummit ? (
-            <div className="text-center py-8">
-              <p className={`text-lg mb-6 ${isWertSummit ? 'text-gray-300' : 'text-gray-600'}`}>
-                웨비나 등록은 이벤트 페이지에서 진행해주세요.
-              </p>
-            </div>
-          ) : null}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      ) : null}
+      
+      {/* 기본 웨비나 입장 페이지 UI는 사용하지 않으므로 제거 */}
+      {/* 모든 웨비나는 WERT 스타일 또는 다른 전용 스타일을 사용 */}
       
       {/* 이메일 인증 확인 안내 모달 */}
       {showEmailVerification && (
@@ -1890,6 +1862,7 @@ export default function WebinarEntry({ webinar }: WebinarEntryProps) {
           </div>
         </div>
       )}
+      </div>
     </>
   )
 }

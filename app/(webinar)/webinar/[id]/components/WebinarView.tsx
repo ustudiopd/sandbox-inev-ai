@@ -25,6 +25,7 @@ interface Webinar {
   end_time?: string
   is_public: boolean
   access_policy: string
+  registration_campaign_id?: string | null
   clients?: {
     id: string
     name: string
@@ -101,8 +102,8 @@ export default function WebinarView({ webinar, isAdminMode = false }: WebinarVie
   const [mounted, setMounted] = useState(false)
   const [expandedSession, setExpandedSession] = useState<string | null>(null)
   
-  // 149404 웨비나는 /event/149403 페이지와 같은 톤앤매너 적용
-  const isWertWebinar = webinar.slug === '149404' || webinar.id === '344c1459-3d4c-483f-9ec7-fcf4af776d2b'
+  // slug가 '149404', '149405'이거나 registration_campaign_id가 있으면 등록 페이지와 연동된 웨비나로 간주
+  const isWertWebinar = webinar.slug === '149402' || webinar.slug === '149404' || webinar.slug === '149405' || !!webinar.registration_campaign_id
   const [openForms, setOpenForms] = useState<any[]>([])
   const [openGiveaways, setOpenGiveaways] = useState<any[]>([])
   const [files, setFiles] = useState<any[]>([])
@@ -581,35 +582,39 @@ export default function WebinarView({ webinar, isAdminMode = false }: WebinarVie
           </div>
         </div>
       )}
-      {/* 149404 웨비나는 /event/149403 페이지와 같은 톤앤매너 적용 */}
-      {webinar.slug === '149404' || webinar.id === '344c1459-3d4c-483f-9ec7-fcf4af776d2b' ? (
+      {/* slug가 '149404', '149405'이거나 registration_campaign_id가 있으면 등록 페이지와 같은 톤앤매너 적용 */}
+      {(isWertWebinar || webinar.slug === '149402' || webinar.slug === '149404' || webinar.slug === '149405') ? (
         <style jsx global>{`
           @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css');
           
           html, body {
             font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-            background-color: #fff;
+            background-color: #fff !important;
             margin: 0;
             padding: 0;
+          }
+          
+          #__next {
+            background-color: #fff !important;
           }
         `}</style>
       ) : null}
       <div className={`min-h-screen w-full overflow-x-hidden ${
-        webinar.slug === '149404' || webinar.id === '344c1459-3d4c-483f-9ec7-fcf4af776d2b'
+        isWertWebinar || webinar.slug === '149402' || webinar.slug === '149404' || webinar.slug === '149405'
           ? 'bg-white'
           : 'bg-gradient-to-br from-gray-50 to-blue-50'
       }`}>
       {/* 헤더 */}
       <header className={`border-b sticky top-0 z-40 w-full ${
-        webinar.slug === '149404' || webinar.id === '344c1459-3d4c-483f-9ec7-fcf4af776d2b'
+        isWertWebinar
           ? 'bg-white/60 backdrop-blur-[2px] border-gray-200/50'
           : 'bg-white border-gray-200 shadow-sm'
       }`}>
         <div className="w-full max-w-[1600px] mx-auto px-2 sm:px-3 lg:px-4 py-2 sm:py-3 lg:py-4">
           <div className="flex items-center justify-between w-full">
             <div className="flex-1 min-w-0">
-              {/* 149404 웨비나는 로고 표시, 제목 숨김 */}
-              {webinar.slug === '149404' || webinar.id === '344c1459-3d4c-483f-9ec7-fcf4af776d2b' ? (
+              {/* registration_campaign_id가 있으면 로고 표시, 제목 숨김 */}
+              {isWertWebinar ? (
                 <div className="flex items-center">
                   <Image
                     src="https://yqsayphssjznthrxpgfb.supabase.co/storage/v1/object/public/webinar-thumbnails/wert/kewert_logo.png"
@@ -699,7 +704,7 @@ export default function WebinarView({ webinar, isAdminMode = false }: WebinarVie
             }`}>
               <h3 className="text-sm sm:text-base lg:text-lg font-semibold text-gray-900 mb-2 sm:mb-3 lg:mb-4">세션 소개</h3>
               
-              {/* 149404 웨비나는 세션 카드 표시 */}
+              {/* registration_campaign_id가 있으면 세션 카드 표시 */}
               {isWertWebinar ? (
                 <>
                   {/* PC: 4개 카드를 1줄로 나란히 표시 */}

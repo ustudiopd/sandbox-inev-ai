@@ -30,9 +30,6 @@ export default async function ConsolePage({
       )
     `)
   
-  // 149404 slug인 경우 웨비나가 없어도 기본 데이터 사용
-  const is149404 = query.column === 'slug' && query.value === '149404'
-  
   if (query.column === 'slug') {
     // slug는 문자열로 비교 (숫자로 저장되어 있어도 문자열로 변환)
     queryBuilder = queryBuilder.eq('slug', String(query.value))
@@ -40,23 +37,43 @@ export default async function ConsolePage({
     queryBuilder = queryBuilder.eq(query.column, query.value)
   }
   
+  // 149404 slug인 경우 등록 캠페인에서 데이터 가져오기
+  const is149404 = query.column === 'slug' && query.value === '149404'
+  
   const { data: webinar, error } = await queryBuilder.single()
   
-  // 149404는 기본 웨비나 데이터 사용
   let finalWebinar = webinar
+  
+  // 웨비나가 없고 149404인 경우 등록 캠페인에서 데이터 가져오기
   if ((error || !webinar) && is149404) {
-    console.log('[Console] 149404 웨비나가 없지만 기본 데이터로 진행')
+    console.log('[Console] 149404 웨비나가 없음 - /149403 등록 캠페인에서 데이터 가져오기')
+    
+    // /149403 등록 캠페인 조회
+    const { data: campaign, error: campaignError } = await admin
+      .from('event_survey_campaigns')
+      .select('id, title, description, client_id, agency_id, public_path, type')
+      .eq('public_path', '/149403')
+      .eq('type', 'registration')
+      .maybeSingle()
+    
+    if (campaignError || !campaign) {
+      console.error('[Console] /149403 등록 캠페인 조회 실패:', campaignError)
+      redirect(`/webinar/${id}`)
+    }
+    
+    // 등록 캠페인 정보로 웨비나 데이터 구성
     finalWebinar = {
       id: '00000000-0000-0000-0000-000000000000', // 임시 UUID
       slug: '149404',
-      title: 'AI 특허리서치 실무 활용 웨비나',
-      description: '실제 고객사례로 알아보는 AI 특허리서치 실무 활용 웨비나',
+      title: campaign.title || 'AI 특허리서치 실무 활용 웨비나',
+      description: campaign.description || '실제 고객사례로 알아보는 AI 특허리서치 실무 활용 웨비나',
       youtube_url: '',
       start_time: '2026-02-06T14:00:00Z',
       end_time: '2026-02-06T15:30:00Z',
-      access_policy: 'email_auth',
-      client_id: null,
-      agency_id: null,
+      access_policy: 'name_email_auth',
+      client_id: campaign.client_id,
+      agency_id: campaign.agency_id,
+      registration_campaign_id: campaign.id,
       is_public: true,
       max_participants: null,
       created_by: null,
@@ -64,6 +81,11 @@ export default async function ConsolePage({
       updated_at: new Date().toISOString(),
       clients: null,
     } as any
+    
+    console.log('[Console] 등록 캠페인에서 웨비나 데이터 구성 완료:', {
+      title: finalWebinar.title,
+      registration_campaign_id: finalWebinar.registration_campaign_id,
+    })
   } else if (error || !webinar) {
     // 웨비나를 찾을 수 없으면 입장 페이지로 리다이렉트
     redirect(`/webinar/${id}`)
@@ -83,10 +105,6 @@ export default async function ConsolePage({
   if (isSuperAdmin) {
     hasPermission = true
     userRole = 'super_admin'
-  } else if (is149404 && !finalWebinar.client_id) {
-    // 149404 웨비나이고 client_id가 없으면 모든 사용자 접근 허용 (임시)
-    hasPermission = true
-    userRole = 'admin'
   } else {
     // 클라이언트 멤버십 확인 (Admin Supabase로 RLS 우회)
     const { data: clientMember, error: clientMemberError } = await admin

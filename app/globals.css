@@ -20,6 +20,13 @@
 
 body {
   color: rgb(var(--foreground-rgb));
+  /* 기본 배경을 흰색으로 변경 - 플래시 방지 */
+  background: #fff;
+  background-color: #fff;
+}
+
+/* 관리 페이지용 그라데이션 (필요한 곳에서만 적용) */
+body[data-theme="admin"] {
   background: linear-gradient(
       to bottom,
       transparent,

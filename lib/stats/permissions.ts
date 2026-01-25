@@ -25,7 +25,7 @@ export async function checkWebinarStatsPermission(webinarId: string) {
   if (isSuperAdmin) {
     const { data: webinar } = await admin
       .from('webinars')
-      .select('id, agency_id, client_id')
+      .select('id, agency_id, client_id, registration_campaign_id')
       .eq(query.column, query.value)
       .single()
 
@@ -39,7 +39,7 @@ export async function checkWebinarStatsPermission(webinarId: string) {
   // 웨비나 정보 조회 (UUID 또는 slug로 조회)
   const { data: webinar, error: webinarError } = await admin
     .from('webinars')
-    .select('id, agency_id, client_id')
+    .select('id, agency_id, client_id, registration_campaign_id')
     .eq(query.column, query.value)
     .single()
 

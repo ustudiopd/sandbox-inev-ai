@@ -279,6 +279,8 @@ export default function SidebarTree({ organizations }: SidebarTreeProps) {
             let displayTitle = event.title
             if (event.type === 'webinar' && event.slug === '149404') {
               displayTitle = '0206wert웨비나'
+            } else if (event.type === 'webinar' && event.slug === '149405') {
+              displayTitle = '149405 웨비나'
             } else if (isRegistration && event.slug === '/149403') {
               displayTitle = 'AI 특허리서치 실무 활용 웨비나'
             }
@@ -510,6 +512,8 @@ export default function SidebarTree({ organizations }: SidebarTreeProps) {
             let displayTitle = event.title
             if (event.type === 'webinar' && event.slug === '149404') {
               displayTitle = '0206wert웨비나'
+            } else if (event.type === 'webinar' && event.slug === '149405') {
+              displayTitle = '149405 웨비나'
             } else if (isRegistration && event.slug === '/149403') {
               displayTitle = 'AI 특허리서치 실무 활용 웨비나'
             }

@@ -17,8 +17,9 @@ export default function NewWebinarPage() {
     endTime: '',
     maxParticipants: '',
     isPublic: false,
-    accessPolicy: 'auth' as 'auth' | 'guest_allowed' | 'invite_only' | 'email_auth',
+    accessPolicy: 'auth' as 'auth' | 'guest_allowed' | 'invite_only' | 'email_auth' | 'name_email_auth',
     allowedEmails: [] as string[],
+    publicPath: '', // 선택사항: 비워두면 자동 생성
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -56,6 +57,7 @@ export default function NewWebinarPage() {
         isPublic: formData.isPublic,
         accessPolicy: formData.accessPolicy,
         allowedEmails: formData.accessPolicy === 'email_auth' ? formData.allowedEmails : undefined,
+        publicPath: formData.publicPath || undefined, // 비워두면 undefined로 전달하여 자동 생성
       }
       
       console.log('웨비나 생성 요청:', requestBody)
@@ -86,7 +88,9 @@ export default function NewWebinarPage() {
       }
       
       // 성공 시 웨비나 목록 페이지로 이동
-      alert('웨비나가 성공적으로 생성되었습니다!')
+      const webinarSlug = result.webinar?.slug || '자동 생성됨'
+      const webinarUrl = `/webinar/${webinarSlug}`
+      alert(`웨비나가 성공적으로 생성되었습니다!\n\n공개 경로: /${webinarSlug}\n접근 URL: ${webinarUrl}`)
       router.push(`/client/${clientId}/webinars`)
       router.refresh()
     } catch (err: any) {
@@ -146,6 +150,25 @@ export default function NewWebinarPage() {
                 placeholder="웨비나에 대한 설명을 입력하세요"
                 rows={4}
               />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                공개 경로 (Public Path) <span className="text-gray-400 text-xs">(선택사항)</span>
+              </label>
+              <input
+                type="text"
+                value={formData.publicPath}
+                onChange={(e) => setFormData({ ...formData, publicPath: e.target.value })}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                placeholder="비워두면 6자리 숫자로 자동 생성됩니다"
+                pattern="^/[a-zA-Z0-9\/_-]+$"
+              />
+              <p className="mt-1 text-sm text-gray-500">
+                비워두면 6자리 숫자(예: /123456)로 자동 생성됩니다.
+                <br />직접 입력 시 슬래시(/)로 시작하는 유효한 경로를 입력하세요. 실제 접근 경로는 <code className="bg-gray-100 px-1 rounded">/webinar{'{'}경로{'}'}</code> 형태가 됩니다.
+                <br />예: <code className="bg-gray-100 px-1 rounded">/test</code> 입력 시 → <code className="bg-gray-100 px-1 rounded">/webinar/test</code>로 접근 가능
+              </p>
             </div>
             
             <div>
@@ -216,6 +239,7 @@ export default function NewWebinarPage() {
               >
                 <option value="auth">인증필요 (로그인 필수)</option>
                 <option value="email_auth">인증필요 (이메일)</option>
+                <option value="name_email_auth">인증필요 (이름+이메일)</option>
                 <option value="guest_allowed">게스트 허용</option>
                 <option value="invite_only">초대 전용</option>
               </select>

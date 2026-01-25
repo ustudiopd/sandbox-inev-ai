@@ -998,6 +998,25 @@
   - API에서 auth.users 조회하여 마지막 로그인 정보 가져오기
   - 모달에도 이메일 및 마지막 로그인 정보 표시
 
+## [2026-01-25] 149402 웨비나 및 149403 등록 페이지 연동
+- ✅ 149402 웨비나에 149403 등록 페이지 스타일 적용
+  - `app/(webinar)/webinar/[id]/components/WebinarEntry.tsx`: 149402 전용 UI 추가
+  - 149403 등록 페이지 스타일 참고 (registration-hero, registration-form-container 등)
+  - 이름+이메일 로그인 폼 적용 (handleNameEmailAuth 사용)
+  - Pretendard 폰트 및 WERT 스타일 CSS 추가
+- ✅ 149403 등록 페이지와 149402 웨비나 연동
+  - `app/event/[...path]/components/WertSummitPage.tsx`: 웨비나 시청 링크를 `/webinar/149402`로 변경
+  - `scripts/link-149403-to-149402.ts`: 데이터베이스 연동 스크립트 실행
+  - 149402 웨비나의 `registration_campaign_id`를 149403 캠페인으로 설정
+- ✅ 149402 웨비나 입장 시 등록 페이지로 리다이렉트
+  - `app/(webinar)/webinar/[id]/components/WebinarEntry.tsx`: handleNameEmailAuth, handleEmailAuth 함수 수정
+  - 149402인 경우 `/event/149403`으로 리다이렉트, 그 외는 `/webinar/{id}/live`로 이동
+- ✅ 149404 웨비나 삭제
+  - `scripts/delete-149404-webinar.ts`: 149404 웨비나 및 관련 데이터 삭제 스크립트 실행
+- ✅ 빌드 에러 수정
+  - `app/(webinar)/webinar/[id]/page.tsx`: is149402 변수 정의 추가
+  - 중복 정의된 isSlug149402 변수 제거
+
 ## 남은 작업
 
 ### Phase 3 - 웨비나 및 실시간 기능 (대부분 완료)

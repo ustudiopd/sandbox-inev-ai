@@ -21,7 +21,8 @@ export async function POST(req: Request) {
       maxParticipants,
       isPublic,
       accessPolicy,
-      allowedEmails
+      allowedEmails,
+      publicPath // 선택사항: 공개 경로 (slug로 사용)
     } = body
     
     if (!clientId || !title || !youtubeUrl) {
@@ -99,65 +100,120 @@ export async function POST(req: Request) {
       )
     }
     
-    // slug 자동 생성 (Gemini 2.0 Flash 사용)
+    // slug 생성: publicPath가 제공되면 사용, 없으면 자동 생성
     let slug: string | null = null
     
-    // 1순위: Gemini API로 영문 슬러그 생성
-    try {
-      slug = await generateSlugFromTitle(title)
-      if (slug) {
-        console.log('Gemini로 생성된 slug:', slug)
-      }
-    } catch (error) {
-      console.warn('Gemini slug 생성 실패:', error)
-    }
-    
-    // 2순위: 데이터베이스 함수 사용
-    if (!slug) {
-      const { data: slugResult, error: slugError } = await admin
-        .rpc('generate_slug_from_title', { title })
+    if (publicPath) {
+      // publicPath가 제공된 경우 검증 및 사용
+      // 슬래시 제거 (웨비나 slug는 슬래시 없이 저장)
+      const cleanPath = publicPath.startsWith('/') ? publicPath.slice(1) : publicPath
       
-      slug = slugResult as string | null
-      if (slugError) {
-        console.warn('DB RPC slug 생성 실패:', slugError)
+      // 경로 검증: 유효한 문자만 허용
+      const pathPattern = /^[a-zA-Z0-9\/_-]+$/
+      if (!pathPattern.test(cleanPath)) {
+        return NextResponse.json(
+          { error: 'publicPath는 영문, 숫자, 슬래시(/), 언더스코어(_), 하이픈(-)만 사용할 수 있습니다' },
+          { status: 400 }
+        )
       }
-    }
-    
-    // 3순위: 수동으로 slug 생성 (간단한 버전)
-    if (!slug) {
-      console.warn('slug 생성 실패, 수동 생성 시도')
-      slug = title
-        .toLowerCase()
-        .replace(/[^가-힣a-z0-9\s]/g, '')
-        .replace(/\s+/g, '-')
-        .substring(0, 100)
-        .replace(/^-+|-+$/g, '')
       
-      if (!slug) {
-        slug = 'webinar-' + Date.now().toString(36)
-      }
-    }
-    
-    // 중복 체크 및 숫자 추가
-    let finalSlug = slug
-    let counter = 0
-    while (true) {
+      // 중복 체크
       const { data: existing } = await admin
         .from('webinars')
         .select('id')
-        .eq('slug', finalSlug)
+        .eq('slug', cleanPath)
         .maybeSingle()
       
-      if (!existing) break
+      if (existing) {
+        return NextResponse.json(
+          { error: `slug "${cleanPath}"가 이미 사용 중입니다. 다른 경로를 사용해주세요.` },
+          { status: 400 }
+        )
+      }
       
-      counter++
-      finalSlug = slug + '-' + counter
-      if (counter > 1000) {
-        finalSlug = slug + '-' + Date.now().toString(36)
-        break
+      slug = cleanPath
+      console.log('사용자 제공 slug 사용:', slug)
+    } else {
+      // publicPath가 없으면 자동 생성
+      // 1순위: 6자리 숫자로 자동 생성
+      let generatedSlug: string | null = null
+      let attempts = 0
+      while (!generatedSlug && attempts < 100) {
+        const randomSlug = Math.floor(100000 + Math.random() * 900000).toString()
+        const { data: existing } = await admin
+          .from('webinars')
+          .select('id')
+          .eq('slug', randomSlug)
+          .maybeSingle()
+        
+        if (!existing) {
+          generatedSlug = randomSlug
+        }
+        attempts++
+      }
+      
+      if (generatedSlug) {
+        slug = generatedSlug
+        console.log('6자리 숫자 slug 자동 생성:', slug)
+      } else {
+        // 2순위: Gemini API로 영문 슬러그 생성
+        try {
+          slug = await generateSlugFromTitle(title)
+          if (slug) {
+            console.log('Gemini로 생성된 slug:', slug)
+          }
+        } catch (error) {
+          console.warn('Gemini slug 생성 실패:', error)
+        }
+        
+        // 3순위: 데이터베이스 함수 사용
+        if (!slug) {
+          const { data: slugResult, error: slugError } = await admin
+            .rpc('generate_slug_from_title', { title })
+          
+          slug = slugResult as string | null
+          if (slugError) {
+            console.warn('DB RPC slug 생성 실패:', slugError)
+          }
+        }
+        
+        // 4순위: 수동으로 slug 생성 (간단한 버전)
+        if (!slug) {
+          console.warn('slug 생성 실패, 수동 생성 시도')
+          slug = title
+            .toLowerCase()
+            .replace(/[^가-힣a-z0-9\s]/g, '')
+            .replace(/\s+/g, '-')
+            .substring(0, 100)
+            .replace(/^-+|-+$/g, '')
+          
+          if (!slug) {
+            slug = 'webinar-' + Date.now().toString(36)
+          }
+        }
+        
+        // 중복 체크 및 숫자 추가
+        let finalSlug = slug
+        let counter = 0
+        while (true) {
+          const { data: existing } = await admin
+            .from('webinars')
+            .select('id')
+            .eq('slug', finalSlug)
+            .maybeSingle()
+          
+          if (!existing) break
+          
+          counter++
+          finalSlug = slug + '-' + counter
+          if (counter > 1000) {
+            finalSlug = slug + '-' + Date.now().toString(36)
+            break
+          }
+        }
+        slug = finalSlug
       }
     }
-    slug = finalSlug
     
     // 웨비나 생성
     const { data: webinar, error: webinarError } = await admin

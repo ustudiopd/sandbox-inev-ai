@@ -345,7 +345,7 @@ export default function WertSummitPage() {
           <Link href="/event/149403/register" className="register-button">
             등록하기
           </Link>
-          <Link href="/webinar/149404" className="webinar-button">
+          <Link href="/webinar/149402" className="webinar-button">
             웨비나 시청
           </Link>
         </div>

@@ -49,15 +49,63 @@ export default async function WebinarLivePage({
     queryBuilder = queryBuilder.eq(query.column, query.value)
   }
   
+  // 149402, 149404, 149405 slug인 경우 등록 캠페인에서 데이터 가져오기
+  const is149402 = query.column === 'slug' && query.value === '149402'
+  const is149404 = query.column === 'slug' && query.value === '149404'
+  const is149405 = query.column === 'slug' && query.value === '149405'
+  const isWertSlug = is149402 || is149404 || is149405
+  
   const { data: webinar, error } = await queryBuilder.single()
   
-  if (error || !webinar) {
-    // 웨비나가 없으면 입장 페이지로 리다이렉트
+  let finalWebinar = webinar
+  
+  // 웨비나가 없고 149402, 149404, 149405인 경우 등록 캠페인에서 데이터 가져오기
+  if ((error || !webinar) && isWertSlug) {
+    // 149402는 /149402 등록 캠페인에서, 149404는 /149403 등록 캠페인에서, 149405는 /149405 등록 캠페인에서 데이터 가져오기
+    const campaignPath = is149402 ? '/149402' : is149404 ? '/149403' : '/149405'
+    const slugValue = is149402 ? '149402' : is149404 ? '149404' : '149405'
+    console.log(`[WebinarLivePage] ${slugValue} 웨비나가 없음 - ${campaignPath} 등록 캠페인에서 데이터 가져오기`)
+    
+    // 등록 캠페인 조회
+    const { data: campaign, error: campaignError } = await admin
+      .from('event_survey_campaigns')
+      .select('id, title, description, client_id, agency_id, public_path, type')
+      .eq('public_path', campaignPath)
+      .eq('type', 'registration')
+      .maybeSingle()
+    
+    if (campaignError || !campaign) {
+      console.error(`[WebinarLivePage] ${campaignPath} 등록 캠페인 조회 실패:`, campaignError)
+      redirect(`/webinar/${id}`)
+    }
+    
+    // 등록 캠페인 정보로 웨비나 데이터 구성
+    finalWebinar = {
+      id: '00000000-0000-0000-0000-000000000000', // 임시 UUID
+      slug: slugValue,
+      title: campaign.title || '웨비나',
+      description: campaign.description || '',
+      youtube_url: '',
+      start_time: '2026-02-06T14:00:00Z',
+      end_time: '2026-02-06T15:30:00Z',
+      access_policy: 'name_email_auth',
+      client_id: campaign.client_id,
+      agency_id: campaign.agency_id,
+      registration_campaign_id: campaign.id,
+      is_public: true,
+      clients: null,
+    } as any
+    
+    console.log('[WebinarLivePage] 등록 캠페인에서 웨비나 데이터 구성 완료')
+  } else if (error || !webinar) {
+    // 웨비나를 찾을 수 없으면 입장 페이지로 리다이렉트
     redirect(`/webinar/${id}`)
+  } else {
+    finalWebinar = webinar
   }
   
   // slug가 있으면 slug를 사용하고, 없으면 id를 사용 (리다이렉트용)
-  const webinarId = webinar.slug || webinar.id
+  const webinarId = finalWebinar.slug || finalWebinar.id
   
   // 사용자 정보 조회
   const { data: { user } } = await supabase.auth.getUser()
@@ -98,7 +146,7 @@ export default async function WebinarLivePage({
         const { data: clientMember } = await admin
           .from('client_members')
           .select('role')
-          .eq('client_id', webinar.client_id)
+          .eq('client_id', finalWebinar.client_id)
           .eq('user_id', user.id)
           .maybeSingle()
         
@@ -110,7 +158,7 @@ export default async function WebinarLivePage({
           const { data: agencyMember } = await admin
             .from('agency_members')
             .select('role')
-            .eq('agency_id', webinar.agency_id)
+            .eq('agency_id', finalWebinar.agency_id)
             .eq('user_id', user.id)
             .maybeSingle()
           
@@ -131,7 +179,7 @@ export default async function WebinarLivePage({
       const { data: registration } = await admin
         .from('registrations')
         .select('webinar_id, user_id')
-        .eq('webinar_id', webinar.id)
+        .eq('webinar_id', finalWebinar.id)
         .eq('user_id', user.id)
         .maybeSingle()
       
@@ -161,16 +209,16 @@ export default async function WebinarLivePage({
     }
   } else {
     // 일반 모드: 접근 정책 확인
-    if (webinar.access_policy === 'auth' && !user) {
+    if (finalWebinar.access_policy === 'auth' && !user) {
       redirect(`/webinar/${webinarId}`)
     }
     
     // email_auth 정책: 등록된 이메일인지 확인
-    if (webinar.access_policy === 'email_auth' && user) {
+    if (finalWebinar.access_policy === 'email_auth' && user) {
       const { data: allowedEmail } = await admin
         .from('webinar_allowed_emails')
         .select('email')
-        .eq('webinar_id', webinar.id)
+        .eq('webinar_id', finalWebinar.id)
         .ilike('email', user.email?.toLowerCase() || '')
         .maybeSingle()
       
@@ -181,12 +229,12 @@ export default async function WebinarLivePage({
     }
     
     // name_email_auth 정책: 등록 페이지 캠페인에서 등록 확인 (이름+이메일)
-    if (webinar.access_policy === 'name_email_auth' && user && webinar.registration_campaign_id) {
+    if (finalWebinar.access_policy === 'name_email_auth' && user && finalWebinar.registration_campaign_id) {
       // 등록 페이지 캠페인에 등록된 사용자인지 확인은 WebinarEntry에서 이미 처리됨
       // 여기서는 추가 검증이 필요하면 구현
     }
   }
   
-  return <WebinarView webinar={webinar} isAdminMode={isAdminMode} />
+  return <WebinarView webinar={finalWebinar} isAdminMode={isAdminMode} />
 }
 

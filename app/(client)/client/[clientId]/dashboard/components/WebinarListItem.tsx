@@ -16,7 +16,7 @@ interface WebinarListItemProps {
 export default function WebinarListItem({ webinar, clientId }: WebinarListItemProps) {
   // slug가 있으면 slug를 사용하고, 없으면 id를 사용 (URL용)
   const webinarSlug = webinar.slug || webinar.id
-  const displayTitle = webinarSlug === '149404' ? '0206wert웨비나' : webinar.title
+  const displayTitle = webinarSlug === '149404' ? '0206wert웨비나' : webinarSlug === '149405' ? '149405 웨비나' : webinar.title
   
   return (
     <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">

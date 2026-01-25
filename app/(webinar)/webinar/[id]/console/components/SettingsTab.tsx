@@ -367,25 +367,6 @@ ${webinar.title}
           </select>
           {(formData.accessPolicy === 'email_auth' || formData.accessPolicy === 'name_email_auth') && (
             <div className="mt-4 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  등록된 이메일 목록 (한 줄에 하나씩)
-                </label>
-                <textarea
-                  value={formData.allowedEmails.join('\n')}
-                  onChange={(e) => {
-                    const emails = e.target.value.split('\n').map(email => email.trim()).filter(email => email)
-                    setFormData({ ...formData, allowedEmails: emails })
-                  }}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="user1@example.com&#10;user2@example.com&#10;user3@example.com"
-                  rows={6}
-                />
-                <p className="mt-1 text-sm text-gray-500">
-                  등록된 이메일 주소만 이 웨비나에 입장할 수 있습니다.
-                </p>
-              </div>
-              
               {/* 등록된 이메일별 접속 링크 */}
               {formData.allowedEmails.length > 0 && (
                 <div className="mt-4 p-4 bg-gray-50 rounded-lg">
