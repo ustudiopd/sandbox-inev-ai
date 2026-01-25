@@ -1,5 +1,5 @@
-import { NextResponse } from 'next/server'
-import { requireAuth } from '@/lib/auth/guards'
+import { NextRequest, NextResponse } from 'next/server'
+import { createServerClient } from '@supabase/ssr'
 import { createAdminSupabase } from '@/lib/supabase/admin'
 
 export const runtime = 'nodejs'
@@ -7,9 +7,23 @@ export const runtime = 'nodejs'
 /**
  * 프로필 정보 수정 (자신의 프로필만 수정 가능)
  */
-export async function PATCH(req: Request) {
+export async function PATCH(req: NextRequest) {
   try {
-    const { user } = await requireAuth()
+    // API 라우트에서는 Request에서 직접 쿠키 읽기
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          get: (name: string) => req.cookies.get(name)?.value,
+          set: () => {}, // API 라우트에서는 set 불필요
+          remove: () => {}, // API 라우트에서는 remove 불필요
+        },
+      }
+    )
+    
+    const { data: { user } } = await supabase.auth.getUser()
+    
     if (!user) {
       return NextResponse.json(
         { error: 'Unauthorized' },

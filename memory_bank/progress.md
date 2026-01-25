@@ -1,5 +1,32 @@
 # 완료된 작업 내역 (Progress)
 
+## [2025-01-26] 사이드바 완전 제거 및 통계 기능 개선
+- ✅ 사이드바 기능 완전 제거
+  - `NEXT_PUBLIC_USE_TOP_NAV` 환경 변수 제거
+  - `LayoutWrapper.tsx`에서 사이드바 관련 코드 제거, 항상 TopNav 사용
+  - `app/(super)/super/layout.tsx`에서 SuperSidebar 제거
+  - 사이드바 없이 TopNav만 사용하도록 전환 완료
+- ✅ 웨비나 통계 페이지에 설문조사 통계 추가
+  - `/api/webinars/[webinarId]/stats/survey` API 생성
+  - 웨비나의 `registration_campaign_id`로 연결된 설문조사 캠페인 통계 조회
+  - 통계 탭에 설문조사 통계 섹션 추가 (완료 수, 스캔 완료 수, 경품 기록 수)
+- ✅ 웨비나 대시보드 탭 간소화
+  - 대시보드 탭: 간단한 통계 요약만 표시 (차트 제거)
+  - 통계 탭: 상세 통계와 차트 표시
+- ✅ 설문조사 캠페인 상세 페이지에 통계 탭 추가
+  - `app/(client)/client/[clientId]/surveys/[campaignId]/components/tabs/StatsTab.tsx` 생성
+  - 기본 통계 (완료 수, 스캔 완료 수, 경품 기록 수)
+  - 시간대별 완료 추이 차트
+  - 문항별 통계 (선택형: 파이 차트, 텍스트형: 답변 목록)
+  - 날짜 범위 필터 기능 (전체/오늘/최근 7일/최근 30일)
+- ✅ 프로필 설정 페이지 폼 중첩 오류 수정
+  - 비밀번호 변경 폼을 프로필 수정 폼 밖으로 분리
+  - HTML 중첩 오류 해결
+- ✅ API 라우트 인증 문제 수정
+  - `/api/profile/update`, `/api/profile/change-password`에서 `requireAuth()` 대신 직접 인증 확인
+  - `NextRequest`를 사용하여 쿠키 직접 읽기
+  - 클라이언트 fetch에 `credentials: 'include'` 추가
+
 ## [2025-01-XX] 이벤트 등록 페이지 기능 구현 완료
 - ✅ 등록 페이지 컴포넌트 구현
   - `app/event/[...path]/components/RegistrationPage.tsx`: 공개 등록 페이지 (상세 폼)

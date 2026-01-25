@@ -26,7 +26,8 @@ export default async function RegistrantsPage({
       *,
       clients:client_id (
         id,
-        name
+        name,
+        logo_url
       )
     `)
   
@@ -146,10 +147,12 @@ export default async function RegistrantsPage({
           return
         }
         
-        // DB에 저장된 role을 우선 사용, manual 등록은 항상 관리자로 표시 (DB 값보다 우선)
+        // DB에 저장된 role을 우선 사용, manual 등록 처리: pd@ustudio.co.kr만 관리자, 나머지는 참여자
         let role = reg.role || 'attendee'
         if (reg.registered_via === 'manual') {
-          role = '관리자'
+          const email = reg.profiles?.email?.toLowerCase()?.trim()
+          const isPdAccount = email === 'pd@ustudio.co.kr'
+          role = isPdAccount ? '관리자' : 'attendee'
         }
         
         registrations.push({
@@ -179,11 +182,13 @@ export default async function RegistrantsPage({
       .eq('webinar_id', webinar.id)
       .order('created_at', { ascending: false })
     
-    // DB에 저장된 role을 우선 사용, manual 등록은 항상 관리자로 표시 (DB 값보다 우선)
+    // DB에 저장된 role을 우선 사용, manual 등록 처리: pd@ustudio.co.kr만 관리자, 나머지는 참여자
     registrations = (webinarRegistrations || []).map((reg: any) => {
       let role = reg.role || 'attendee'
       if (reg.registered_via === 'manual') {
-        role = '관리자'
+        const email = reg.profiles?.email?.toLowerCase()?.trim()
+        const isPdAccount = email === 'pd@ustudio.co.kr'
+        role = isPdAccount ? '관리자' : 'attendee'
       }
       return {
         ...reg,

@@ -25,12 +25,15 @@ export async function GET(
     }
 
     const admin = createAdminSupabase()
+    
+    // 실제 웨비나 UUID 사용 (slug가 아닌)
+    const actualWebinarId = webinar.id
 
     // 웨비나 정보 조회
     const { data: webinarInfo } = await admin
       .from('webinars')
       .select('start_time, end_time')
-      .eq('id', webinarId)
+      .eq('id', actualWebinarId)
       .single()
 
     // 쿼리 파라미터 파싱
@@ -40,14 +43,12 @@ export async function GET(
       webinarInfo?.end_time
     )
 
-    // 기본 통계
+    // 기본 통계 (전체 기간 조회 - 날짜 필터 없음)
     const { data: questions } = await admin
       .from('questions')
       .select('id, user_id, answered_at, created_at')
-      .eq('webinar_id', webinarId)
+      .eq('webinar_id', actualWebinarId)
       .neq('status', 'hidden')
-      .gte('created_at', from.toISOString())
-      .lt('created_at', to.toISOString())
 
     const totalQuestions = questions?.length || 0
     const answeredQuestions = questions?.filter((q) => q.answered_at).length || 0
@@ -109,7 +110,7 @@ export async function GET(
       admin
         .from('registrations')
         .select('user_id, nickname')
-        .eq('webinar_id', webinarId)
+        .eq('webinar_id', actualWebinarId)
         .in('user_id', userIds),
       admin
         .from('profiles')

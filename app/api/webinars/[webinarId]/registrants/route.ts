@@ -368,10 +368,16 @@ export async function GET(
                   }
                 }
                 
-                // manual 등록은 항상 관리자로 표시 (DB 값보다 우선)
+                // manual 등록 처리: pd@ustudio.co.kr만 관리자, 나머지는 참여자
                 if (reg.registered_via === 'manual') {
-                  role = '관리자'
-                  console.log(`[registrants API] manual 등록 감지: ${email} → 역할을 "관리자"로 설정`)
+                  const isPdAccount = email === 'pd@ustudio.co.kr'
+                  if (isPdAccount) {
+                    role = '관리자'
+                    console.log(`[registrants API] manual 등록 감지 (PD 계정): ${email} → 역할을 "관리자"로 설정`)
+                  } else {
+                    role = 'attendee'
+                    console.log(`[registrants API] manual 등록 감지: ${email} → 역할을 "참여자"로 설정`)
+                  }
                 }
                 
                 registrants.push({
@@ -541,10 +547,16 @@ export async function GET(
           }
         }
         
-        // manual 등록은 항상 관리자로 표시 (DB 값보다 우선)
+        // manual 등록 처리: pd@ustudio.co.kr만 관리자, 나머지는 참여자
         if (reg.registered_via === 'manual') {
-          role = '관리자'
-          console.log(`[registrants API] manual 등록 감지: ${email} → 역할을 "관리자"로 설정`)
+          const isPdAccount = email === 'pd@ustudio.co.kr'
+          if (isPdAccount) {
+            role = '관리자'
+            console.log(`[registrants API] manual 등록 감지 (PD 계정): ${email} → 역할을 "관리자"로 설정`)
+          } else {
+            role = 'attendee'
+            console.log(`[registrants API] manual 등록 감지: ${email} → 역할을 "참여자"로 설정`)
+          }
         }
         
         return {

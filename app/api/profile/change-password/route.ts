@@ -1,5 +1,5 @@
-import { NextResponse } from 'next/server'
-import { requireAuth } from '@/lib/auth/guards'
+import { NextRequest, NextResponse } from 'next/server'
+import { createServerClient } from '@supabase/ssr'
 import { createAdminSupabase } from '@/lib/supabase/admin'
 
 export const runtime = 'nodejs'
@@ -7,9 +7,23 @@ export const runtime = 'nodejs'
 /**
  * 사용자 비밀번호 변경 (자신의 비밀번호만 변경 가능)
  */
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
-    const { user } = await requireAuth()
+    // API 라우트에서는 Request에서 직접 쿠키 읽기
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          get: (name: string) => req.cookies.get(name)?.value,
+          set: () => {}, // API 라우트에서는 set 불필요
+          remove: () => {}, // API 라우트에서는 remove 불필요
+        },
+      }
+    )
+    
+    const { data: { user } } = await supabase.auth.getUser()
+    
     if (!user) {
       return NextResponse.json(
         { error: 'Unauthorized' },
@@ -34,10 +48,6 @@ export async function POST(req: Request) {
       )
     }
 
-    // 현재 비밀번호 확인 (서버 Supabase로 인증 시도)
-    const { createServerSupabase } = await import('@/lib/supabase/server')
-    const supabase = await createServerSupabase()
-    
     // 현재 비밀번호로 로그인 시도하여 검증
     const { error: signInError } = await supabase.auth.signInWithPassword({
       email: user.email!,

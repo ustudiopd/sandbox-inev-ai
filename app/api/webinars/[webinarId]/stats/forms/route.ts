@@ -25,12 +25,15 @@ export async function GET(
     }
 
     const admin = createAdminSupabase()
+    
+    // 실제 웨비나 UUID 사용 (slug가 아닌)
+    const actualWebinarId = webinar.id
 
     // 웨비나 정보 조회
     const { data: webinarInfo } = await admin
       .from('webinars')
       .select('start_time, end_time')
-      .eq('id', webinarId)
+      .eq('id', actualWebinarId)
       .single()
 
     // 쿼리 파라미터 파싱
@@ -44,7 +47,7 @@ export async function GET(
     const { data: forms } = await admin
       .from('forms')
       .select('id, kind')
-      .eq('webinar_id', webinarId)
+      .eq('webinar_id', actualWebinarId)
 
     const totalSurveys = forms?.filter((f) => f.kind === 'survey').length || 0
     const totalQuizzes = forms?.filter((f) => f.kind === 'quiz').length || 0

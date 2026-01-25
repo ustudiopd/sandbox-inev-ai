@@ -3,6 +3,7 @@ import { createAdminSupabase } from '@/lib/supabase/admin'
 import { redirect } from 'next/navigation'
 import { requireAuth } from '@/lib/auth/guards'
 import { getWebinarQuery } from '@/lib/utils/webinar'
+import { Suspense } from 'react'
 import ConsoleView from './components/ConsoleView'
 
 export default async function ConsolePage({
@@ -138,7 +139,11 @@ export default async function ConsolePage({
     redirect(`/webinar/${webinarId}`)
   }
   
-  return <ConsoleView webinar={finalWebinar} userRole={userRole} />
+  return (
+    <Suspense fallback={<div className="p-8">로딩 중...</div>}>
+      <ConsoleView webinar={finalWebinar} userRole={userRole} />
+    </Suspense>
+  )
 }
 
 

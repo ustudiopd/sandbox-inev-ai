@@ -49,14 +49,25 @@ export async function POST(
         .eq('user_id', user.id)
         .maybeSingle()
 
-      // 등록되어 있지 않으면 자동 등록 (manual 등록은 관리자로 저장)
+      // 등록되어 있지 않으면 자동 등록 (manual 등록)
       if (!registration) {
+        // 사용자 이메일 확인
+        const { data: profile } = await admin
+          .from('profiles')
+          .select('email')
+          .eq('id', user.id)
+          .single()
+        
+        // pd@ustudio.co.kr 계정만 관리자로 설정, 나머지는 참여자
+        const isPdAccount = profile?.email?.toLowerCase() === 'pd@ustudio.co.kr'
+        const role = isPdAccount ? '관리자' : 'attendee'
+        
         await admin
           .from('registrations')
           .insert({
             webinar_id: webinarId,
             user_id: user.id,
-            role: '관리자',
+            role: role,
             registered_via: 'manual',
           })
       }

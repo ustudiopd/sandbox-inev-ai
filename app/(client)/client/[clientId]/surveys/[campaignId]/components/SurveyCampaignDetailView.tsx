@@ -9,6 +9,7 @@ import ParticipantsTab from './tabs/ParticipantsTab'
 import SettingsTab from './tabs/SettingsTab'
 import AnalysisGuidelineTab from './tabs/AnalysisGuidelineTab'
 import AnalysisReportSection from './tabs/AnalysisReportSection'
+import StatsTab from './tabs/StatsTab'
 
 interface SurveyCampaignDetailViewProps {
   campaign: any
@@ -16,7 +17,7 @@ interface SurveyCampaignDetailViewProps {
 }
 
 export default function SurveyCampaignDetailView({ campaign, clientId }: SurveyCampaignDetailViewProps) {
-  const [activeTab, setActiveTab] = useState<'overview' | 'form' | 'publicSettings' | 'participants' | 'settings' | 'guidelines' | 'analysis'>('overview')
+  const [activeTab, setActiveTab] = useState<'overview' | 'form' | 'publicSettings' | 'participants' | 'settings' | 'guidelines' | 'analysis' | 'stats'>('overview')
   const [campaignData, setCampaignData] = useState(campaign)
   
   const handleCampaignUpdate = (updatedCampaign: any) => {
@@ -111,6 +112,18 @@ export default function SurveyCampaignDetailView({ campaign, clientId }: SurveyC
               <span className="hidden lg:inline text-sm font-medium whitespace-nowrap">참여자 관리</span>
             </button>
             <button
+              onClick={() => setActiveTab('stats')}
+              title="통계"
+              className={`px-3 sm:px-6 py-3 sm:py-4 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center gap-2 ${
+                activeTab === 'stats'
+                  ? 'bg-blue-50 text-blue-600 border-b-2 border-blue-600'
+                  : 'text-gray-600 hover:bg-gray-50'
+              }`}
+            >
+              <span className="text-xl sm:text-2xl">📈</span>
+              <span className="hidden lg:inline text-sm font-medium whitespace-nowrap">통계</span>
+            </button>
+            <button
               onClick={() => setActiveTab('analysis')}
               title="AI 분석"
               className={`px-3 sm:px-6 py-3 sm:py-4 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center gap-2 ${
@@ -185,6 +198,13 @@ export default function SurveyCampaignDetailView({ campaign, clientId }: SurveyC
             <div>
               <h2 className="text-xl font-semibold mb-4">참여자 관리</h2>
               <ParticipantsTab campaignId={campaignData.id} entries={campaignData.entries || []} />
+            </div>
+          )}
+          
+          {activeTab === 'stats' && (
+            <div>
+              <h2 className="text-xl font-semibold mb-4">통계</h2>
+              <StatsTab campaignId={campaignData.id} />
             </div>
           )}
           

@@ -30,7 +30,7 @@ export default function UnifiedListItem({ item, clientId }: UnifiedListItemProps
   const actions = isWebinar ? [
     { label: '공개페이지', href: `/webinar/${webinarSlug}`, target: '_blank', color: 'blue' },
     { label: '콘솔', href: `/client/${clientId}/webinars/${item.id}`, color: 'purple' },
-    { label: '통계', href: `/webinar/${webinarSlug}/stats`, color: 'blue' },
+    { label: '통계', href: `/client/${clientId}/webinars/${item.id}?tab=stats`, color: 'blue' },
     { label: '관리자 접속', href: `/webinar/${webinarSlug}/live?admin=true`, color: 'green' },
   ] : [
     { label: '공개페이지', href: `/event${item.public_path}`, target: '_blank', color: 'blue' },

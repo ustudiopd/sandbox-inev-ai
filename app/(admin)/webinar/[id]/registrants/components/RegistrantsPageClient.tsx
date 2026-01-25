@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import WebinarHeader from '@/components/webinar/WebinarHeader'
 
 interface Registrant {
   id: string
@@ -18,6 +19,12 @@ interface Webinar {
   id: string
   title: string
   slug: string | null
+  client_id: string
+  clients?: {
+    id: string
+    name: string
+    logo_url?: string | null
+  } | null
 }
 
 interface RegistrantsPageClientProps {
@@ -80,35 +87,32 @@ export default function RegistrantsPageClient({
   const webinarId = webinar.slug || webinar.id
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 p-8">
-      <div className="max-w-7xl mx-auto">
-        {/* 헤더 */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                등록자 관리
-              </h1>
-              <p className="text-gray-600">{webinar.title}</p>
+    <>
+      {/* 웨비나 헤더 */}
+      <WebinarHeader webinar={webinar} />
+      
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 p-8">
+        <div className="max-w-7xl mx-auto">
+          {/* 헤더 */}
+          <div className="mb-8">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                  등록자 관리
+                </h1>
+              </div>
+              <div className="flex gap-3">
+                <button
+                  onClick={handleExportCSV}
+                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                >
+                  📥 CSV 내보내기
+                </button>
+              </div>
             </div>
-            <div className="flex gap-3">
-              <Link
-                href={`/webinar/${webinarId}/console`}
-                className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
-              >
-                ← 운영 콘솔로
-              </Link>
-              <button
-                onClick={handleExportCSV}
-                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-              >
-                📥 CSV 내보내기
-              </button>
-            </div>
-          </div>
 
-          {/* 통계 카드 */}
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+            {/* 통계 카드 */}
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
             <div className="bg-white p-4 rounded-lg shadow">
               <div className="text-sm text-gray-600 mb-1">총 등록자</div>
               <div className="text-2xl font-bold text-gray-900">{stats.total}</div>
@@ -129,10 +133,10 @@ export default function RegistrantsPageClient({
               <div className="text-sm text-gray-600 mb-1">알 수 없음</div>
               <div className="text-2xl font-bold text-gray-600">{stats.unknown}</div>
             </div>
-          </div>
+            </div>
 
-          {/* 검색 및 필터 */}
-          <div className="bg-white p-4 rounded-lg shadow mb-6">
+            {/* 검색 및 필터 */}
+            <div className="bg-white p-4 rounded-lg shadow mb-6">
             <div className="flex gap-4">
               <input
                 type="text"
@@ -153,11 +157,11 @@ export default function RegistrantsPageClient({
                 <option value="unknown">알 수 없음</option>
               </select>
             </div>
+            </div>
           </div>
-        </div>
 
-        {/* 등록자 목록 */}
-        <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+          {/* 등록자 목록 */}
+          <div className="bg-white rounded-xl shadow-lg overflow-hidden">
           <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-6">
             <h2 className="text-xl font-semibold text-white">
               등록자 목록 ({filteredRegistrations.length}명)
@@ -225,9 +229,10 @@ export default function RegistrantsPageClient({
               </tbody>
             </table>
           </div>
+          </div>
         </div>
       </div>
-    </div>
+    </>
   )
 }
 

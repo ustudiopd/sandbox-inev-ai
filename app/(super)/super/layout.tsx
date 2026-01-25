@@ -1,6 +1,4 @@
 import { requireSuperAdmin } from '@/lib/auth/guards'
-import SuperSidebar from './_components/SuperSidebar'
-import WorkspaceSwitcher from '@/components/layout/WorkspaceSwitcher'
 
 export default async function SuperLayout({
   children,
@@ -10,10 +8,10 @@ export default async function SuperLayout({
   // 서버에서 확정적으로 권한 확인
   await requireSuperAdmin()
 
+  // TopNav는 LayoutWrapper에서 처리되므로 여기서는 레이아웃만 조정
   return (
-    <div className="flex min-h-screen bg-gray-50">
-      <SuperSidebar />
-      <main className="flex-1 ml-64">{children}</main>
+    <div className="min-h-screen bg-gray-50">
+      <main className="w-full">{children}</main>
     </div>
   )
 }

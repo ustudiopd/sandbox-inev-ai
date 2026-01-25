@@ -25,12 +25,15 @@ export async function GET(
     }
 
     const admin = createAdminSupabase()
+    
+    // 실제 웨비나 UUID 사용 (slug가 아닌)
+    const actualWebinarId = webinar.id
 
     // 웨비나 정보 조회
     const { data: webinarInfo } = await admin
       .from('webinars')
       .select('start_time, end_time')
-      .eq('id', webinarId)
+      .eq('id', actualWebinarId)
       .single()
 
     // 쿼리 파라미터 파싱
@@ -44,13 +47,13 @@ export async function GET(
     const { count: totalFiles } = await admin
       .from('webinar_files')
       .select('*', { count: 'exact', head: true })
-      .eq('webinar_id', webinarId)
+      .eq('webinar_id', actualWebinarId)
 
     // 다운로드 요약
     const { data: downloads } = await admin
       .from('webinar_downloads')
       .select('id, user_id, file_id')
-      .eq('webinar_id', webinarId)
+      .eq('webinar_id', actualWebinarId)
       .gte('downloaded_at', from.toISOString())
       .lt('downloaded_at', to.toISOString())
 

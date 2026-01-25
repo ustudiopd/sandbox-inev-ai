@@ -15,9 +15,12 @@ export async function GET(
     const { webinarId } = await params
     const { searchParams } = new URL(request.url)
 
+    console.log('[Stats Chat] 시작:', { webinarId, searchParams: Object.fromEntries(searchParams) })
+
     // 권한 확인
     const { hasPermission, webinar } = await checkWebinarStatsPermission(webinarId)
     if (!hasPermission || !webinar) {
+      console.error('[Stats Chat] 권한 없음:', { webinarId, hasPermission, webinar })
       return NextResponse.json(
         { success: false, error: '권한이 없습니다.' },
         { status: 403 }
@@ -25,12 +28,16 @@ export async function GET(
     }
 
     const admin = createAdminSupabase()
+    
+    // 실제 웨비나 UUID 사용 (slug가 아닌)
+    const actualWebinarId = webinar.id
+    console.log('[Stats Chat] 웨비나 ID:', { webinarId, actualWebinarId })
 
     // 웨비나 정보 조회 (시작/종료 시간)
     const { data: webinarInfo } = await admin
       .from('webinars')
       .select('start_time, end_time')
-      .eq('id', webinarId)
+      .eq('id', actualWebinarId)
       .single()
 
     // 쿼리 파라미터 파싱
@@ -40,14 +47,18 @@ export async function GET(
       webinarInfo?.end_time
     )
 
-    // 기본 통계
-    const { data: messages } = await admin
+    // 기본 통계 (전체 기간 조회 - 날짜 필터 없음)
+    console.log('[Stats Chat] 메시지 조회 시작:', { actualWebinarId })
+    const { data: messages, error: messagesError } = await admin
       .from('messages')
       .select('id, user_id', { count: 'exact' })
-      .eq('webinar_id', webinarId)
+      .eq('webinar_id', actualWebinarId)
       .eq('hidden', false)
-      .gte('created_at', from.toISOString())
-      .lt('created_at', to.toISOString())
+
+    if (messagesError) {
+      console.error('[Stats Chat] 메시지 조회 오류:', messagesError)
+    }
+    console.log('[Stats Chat] 메시지 조회 결과:', { count: messages?.length || 0, error: messagesError })
 
     const totalMessages = messages?.length || 0
     const uniqueSenders = new Set(messages?.map((m) => m.user_id)).size
@@ -57,7 +68,7 @@ export async function GET(
     const { data: timelineData } = await admin
       .from('messages')
       .select('created_at, user_id')
-      .eq('webinar_id', webinarId)
+      .eq('webinar_id', actualWebinarId)
       .eq('hidden', false)
       .gte('created_at', from.toISOString())
       .lt('created_at', to.toISOString())
@@ -103,7 +114,7 @@ export async function GET(
       admin
         .from('registrations')
         .select('user_id, nickname')
-        .eq('webinar_id', webinarId)
+        .eq('webinar_id', actualWebinarId)
         .in('user_id', userIds),
       admin
         .from('profiles')
@@ -136,28 +147,38 @@ export async function GET(
     const { count: totalRegistrants } = await admin
       .from('registrations')
       .select('*', { count: 'exact', head: true })
-      .eq('webinar_id', webinarId)
+      .eq('webinar_id', actualWebinarId)
 
     const participationRate =
       totalRegistrants && totalRegistrants > 0
         ? (uniqueSenders / totalRegistrants) * 100
         : 0
 
+    const responseData = {
+      totalMessages,
+      uniqueSenders,
+      participationRate: Math.round(participationRate * 100) / 100,
+      timeline,
+      topSenders,
+      peakTime: peakTimeEntry
+        ? {
+            time: peakTimeEntry.time_slot,
+            messageCount: peakTimeEntry.message_count,
+          }
+        : null,
+    }
+
+    console.log('[Stats Chat] 응답 데이터:', {
+      totalMessages,
+      uniqueSenders,
+      participationRate: responseData.participationRate,
+      timelineLength: timeline.length,
+      topSendersCount: topSenders.length
+    })
+
     return NextResponse.json({
       success: true,
-      data: {
-        totalMessages,
-        uniqueSenders,
-        participationRate: Math.round(participationRate * 100) / 100,
-        timeline,
-        topSenders,
-        peakTime: peakTimeEntry
-          ? {
-              time: peakTimeEntry.time_slot,
-              messageCount: peakTimeEntry.message_count,
-            }
-          : null,
-      },
+      data: responseData,
     })
   } catch (error: any) {
     console.error('[Stats Chat] 오류:', error)

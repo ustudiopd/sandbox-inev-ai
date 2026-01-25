@@ -25,7 +25,7 @@ export async function checkWebinarStatsPermission(webinarId: string) {
   // 웨비나 조회 쿼리 빌더
   let queryBuilder = admin
     .from('webinars')
-    .select('id, agency_id, client_id, registration_campaign_id')
+    .select('id, agency_id, client_id, registration_campaign_id, start_time, end_time')
   
   if (query.column === 'slug') {
     // slug는 문자열로 비교 (숫자로 저장되어 있어도 문자열로 변환)

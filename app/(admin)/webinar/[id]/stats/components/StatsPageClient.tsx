@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import WebinarHeader from '@/components/webinar/WebinarHeader'
 import {
   LineChart,
   Line,
@@ -24,6 +25,12 @@ interface Webinar {
   slug: string | null
   start_time?: string | null
   end_time?: string | null
+  client_id: string
+  clients?: {
+    id: string
+    name: string
+    logo_url?: string | null
+  } | null
 }
 
 interface StatsPageClientProps {
@@ -83,6 +90,14 @@ interface StatsData {
       lastParticipants: number
     }>
     peakTime: { time: string; participantCount: number } | null
+  }
+  survey?: {
+    hasCampaign: boolean
+    campaignTitle?: string
+    campaignStatus?: string
+    totalCompleted: number
+    totalVerified: number
+    totalPrizeRecorded: number
   }
 }
 
@@ -195,38 +210,35 @@ export default function StatsPageClient({ webinar }: StatsPageClientProps) {
     })) || []
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 p-8">
-      <div className="max-w-7xl mx-auto">
-        {/* 헤더 */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                통계
-              </h1>
-              <p className="text-gray-600">{webinar.title}</p>
-            </div>
-            <div className="flex items-center gap-4">
-              {/* 날짜 범위 선택 */}
-              <select
-                value={dateRange}
-                onChange={(e) => setDateRange(e.target.value as any)}
-                className="px-4 py-2 border border-gray-300 rounded-lg bg-white"
-              >
-                <option value="all">전체</option>
-                <option value="today">오늘</option>
-                <option value="week">최근 7일</option>
-                <option value="month">최근 30일</option>
-              </select>
-              <Link
-                href={`/webinar/${webinarId}/console`}
-                className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
-              >
-                ← 운영 콘솔로
-              </Link>
+    <>
+      {/* 웨비나 헤더 */}
+      <WebinarHeader webinar={webinar} />
+      
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 p-8">
+        <div className="max-w-7xl mx-auto">
+          {/* 헤더 */}
+          <div className="mb-8">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                  통계
+                </h1>
+              </div>
+              <div className="flex items-center gap-4">
+                {/* 날짜 범위 선택 */}
+                <select
+                  value={dateRange}
+                  onChange={(e) => setDateRange(e.target.value as any)}
+                  className="px-4 py-2 border border-gray-300 rounded-lg bg-white"
+                >
+                  <option value="all">전체</option>
+                  <option value="today">오늘</option>
+                  <option value="week">최근 7일</option>
+                  <option value="month">최근 30일</option>
+                </select>
+              </div>
             </div>
           </div>
-        </div>
 
         {/* 개요 카드 */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
@@ -595,8 +607,36 @@ export default function StatsPageClient({ webinar }: StatsPageClientProps) {
             </div>
           </div>
         )}
+
+        {/* 설문조사 통계 */}
+        {stats.survey && stats.survey.hasCampaign && (
+          <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
+            <h2 className="text-xl font-semibold mb-4">설문조사 통계</h2>
+            {stats.survey.campaignTitle && (
+              <div className="mb-4">
+                <div className="text-sm text-gray-600 mb-1">캠페인명</div>
+                <div className="text-lg font-medium text-gray-900">{stats.survey.campaignTitle}</div>
+              </div>
+            )}
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              <div>
+                <div className="text-sm text-gray-600 mb-1">완료 수</div>
+                <div className="text-2xl font-bold text-blue-600">{stats.survey.totalCompleted}</div>
+              </div>
+              <div>
+                <div className="text-sm text-gray-600 mb-1">스캔 완료 수</div>
+                <div className="text-2xl font-bold text-green-600">{stats.survey.totalVerified}</div>
+              </div>
+              <div>
+                <div className="text-sm text-gray-600 mb-1">경품 기록 수</div>
+                <div className="text-2xl font-bold text-purple-600">{stats.survey.totalPrizeRecorded}</div>
+              </div>
+            </div>
+          </div>
+        )}
+        </div>
       </div>
-    </div>
+    </>
   )
 }
 

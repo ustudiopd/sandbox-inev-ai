@@ -1,7 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
+import WebinarHeader from '@/components/webinar/WebinarHeader'
 import QAModeration from './QAModeration'
 import ChatModeration from './ChatModeration'
 import FormManagement from './FormManagement'
@@ -10,6 +12,7 @@ import GiveawayManagement from './GiveawayManagement'
 import SettingsTab from './SettingsTab'
 import DashboardTab from './DashboardTab'
 import ParticipantsTab from './ParticipantsTab'
+import StatsTab from './StatsTab'
 
 interface Webinar {
   id: string
@@ -40,64 +43,38 @@ interface ConsoleViewProps {
  * Q&A 모더레이션, 퀴즈, 추첨 등을 관리하는 운영자 전용 페이지
  */
 export default function ConsoleView({ webinar, userRole }: ConsoleViewProps) {
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'qa' | 'chat' | 'forms' | 'files' | 'giveaways' | 'settings' | 'participants'>('dashboard')
+  const searchParams = useSearchParams()
+  const tabParam = searchParams.get('tab')
+  
+  // URL 쿼리 파라미터에서 탭 확인
+  const validTabs = ['dashboard', 'qa', 'chat', 'forms', 'files', 'giveaways', 'settings', 'participants', 'stats'] as const
+  const initialTab = (tabParam && validTabs.includes(tabParam as any)) ? (tabParam as typeof validTabs[number]) : 'dashboard'
+  
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'qa' | 'chat' | 'forms' | 'files' | 'giveaways' | 'settings' | 'participants' | 'stats'>(initialTab)
   const [webinarData, setWebinarData] = useState(webinar)
   // slug가 있으면 slug를 사용하고, 없으면 id를 사용 (URL용)
   const webinarSlug = webinarData.slug || webinarData.id
+  
+  // URL 파라미터 변경 시 탭 업데이트
+  useEffect(() => {
+    if (tabParam && validTabs.includes(tabParam as any)) {
+      setActiveTab(tabParam as typeof validTabs[number])
+    }
+  }, [tabParam])
   
   const handleWebinarUpdate = (updatedWebinar: any) => {
     setWebinarData(updatedWebinar)
   }
   
   return (
-    <div className="p-8">
-      <div className="max-w-7xl mx-auto">
-        {/* 헤더 */}
-        <div className="mb-8">
-          <div className="flex justify-between items-start mb-4">
-            <div className="flex justify-between items-start">
-              <div>
-                <div className="flex items-center gap-3 mb-2">
-                  <Link 
-                    href={`/client/${webinar.client_id}/dashboard`}
-                    className="text-blue-600 hover:text-blue-700 hover:underline text-sm"
-                  >
-                    ← 메인 대시보드로
-                  </Link>
-                  <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                    운영 콘솔
-                  </h1>
-                </div>
-                <p className="text-gray-600">{webinarData.title}</p>
-              </div>
-              <div className="flex items-center gap-3">
-                <Link
-                  href={`/webinar/${webinarSlug}/stats`}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium whitespace-nowrap"
-                >
-                  📊 통계
-                </Link>
-                <Link
-                  href={`/webinar/${webinarSlug}/live?admin=true&from=console`}
-                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium whitespace-nowrap"
-                >
-                  관리자 접속
-                </Link>
-                {webinarData.clients?.logo_url && (
-                  <img 
-                    src={webinarData.clients.logo_url} 
-                    alt={webinarData.clients.name}
-                    className="h-12 w-auto"
-                  />
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        <div>
-        {/* 탭 네비게이션 */}
-        <div className="bg-white rounded-xl shadow-lg mb-6 overflow-hidden">
+    <>
+      {/* 웨비나 헤더 (TopNav 아래에 위치) */}
+      <WebinarHeader webinar={webinarData} />
+      
+      <div className="p-8">
+        <div className="max-w-7xl mx-auto">
+          {/* 탭 네비게이션 */}
+          <div className="bg-white rounded-xl shadow-lg mb-6 overflow-hidden">
           <div className="border-b border-gray-200 flex">
             <button
               onClick={() => setActiveTab('dashboard')}
@@ -170,6 +147,16 @@ export default function ConsoleView({ webinar, userRole }: ConsoleViewProps) {
               👥 참여자 관리
             </button>
             <button
+              onClick={() => setActiveTab('stats')}
+              className={`px-6 py-4 text-sm font-medium transition-colors ${
+                activeTab === 'stats'
+                  ? 'bg-blue-50 text-blue-600 border-b-2 border-blue-600'
+                  : 'text-gray-600 hover:bg-gray-50'
+              }`}
+            >
+              📊 통계
+            </button>
+            <button
               onClick={() => setActiveTab('settings')}
               className={`px-6 py-4 text-sm font-medium transition-colors ${
                 activeTab === 'settings'
@@ -230,6 +217,13 @@ export default function ConsoleView({ webinar, userRole }: ConsoleViewProps) {
             </div>
           )}
           
+          {activeTab === 'stats' && (
+            <div>
+              <h2 className="text-xl font-semibold mb-4">통계</h2>
+              <StatsTab webinar={webinarData} />
+            </div>
+          )}
+          
           {activeTab === 'settings' && (
             <div>
               <h2 className="text-xl font-semibold mb-4">웨비나 설정</h2>
@@ -237,9 +231,9 @@ export default function ConsoleView({ webinar, userRole }: ConsoleViewProps) {
             </div>
           )}
         </div>
-        </div>
       </div>
-    </div>
+      </div>
+    </>
   )
 }
 

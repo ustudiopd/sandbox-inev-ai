@@ -23,18 +23,21 @@ export async function GET(
     }
 
     const admin = createAdminSupabase()
+    
+    // 실제 웨비나 UUID 사용 (slug가 아닌)
+    const actualWebinarId = webinar.id
 
     // 기본 등록자 수
     const { count: totalRegistrants } = await admin
       .from('registrations')
       .select('*', { count: 'exact', head: true })
-      .eq('webinar_id', webinarId)
+      .eq('webinar_id', actualWebinarId)
 
     // 등록 출처별 통계
     const { data: registrations } = await admin
       .from('registrations')
       .select('registered_via')
-      .eq('webinar_id', webinarId)
+      .eq('webinar_id', actualWebinarId)
 
     const sourceCounts = new Map<string, number>()
     registrations?.forEach((reg) => {
@@ -53,7 +56,7 @@ export async function GET(
     const { data: maxAccessLog } = await admin
       .from('webinar_access_logs')
       .select('max_participants')
-      .eq('webinar_id', webinarId)
+      .eq('webinar_id', actualWebinarId)
       .order('max_participants', { ascending: false })
       .limit(1)
       .single()

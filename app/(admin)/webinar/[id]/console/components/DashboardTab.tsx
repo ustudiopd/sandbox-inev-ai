@@ -83,6 +83,14 @@ interface StatsData {
     }>
     peakTime: { time: string; participantCount: number } | null
   }
+  survey?: {
+    hasCampaign: boolean
+    campaignTitle?: string
+    campaignStatus?: string
+    totalCompleted: number
+    totalVerified: number
+    totalPrizeRecorded: number
+  }
 }
 
 interface PresenceUser {
@@ -536,20 +544,6 @@ export default function DashboardTab({ webinarId, webinarSlug }: DashboardTabPro
     return null
   }
 
-  // 차트 데이터 준비
-  const chatTimelineData = stats.chat?.timeline.map((item) => ({
-    time: new Date(item.time_slot).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }),
-    messages: item.message_count,
-    senders: item.sender_count,
-  })) || []
-
-  const accessTimelineData = stats.access?.timeline.map((item) => ({
-    time: new Date(item.time).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }),
-    avg: Math.round(item.avgParticipants),
-    max: item.maxParticipants,
-    min: item.minParticipants,
-  })) || []
-
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
@@ -591,91 +585,69 @@ export default function DashboardTab({ webinarId, webinarSlug }: DashboardTabPro
         </div>
       </div>
 
-      {/* 채팅 통계 */}
-      {stats.chat && (
-        <div className="bg-white rounded-xl shadow-md p-6 mb-6">
-          <h3 className="text-lg font-semibold mb-4">채팅 통계</h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-            <div>
-              <div className="text-sm text-gray-600 mb-1">총 메시지 수</div>
-              <div className="text-2xl font-bold text-gray-900">{stats.chat.totalMessages}</div>
+      {/* 간단한 통계 요약 */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        {stats.chat && (
+          <>
+            <div className="bg-white rounded-xl shadow-md p-4">
+              <div className="text-sm text-gray-600 mb-1">총 메시지</div>
+              <div className="text-2xl font-bold text-blue-600">{stats.chat.totalMessages}</div>
             </div>
-            <div>
-              <div className="text-sm text-gray-600 mb-1">발신자 수</div>
-              <div className="text-2xl font-bold text-gray-900">{stats.chat.uniqueSenders}</div>
-            </div>
-            <div>
-              <div className="text-sm text-gray-600 mb-1">참여율</div>
+            <div className="bg-white rounded-xl shadow-md p-4">
+              <div className="text-sm text-gray-600 mb-1">채팅 참여율</div>
               <div className="text-2xl font-bold text-green-600">{stats.chat.participationRate.toFixed(1)}%</div>
             </div>
-            <div>
-              <div className="text-sm text-gray-600 mb-1">피크 시간</div>
-              <div className="text-lg font-bold text-blue-600">
-                {stats.chat.peakTime
-                  ? new Date(stats.chat.peakTime.time).toLocaleTimeString('ko-KR', {
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    })
-                  : '-'}
-              </div>
+          </>
+        )}
+        {stats.qa && (
+          <>
+            <div className="bg-white rounded-xl shadow-md p-4">
+              <div className="text-sm text-gray-600 mb-1">총 질문</div>
+              <div className="text-2xl font-bold text-purple-600">{stats.qa.totalQuestions}</div>
             </div>
-          </div>
-          {chatTimelineData.length > 0 && (
-            <div className="mt-6">
-              <h4 className="text-md font-semibold mb-4">시간대별 메시지 추이</h4>
-              <ResponsiveContainer width="100%" height={250}>
-                <LineChart data={chatTimelineData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                  <XAxis dataKey="time" stroke="#6b7280" />
-                  <YAxis stroke="#6b7280" />
-                  <Tooltip
-                    contentStyle={{
-                      borderRadius: '8px',
-                      border: 'none',
-                      boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-                    }}
-                  />
-                  <Legend />
-                  <Line type="monotone" dataKey="messages" stroke="#3B82F6" strokeWidth={2} name="메시지 수" />
-                  <Line type="monotone" dataKey="senders" stroke="#10B981" strokeWidth={2} name="발신자 수" />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Q&A 통계 */}
-      {stats.qa && (
-        <div className="bg-white rounded-xl shadow-md p-6 mb-6">
-          <h3 className="text-lg font-semibold mb-4">Q&A 통계</h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div>
-              <div className="text-sm text-gray-600 mb-1">총 질문 수</div>
-              <div className="text-2xl font-bold text-gray-900">{stats.qa.totalQuestions}</div>
-            </div>
-            <div>
-              <div className="text-sm text-gray-600 mb-1">답변 수</div>
-              <div className="text-2xl font-bold text-green-600">{stats.qa.answeredQuestions}</div>
-            </div>
-            <div>
+            <div className="bg-white rounded-xl shadow-md p-4">
               <div className="text-sm text-gray-600 mb-1">답변률</div>
-              <div className="text-2xl font-bold text-blue-600">
+              <div className="text-2xl font-bold text-orange-600">
                 {stats.qa.totalQuestions > 0
                   ? ((stats.qa.answeredQuestions / stats.qa.totalQuestions) * 100).toFixed(1)
-                  : 0}
-                %
+                  : 0}%
               </div>
             </div>
-            <div>
-              <div className="text-sm text-gray-600 mb-1">평균 답변 시간</div>
-              <div className="text-2xl font-bold text-purple-600">
-                {stats.qa.answerTime.avgMinutes > 0 ? `${stats.qa.answerTime.avgMinutes.toFixed(1)}분` : '-'}
-              </div>
+          </>
+        )}
+        {stats.forms && (
+          <>
+            <div className="bg-white rounded-xl shadow-md p-4">
+              <div className="text-sm text-gray-600 mb-1">설문 응답</div>
+              <div className="text-2xl font-bold text-indigo-600">{stats.forms.survey.totalSubmissions}</div>
             </div>
+            {stats.forms.totalQuizzes > 0 && (
+              <div className="bg-white rounded-xl shadow-md p-4">
+                <div className="text-sm text-gray-600 mb-1">퀴즈 평균 점수</div>
+                <div className="text-2xl font-bold text-amber-600">{stats.forms.quiz.avgScore.toFixed(1)}</div>
+              </div>
+            )}
+          </>
+        )}
+        {stats.giveaways && stats.giveaways.totalGiveaways > 0 && (
+          <div className="bg-white rounded-xl shadow-md p-4">
+            <div className="text-sm text-gray-600 mb-1">추첨 참여</div>
+            <div className="text-2xl font-bold text-pink-600">{stats.giveaways.totalEntries}</div>
           </div>
-        </div>
-      )}
+        )}
+        {stats.files && stats.files.totalFiles > 0 && (
+          <div className="bg-white rounded-xl shadow-md p-4">
+            <div className="text-sm text-gray-600 mb-1">파일 다운로드</div>
+            <div className="text-2xl font-bold text-teal-600">{stats.files.totalDownloads}</div>
+          </div>
+        )}
+        {stats.survey && stats.survey.hasCampaign && (
+          <div className="bg-white rounded-xl shadow-md p-4">
+            <div className="text-sm text-gray-600 mb-1">설문조사 완료</div>
+            <div className="text-2xl font-bold text-cyan-600">{stats.survey.totalCompleted}</div>
+          </div>
+        )}
+      </div>
 
       {/* 현재 접속 중인 참여자 목록 - 실시간 업데이트 */}
       <div className="bg-white rounded-xl shadow-md p-6 mb-6">
@@ -739,136 +711,15 @@ export default function DashboardTab({ webinarId, webinarSlug }: DashboardTabPro
           )}
       </div>
 
-      {/* 접속 통계 (타임라인) */}
-      {stats.access && accessTimelineData.length > 0 && (
-        <div className="bg-white rounded-xl shadow-md p-6 mb-6">
-          <h3 className="text-lg font-semibold mb-4">접속 통계</h3>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
-            <div>
-              <div className="text-sm text-gray-600 mb-1">최대 동시 접속자</div>
-              <div className="text-2xl font-bold text-blue-600">{stats.access.maxConcurrentParticipants}</div>
-            </div>
-            <div>
-              <div className="text-sm text-gray-600 mb-1">평균 동시 접속자</div>
-              <div className="text-2xl font-bold text-purple-600">
-                {Math.round(stats.access.avgConcurrentParticipants)}
-              </div>
-            </div>
-            <div>
-              <div className="text-sm text-gray-600 mb-1">피크 시간</div>
-              <div className="text-lg font-bold text-purple-600">
-                {stats.access.peakTime
-                  ? new Date(stats.access.peakTime.time).toLocaleTimeString('ko-KR', {
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    })
-                  : '-'}
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-6">
-            <h4 className="text-md font-semibold mb-4">시간대별 접속자 수 추이</h4>
-            <ResponsiveContainer width="100%" height={250}>
-              <LineChart data={accessTimelineData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis dataKey="time" stroke="#6b7280" />
-                <YAxis stroke="#6b7280" />
-                <Tooltip
-                  contentStyle={{
-                    borderRadius: '8px',
-                    border: 'none',
-                    boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-                  }}
-                />
-                <Legend />
-                <Line type="monotone" dataKey="avg" stroke="#3B82F6" strokeWidth={2} name="평균 접속자" />
-                <Line type="monotone" dataKey="max" stroke="#10B981" strokeWidth={2} name="최대 접속자" />
-                <Line type="monotone" dataKey="min" stroke="#EF4444" strokeWidth={2} name="최소 접속자" />
-              </LineChart>
-            </ResponsiveContainer>
+      {/* 통계 탭으로 이동 안내 */}
+      <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm text-blue-800 font-medium">더 자세한 통계를 보시겠어요?</p>
+            <p className="text-xs text-blue-600 mt-1">통계 탭에서 상세한 차트와 분석을 확인할 수 있습니다.</p>
           </div>
         </div>
-      )}
-
-      {/* 폼/퀴즈 통계 */}
-      {stats.forms && (
-        <div className="bg-white rounded-xl shadow-md p-6 mb-6">
-          <h3 className="text-lg font-semibold mb-4">폼/퀴즈 통계</h3>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            <div>
-              <div className="text-sm text-gray-600 mb-1">설문 수</div>
-              <div className="text-2xl font-bold text-gray-900">{stats.forms.totalSurveys}</div>
-            </div>
-            <div>
-              <div className="text-sm text-gray-600 mb-1">설문 응답 수</div>
-              <div className="text-2xl font-bold text-gray-900">{stats.forms.survey.totalSubmissions}</div>
-            </div>
-            <div>
-              <div className="text-sm text-gray-600 mb-1">설문 응답자 수</div>
-              <div className="text-2xl font-bold text-green-600">{stats.forms.survey.uniqueRespondents}</div>
-            </div>
-            <div>
-              <div className="text-sm text-gray-600 mb-1">퀴즈 수</div>
-              <div className="text-2xl font-bold text-gray-900">{stats.forms.totalQuizzes}</div>
-            </div>
-            <div>
-              <div className="text-sm text-gray-600 mb-1">퀴즈 시도 수</div>
-              <div className="text-2xl font-bold text-gray-900">{stats.forms.quiz.totalAttempts}</div>
-            </div>
-            <div>
-              <div className="text-sm text-gray-600 mb-1">평균 점수</div>
-              <div className="text-2xl font-bold text-blue-600">{stats.forms.quiz.avgScore.toFixed(1)}</div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* 추첨 통계 */}
-      {stats.giveaways && (
-        <div className="bg-white rounded-xl shadow-md p-6 mb-6">
-          <h3 className="text-lg font-semibold mb-4">추첨 통계</h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div>
-              <div className="text-sm text-gray-600 mb-1">추첨 수</div>
-              <div className="text-2xl font-bold text-gray-900">{stats.giveaways.totalGiveaways}</div>
-            </div>
-            <div>
-              <div className="text-sm text-gray-600 mb-1">완료된 추첨</div>
-              <div className="text-2xl font-bold text-green-600">{stats.giveaways.drawnGiveaways}</div>
-            </div>
-            <div>
-              <div className="text-sm text-gray-600 mb-1">참여 수</div>
-              <div className="text-2xl font-bold text-gray-900">{stats.giveaways.totalEntries}</div>
-            </div>
-            <div>
-              <div className="text-sm text-gray-600 mb-1">참여자 수</div>
-              <div className="text-2xl font-bold text-purple-600">{stats.giveaways.uniqueParticipants}</div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* 파일 통계 */}
-      {stats.files && (
-        <div className="bg-white rounded-xl shadow-md p-6">
-          <h3 className="text-lg font-semibold mb-4">파일 통계</h3>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            <div>
-              <div className="text-sm text-gray-600 mb-1">파일 수</div>
-              <div className="text-2xl font-bold text-gray-900">{stats.files.totalFiles}</div>
-            </div>
-            <div>
-              <div className="text-sm text-gray-600 mb-1">다운로드 수</div>
-              <div className="text-2xl font-bold text-blue-600">{stats.files.totalDownloads}</div>
-            </div>
-            <div>
-              <div className="text-sm text-gray-600 mb-1">다운로더 수</div>
-              <div className="text-2xl font-bold text-green-600">{stats.files.uniqueDownloaders}</div>
-            </div>
-          </div>
-        </div>
-      )}
+      </div>
     </div>
   )
 }

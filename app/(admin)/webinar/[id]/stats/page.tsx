@@ -23,7 +23,8 @@ export default async function StatsPage({
       *,
       clients:client_id (
         id,
-        name
+        name,
+        logo_url
       )
     `)
   

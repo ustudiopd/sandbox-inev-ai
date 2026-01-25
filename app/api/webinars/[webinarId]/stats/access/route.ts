@@ -25,12 +25,15 @@ export async function GET(
     }
 
     const admin = createAdminSupabase()
+    
+    // 실제 웨비나 UUID 사용 (slug가 아닌)
+    const actualWebinarId = webinar.id
 
     // 웨비나 정보 조회
     const { data: webinarInfo } = await admin
       .from('webinars')
       .select('start_time, end_time')
-      .eq('id', webinarId)
+      .eq('id', actualWebinarId)
       .single()
 
     // 현재 접속자 수 및 목록 조회 (webinar_live_presence에서 실시간 조회)
@@ -47,7 +50,7 @@ export async function GET(
     const { data: activePresences, error: presenceError } = await admin
       .from('webinar_live_presence')
       .select('user_id, last_seen_at, joined_at')
-      .eq('webinar_id', webinarId)
+      .eq('webinar_id', actualWebinarId)
       .gte('last_seen_at', activeSince)
       .order('last_seen_at', { ascending: false })
 
@@ -68,7 +71,7 @@ export async function GET(
     const { data: allAttendees, error: attendeesError } = await admin
       .from('webinar_live_presence')
       .select('user_id')
-      .eq('webinar_id', webinarId)
+      .eq('webinar_id', actualWebinarId)
       .not('joined_at', 'is', null)
 
     const totalAttendees = allAttendees 
@@ -101,7 +104,7 @@ export async function GET(
         admin
           .from('registrations')
           .select('user_id, nickname, role')
-          .eq('webinar_id', webinarId)
+          .eq('webinar_id', actualWebinarId)
           .in('user_id', userIds),
       ])
 
@@ -147,21 +150,19 @@ export async function GET(
       webinarInfo?.end_time
     )
 
-    // 접속 로그 조회
-    const { data: accessLogs } = await admin
+    // 전체 기간 접속 로그 조회 (최대/평균 동시 접속자 계산용)
+    const { data: allAccessLogs } = await admin
       .from('webinar_access_logs')
       .select('*')
-      .eq('webinar_id', webinarId)
-      .gte('time_bucket', from.toISOString())
-      .lt('time_bucket', to.toISOString())
+      .eq('webinar_id', actualWebinarId)
       .order('time_bucket', { ascending: true })
 
-    // 전체 최대/평균 동시접속 계산
+    // 전체 최대/평균 동시접속 계산 (전체 기간 기준)
     let maxConcurrentParticipants = 0
     let totalSum = 0
     let totalSamples = 0
 
-    accessLogs?.forEach((log) => {
+    allAccessLogs?.forEach((log) => {
       if (log.max_participants > maxConcurrentParticipants) {
         maxConcurrentParticipants = log.max_participants
       }
@@ -171,6 +172,15 @@ export async function GET(
 
     const avgConcurrentParticipants =
       totalSamples > 0 ? totalSum / totalSamples : 0
+
+    // 타임라인용 접속 로그 조회 (날짜 필터 적용)
+    const { data: accessLogs } = await admin
+      .from('webinar_access_logs')
+      .select('*')
+      .eq('webinar_id', actualWebinarId)
+      .gte('time_bucket', from.toISOString())
+      .lt('time_bucket', to.toISOString())
+      .order('time_bucket', { ascending: true })
 
     // 타임라인
     const timeline =
