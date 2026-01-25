@@ -10,7 +10,7 @@ async function uploadWertThumb() {
     const admin = createAdminSupabase()
     
     // 이미지 파일 읽기
-    const imagePath = join(process.cwd(), 'img', 'wert', 'thumb.png')
+    const imagePath = join(process.cwd(), 'img', 'wert', 'thumb3.png')
     console.log('이미지 파일 경로:', imagePath)
     
     const imageBuffer = readFileSync(imagePath)
@@ -47,7 +47,7 @@ async function uploadWertThumb() {
       console.log('✅ 버킷이 이미 존재합니다:', bucketName)
     }
     
-    // 이미지 업로드
+    // 이미지 업로드 (thumb.png로 덮어쓰기)
     const filePath = 'wert/thumb.png'
     console.log('이미지 업로드 중...')
     

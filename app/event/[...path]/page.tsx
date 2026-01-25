@@ -35,10 +35,12 @@ export async function generateMetadata({
       title: '실제 고객사례로 알아보는 AI 특허리서치 실무 활용 웨비나 | keywert Insight',
       description: '2026년 2월 6일(금) 오후 2시-3시 30분, 온라인 LIVE로 진행되는 무료 웨비나. IP팀·특허사무소·R&D팀의 키워트 인사이트 활용 방식을 실제 고객사례를 통해 알아보세요.',
       keywords: 'AI 특허리서치, 키워트 인사이트, 특허 분석, IP팀, 특허사무소, R&D, 웨비나, keywert Insight',
+      metadataBase: new URL('https://eventflow.kr'),
       openGraph: {
         title: '실제 고객사례로 알아보는 AI 특허리서치 실무 활용 웨비나',
         description: '2026년 2월 6일(금) 오후 2시-3시 30분, 온라인 LIVE | 무료 참가 | IP팀·특허사무소·R&D팀의 키워트 인사이트 활용 방식을 실제 고객사례를 통해 알아보세요.',
         type: 'website',
+        url: 'https://eventflow.kr/event/149403',
         siteName: 'keywert Insight',
         images: [
           {
@@ -56,7 +58,7 @@ export async function generateMetadata({
         images: [thumbnailUrl],
       },
       alternates: {
-        canonical: '/event/149403',
+        canonical: 'https://eventflow.kr/event/149403',
       },
     }
   }
