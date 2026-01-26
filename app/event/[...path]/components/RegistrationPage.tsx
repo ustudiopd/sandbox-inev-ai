@@ -671,7 +671,7 @@ export default function RegistrationPage({ campaign, baseUrl }: RegistrationPage
     const headerImageUrl = campaign.public_path === '/149403'
       ? 'https://yqsayphssjznthrxpgfb.supabase.co/storage/v1/object/public/webinar-thumbnails/wert.png'
       : campaign.public_path === '/445870'
-      ? 'https://yqsayphssjznthrxpgfb.supabase.co/storage/v1/object/public/webinar-thumbnails/edm_header_1600_2.jpg'
+      ? 'https://yqsayphssjznthrxpgfb.supabase.co/storage/v1/object/public/webinar-thumbnails/edm_header_1600_0126.jpg'
       : 'https://yqsayphssjznthrxpgfb.supabase.co/storage/v1/object/public/webinar-thumbnails/edm_header_1600_1.jpg'
     
     return (
@@ -1422,7 +1422,7 @@ export default function RegistrationPage({ campaign, baseUrl }: RegistrationPage
   const headerImageUrl = campaign.public_path === '/149403'
     ? 'https://yqsayphssjznthrxpgfb.supabase.co/storage/v1/object/public/webinar-thumbnails/wert.png'
     : campaign.public_path === '/445870'
-    ? 'https://yqsayphssjznthrxpgfb.supabase.co/storage/v1/object/public/webinar-thumbnails/edm_header_1600_2.jpg'
+    ? 'https://yqsayphssjznthrxpgfb.supabase.co/storage/v1/object/public/webinar-thumbnails/edm_header_1600_0126.jpg'
     : 'https://yqsayphssjznthrxpgfb.supabase.co/storage/v1/object/public/webinar-thumbnails/edm_header_1600_1.jpg'
   
   return (

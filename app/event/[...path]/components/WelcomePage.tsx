@@ -19,10 +19,10 @@ export default function WelcomePage({ campaign, baseUrl, isDraft = false, campai
     : `${baseUrl}/event${campaign.public_path}/survey?lookup=true`
   
   // 헤더 이미지 URL - 등록 페이지는 사용자 제공 이미지 사용
-  // 445870 경로는 edm_header_1600_2.jpg 사용
+  // 445870 경로는 edm_header_1600_0126.jpg 사용
   const headerImageUrl = isRegistration
     ? (campaign.public_path === '/445870' 
-        ? 'https://yqsayphssjznthrxpgfb.supabase.co/storage/v1/object/public/webinar-thumbnails/edm_header_1600_2.jpg'
+        ? 'https://yqsayphssjznthrxpgfb.supabase.co/storage/v1/object/public/webinar-thumbnails/edm_header_1600_0126.jpg'
         : 'https://yqsayphssjznthrxpgfb.supabase.co/storage/v1/object/public/webinar-thumbnails/edm_header_1600_1.jpg')
     : 'https://yqsayphssjznthrxpgfb.supabase.co/storage/v1/object/public/webinar-thumbnails/hpe-booth-header.jpg'
   
