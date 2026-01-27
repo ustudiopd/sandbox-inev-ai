@@ -44,6 +44,7 @@ async function uploadOnePredictImages() {
     const imagesToUpload = [
       { localFile: 'thumb1.jpg', bucketPath: 'onepredict/thumb1.jpg', contentType: 'image/jpeg' },
       { localFile: 'thumb2.jpg', bucketPath: 'onepredict/thumb2.jpg', contentType: 'image/jpeg' },
+      { localFile: 'fb0be79a9dfc8.jpg', bucketPath: 'onepredict/fb0be79a9dfc8.jpg', contentType: 'image/jpeg' },
       { localFile: 'be6b22396f779.png', bucketPath: 'onepredict/be6b22396f779.png', contentType: 'image/png' },
     ]
     
