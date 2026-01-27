@@ -225,7 +225,7 @@ export default function OnePredictRegistrationPage({ campaign, baseUrl = '' }: O
               {/* 관심제품 */}
               <div>
                 <label className="block text-sm font-bold text-gray-700 mb-2">
-                  6. 관심제품 (중복 선택 가능)
+                  6. 관심 제품명
                 </label>
                 <div className="space-y-2">
                   <label className="flex items-center space-x-2 cursor-pointer">
@@ -236,7 +236,7 @@ export default function OnePredictRegistrationPage({ campaign, baseUrl = '' }: O
                       className="w-4 h-4"
                       style={{ accentColor: '#2936E7' }}
                     />
-                    <span>Guardione Solution</span>
+                    <span>guardione solution</span>
                   </label>
                   <label className="flex items-center space-x-2 cursor-pointer">
                     <input
@@ -246,7 +246,7 @@ export default function OnePredictRegistrationPage({ campaign, baseUrl = '' }: O
                       className="w-4 h-4"
                       style={{ accentColor: '#2936E7' }}
                     />
-                    <span>AI Native Factory Solution</span>
+                    <span>AI native factory solution</span>
                   </label>
                 </div>
               </div>
