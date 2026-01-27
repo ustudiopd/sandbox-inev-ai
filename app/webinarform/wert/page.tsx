@@ -288,15 +288,26 @@ export default function WebinarFormWertPage() {
         <div className="w-full px-4 sm:px-6 lg:px-[72px] pt-20 sm:pt-[150px] lg:pt-[150px] pb-6 sm:pb-8 lg:pb-20 relative inline-flex flex-col justify-start items-center gap-4 sm:gap-8 lg:gap-20 z-10">
           <div className="self-stretch flex flex-col justify-start items-center gap-4 sm:gap-8 lg:gap-16">
             <div className="w-full max-w-[623px] flex flex-col justify-start items-center gap-3 sm:gap-5 lg:gap-10">
+              {/* IP Insight ON 이미지 */}
+              <div className="flex justify-center items-center" style={{ marginTop: '24px', marginBottom: '24px' }}>
+                <Image
+                  src="https://yqsayphssjznthrxpgfb.supabase.co/storage/v1/object/public/webinar-thumbnails/wert/ip_insight_on.png"
+                  alt="IP Insight ON"
+                  width={204}
+                  height={60}
+                  className="object-contain"
+                  unoptimized
+                />
+              </div>
               <div className="self-stretch flex flex-col justify-start items-center gap-1 sm:gap-4 lg:gap-2">
-                <div className="self-stretch text-center justify-start text-black/80 font-bold text-base sm:text-lg lg:text-[32px] leading-relaxed sm:leading-relaxed lg:leading-[48px]" style={{ fontFamily: 'Pretendard, sans-serif' }}>
+                <div className="self-stretch text-center justify-start text-black/80 font-bold text-base sm:text-lg lg:text-[32px] leading-relaxed sm:leading-relaxed lg:leading-[48px]" style={{ fontFamily: 'Pretendard, sans-serif', marginBottom: '16px' }}>
                   고객사례로 알아보는
                 </div>
-                <div className="self-stretch text-center justify-start text-black font-bold text-4xl sm:text-3xl lg:text-[96px] leading-tight sm:leading-tight lg:leading-[117.60px]" style={{ fontFamily: 'Pretendard, sans-serif' }}>
+                <div className="self-stretch text-center justify-start text-black font-bold text-4xl sm:text-3xl lg:text-[96px] leading-tight sm:leading-tight lg:leading-[117.60px]" style={{ fontFamily: 'Pretendard, sans-serif', marginBottom: '8px' }}>
                   AI 특허리서치<br /><span className="whitespace-nowrap">실무 활용 웨비나</span>
                 </div>
               </div>
-              <div className="inline-flex justify-start items-center gap-2 flex-wrap">
+              <div className="inline-flex justify-start items-center gap-2 flex-wrap" style={{ marginTop: '8px', marginBottom: '8px' }}>
                 <div className="px-2.5 sm:px-4 lg:px-6 py-[0.8rem] bg-black rounded-lg sm:rounded-xl lg:rounded-2xl flex justify-center items-center gap-2 overflow-hidden">
                   <div className="text-center justify-start text-white font-bold text-xs sm:text-base lg:text-[36px] leading-tight" style={{ fontFamily: 'Pretendard, sans-serif' }}>
                     2026. 02. 06{" "}
@@ -309,7 +320,7 @@ export default function WebinarFormWertPage() {
                 </div>
               </div>
             </div>
-            <div className="self-stretch flex flex-col justify-start items-start gap-2 sm:gap-4 lg:gap-8">
+            <div className="self-stretch flex flex-col justify-start items-start gap-2 sm:gap-4 lg:gap-8" style={{ marginTop: '8px' }}>
               <div className="self-stretch text-center justify-start text-black font-bold text-base sm:text-base lg:text-[36px] leading-relaxed sm:leading-relaxed lg:leading-[60px]" style={{ fontFamily: 'Pretendard, sans-serif' }}>
                 IP팀·특허사무소·R&D팀의<br />키워트 인사이트 활용 방식이 궁금하다면,
               </div>

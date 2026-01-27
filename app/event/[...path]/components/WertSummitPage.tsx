@@ -76,11 +76,13 @@ export default function WertSummitPage() {
           text-transform: uppercase;
           font-weight: 900;
           text-align: left;
+          margin-bottom: 32px;
         }
 
         .sub-title {
           font-size: clamp(1.5rem, 4vw, 3rem);
           margin-top: 1.5rem;
+          margin-bottom: 32px;
           font-weight: 700;
           color: #000;
           display: flex;
@@ -331,7 +333,16 @@ export default function WertSummitPage() {
           <img src={wert1LogoUrl} alt="Wert Intelligence Logo" className="w-full h-auto" />
         </div>
 
-        <div className="content">
+        {/* IP Insight ON 이미지 */}
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginTop: '40px', marginBottom: '40px' }}>
+          <img
+            src="https://yqsayphssjznthrxpgfb.supabase.co/storage/v1/object/public/webinar-thumbnails/wert/ip_insight_on.png"
+            alt="IP Insight ON"
+            style={{ width: '204px', height: '60px', objectFit: 'contain' }}
+          />
+        </div>
+
+        <div className="content" style={{ marginTop: '32px', marginBottom: '32px' }}>
           <h1 className="main-title">
             WERT TECH<br />
             SUMMIT 26

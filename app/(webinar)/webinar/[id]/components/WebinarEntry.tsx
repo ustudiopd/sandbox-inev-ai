@@ -1120,22 +1120,23 @@ export default function WebinarEntry({ webinar, isWertPage: serverIsWertPage }: 
     
     .registration-subtitle-text {
       text-align: center;
-      font-size: 16px;
+      font-size: 20px;
       font-weight: 700;
       color: rgba(0, 0, 0, 0.8);
       font-family: 'Pretendard', sans-serif;
       margin: 0;
+      margin-bottom: 24px;
     }
     
     @media (min-width: 640px) {
       .registration-subtitle-text {
-        font-size: 18px;
+        font-size: 22px;
       }
     }
     
     @media (min-width: 1024px) {
       .registration-subtitle-text {
-        font-size: 32px;
+        font-size: 36px;
         line-height: 48px;
       }
     }
@@ -1147,6 +1148,7 @@ export default function WebinarEntry({ webinar, isWertPage: serverIsWertPage }: 
       line-height: 117.6px;
       color: #000;
       margin: 0;
+      margin-bottom: 32px;
     }
     
     .registration-date-badges {
@@ -1155,6 +1157,8 @@ export default function WebinarEntry({ webinar, isWertPage: serverIsWertPage }: 
       align-items: center;
       flex-wrap: wrap;
       justify-content: center;
+      margin-top: 32px;
+      margin-bottom: 32px;
     }
     
     .date-badge {
@@ -1304,6 +1308,12 @@ export default function WebinarEntry({ webinar, isWertPage: serverIsWertPage }: 
       .registration-title {
         font-size: 36px;
         line-height: 1.25;
+        margin-bottom: 24px;
+      }
+      
+      .registration-date-badges {
+        margin-top: 24px;
+        margin-bottom: 24px;
       }
       
       .date-badge {
@@ -1348,7 +1358,7 @@ export default function WebinarEntry({ webinar, isWertPage: serverIsWertPage }: 
       }
       
       .registration-subtitle-text {
-        font-size: 16px !important;
+        font-size: 18px !important;
         line-height: 24px !important;
       }
       
@@ -1713,12 +1723,19 @@ export default function WebinarEntry({ webinar, isWertPage: serverIsWertPage }: 
                 <div className="registration-hero-content">
                   <div className="registration-content">
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '40px' }} className="hero-main-content">
-                      <div className="hero-title-section">
+                      <div className="hero-title-section" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                        {/* IP Insight ON 이미지 */}
+                        <img
+                          src={`${supabaseUrl}/storage/v1/object/public/webinar-thumbnails/wert/ip_insight_on.png`}
+                          alt="IP Insight ON"
+                          style={{ width: '204px', height: '60px', marginTop: '40px', marginBottom: '40px', objectFit: 'contain' }}
+                        />
                         <div className="registration-subtitle-text">
                           고객사례로 알아보는
                         </div>
                         <h1 className="registration-title">
-                          {webinar.title}
+                          AI 특허리서치<br />
+                          <span style={{ whiteSpace: 'nowrap' }}>실무 활용 웨비나</span>
                         </h1>
                         {webinar.webinar_start_time && (
                           <>
