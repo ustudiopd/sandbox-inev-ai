@@ -95,13 +95,15 @@ export default function OnePredictRegistrationPage({ campaign, baseUrl = '' }: O
     <div className="min-h-screen bg-[#f8f9fa] font-sans" style={{ fontFamily: "'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif" }}>
       {/* Header */}
       <header className="fixed w-full z-50 bg-white border-b border-gray-200 h-[80px] max-sm:h-[60px]">
-        <div className="max-w-5xl container mx-auto px-6 max-sm:px-4 h-full flex items-center">
-          <div className="flex items-center cursor-pointer" onClick={() => router.push('/webinar/426307')}>
-            <img 
-              src="https://yqsayphssjznthrxpgfb.supabase.co/storage/v1/object/public/webinar-thumbnails/onepredict/be6b22396f779.png" 
-              alt="원프레딕트 로고"
-              className="w-[120px] max-sm:w-[100px] h-auto"
-            />
+        <div className="w-full px-6 max-sm:px-4 h-full flex items-center">
+          <div className="max-w-3xl mx-auto w-full flex items-center">
+            <div className="flex items-center cursor-pointer" onClick={() => router.push('/webinar/426307')}>
+              <img 
+                src="https://yqsayphssjznthrxpgfb.supabase.co/storage/v1/object/public/webinar-thumbnails/onepredict/be6b22396f779.png" 
+                alt="원프레딕트 로고"
+                className="w-[120px] max-sm:w-[100px] h-auto"
+              />
+            </div>
           </div>
         </div>
       </header>
