@@ -4,6 +4,55 @@ import { Suspense } from 'react'
 import { createAdminSupabase } from '@/lib/supabase/admin'
 import { getWebinarQuery } from '@/lib/utils/webinar'
 import OnePredictRegistrationPage from '@/app/event/[...path]/components/OnePredictRegistrationPage'
+import type { Metadata } from 'next'
+
+/**
+ * 메타데이터 생성 함수
+ */
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>
+}): Promise<Metadata> {
+  const { id } = await params
+  
+  // 426307 slug인 경우 메타데이터 설정
+  if (id === '426307') {
+    const thumbnailUrl = 'https://yqsayphssjznthrxpgfb.supabase.co/storage/v1/object/public/webinar-thumbnails/onepredict/fb0be79a9dfc8.jpg'
+    return {
+      title: '산업 AI의 미래: 가동 효율 극대화 전략 | 원프레딕트 웨비나 등록',
+      description: '원프레딕트 GuardiOne® 기반 설비 관리 혁신 및 DX 성공 전략 공개 - 웨비나 등록',
+      keywords: '원프레딕트, GuardiOne, 산업 AI, 설비 관리, 디지털 트랜스포메이션, 예지보전, 웨비나',
+      metadataBase: new URL('https://eventflow.kr'),
+      openGraph: {
+        title: '산업 AI의 미래: 가동 효율 극대화 전략',
+        description: '원프레딕트 GuardiOne® 기반 설비 관리 혁신 및 DX 성공 전략 공개',
+        type: 'website',
+        url: 'https://eventflow.kr/webinar/426307/register',
+        siteName: '원프레딕트 웨비나',
+        images: [
+          {
+            url: thumbnailUrl,
+            width: 1200,
+            height: 630,
+            alt: '원프레딕트 웨비나',
+          },
+        ],
+      },
+      twitter: {
+        card: 'summary_large_image',
+        title: '산업 AI의 미래: 가동 효율 극대화 전략',
+        description: '원프레딕트 GuardiOne® 기반 설비 관리 혁신 및 DX 성공 전략 공개',
+        images: [thumbnailUrl],
+      },
+      alternates: {
+        canonical: 'https://eventflow.kr/webinar/426307/register',
+      },
+    }
+  }
+  
+  return {}
+}
 
 export default async function WebinarRegisterPage({
   params,

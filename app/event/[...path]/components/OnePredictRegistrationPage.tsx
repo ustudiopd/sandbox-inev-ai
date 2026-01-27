@@ -28,6 +28,9 @@ export default function OnePredictRegistrationPage({ campaign, baseUrl = '' }: O
     country: '',
     message: ''
   })
+  
+  // 개인정보 활용 동의 상태
+  const [privacyConsent, setPrivacyConsent] = useState<'yes' | 'no' | null>(null)
 
   const showMessageBox = (text: string) => {
     setMessageText(text)
@@ -41,6 +44,34 @@ export default function OnePredictRegistrationPage({ campaign, baseUrl = '' }: O
 
   const handleRegistration = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+    
+    // 필수 필드 검증
+    if (!formData.position) {
+      showMessageBox('직급을 선택해주세요.')
+      return
+    }
+    
+    if (!formData.industry) {
+      showMessageBox('산업을 선택해주세요.')
+      return
+    }
+    
+    if (!formData.address.trim()) {
+      showMessageBox('주소를 입력해주세요.')
+      return
+    }
+    
+    if (!formData.country.trim()) {
+      showMessageBox('국가를 입력해주세요.')
+      return
+    }
+    
+    // 개인정보 활용 동의 검증
+    if (privacyConsent !== 'yes') {
+      showMessageBox('개인정보 활용 동의에 동의해주세요.')
+      return
+    }
+    
     // 휴대폰 번호 합치기
     const phone = `${formData.phone1}-${formData.phone2}-${formData.phone3}`
     const registrationData = {
@@ -224,12 +255,13 @@ export default function OnePredictRegistrationPage({ campaign, baseUrl = '' }: O
               {/* 직급 */}
               <div>
                 <label className="block text-sm font-bold text-gray-700 mb-2">
-                  5. 직급
+                  5. 직급 <span className="text-red-500">*</span>
                 </label>
                 <select
                   name="position"
                   value={formData.position}
                   onChange={handleInputChange}
+                  required
                   className="w-full px-4 max-sm:px-3 py-3 max-sm:py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:border-[#2936E7] max-sm:text-sm"
                 >
                   <option value="">선택해주세요</option>
@@ -242,7 +274,7 @@ export default function OnePredictRegistrationPage({ campaign, baseUrl = '' }: O
               {/* 관심제품 */}
               <div>
                 <label className="block text-sm font-bold text-gray-700 mb-2">
-                  6. 관심 제품명
+                  6. 관심 제품명 <span className="text-gray-500 font-normal text-xs">(복수선택가능)</span>
                 </label>
                 <div className="space-y-2">
                   <label className="flex items-center space-x-2 cursor-pointer">
@@ -271,12 +303,13 @@ export default function OnePredictRegistrationPage({ campaign, baseUrl = '' }: O
               {/* 산업 */}
               <div>
                 <label className="block text-sm font-bold text-gray-700 mb-2">
-                  7. 산업
+                  7. 산업 <span className="text-red-500">*</span>
                 </label>
                 <select
                   name="industry"
                   value={formData.industry}
                   onChange={handleInputChange}
+                  required
                   className="w-full px-4 max-sm:px-3 py-3 max-sm:py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:border-[#2936E7] max-sm:text-sm"
                 >
                   <option value="">선택해주세요</option>
@@ -304,13 +337,14 @@ export default function OnePredictRegistrationPage({ campaign, baseUrl = '' }: O
               {/* 주소 */}
               <div>
                 <label className="block text-sm font-bold text-gray-700 mb-2">
-                  8. 주소
+                  8. 주소 <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
                   name="address"
                   value={formData.address}
                   onChange={handleInputChange}
+                  required
                   className="w-full px-4 max-sm:px-3 py-3 max-sm:py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:border-[#2936E7] max-sm:text-sm"
                 />
               </div>
@@ -318,7 +352,7 @@ export default function OnePredictRegistrationPage({ campaign, baseUrl = '' }: O
               {/* 국가 */}
               <div>
                 <label className="block text-sm font-bold text-gray-700 mb-2">
-                  9. 국가
+                  9. 국가 <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -326,6 +360,7 @@ export default function OnePredictRegistrationPage({ campaign, baseUrl = '' }: O
                   value={formData.country}
                   onChange={handleInputChange}
                   placeholder="대한민국"
+                  required
                   className="w-full px-4 max-sm:px-3 py-3 max-sm:py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:border-[#2936E7] max-sm:text-sm"
                 />
               </div>
@@ -345,18 +380,58 @@ export default function OnePredictRegistrationPage({ campaign, baseUrl = '' }: O
                 />
               </div>
 
-              {/* 개인정보 동의 */}
-              <div className="flex items-center space-x-2 pt-4">
-                <input
-                  type="checkbox"
-                  id="privacyAgree"
-                  required
-                  className="w-4 h-4 flex-shrink-0"
-                  style={{ accentColor: '#2936E7' }}
-                />
-                <label htmlFor="privacyAgree" className="text-xs text-gray-500 leading-relaxed">
-                  개인정보 수집 및 이용에 동의합니다. <span className="text-red-500">*</span> <a href="https://ko.onepredict.ai/privacy" className="text-[#2936E7] underline">개인정보처리방침</a>
-                </label>
+              {/* 개인정보 활용 동의 */}
+              <div style={{ paddingTop: '24px', borderTop: '1px solid #e5e5e5' }} className="mobile-consent-section">
+                <div style={{ marginBottom: '16px' }}>
+                  <h3 style={{ fontSize: '16px', fontWeight: 'bold', color: '#000', marginBottom: '12px' }}>
+                    개인정보 활용 동의 <span style={{ color: '#f00' }}>*</span>
+                  </h3>
+                  <div style={{ fontSize: '14px', color: '#333', lineHeight: '22px', marginBottom: '16px' }}>
+                    <p style={{ marginBottom: '12px' }}>
+                      주식회사 원프레딕트는 웨비나 운영과 서비스 홍보를 위해 다음과 같이 개인정보를 수집 및 이용하고자 합니다. 귀하는 동의를 거부할 권리가 있으며, 거부할 경우 웨비나 이용이 제한됩니다.
+                    </p>
+                    <div style={{ marginBottom: '12px' }}>
+                      <strong>- 항목:</strong> 이름, 이메일, 휴대폰번호, 회사
+                    </div>
+                    <div style={{ marginBottom: '12px' }}>
+                      <strong>- 수집 및 이용목적:</strong> 참가자 혜택 제공(서비스 안내 등)
+                    </div>
+                    <div style={{ marginBottom: '12px' }}>
+                      <strong>- 보유 및 이용기간:</strong> 동의 철회까지
+                    </div>
+                    <div style={{ fontSize: '13px', color: '#666', marginTop: '16px', padding: '12px', backgroundColor: '#f9f9f9', borderRadius: '8px' }}>
+                      <strong>※ 동의 거부 권리 및 불이익:</strong> 귀하는 위와 같은 개인정보 활용 동의를 거부할 권리가 있습니다. 다만, 동의 거부 시 웨비나 참가 신청 및 관련 혜택 제공이 제한될 수 있습니다.
+                    </div>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+                    <input
+                      type="radio"
+                      name="privacyConsent"
+                      value="yes"
+                      checked={privacyConsent === 'yes'}
+                      onChange={(e) => setPrivacyConsent('yes')}
+                      style={{ width: '20px', height: '20px', marginRight: '12px', accentColor: '#2936E7', flexShrink: 0 }}
+                      required
+                    />
+                    <span style={{ fontSize: '16px', color: '#000' }}>네, 동의합니다.</span>
+                  </label>
+                  <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+                    <input
+                      type="radio"
+                      name="privacyConsent"
+                      value="no"
+                      checked={privacyConsent === 'no'}
+                      onChange={(e) => setPrivacyConsent('no')}
+                      style={{ width: '20px', height: '20px', marginRight: '12px', accentColor: '#2936E7', flexShrink: 0 }}
+                    />
+                    <span style={{ fontSize: '16px', color: '#000' }}>아니요, 동의하지 않습니다.</span>
+                  </label>
+                </div>
+                <div style={{ marginTop: '12px', fontSize: '12px', color: '#666' }}>
+                  자세한 내용은 <a href="https://ko.onepredict.ai/privacy" target="_blank" rel="noopener noreferrer" style={{ color: '#2936E7', textDecoration: 'underline' }}>개인정보처리방침</a>을 참조하시기 바랍니다.
+                </div>
               </div>
 
               {/* 제출 버튼 */}
