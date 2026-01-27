@@ -8,10 +8,7 @@ import DonePageClient from './components/DonePageClient'
 import RegistrationPage from './components/RegistrationPage'
 import WelcomePage from './components/WelcomePage'
 import WebinarFormWertPage from '@/app/webinarform/wert/page'
-import OnePredictWebinarPage from './components/OnePredictWebinarPage'
-import OnePredictRegistrationPage from './components/OnePredictRegistrationPage'
-import OnePredictEnterPage from './components/OnePredictEnterPage'
-import OnePredictWebinarLivePage from './components/OnePredictWebinarLivePage'
+import ClientWrapper from './components/ClientWrapper'
 import type { Metadata } from 'next'
 
 /**
@@ -353,18 +350,13 @@ export default async function SurveyPublicPage({
       const protocol = headersList.get('x-forwarded-proto') || 'http'
       const baseUrl = `${protocol}://${host}`
       
-      // 캠페인이 없어도 페이지 표시
+      // 캠페인이 없어도 페이지 표시 - 동적 import로 샌드박스화
       return (
-        <Suspense fallback={
-          <div className="min-h-screen bg-white flex items-center justify-center">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#2936E7] mx-auto mb-4"></div>
-              <p className="text-gray-600">로딩 중...</p>
-            </div>
-          </div>
-        }>
-          <OnePredictWebinarPage campaign={campaign} baseUrl={baseUrl} />
-        </Suspense>
+        <ClientWrapper
+          clientName="원프레딕트"
+          loader={() => import('./components/OnePredictWebinarPage')}
+          props={{ campaign, baseUrl }}
+        />
       )
     }
     
@@ -487,16 +479,11 @@ export default async function SurveyPublicPage({
       const protocol = headersList.get('x-forwarded-proto') || 'http'
       const baseUrl = `${protocol}://${host}`
       return (
-        <Suspense fallback={
-          <div className="min-h-screen bg-white flex items-center justify-center">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#2936E7] mx-auto mb-4"></div>
-              <p className="text-gray-600">로딩 중...</p>
-            </div>
-          </div>
-        }>
-          <OnePredictRegistrationPage campaign={campaign} baseUrl={baseUrl} />
-        </Suspense>
+        <ClientWrapper
+          clientName="원프레딕트 등록"
+          loader={() => import('./components/OnePredictRegistrationPage')}
+          props={{ campaign, baseUrl }}
+        />
       )
     }
     
@@ -528,16 +515,11 @@ export default async function SurveyPublicPage({
       const protocol = headersList.get('x-forwarded-proto') || 'http'
       const baseUrl = `${protocol}://${host}`
       return (
-        <Suspense fallback={
-          <div className="min-h-screen bg-white flex items-center justify-center">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#2936E7] mx-auto mb-4"></div>
-              <p className="text-gray-600">로딩 중...</p>
-            </div>
-          </div>
-        }>
-          <OnePredictEnterPage campaign={campaign} baseUrl={baseUrl} />
-        </Suspense>
+        <ClientWrapper
+          clientName="원프레딕트 입장"
+          loader={() => import('./components/OnePredictEnterPage')}
+          props={{ campaign, baseUrl }}
+        />
       )
     }
     notFound()
@@ -549,16 +531,11 @@ export default async function SurveyPublicPage({
       const protocol = headersList.get('x-forwarded-proto') || 'http'
       const baseUrl = `${protocol}://${host}`
       return (
-        <Suspense fallback={
-          <div className="min-h-screen bg-white flex items-center justify-center">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#2936E7] mx-auto mb-4"></div>
-              <p className="text-gray-600">로딩 중...</p>
-            </div>
-          </div>
-        }>
-          <OnePredictWebinarLivePage campaign={campaign} baseUrl={baseUrl} />
-        </Suspense>
+        <ClientWrapper
+          clientName="원프레딕트 라이브"
+          loader={() => import('./components/OnePredictWebinarLivePage')}
+          props={{ campaign, baseUrl }}
+        />
       )
     }
     notFound()

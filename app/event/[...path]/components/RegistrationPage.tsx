@@ -26,15 +26,16 @@ export default function RegistrationPage({ campaign, baseUrl }: RegistrationPage
   // 등록 폼 필드
   const [email, setEmail] = useState('')
   const [name, setName] = useState('')
-  const [jobTitle, setJobTitle] = useState('')
-  const [company, setCompany] = useState('')
+  const [organization, setOrganization] = useState('') // 소속
+  const [department, setDepartment] = useState('') // 부서
+  const [position, setPosition] = useState('') // 직함
+  const [yearsOfExperience, setYearsOfExperience] = useState('') // 연차(경력)
+  const [question, setQuestion] = useState('') // 웨비나와 관련하여 궁금한 사항
   const [phoneCountryCode, setPhoneCountryCode] = useState('+82')
   const [phone1, setPhone1] = useState('010')
   const [phone2, setPhone2] = useState('')
   const [phone3, setPhone3] = useState('')
-  const [consentEmail, setConsentEmail] = useState(false)
-  const [consentPhone, setConsentPhone] = useState(false)
-  const [privacyConsent, setPrivacyConsent] = useState(false)
+  const [privacyConsent, setPrivacyConsent] = useState<'yes' | 'no' | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   
@@ -102,27 +103,37 @@ export default function RegistrationPage({ campaign, baseUrl }: RegistrationPage
     }
     
     if (!name.trim()) {
-      setError('성함을 입력해주세요.')
+      setError('이름을 입력해주세요.')
       return
     }
     
-    if (!company.trim()) {
-      setError('회사명을 입력해주세요.')
+    if (!organization.trim()) {
+      setError('소속을 입력해주세요.')
       return
     }
     
-    if (!jobTitle.trim()) {
-      setError('직급을 입력해주세요.')
+    if (!department.trim()) {
+      setError('부서를 입력해주세요.')
+      return
+    }
+    
+    if (!position.trim()) {
+      setError('직함을 입력해주세요.')
+      return
+    }
+    
+    if (!yearsOfExperience.trim()) {
+      setError('연차(경력)를 입력해주세요.')
       return
     }
     
     if (!phone1 || !phone2 || !phone3) {
-      setError('전화번호를 모두 입력해주세요.')
+      setError('휴대폰 번호를 모두 입력해주세요.')
       return
     }
     
-    if (!privacyConsent) {
-      setError('개인정보취급방침에 동의해주세요.')
+    if (privacyConsent !== 'yes') {
+      setError('개인정보 활용 동의에 동의해주세요.')
       return
     }
     
@@ -139,18 +150,20 @@ export default function RegistrationPage({ campaign, baseUrl }: RegistrationPage
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: name.trim(),
-          company: company.trim(),
+          company: organization.trim(), // 소속을 company 필드에 저장 (기존 API 호환성)
           phone: phone,
           phone_norm: phoneNorm,
-            registration_data: {
-              email: email.trim(),
-              name: name.trim(),
-              jobTitle: jobTitle.trim(),
-              phoneCountryCode: phoneCountryCode,
-              consentEmail: consentEmail,
-              consentPhone: consentPhone,
-              privacyConsent: privacyConsent,
-            },
+          registration_data: {
+            email: email.trim(),
+            name: name.trim(),
+            organization: organization.trim(),
+            department: department.trim(),
+            position: position.trim(),
+            yearsOfExperience: yearsOfExperience.trim(),
+            question: question.trim() || undefined, // 선택 필드 (빈 문자열이면 undefined)
+            phoneCountryCode: phoneCountryCode,
+            privacyConsent: privacyConsent === 'yes',
+          },
         }),
       })
       
@@ -1309,26 +1322,26 @@ export default function RegistrationPage({ campaign, baseUrl }: RegistrationPage
                 </div>
               )}
               
-              {/* 회사명 */}
+              {/* 이름 */}
               <div>
                 <label className="registration-form-label">
-                  회사명 <span style={{ color: '#f00' }}>*</span>
+                  이름 <span style={{ color: '#f00' }}>*</span>
                 </label>
                 <input
                   type="text"
-                  value={company}
-                  onChange={(e) => setCompany(e.target.value)}
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
                   className="registration-form-input"
-                  placeholder="회사명을 입력하세요"
+                  placeholder="이름을 입력하세요"
                   disabled={submitting}
                   required
                 />
               </div>
               
-              {/* 이메일 주소 */}
+              {/* 이메일 */}
               <div>
                 <label className="registration-form-label">
-                  이메일 주소 <span style={{ color: '#f00' }}>*</span>
+                  이메일 <span style={{ color: '#f00' }}>*</span>
                 </label>
                 <input
                   type="email"
@@ -1341,42 +1354,10 @@ export default function RegistrationPage({ campaign, baseUrl }: RegistrationPage
                 />
               </div>
               
-              {/* 성함 */}
-              <div>
-                <label className="registration-form-label">
-                  성함 <span style={{ color: '#f00' }}>*</span>
-                </label>
-                <input
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="registration-form-input"
-                  placeholder="성함을 입력하세요"
-                  disabled={submitting}
-                  required
-                />
-              </div>
-              
-              {/* 직급 */}
-              <div>
-                <label className="registration-form-label">
-                  직급 <span style={{ color: '#f00' }}>*</span>
-                </label>
-                <input
-                  type="text"
-                  value={jobTitle}
-                  onChange={(e) => setJobTitle(e.target.value)}
-                  className="registration-form-input"
-                  placeholder="직급을 입력하세요"
-                  disabled={submitting}
-                  required
-                />
-              </div>
-              
               {/* 휴대폰 번호 */}
               <div>
                 <label className="registration-form-label">
-                  휴대폰 번호 <span style={{ color: '#f00' }}>*</span>
+                  휴대폰번호 <span style={{ color: '#f00' }}>*</span>
                 </label>
                 <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }} className="mobile-phone-gap">
                   <input
@@ -1431,85 +1412,137 @@ export default function RegistrationPage({ campaign, baseUrl }: RegistrationPage
                 </div>
               </div>
               
-              {/* 커뮤니케이션 동의 */}
-              <div style={{ paddingTop: '24px', borderTop: '1px solid #e5e5e5' }} className="mobile-consent-section">
-                <p style={{ fontSize: '16px', color: '#666', marginBottom: '16px', lineHeight: '24px' }} className="mobile-consent-text">
-                  WERT에 대한 맞춤식 커뮤니케이션을 통해 WERT 파트너의 제품, 서비스, 특별 행사 및 이벤트 정보를 선택적으로 받으시겠습니까?
-                </p>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }} className="mobile-checkbox-gap">
-                  <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }} className="mobile-checkbox-label">
-                    <input
-                      type="checkbox"
-                      checked={consentEmail}
-                      onChange={(e) => setConsentEmail(e.target.checked)}
-                      style={{ width: '20px', height: '20px', marginRight: '12px', accentColor: '#00A08C' }}
-                      className="mobile-checkbox"
-                      disabled={submitting}
-                    />
-                    <span style={{ fontSize: '16px', color: '#000' }} className="mobile-checkbox-text">이메일</span>
-                  </label>
-                  <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }} className="mobile-checkbox-label">
-                    <input
-                      type="checkbox"
-                      checked={consentPhone}
-                      onChange={(e) => setConsentPhone(e.target.checked)}
-                      style={{ width: '20px', height: '20px', marginRight: '12px', accentColor: '#00A08C' }}
-                      className="mobile-checkbox"
-                      disabled={submitting}
-                    />
-                    <span style={{ fontSize: '16px', color: '#000' }} className="mobile-checkbox-text">전화번호</span>
-                  </label>
-                </div>
+              {/* 소속 */}
+              <div>
+                <label className="registration-form-label">
+                  소속 <span style={{ color: '#f00' }}>*</span>
+                </label>
+                <input
+                  type="text"
+                  value={organization}
+                  onChange={(e) => setOrganization(e.target.value)}
+                  className="registration-form-input"
+                  placeholder="소속을 입력하세요"
+                  disabled={submitting}
+                  required
+                />
               </div>
               
-              {/* 개인정보취급방침 */}
-              <div style={{ paddingTop: '24px', borderTop: '1px solid #e5e5e5' }} className="mobile-consent-section">
-                <p style={{ fontSize: '14px', color: '#666', marginBottom: '16px', lineHeight: '22px' }} className="mobile-privacy-text">
-                  WERT에서 귀하의 정보를 관리, 사용, 보호하는 방법에 대해 자세히 알아보려면{' '}
-                  <a 
-                    href="https://www.wertcorp.com/kr/policy" 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    style={{ color: '#00A08C', textDecoration: 'underline' }}
-                  >
-                    WERT 개인정보 취급방침
-                  </a>을 참조하시기 바랍니다. 
-                  동의한 사항에 대해 언제든지 취소 또는 수정하여 WERT의 마케팅 커뮤니케이션 서비스를 받을 수 있습니다. 
-                  이 작업을 수행하려면 WERT 이메일 마케팅 커뮤니케이션 페이지 하단의 옵트아웃 및 환경설정 메커니즘을 사용하거나{' '}
-                  <a 
-                    href="/unsubscribe" 
-                    onClick={(e) => {
-                      e.preventDefault()
-                      const width = 600
-                      const height = 700
-                      const left = (window.screen.width - width) / 2
-                      const top = (window.screen.height - height) / 2
-                      window.open(
-                        '/unsubscribe',
-                        'unsubscribe',
-                        `width=${width},height=${height},left=${left},top=${top},toolbar=no,menubar=no,location=no,status=no,scrollbars=yes,resizable=yes`
-                      )
-                    }}
-                    style={{ color: '#00A08C', textDecoration: 'underline', cursor: 'pointer' }}
-                  >
-                    이 링크
-                  </a>를 클릭하시면 됩니다. 
-                  마케팅 팀으로부터 전화를 받으실 수 있도록 휴대폰 번호를 제공하신 경우, 로밍 요금이 적용될 수 있음을 알아두시기 바랍니다.
-                </p>
-                <label style={{ display: 'flex', alignItems: 'start', cursor: 'pointer' }} className="mobile-checkbox-label">
-                  <input
-                    type="checkbox"
-                    checked={privacyConsent}
-                    onChange={(e) => setPrivacyConsent(e.target.checked)}
-                    style={{ width: '20px', height: '20px', marginRight: '12px', marginTop: '2px', accentColor: '#00A08C' }}
-                    className="mobile-checkbox"
-                    disabled={submitting}
-                    required
-                  />
-                  <span style={{ fontSize: '16px', color: '#000' }} className="mobile-checkbox-text">
-                    개인정보 취급방침에 동의합니다 <span style={{ color: '#f00' }}>*</span>
-                  </span>
+              {/* 부서 */}
+              <div>
+                <label className="registration-form-label">
+                  부서 <span style={{ color: '#f00' }}>*</span>
                 </label>
+                <input
+                  type="text"
+                  value={department}
+                  onChange={(e) => setDepartment(e.target.value)}
+                  className="registration-form-input"
+                  placeholder="부서를 입력하세요"
+                  disabled={submitting}
+                  required
+                />
+              </div>
+              
+              {/* 직함 */}
+              <div>
+                <label className="registration-form-label">
+                  직함 <span style={{ color: '#f00' }}>*</span>
+                </label>
+                <input
+                  type="text"
+                  value={position}
+                  onChange={(e) => setPosition(e.target.value)}
+                  className="registration-form-input"
+                  placeholder="직함을 입력하세요"
+                  disabled={submitting}
+                  required
+                />
+              </div>
+              
+              {/* 연차(경력) */}
+              <div>
+                <label className="registration-form-label">
+                  연차(경력) <span style={{ color: '#f00' }}>*</span>
+                </label>
+                <input
+                  type="text"
+                  value={yearsOfExperience}
+                  onChange={(e) => setYearsOfExperience(e.target.value)}
+                  className="registration-form-input"
+                  placeholder="예: 5년, 신입 등"
+                  disabled={submitting}
+                  required
+                />
+              </div>
+              
+              {/* 웨비나와 관련하여 궁금한 사항 */}
+              <div>
+                <label className="registration-form-label">
+                  웨비나와 관련하여 궁금한 사항을 기재해 주세요.
+                </label>
+                <textarea
+                  value={question}
+                  onChange={(e) => setQuestion(e.target.value)}
+                  className="registration-form-input"
+                  placeholder="궁금한 사항을 입력하세요"
+                  rows={4}
+                  disabled={submitting}
+                  style={{ resize: 'vertical', minHeight: '100px' }}
+                />
+              </div>
+              
+              {/* 개인정보 활용 동의 */}
+              <div style={{ paddingTop: '24px', borderTop: '1px solid #e5e5e5' }} className="mobile-consent-section">
+                <div style={{ marginBottom: '16px' }}>
+                  <h3 style={{ fontSize: '16px', fontWeight: 'bold', color: '#000', marginBottom: '12px' }}>
+                    개인정보 활용 동의 <span style={{ color: '#f00' }}>*</span>
+                  </h3>
+                  <div style={{ fontSize: '14px', color: '#333', lineHeight: '22px', marginBottom: '16px' }}>
+                    <p style={{ marginBottom: '12px' }}>
+                      주식회사 워트인텔리전스는 웨비나 운영과 서비스 홍보를 위해 다음과 같이 개인정보를 수집 및 이용하고자 합니다. 귀하는 동의를 거부할 권리가 있으며, 거부할 경우 웨비나 이용이 제한됩니다.
+                    </p>
+                    <div style={{ marginBottom: '12px' }}>
+                      <strong>- 항목:</strong> 이름, 이메일, 휴대폰번호, 소속, 부서, 직함, 연차(경력)
+                    </div>
+                    <div style={{ marginBottom: '12px' }}>
+                      <strong>- 수집 및 이용목적:</strong> 참가자 혜택 제공(서비스 안내 등)
+                    </div>
+                    <div style={{ marginBottom: '12px' }}>
+                      <strong>- 보유 및 이용기간:</strong> 동의 철회까지
+                    </div>
+                    <div style={{ fontSize: '13px', color: '#666', marginTop: '16px', padding: '12px', backgroundColor: '#f9f9f9', borderRadius: '8px' }}>
+                      <strong>※ 동의 거부 권리 및 불이익:</strong> 귀하는 위와 같은 개인정보 활용 동의를 거부할 권리가 있습니다. 다만, 동의 거부 시 웨비나 참가 신청 및 관련 혜택 제공이 제한될 수 있습니다.
+                    </div>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+                    <input
+                      type="radio"
+                      name="privacyConsent"
+                      value="yes"
+                      checked={privacyConsent === 'yes'}
+                      onChange={(e) => setPrivacyConsent('yes')}
+                      style={{ width: '20px', height: '20px', marginRight: '12px', accentColor: '#00A08C', flexShrink: 0 }}
+                      disabled={submitting}
+                      required
+                    />
+                    <span style={{ fontSize: '16px', color: '#000' }}>네, 동의합니다.</span>
+                  </label>
+                  <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+                    <input
+                      type="radio"
+                      name="privacyConsent"
+                      value="no"
+                      checked={privacyConsent === 'no'}
+                      onChange={(e) => setPrivacyConsent('no')}
+                      style={{ width: '20px', height: '20px', marginRight: '12px', accentColor: '#00A08C', flexShrink: 0 }}
+                      disabled={submitting}
+                    />
+                    <span style={{ fontSize: '16px', color: '#000' }}>아니요, 동의하지 않습니다.</span>
+                  </label>
+                </div>
               </div>
               
               {/* 제출 버튼 */}
@@ -1589,26 +1622,26 @@ export default function RegistrationPage({ campaign, baseUrl }: RegistrationPage
               </div>
             )}
             
-            {/* 회사명 */}
+            {/* 이름 */}
             <div className="flex items-center gap-4">
               <label className="text-sm font-medium text-gray-700 whitespace-nowrap min-w-[100px]">
-                회사명 <span className="text-red-500">*</span>
+                이름 <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
-                value={company}
-                onChange={(e) => setCompany(e.target.value)}
+                value={name}
+                onChange={(e) => setName(e.target.value)}
                 className="flex-1 px-4 py-2.5 border-b-2 border-gray-200 focus:border-[#00B388] outline-none transition-colors bg-white text-gray-900 text-base"
-                placeholder="회사명을 입력하세요"
+                placeholder="이름을 입력하세요"
                 disabled={submitting}
                 required
               />
             </div>
             
-            {/* 이메일 주소 */}
+            {/* 이메일 */}
             <div className="flex items-center gap-4">
               <label className="text-sm font-medium text-gray-700 whitespace-nowrap min-w-[100px]">
-                이메일 주소 <span className="text-red-500">*</span>
+                이메일 <span className="text-red-500">*</span>
               </label>
               <input
                 type="email"
@@ -1621,35 +1654,83 @@ export default function RegistrationPage({ campaign, baseUrl }: RegistrationPage
               />
             </div>
             
-            {/* 성함 */}
+            {/* 소속 */}
             <div className="flex items-center gap-4">
               <label className="text-sm font-medium text-gray-700 whitespace-nowrap min-w-[100px]">
-                성함 <span className="text-red-500">*</span>
+                소속 <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
+                value={organization}
+                onChange={(e) => setOrganization(e.target.value)}
                 className="flex-1 px-4 py-2.5 border-b-2 border-gray-200 focus:border-[#00B388] outline-none transition-colors bg-white text-gray-900 text-base"
-                placeholder="성함을 입력하세요"
+                placeholder="소속을 입력하세요"
                 disabled={submitting}
                 required
               />
             </div>
             
-            {/* 직급 */}
+            {/* 부서 */}
             <div className="flex items-center gap-4">
               <label className="text-sm font-medium text-gray-700 whitespace-nowrap min-w-[100px]">
-                직급 <span className="text-red-500">*</span>
+                부서 <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
-                value={jobTitle}
-                onChange={(e) => setJobTitle(e.target.value)}
+                value={department}
+                onChange={(e) => setDepartment(e.target.value)}
                 className="flex-1 px-4 py-2.5 border-b-2 border-gray-200 focus:border-[#00B388] outline-none transition-colors bg-white text-gray-900 text-base"
-                placeholder="직급을 입력하세요"
+                placeholder="부서를 입력하세요"
                 disabled={submitting}
                 required
+              />
+            </div>
+            
+            {/* 직함 */}
+            <div className="flex items-center gap-4">
+              <label className="text-sm font-medium text-gray-700 whitespace-nowrap min-w-[100px]">
+                직함 <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                value={position}
+                onChange={(e) => setPosition(e.target.value)}
+                className="flex-1 px-4 py-2.5 border-b-2 border-gray-200 focus:border-[#00B388] outline-none transition-colors bg-white text-gray-900 text-base"
+                placeholder="직함을 입력하세요"
+                disabled={submitting}
+                required
+              />
+            </div>
+            
+            {/* 연차(경력) */}
+            <div className="flex items-center gap-4">
+              <label className="text-sm font-medium text-gray-700 whitespace-nowrap min-w-[100px]">
+                연차(경력) <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                value={yearsOfExperience}
+                onChange={(e) => setYearsOfExperience(e.target.value)}
+                className="flex-1 px-4 py-2.5 border-b-2 border-gray-200 focus:border-[#00B388] outline-none transition-colors bg-white text-gray-900 text-base"
+                placeholder="예: 5년, 신입 등"
+                disabled={submitting}
+                required
+              />
+            </div>
+            
+            {/* 웨비나와 관련하여 궁금한 사항 */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                웨비나와 관련하여 궁금한 사항을 기재해 주세요.
+              </label>
+              <textarea
+                value={question}
+                onChange={(e) => setQuestion(e.target.value)}
+                className="w-full px-4 py-2.5 border-b-2 border-gray-200 focus:border-[#00B388] outline-none transition-colors bg-white text-gray-900 text-base"
+                placeholder="궁금한 사항을 입력하세요"
+                rows={4}
+                disabled={submitting}
+                style={{ resize: 'vertical', minHeight: '100px' }}
               />
             </div>
             
@@ -1707,102 +1788,55 @@ export default function RegistrationPage({ campaign, baseUrl }: RegistrationPage
               </div>
             </div>
             
-            {/* 커뮤니케이션 동의 */}
+            {/* 개인정보 활용 동의 */}
             <div className="pt-4 border-t border-gray-200">
-              <p className="text-sm font-medium text-gray-700 mb-4">
-                {campaign.public_path === '/149403' 
-                  ? 'WERT에 대한 맞춤식 커뮤니케이션을 통해 WERT 파트너의 제품, 서비스, 특별 행사 및 이벤트 정보를 선택적으로 받으시겠습니까?'
-                  : 'HPE에 대한 맞춤식 커뮤니케이션을 통해 HPE 파트너의 제품, 서비스, 특별 행사 및 이벤트 정보를 선택적으로 받으시겠습니까?'}
-              </p>
+              <h3 className="text-base font-bold text-gray-900 mb-3">
+                개인정보 활용 동의 <span className="text-red-500">*</span>
+              </h3>
+              <div className="text-sm text-gray-700 mb-4 leading-relaxed">
+                <p className="mb-3">
+                  주식회사 워트인텔리전스는 웨비나 운영과 서비스 홍보를 위해 다음과 같이 개인정보를 수집 및 이용하고자 합니다. 귀하는 동의를 거부할 권리가 있으며, 거부할 경우 웨비나 이용이 제한됩니다.
+                </p>
+                <div className="mb-2">
+                  <strong>- 항목:</strong> 이름, 이메일, 휴대폰번호, 소속, 부서, 직함, 연차(경력)
+                </div>
+                <div className="mb-2">
+                  <strong>- 수집 및 이용목적:</strong> 참가자 혜택 제공(서비스 안내 등)
+                </div>
+                <div className="mb-3">
+                  <strong>- 보유 및 이용기간:</strong> 동의 철회까지
+                </div>
+                <div className="text-xs text-gray-600 mt-4 p-3 bg-gray-50 rounded-lg">
+                  <strong>※ 동의 거부 권리 및 불이익:</strong> 귀하는 위와 같은 개인정보 활용 동의를 거부할 권리가 있습니다. 다만, 동의 거부 시 웨비나 참가 신청 및 관련 혜택 제공이 제한될 수 있습니다.
+                </div>
+              </div>
               <div className="space-y-3">
                 <label className="flex items-center cursor-pointer">
                   <input
-                    type="checkbox"
-                    checked={consentEmail}
-                    onChange={(e) => setConsentEmail(e.target.checked)}
-                    className="w-4 h-4 text-[#00B388] border-gray-300 rounded focus:ring-[#00B388]"
+                    type="radio"
+                    name="privacyConsent"
+                    value="yes"
+                    checked={privacyConsent === 'yes'}
+                    onChange={(e) => setPrivacyConsent('yes')}
+                    className="w-4 h-4 text-[#00B388] border-gray-300 focus:ring-[#00B388]"
                     disabled={submitting}
+                    required
                   />
-                  <span className="ml-3 text-sm font-medium text-gray-700">이메일</span>
+                  <span className="ml-3 text-sm font-medium text-gray-700">네, 동의합니다.</span>
                 </label>
                 <label className="flex items-center cursor-pointer">
                   <input
-                    type="checkbox"
-                    checked={consentPhone}
-                    onChange={(e) => setConsentPhone(e.target.checked)}
-                    className="w-4 h-4 text-[#00B388] border-gray-300 rounded focus:ring-[#00B388]"
+                    type="radio"
+                    name="privacyConsent"
+                    value="no"
+                    checked={privacyConsent === 'no'}
+                    onChange={(e) => setPrivacyConsent('no')}
+                    className="w-4 h-4 text-[#00B388] border-gray-300 focus:ring-[#00B388]"
                     disabled={submitting}
                   />
-                  <span className="ml-3 text-sm font-medium text-gray-700">전화번호</span>
+                  <span className="ml-3 text-sm font-medium text-gray-700">아니요, 동의하지 않습니다.</span>
                 </label>
               </div>
-            </div>
-            
-            {/* 개인정보취급방침 */}
-            <div className="pt-4 border-t border-gray-200">
-              <p className="text-xs sm:text-sm text-gray-600 mb-4 leading-relaxed">
-                {campaign.public_path === '/149403' ? (
-                  <>
-                    WERT에서 귀하의 정보를 관리, 사용, 보호하는 방법에 대해 자세히 알아보려면{' '}
-                    <a 
-                      href="https://www.wertcorp.com/kr/policy" 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="text-[#00B388] hover:underline"
-                    >
-                      WERT 개인정보 취급방침
-                    </a>을 참조하시기 바랍니다. 
-                    동의한 사항에 대해 언제든지 취소 또는 수정하여 WERT의 마케팅 커뮤니케이션 서비스를 받을 수 있습니다. 
-                    이 작업을 수행하려면 WERT 이메일 마케팅 커뮤니케이션 페이지 하단의 옵트아웃 및 환경설정 메커니즘을 사용하거나{' '}
-                  </>
-                ) : (
-                  <>
-                    HPE에서 귀하의 정보를 관리, 사용, 보호하는 방법에 대해 자세히 알아보려면{' '}
-                    <a 
-                      href="https://www.hpe.com/kr/ko/privacy/ww-privacy-statement.html" 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="text-[#00B388] hover:underline"
-                    >
-                      HPE 개인정보 취급방침
-                    </a>을 참조하시기 바랍니다. 
-                    동의한 사항에 대해 언제든지 취소 또는 수정하여 HPE의 마케팅 커뮤니케이션 서비스를 받을 수 있습니다. 
-                    이 작업을 수행하려면 HPE 이메일 마케팅 커뮤니케이션 페이지 하단의 옵트아웃 및 환경설정 메커니즘을 사용하거나{' '}
-                  </>
-                )}
-                <a 
-                  href="/unsubscribe" 
-                  onClick={(e) => {
-                    e.preventDefault()
-                    const width = 600
-                    const height = 700
-                    const left = (window.screen.width - width) / 2
-                    const top = (window.screen.height - height) / 2
-                    window.open(
-                      '/unsubscribe',
-                      'unsubscribe',
-                      `width=${width},height=${height},left=${left},top=${top},toolbar=no,menubar=no,location=no,status=no,scrollbars=yes,resizable=yes`
-                    )
-                  }}
-                  className="text-[#00B388] hover:underline cursor-pointer"
-                >
-                  이 링크
-                </a>를 클릭하시면 됩니다. 
-                마케팅 팀으로부터 전화를 받으실 수 있도록 휴대폰 번호를 제공하신 경우, 로밍 요금이 적용될 수 있음을 알아두시기 바랍니다.
-              </p>
-              <label className="flex items-start cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={privacyConsent}
-                  onChange={(e) => setPrivacyConsent(e.target.checked)}
-                  className="w-4 h-4 text-[#00B388] border-gray-300 rounded focus:ring-[#00B388] mt-0.5"
-                  disabled={submitting}
-                  required
-                />
-                <span className="ml-3 text-sm font-medium text-gray-700">
-                  개인정보 취급방침에 동의합니다 <span className="text-red-500">*</span>
-                </span>
-              </label>
             </div>
             
             {/* 제출 버튼 */}
