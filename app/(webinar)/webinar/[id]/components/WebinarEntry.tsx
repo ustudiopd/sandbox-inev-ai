@@ -1001,28 +1001,35 @@ export default function WebinarEntry({ webinar, isWertPage: serverIsWertPage }: 
     
     /* 149402용 - 149403 등록 페이지 스타일 참고 */
     .registration-hero {
-      width: 100%;
-      max-width: 1000px;
-      margin: 0 auto;
+      width: 100vw;
+      margin-left: calc(-50vw + 50%);
+      margin-right: calc(-50vw + 50%);
       position: relative;
-      background: white;
+      background-image: url(https://yqsayphssjznthrxpgfb.supabase.co/storage/v1/object/public/webinar-thumbnails/wert/bg2.png);
+      background-size: cover;
+      background-position: left center;
+      background-repeat: no-repeat;
+      background-attachment: local;
       min-height: 600px;
-      padding-top: 112px;
+      padding-top: 150px;
       padding-bottom: 80px;
       overflow: hidden;
     }
     
+    @media (min-width: 640px) {
+      .registration-hero {
+        padding-top: 150px;
+      }
+    }
+    
+    @media (min-width: 1024px) {
+      .registration-hero {
+        padding-top: 150px;
+      }
+    }
+    
     .registration-hero-bg {
-      width: 1972px;
-      height: 1109px;
-      position: absolute;
-      left: -34px;
-      top: 1530px;
-      transform-origin: top left;
-      transform: rotate(-90deg);
-      filter: blur(40px);
-      opacity: 0.3;
-      z-index: 0;
+      display: none;
     }
     
     .registration-hero-content {
@@ -1030,20 +1037,48 @@ export default function WebinarEntry({ webinar, isWertPage: serverIsWertPage }: 
       z-index: 1;
     }
     
-    .registration-header {
+    .registration-hero-gradient {
       width: 100%;
-      max-width: 1000px;
-      height: 112px;
+      height: 192px;
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      background: linear-gradient(to bottom, rgba(255, 255, 255, 0), rgba(255, 255, 255, 1));
+      z-index: 0;
+    }
+    
+    @media (min-width: 640px) {
+      .registration-hero-gradient {
+        height: 288px;
+      }
+    }
+    
+    @media (min-width: 1024px) {
+      .registration-hero-gradient {
+        height: 432px;
+      }
+    }
+    
+    .registration-header {
+      width: 100vw;
+      height: 56px;
       position: absolute;
       top: 0;
-      left: 50%;
-      transform: translateX(-50%);
+      left: 0;
+      margin-left: calc(-50vw + 50%);
+      margin-right: calc(-50vw + 50%);
       background: rgba(255, 255, 255, 0.6);
       backdrop-filter: blur(2px);
       z-index: 10;
       display: flex;
       align-items: center;
       justify-content: center;
+    }
+    
+    @media (min-width: 1024px) {
+      .registration-header {
+        height: 112px;
+      }
     }
     
     .registration-logo {
@@ -1054,11 +1089,23 @@ export default function WebinarEntry({ webinar, isWertPage: serverIsWertPage }: 
     .registration-content {
       max-width: 856px;
       margin: 0 auto;
-      padding: 0 72px;
+      padding: 0 16px;
       display: flex;
       flex-direction: column;
       align-items: center;
       gap: 40px;
+    }
+    
+    @media (min-width: 640px) {
+      .registration-content {
+        padding: 0 24px;
+      }
+    }
+    
+    @media (min-width: 1024px) {
+      .registration-content {
+        padding: 0 72px;
+      }
     }
     
     .registration-title {
@@ -1109,7 +1156,9 @@ export default function WebinarEntry({ webinar, isWertPage: serverIsWertPage }: 
       font-size: 36px;
       font-weight: 700;
       color: #000;
-      margin-bottom: 40px;
+      margin-bottom: 0;
+      margin-top: 0;
+      line-height: 1.2;
       text-align: center;
     }
     
@@ -1174,7 +1223,7 @@ export default function WebinarEntry({ webinar, isWertPage: serverIsWertPage }: 
     
     @media (max-width: 768px) {
       .registration-hero {
-        padding-top: 72px;
+        padding-top: 150px;
         padding-bottom: 40px;
         min-height: auto;
       }
@@ -1225,7 +1274,9 @@ export default function WebinarEntry({ webinar, isWertPage: serverIsWertPage }: 
       
       .registration-form-title {
         font-size: 20px;
-        margin-bottom: 20px;
+        margin-bottom: 0;
+        margin-top: 0;
+        line-height: 1.2;
       }
       
       .registration-form-label {
@@ -1254,6 +1305,13 @@ export default function WebinarEntry({ webinar, isWertPage: serverIsWertPage }: 
       .mobile-text-sm {
         font-size: 18px !important;
         line-height: 26px !important;
+      }
+      
+      .entry-notice-text {
+        font-size: 12px !important;
+        line-height: 18px !important;
+        margin-top: 0px !important;
+        margin-bottom: 0px !important;
       }
       
       .back-to-main-link {
@@ -1555,6 +1613,9 @@ export default function WebinarEntry({ webinar, isWertPage: serverIsWertPage }: 
                   />
                 </div>
                 
+                {/* Gradient Overlay */}
+                <div className="registration-hero-gradient" />
+                
                 {/* Hero Content */}
                 <div className="registration-hero-content">
                   <div className="registration-content">
@@ -1664,7 +1725,21 @@ export default function WebinarEntry({ webinar, isWertPage: serverIsWertPage }: 
                     ← 메인페이지로 돌아가기
                   </Link>
                   
-                  <h1 className="registration-form-title">웨비나 입장</h1>
+                  <div style={{ marginBottom: '32px' }}>
+                    <h1 className="registration-form-title" style={{ marginBottom: '0', marginTop: '0' }}>웨비나 입장</h1>
+                    {/* 안내 문구 */}
+                    <p style={{ 
+                      marginTop: '0',
+                      marginBottom: '0',
+                      textAlign: 'center',
+                      fontSize: '14px',
+                      color: '#666',
+                      lineHeight: '20px',
+                      fontFamily: 'Pretendard, sans-serif'
+                    }} className="entry-notice-text">
+                      웨비나 등록 시 입력했던 이름과 이메일 주소를 작성하시면 입장됩니다.
+                    </p>
+                  </div>
                   
                   <form onSubmit={handleNameEmailAuth} style={{ display: 'flex', flexDirection: 'column', gap: '32px' }} className="mobile-form-gap">
                     {error && (

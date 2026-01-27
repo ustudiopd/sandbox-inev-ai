@@ -42,7 +42,22 @@ const audience = [
 const sessions = [
   {
     label: "SESSION 1",
-    duration: "약 40분",
+    duration: "약 15분",
+    title: "키워트 인사이트 소개",
+    titleMobile: "키워트 인사이트 소개",
+    bullets: [
+      "AI 특허리서치 '키워트 인사이트' 특징",
+      "특허 특화 AI '플루토LM'의 차별점",
+    ],
+    speaker: {
+      name: "조경식 이사",
+      role: "워트인텔리전스\n그로스실",
+      avatar: "https://yqsayphssjznthrxpgfb.supabase.co/storage/v1/object/public/webinar-thumbnails/wert/jo2.png",
+    },
+  },
+  {
+    label: "SESSION 2",
+    duration: "약 30분",
     title: "고객사례로 알아보는 AI 특허리서치 활용법",
     titleMobile: "고객사례로 알아보는\nAI 특허리서치 활용법",
     bullets: [
@@ -50,25 +65,9 @@ const sessions = [
       "조직 간 커뮤니케이션 및 의사결정 개선 사례",
     ],
     speaker: {
-      name: "조은비 시니어 매니저",
-      role: "워트인텔리전스\n글로벌마켓매니지먼트팀",
+      name: "조은비 책임",
+      role: "워트인텔리전스\n그로스실",
       avatar: "https://yqsayphssjznthrxpgfb.supabase.co/storage/v1/object/public/webinar-thumbnails/wert/jo.png",
-    },
-  },
-  {
-    label: "SESSION 2",
-    duration: "약 20분",
-    title: "키워트 인사이트가 가장 많이 받는 질문들",
-    titleMobile: "키워트 인사이트가\n가장 많이 받는 질문들",
-    bullets: [
-      "고객 데이터가 AI 학습에 사용되지 않나요?",
-      "키워트 인사이트의 보안 구조는 어떻게 되어 있나요?",
-      "키워트 인사이트는 ChatGPT·Gemini 같은 범용 AI와\n무엇이 다른가요?",
-    ],
-    speaker: {
-      name: "조경식 팀장",
-      role: "워트인텔리전스\n글로벌마켓매니지먼트팀",
-      avatar: "https://yqsayphssjznthrxpgfb.supabase.co/storage/v1/object/public/webinar-thumbnails/wert/jo2.png",
     },
   },
   {
@@ -215,7 +214,7 @@ function OrganizationCarousel() {
       </div>
       
       {/* Navigation Buttons */}
-      <div className="absolute top-1/2 -translate-y-1/2 left-0 right-0 flex justify-between px-2 sm:px-4 pointer-events-none z-20">
+      <div className="absolute top-1/2 -translate-y-1/2 left-1/2 -translate-x-1/2 w-full max-w-[856px] flex justify-between px-2 sm:px-4 pointer-events-none z-20">
         <button
           onClick={goToPrev}
           className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/90 shadow-lg flex items-center justify-center pointer-events-auto hover:bg-white transition-colors"
@@ -251,22 +250,24 @@ export default function WebinarFormWertPage() {
         }}
       >
       {/* Hero Section */}
-      <section className="w-full relative bg-white overflow-hidden" style={{ fontFamily: 'Pretendard, sans-serif', minHeight: 'auto' }}>
-        {/* Background Image */}
-        <div className="w-full h-[500px] sm:h-[700px] lg:h-[1488px] absolute inset-0 z-0">
-          <Image
-            src="https://yqsayphssjznthrxpgfb.supabase.co/storage/v1/object/public/webinar-thumbnails/wert/image 50-1.png"
-            alt=""
-            width={1000}
-            height={1488}
-            className="w-full h-full object-cover"
-            priority
-            unoptimized
-          />
-        </div>
+      <section 
+        className="w-screen relative overflow-hidden" 
+        style={{ 
+          fontFamily: 'Pretendard, sans-serif', 
+          minHeight: 'auto',
+          marginLeft: 'calc(-50vw + 50%)',
+          marginRight: 'calc(-50vw + 50%)',
+          width: '100vw',
+          backgroundImage: 'url(https://yqsayphssjznthrxpgfb.supabase.co/storage/v1/object/public/webinar-thumbnails/wert/bg2.png)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'left center',
+          backgroundRepeat: 'no-repeat',
+          backgroundAttachment: 'local'
+        }}
+      >
 
         {/* Header with Logo */}
-        <div className="w-full h-14 sm:h-16 lg:h-28 left-0 top-0 absolute bg-white/60 backdrop-blur-[2px] overflow-hidden flex items-center justify-center px-4 z-10">
+        <div className="w-full h-14 lg:h-28 left-0 top-0 absolute bg-white/60 backdrop-blur-[2px] overflow-hidden flex items-center justify-center px-4 z-10">
           <div className="w-40 sm:w-56 lg:w-80 h-5 sm:h-7 lg:h-10 overflow-hidden">
             <Image
               src="/storage/v1/object/public/webinar-thumbnails/wert/kewert_logo.png"
@@ -284,24 +285,21 @@ export default function WebinarFormWertPage() {
         <div className="w-full h-32 sm:h-48 lg:h-72 left-0 bottom-0 absolute bg-gradient-to-b from-white/0 to-white z-0" />
 
         {/* Content Area */}
-        <div className="w-full px-4 sm:px-6 lg:px-[72px] pt-[72px] sm:pt-16 lg:pt-[315px] pb-6 sm:pb-8 lg:pb-20 relative inline-flex flex-col justify-start items-center gap-4 sm:gap-8 lg:gap-20 z-10">
+        <div className="w-full px-4 sm:px-6 lg:px-[72px] pt-[150px] sm:pt-[150px] lg:pt-[150px] pb-6 sm:pb-8 lg:pb-20 relative inline-flex flex-col justify-start items-center gap-4 sm:gap-8 lg:gap-20 z-10">
           <div className="self-stretch flex flex-col justify-start items-center gap-4 sm:gap-8 lg:gap-16">
             <div className="w-full max-w-[623px] flex flex-col justify-start items-center gap-3 sm:gap-5 lg:gap-10">
               <div className="self-stretch flex flex-col justify-start items-center gap-2 sm:gap-4 lg:gap-8">
-                <div className="self-stretch text-center justify-start text-black font-bold text-sm sm:text-lg lg:text-[36px] leading-tight" style={{ fontFamily: 'Pretendard, sans-serif' }}>
-                  실제 고객사례로 알아보는
-                </div>
                 <div className="self-stretch text-center justify-start text-black font-bold text-xl sm:text-3xl lg:text-[96px] leading-tight sm:leading-tight lg:leading-[117.60px]" style={{ fontFamily: 'Pretendard, sans-serif' }}>
                   AI 특허리서치<br /><span className="whitespace-nowrap">실무 활용 웨비나</span>
                 </div>
               </div>
               <div className="inline-flex justify-start items-center gap-2 flex-wrap">
-                <div className="px-2.5 sm:px-4 lg:px-6 py-1 sm:py-1.5 lg:py-2 bg-black rounded-lg sm:rounded-xl lg:rounded-2xl flex justify-center items-center gap-2 overflow-hidden">
+                <div className="px-2.5 sm:px-4 lg:px-6 py-[0.8rem] bg-black rounded-lg sm:rounded-xl lg:rounded-2xl flex justify-center items-center gap-2 overflow-hidden">
                   <div className="text-center justify-start text-white font-bold text-xs sm:text-base lg:text-[36px] leading-tight" style={{ fontFamily: 'Pretendard, sans-serif' }}>
                     2026. 02. 06{" "}
                   </div>
                 </div>
-                <div className="px-2.5 sm:px-4 lg:px-6 py-1 sm:py-1.5 lg:py-2 bg-black rounded-lg sm:rounded-xl lg:rounded-2xl flex justify-center items-center gap-2 overflow-hidden">
+                <div className="px-2.5 sm:px-4 lg:px-6 py-[0.8rem] bg-black rounded-lg sm:rounded-xl lg:rounded-2xl flex justify-center items-center gap-2 overflow-hidden">
                   <div className="text-center justify-start text-white font-bold text-xs sm:text-base lg:text-[36px] leading-tight" style={{ fontFamily: 'Pretendard, sans-serif' }}>
                     14:00
                   </div>
@@ -336,9 +334,9 @@ export default function WebinarFormWertPage() {
             </Link>
             <Link
               href="/webinar/149402"
-              className="self-stretch px-4 sm:px-8 lg:pl-16 lg:pr-10 py-2.5 sm:py-3 lg:py-6 bg-white/60 rounded-full lg:rounded-[200px] outline outline-2 outline-offset-[-2px] outline-white inline-flex justify-center items-center gap-2 sm:gap-3 lg:gap-6 overflow-hidden min-h-[44px] sm:min-h-[48px]"
+              className="self-stretch px-4 sm:px-8 lg:pl-16 lg:pr-10 py-2.5 sm:py-3 lg:py-6 bg-[#000000] rounded-full lg:rounded-[200px] inline-flex justify-center items-center gap-2 sm:gap-3 lg:gap-6 overflow-hidden min-h-[44px] sm:min-h-[48px]"
             >
-              <div className="text-center justify-start text-stone-900 font-bold text-sm sm:text-lg lg:text-[36px] leading-tight" style={{ fontFamily: 'Pretendard, sans-serif' }}>
+              <div className="text-center justify-start text-[#ffffff] font-bold text-sm sm:text-lg lg:text-[36px] leading-tight" style={{ fontFamily: 'Pretendard, sans-serif' }}>
                 웨비나 시청하기
               </div>
               <Image
@@ -346,7 +344,7 @@ export default function WebinarFormWertPage() {
                 alt=""
                 width={14}
                 height={20}
-                className="w-2.5 h-3.5 sm:w-3.5 sm:h-5 object-contain brightness-0"
+                className="w-2.5 h-3.5 sm:w-3.5 sm:h-5 object-contain brightness-[10]"
                 unoptimized
               />
             </Link>
@@ -358,8 +356,8 @@ export default function WebinarFormWertPage() {
       <section className="w-full relative bg-white overflow-hidden py-8 sm:py-12 lg:py-20">
         <div className="w-full max-w-[858px] mx-auto px-4 sm:px-6 lg:px-[72px] flex flex-col justify-start items-start gap-8 sm:gap-12 lg:gap-20">
           <div className="self-stretch flex flex-col justify-start items-center gap-3.5">
-            <div className="w-24 h-24 relative">
-              <div className="w-[103px] h-[90px] left-[38px] top-[10px] absolute">
+            <div className="w-24 h-24 relative flex items-center justify-center">
+              <div className="w-[103px] h-[90px]">
                 <Image
                   src="https://yqsayphssjznthrxpgfb.supabase.co/storage/v1/object/public/webinar-thumbnails/wert/qa2.png"
                   alt="Q&A"
@@ -461,7 +459,14 @@ export default function WebinarFormWertPage() {
       </section>
 
       {/* Section 3 - Overview, Audience, Agenda & Speaker */}
-      <section className="w-full relative bg-gradient-to-b from-emerald-900 to-black overflow-hidden py-8 sm:py-12 lg:py-20">
+      <section 
+        className="w-screen relative bg-gradient-to-b from-emerald-900 to-black overflow-hidden py-8 sm:py-12 lg:py-20" 
+        style={{ 
+          marginLeft: 'calc(-50vw + 50%)',
+          marginRight: 'calc(-50vw + 50%)',
+          width: '100vw'
+        }}
+      >
         {/* OVERVIEW Section */}
         <div className="w-full max-w-[856px] mx-auto px-4 sm:px-6 lg:px-[72px] flex flex-col justify-start items-start gap-6 sm:gap-10 lg:gap-16">
           <div className="self-stretch flex flex-col justify-center items-center gap-2 sm:gap-3">
@@ -515,27 +520,27 @@ export default function WebinarFormWertPage() {
           </div>
           {/* PC용 - 각 항목을 한 줄씩 표시 */}
           <div className="hidden lg:flex self-stretch flex-col justify-start items-start gap-2.5">
-            <div className="self-stretch pl-10 pr-16 py-6 bg-white/10 rounded-[32px] outline outline-1 outline-offset-[-1px] outline-white/20 flex flex-row justify-start items-center gap-6 overflow-hidden">
-              <div className="text-white font-bold text-[20px] leading-tight whitespace-nowrap flex-shrink-0" style={{ fontFamily: 'Pretendard, sans-serif' }}>
-                일시
+            <div className="self-stretch pl-6 pr-8 py-6 bg-white/10 rounded-[32px] outline outline-1 outline-offset-[-1px] outline-white/20 flex flex-row justify-start items-center gap-6 overflow-hidden">
+              <div className="text-white font-bold text-[20px] leading-tight whitespace-pre flex-shrink-0" style={{ fontFamily: 'Pretendard, sans-serif', width: '80px', textAlign: 'right' }}>
+                일      시
               </div>
               <div className="w-0.5 h-5 bg-white/20 flex-shrink-0"></div>
-              <div className="text-white font-bold text-[30px] leading-[40px]" style={{ fontFamily: 'Pretendard, sans-serif' }}>
+              <div className="text-white font-bold text-[30px] leading-[40px] whitespace-nowrap" style={{ fontFamily: 'Pretendard, sans-serif' }}>
                 2026년 2월 6일(금) 오후 2시-3시 30분
               </div>
             </div>
-            <div className="self-stretch pl-10 pr-16 py-6 bg-white/10 rounded-[32px] outline outline-1 outline-offset-[-1px] outline-white/20 flex flex-row justify-start items-center gap-6 overflow-hidden">
-              <div className="text-white font-bold text-[20px] leading-tight whitespace-nowrap flex-shrink-0" style={{ fontFamily: 'Pretendard, sans-serif' }}>
-                장소
+            <div className="self-stretch pl-6 pr-8 py-6 bg-white/10 rounded-[32px] outline outline-1 outline-offset-[-1px] outline-white/20 flex flex-row justify-start items-center gap-6 overflow-hidden">
+              <div className="text-white font-bold text-[20px] leading-tight whitespace-pre flex-shrink-0" style={{ fontFamily: 'Pretendard, sans-serif', width: '80px', textAlign: 'right' }}>
+                장      소
               </div>
               <div className="w-0.5 h-5 bg-white/20 flex-shrink-0"></div>
               <div className="text-white font-bold text-[30px] leading-[40px]" style={{ fontFamily: 'Pretendard, sans-serif' }}>
                 온라인 LIVE
               </div>
             </div>
-            <div className="self-stretch pl-10 pr-16 py-6 bg-white/10 rounded-[32px] outline outline-1 outline-offset-[-1px] outline-white/20 flex flex-row justify-start items-center gap-6 overflow-hidden">
-              <div className="text-white font-bold text-[20px] leading-tight whitespace-nowrap flex-shrink-0" style={{ fontFamily: 'Pretendard, sans-serif' }}>
-                참가비
+            <div className="self-stretch pl-6 pr-8 py-6 bg-white/10 rounded-[32px] outline outline-1 outline-offset-[-1px] outline-white/20 flex flex-row justify-start items-center gap-6 overflow-hidden">
+              <div className="text-white font-bold text-[20px] leading-tight whitespace-pre flex-shrink-0" style={{ fontFamily: 'Pretendard, sans-serif', width: '80px', textAlign: 'right' }}>
+                참 가 비
               </div>
               <div className="w-0.5 h-5 bg-white/20 flex-shrink-0"></div>
               <div className="text-white font-bold text-[30px] leading-[40px]" style={{ fontFamily: 'Pretendard, sans-serif' }}>
@@ -627,26 +632,36 @@ export default function WebinarFormWertPage() {
                     </div>
                   </div>
                   <div className="self-stretch flex flex-col justify-start items-start gap-6 sm:gap-8 lg:gap-10">
-                    <div className="self-stretch justify-start text-white font-bold text-base sm:text-lg lg:text-[24px] leading-relaxed sm:leading-relaxed lg:leading-[48px]" style={{ fontFamily: 'Pretendard, sans-serif' }}>
+                    <div className={`self-stretch justify-start text-white font-bold ${
+                      ['SESSION 1', 'SESSION 2'].includes(session.label)
+                        ? 'text-xl sm:text-2xl lg:text-3xl leading-[32px] sm:leading-[40px] lg:leading-[48px]'
+                        : 'text-base sm:text-lg lg:text-[24px] leading-relaxed sm:leading-relaxed lg:leading-[48px]'
+                    }`} style={{ fontFamily: 'Pretendard, sans-serif' }}>
                       <span className="sm:hidden whitespace-pre-line">{(session as any).titleMobile || session.title}</span>
                       <span className="hidden sm:inline">{session.title}</span>
                     </div>
-                    <div className="self-stretch flex flex-col justify-start items-start gap-4 sm:gap-5 lg:gap-6">
+                    <div className="self-stretch flex flex-col justify-start items-start gap-0.5 sm:gap-1 lg:gap-2">
                       {session.bullets.map((bullet, bulletIndex) => {
                         const isMultiLine = bullet.includes('\n');
                         const isMobileSingleLine = index === 1 && bulletIndex === 2; // SESSION 2의 세 번째 bullet
                         const parts = bullet.split('\n');
+                        const isSession1 = session.label === 'SESSION 1';
+                        const isSession2 = session.label === 'SESSION 2';
                         return (
                           <div
                             key={bulletIndex}
-                            className={isMultiLine && !isMobileSingleLine ? 'self-stretch flex flex-col justify-center items-start' : index === 0 && bulletIndex === 0 ? 'self-stretch inline-flex justify-start items-start gap-2 sm:gap-3 lg:gap-4' : 'inline-flex justify-start items-start gap-2 sm:gap-3 lg:gap-4'}
+                            className={isMultiLine && !isMobileSingleLine ? 'self-stretch flex flex-col justify-center items-start' : index === 0 && bulletIndex === 0 ? 'self-stretch inline-flex justify-start items-center gap-2 sm:gap-3 lg:gap-4' : 'inline-flex justify-start items-center gap-2 sm:gap-3 lg:gap-4'}
                           >
                             {isMultiLine && !isMobileSingleLine ? (
                               <div className="self-stretch flex flex-col justify-start items-start gap-1.5">
                                 {parts.map((part, partIndex) => (
                                   <div key={partIndex} className="self-stretch inline-flex justify-start items-center gap-2 sm:gap-3 lg:gap-4">
                                     {partIndex === 0 && (
-                                      <div className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 relative flex-shrink-0 flex items-center justify-center">
+                                      <div className={`relative flex-shrink-0 flex items-center justify-center ${
+                                        ['SESSION 1', 'SESSION 2'].includes(session.label)
+                                          ? 'w-3.5 h-3.5 sm:w-4 sm:h-4 lg:w-5 lg:h-5' 
+                                          : 'w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6'
+                                      }`}>
                                         <Image
                                           src="https://yqsayphssjznthrxpgfb.supabase.co/storage/v1/object/public/webinar-thumbnails/wert/check_icon.png"
                                           alt="check"
@@ -657,8 +672,16 @@ export default function WebinarFormWertPage() {
                                         />
                                       </div>
                                     )}
-                                    {partIndex > 0 && <div className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 relative"></div>}
-                                    <div className="flex-1 justify-start text-white/80 font-normal text-sm sm:text-base lg:text-[24px] leading-relaxed sm:leading-relaxed lg:leading-normal" style={{ fontFamily: 'Pretendard, sans-serif' }}>
+                                    {partIndex > 0 && <div className={`relative ${
+                                      ['SESSION 1', 'SESSION 2'].includes(session.label)
+                                        ? 'w-3.5 h-3.5 sm:w-4 sm:h-4 lg:w-5 lg:h-5' 
+                                        : 'w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6'
+                                    }`}></div>}
+                                    <div className={`flex-1 justify-start text-white/80 font-normal flex items-center ${
+                                      ['SESSION 1', 'SESSION 2'].includes(session.label)
+                                        ? 'text-lg sm:text-xl lg:text-2xl'
+                                        : 'text-sm sm:text-base lg:text-[24px]'
+                                    } leading-relaxed sm:leading-relaxed lg:leading-normal`} style={{ fontFamily: 'Pretendard, sans-serif' }}>
                                       {part}
                                     </div>
                                   </div>
@@ -666,7 +689,11 @@ export default function WebinarFormWertPage() {
                               </div>
                             ) : (
                               <>
-                                <div className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 relative flex-shrink-0 flex items-center justify-center">
+                                <div className={`relative flex-shrink-0 flex items-center justify-center ${
+                                  ['SESSION 1', 'SESSION 2'].includes(session.label)
+                                    ? 'w-3.5 h-3.5 sm:w-4 sm:h-4 lg:w-5 lg:h-5' 
+                                    : 'w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6'
+                                }`}>
                                   <Image
                                     src="https://yqsayphssjznthrxpgfb.supabase.co/storage/v1/object/public/webinar-thumbnails/wert/check_icon.png"
                                     alt="check"
@@ -676,7 +703,11 @@ export default function WebinarFormWertPage() {
                                     quality={100}
                                   />
                                 </div>
-                                <div className="justify-start text-white/80 font-normal text-sm sm:text-base lg:text-[24px] leading-relaxed sm:leading-relaxed lg:leading-normal" style={{ fontFamily: 'Pretendard, sans-serif' }}>
+                                <div className={`justify-start text-white/80 font-normal flex items-center ${
+                                  ['SESSION 1', 'SESSION 2'].includes(session.label)
+                                    ? 'text-lg sm:text-xl lg:text-2xl'
+                                    : 'text-sm sm:text-base lg:text-[24px]'
+                                } leading-relaxed sm:leading-relaxed lg:leading-normal`} style={{ fontFamily: 'Pretendard, sans-serif' }}>
                                   {isMobileSingleLine ? (
                                     <>
                                       <span className="sm:hidden">{bullet.replace(/\n/g, ' ')}</span>
@@ -717,10 +748,10 @@ export default function WebinarFormWertPage() {
                         />
                       </div>
                       <div className="flex-1 sm:w-64 inline-flex flex-col justify-start items-start gap-2 sm:gap-3 lg:gap-4">
-                        <div className="justify-start text-white/80 font-normal whitespace-pre-line text-sm sm:text-base lg:text-[24px] leading-relaxed sm:leading-relaxed lg:leading-[36px]" style={{ fontFamily: 'Pretendard, sans-serif' }}>
+                        <div className={`justify-start text-white/80 font-normal whitespace-pre-line ${['SESSION 1', 'SESSION 2'].includes(session.label) ? 'text-lg sm:text-xl lg:text-2xl leading-[27px] sm:leading-[32px] lg:leading-9' : 'text-sm sm:text-base lg:text-[24px] leading-relaxed sm:leading-relaxed lg:leading-[36px]'}`} style={{ fontFamily: 'Pretendard, sans-serif' }}>
                           {session.speaker.role}
                         </div>
-                        <div className="self-stretch justify-start text-white font-bold text-base sm:text-xl lg:text-[30px] leading-tight sm:leading-tight lg:leading-[24px]" style={{ fontFamily: 'Pretendard, sans-serif' }}>
+                        <div className={`self-stretch justify-start text-white font-bold ${['SESSION 1', 'SESSION 2'].includes(session.label) ? 'text-xl sm:text-2xl lg:text-3xl leading-[24px] sm:leading-[28px] lg:leading-6' : 'text-base sm:text-xl lg:text-[30px] leading-tight sm:leading-tight lg:leading-[24px]'}`} style={{ fontFamily: 'Pretendard, sans-serif' }}>
                           {session.speaker.name}
                         </div>
                       </div>
@@ -734,7 +765,14 @@ export default function WebinarFormWertPage() {
       </section>
 
       {/* Section 4 - About keywert Insight */}
-      <section className="w-full relative bg-lime-50 overflow-x-hidden overflow-y-visible py-8 sm:py-12 lg:py-20">
+      <section 
+        className="w-screen relative bg-lime-50 overflow-x-hidden overflow-y-visible py-8 sm:py-12 lg:py-20"
+        style={{ 
+          marginLeft: 'calc(-50vw + 50%)',
+          marginRight: 'calc(-50vw + 50%)',
+          width: '100vw'
+        }}
+      >
         {/* About keywert Insight Section */}
         <div className="w-full mx-auto px-4 sm:px-6 lg:px-8 flex flex-col justify-start items-start gap-8 sm:gap-12 lg:gap-24">
           <div className="self-stretch flex flex-col justify-center items-center gap-2 sm:gap-3">
@@ -862,7 +900,14 @@ export default function WebinarFormWertPage() {
       </section>
 
       {/* Section 5 - Event */}
-      <section className="w-full relative bg-gradient-to-br from-teal-500 to-teal-800 overflow-hidden py-8 sm:py-12 lg:py-20">
+      <section 
+        className="w-screen relative bg-gradient-to-br from-teal-500 to-teal-800 overflow-hidden py-8 sm:py-12 lg:py-20"
+        style={{ 
+          marginLeft: 'calc(-50vw + 50%)',
+          marginRight: 'calc(-50vw + 50%)',
+          width: '100vw'
+        }}
+      >
         <div className="w-full max-w-[856px] mx-auto px-4 sm:px-6 lg:px-[72px] flex flex-col justify-start items-start gap-12 sm:gap-16 lg:gap-24">
           <div className="self-stretch flex flex-col justify-center items-center gap-3">
             <div className="text-center justify-start text-green-200 font-bold" style={{ fontSize: '24px', fontFamily: 'Figtree, sans-serif', lineHeight: '32px' }}>
@@ -938,29 +983,7 @@ export default function WebinarFormWertPage() {
                   </div>
                 </div>
               </div>
-              <div className="self-stretch flex flex-col justify-start items-start gap-8 sm:gap-10 lg:gap-12 relative">
-                {/* Plus Icon - 카드 사이 중앙에 배치 */}
-                <div className="hidden sm:block lg:hidden absolute left-1/2 -translate-x-1/2 z-10" style={{ top: 'calc(160px + 1.25rem)' }}>
-                  <img
-                    src="https://yqsayphssjznthrxpgfb.supabase.co/storage/v1/object/public/webinar-thumbnails/wert/icon_plus.png"
-                    alt="plus"
-                    className="w-14 h-14 object-contain flex-shrink-0"
-                  />
-                </div>
-                <div className="hidden lg:block absolute left-1/2 -translate-x-1/2 z-10" style={{ top: 'calc(224px + 1.5rem)' }}>
-                  <img
-                    src="https://yqsayphssjznthrxpgfb.supabase.co/storage/v1/object/public/webinar-thumbnails/wert/icon_plus.png"
-                    alt="plus"
-                    className="w-16 h-16 object-contain flex-shrink-0"
-                  />
-                </div>
-                <div className="sm:hidden absolute left-1/2 -translate-x-1/2 z-10" style={{ top: 'calc(160px + 1rem)' }}>
-                  <img
-                    src="https://yqsayphssjznthrxpgfb.supabase.co/storage/v1/object/public/webinar-thumbnails/wert/icon_plus.png"
-                    alt="plus"
-                    className="w-12 h-12 object-contain flex-shrink-0"
-                  />
-                </div>
+              <div className="self-stretch flex flex-col justify-start items-start gap-4 sm:gap-5 lg:gap-6 relative">
                 {/* 1달 무료 체험 */}
                 <div className="self-stretch min-h-[160px] sm:h-40 lg:h-56 p-4 sm:p-6 lg:p-10 bg-gradient-to-r from-black/5 to-black/10 rounded-xl sm:rounded-2xl lg:rounded-[32px] outline outline-1 outline-offset-[-1px] outline-white/20 flex flex-col sm:flex-row justify-between items-center gap-2.5 sm:gap-3 lg:gap-2.5 overflow-hidden">
                   <div className="flex-1 justify-start text-center sm:text-left">
@@ -975,6 +998,28 @@ export default function WebinarFormWertPage() {
                     src="https://yqsayphssjznthrxpgfb.supabase.co/storage/v1/object/public/webinar-thumbnails/wert/image 49.png"
                     alt="1달 무료 체험"
                     className="w-20 h-20 sm:w-28 sm:h-28 lg:w-40 lg:h-40 object-contain flex-shrink-0"
+                  />
+                </div>
+                {/* Plus Icon - 카드 사이 중앙에 배치 */}
+                <div className="hidden sm:block lg:hidden absolute left-1/2 -translate-x-1/2 -translate-y-1/2 z-10" style={{ top: 'calc(160px + 0.625rem)' }}>
+                  <img
+                    src="https://yqsayphssjznthrxpgfb.supabase.co/storage/v1/object/public/webinar-thumbnails/wert/icon_plus.png"
+                    alt="plus"
+                    className="w-14 h-14 object-contain flex-shrink-0"
+                  />
+                </div>
+                <div className="hidden lg:block absolute left-1/2 -translate-x-1/2 -translate-y-1/2 z-10" style={{ top: 'calc(224px + 0.75rem)' }}>
+                  <img
+                    src="https://yqsayphssjznthrxpgfb.supabase.co/storage/v1/object/public/webinar-thumbnails/wert/icon_plus.png"
+                    alt="plus"
+                    className="w-16 h-16 object-contain flex-shrink-0"
+                  />
+                </div>
+                <div className="sm:hidden absolute left-1/2 -translate-x-1/2 -translate-y-1/2 z-10" style={{ top: 'calc(160px + 0.5rem)' }}>
+                  <img
+                    src="https://yqsayphssjznthrxpgfb.supabase.co/storage/v1/object/public/webinar-thumbnails/wert/icon_plus.png"
+                    alt="plus"
+                    className="w-12 h-12 object-contain flex-shrink-0"
                   />
                 </div>
                 {/* 특별 견적 */}
@@ -1000,7 +1045,14 @@ export default function WebinarFormWertPage() {
       </section>
 
       {/* Section 6 - Notice & Contact */}
-      <section className="w-full px-4 sm:px-6 lg:px-16 py-8 sm:py-12 lg:py-28 bg-neutral-50 flex flex-col justify-start items-start gap-8 sm:gap-12 lg:gap-16 overflow-hidden">
+      <section 
+        className="w-screen px-4 sm:px-6 lg:px-16 py-8 sm:py-12 lg:py-28 bg-neutral-50 flex flex-col justify-start items-start gap-8 sm:gap-12 lg:gap-16 overflow-hidden"
+        style={{ 
+          marginLeft: 'calc(-50vw + 50%)',
+          marginRight: 'calc(-50vw + 50%)',
+          width: '100vw'
+        }}
+      >
         <div className="w-full max-w-[856px] mx-auto flex flex-col justify-start items-start gap-8 sm:gap-12 lg:gap-16">
         <div className="self-stretch flex flex-col justify-start items-start gap-6 sm:gap-8 lg:gap-10">
           <div className="self-stretch justify-start text-black/60 font-bold text-base sm:text-lg lg:text-[32px] leading-relaxed sm:leading-relaxed lg:leading-[47.82px]" style={{ fontFamily: 'Pretendard, sans-serif' }}>
@@ -1141,7 +1193,14 @@ export default function WebinarFormWertPage() {
       </section>
 
       {/* Footer */}
-      <footer className="w-full h-24 bg-neutral-800 flex items-center justify-center">
+      <footer 
+        className="w-screen h-24 bg-neutral-800 flex items-center justify-center"
+        style={{ 
+          marginLeft: 'calc(-50vw + 50%)',
+          marginRight: 'calc(-50vw + 50%)',
+          width: '100vw'
+        }}
+      >
         <img
           src="https://yqsayphssjznthrxpgfb.supabase.co/storage/v1/object/public/webinar-thumbnails/wert/kewert_logo-w.png"
           alt="wert intelligence"

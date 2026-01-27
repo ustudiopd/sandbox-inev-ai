@@ -803,28 +803,35 @@ export default function RegistrationPage({ campaign, baseUrl }: RegistrationPage
           }
           
           .registration-hero {
-            width: 100%;
-            max-width: 1000px;
-            margin: 0 auto;
+            width: 100vw;
+            margin-left: calc(-50vw + 50%);
+            margin-right: calc(-50vw + 50%);
             position: relative;
-            background: white;
+            background-image: url(https://yqsayphssjznthrxpgfb.supabase.co/storage/v1/object/public/webinar-thumbnails/wert/bg2.png);
+            background-size: cover;
+            background-position: left center;
+            background-repeat: no-repeat;
+            background-attachment: local;
             min-height: 600px;
-            padding-top: 112px;
+            padding-top: 150px;
             padding-bottom: 80px;
             overflow: hidden;
           }
           
+          @media (min-width: 640px) {
+            .registration-hero {
+              padding-top: 150px;
+            }
+          }
+          
+          @media (min-width: 1024px) {
+            .registration-hero {
+              padding-top: 150px;
+            }
+          }
+          
           .registration-hero-bg {
-            width: 1972px;
-            height: 1109px;
-            position: absolute;
-            left: -34px;
-            top: 1530px;
-            transform-origin: top left;
-            transform: rotate(-90deg);
-            filter: blur(40px);
-            opacity: 0.3;
-            z-index: 0;
+            display: none;
           }
           
           .registration-hero-content {
@@ -833,13 +840,13 @@ export default function RegistrationPage({ campaign, baseUrl }: RegistrationPage
           }
           
           .registration-header {
-            width: 100%;
-            max-width: 1000px;
+            width: 100vw;
             height: 112px;
             position: absolute;
             top: 0;
-            left: 50%;
-            transform: translateX(-50%);
+            left: 0;
+            margin-left: calc(-50vw + 50%);
+            margin-right: calc(-50vw + 50%);
             background: rgba(255, 255, 255, 0.6);
             backdrop-filter: blur(2px);
             z-index: 10;
@@ -987,7 +994,7 @@ export default function RegistrationPage({ campaign, baseUrl }: RegistrationPage
           
           @media (max-width: 768px) {
             .registration-hero {
-              padding-top: 72px;
+              padding-top: 150px;
               padding-bottom: 40px;
               min-height: auto;
             }
@@ -1143,14 +1150,6 @@ export default function RegistrationPage({ campaign, baseUrl }: RegistrationPage
 
         {/* Hero Section */}
         <section className="registration-hero">
-          {/* Background Image - Rotated and Blurred */}
-          <div className="registration-hero-bg">
-            <img
-              src={`${supabaseUrl}/storage/v1/object/public/webinar-thumbnails/wert/image 50-1.png`}
-              alt=""
-              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-            />
-          </div>
           <div className="registration-hero-content">
             <div className="registration-content">
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '40px' }}>
@@ -1182,7 +1181,7 @@ export default function RegistrationPage({ campaign, baseUrl }: RegistrationPage
               ← 메인페이지로 돌아가기
             </Link>
             
-            <h1 className="registration-form-title">이벤트 등록</h1>
+            <h1 className="registration-form-title">웨비나 등록</h1>
             
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '32px' }} className="mobile-form-gap">
               {error && (

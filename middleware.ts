@@ -17,11 +17,11 @@ export async function middleware(req: NextRequest) {
         cookies: {
           get: (name: string) => req.cookies.get(name)?.value,
           set: (name: string, value: string, options?: any) => {
-            req.cookies.set({ name, value, ...options })
+            // middleware에서는 response.cookies만 수정 가능 (req.cookies는 읽기 전용)
             response.cookies.set({ name, value, ...options })
           },
           remove: (name: string, options?: any) => {
-            req.cookies.set({ name, value: '', ...options })
+            // middleware에서는 response.cookies만 수정 가능 (req.cookies는 읽기 전용)
             response.cookies.set({ name, value: '', ...options })
           },
         } as any,
