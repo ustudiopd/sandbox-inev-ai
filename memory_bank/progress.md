@@ -1,5 +1,29 @@
 # 완료된 작업 내역 (Progress)
 
+## [2025-01-27] 웨비나 프로젝트명 필드 추가 및 OnePredict 페이지 개선
+- ✅ 웨비나 콘솔 설정에 프로젝트명 필드 추가
+  - 데이터베이스 마이그레이션: `060_add_project_name_to_webinars.sql` 생성 및 실행
+  - `webinars` 테이블에 `project_name` 필드 추가
+  - SettingsTab에 프로젝트명 입력 필드 추가 (웨비나 제목 위에 배치)
+  - API 라우트에서 `project_name` 저장/업데이트 처리
+  - 대시보드에서 `project_name` 표시 (없으면 `title` 사용)
+- ✅ 웨비나 생성 시 기본 옵션 개선
+  - 제목이 없으면 프로젝트명을 제목으로 사용
+  - 프로젝트명이 없으면 제목을 프로젝트명으로 사용 (기본값)
+  - 웨비나 생성 페이지에 프로젝트명 필드 추가
+- ✅ OnePredict 웨비나 페이지 개선
+  - 메인 제목 두 줄 표시: "산업 AI의 미래," 다음 줄바꿈 후 "원프레딕트가 제안하는 가동 효율의 극대화"
+  - 이미지 버킷 업로드: `thumb1.jpg`, `thumb2.jpg`, `be6b22396f779.png` 업로드 완료
+  - 모든 OnePredict 컴포넌트의 이미지 경로를 버킷 URL로 변경
+- ✅ 메타 링크 설정
+  - 제목: "산업 AI의 미래: 가동 효율 극대화 전략"
+  - 소개글: "원프레딕트 GuardiOne® 기반 설비 관리 혁신 및 DX 성공 전략 공개"
+  - 썸네일: `thumb2.jpg` (버킷 URL)
+- ✅ 빌드 오류 수정
+  - TypeScript 타입 오류 수정 (`query.value` 문자열 비교)
+  - `webinar` null 체크 추가
+  - `handleRegistration` 함수 추가
+
 ## [2025-01-26] 사이드바 완전 제거 및 통계 기능 개선
 - ✅ 사이드바 기능 완전 제거
   - `NEXT_PUBLIC_USE_TOP_NAV` 환경 변수 제거

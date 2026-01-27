@@ -65,6 +65,7 @@ export async function PUT(
   try {
     const { webinarId } = await params
     const {
+      projectName,
       title,
       description,
       youtubeUrl,
@@ -156,6 +157,7 @@ export async function PUT(
     
     // 웨비나 수정
     const updateData: any = {}
+    if (projectName !== undefined) updateData.project_name = projectName || null
     if (title !== undefined) updateData.title = title
     if (description !== undefined) updateData.description = description
     if (youtubeUrl !== undefined) updateData.youtube_url = youtubeUrl

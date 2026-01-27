@@ -49,9 +49,73 @@ export default async function WebinarLivePage({
     queryBuilder = queryBuilder.eq(query.column, query.value)
   }
   
-  // 149402 slug인 경우 등록 캠페인에서 데이터 가져오기
+  // 149402 또는 426307 slug인 경우 등록 캠페인에서 데이터 가져오기
   const is149402 = query.column === 'slug' && query.value === '149402'
-  const isWertSlug = is149402
+  const is426307 = query.column === 'slug' && String(query.value) === '426307'
+  const isWertSlug = is149402 || is426307
+  
+  // 426307은 OnePredictWebinarLivePage를 표시
+  if (is426307) {
+    console.log('[WebinarLivePage] 426307 slug 감지 → OnePredictWebinarLivePage 표시')
+    const { headers } = await import('next/headers')
+    const headersList = await headers()
+    const host = headersList.get('host') || 'localhost:3000'
+    const protocol = headersList.get('x-forwarded-proto') || 'http'
+    const baseUrl = `${protocol}://${host}`
+    
+    // 웨비나 데이터 조회 시도 (없어도 페이지는 표시)
+    let campaignData = null
+    
+    try {
+      const { data: webinar, error: webinarError } = await queryBuilder.maybeSingle()
+      
+      // 웨비나가 있으면 사용
+      if (webinar && !webinarError) {
+        campaignData = webinar
+      } else {
+        // 웨비나가 없으면 등록 캠페인에서 데이터 가져오기
+        const { data: campaign } = await admin
+          .from('event_survey_campaigns')
+          .select('id, title, description, client_id, agency_id, public_path, type')
+          .eq('public_path', '/426307')
+          .eq('type', 'registration')
+          .maybeSingle()
+        
+        if (campaign) {
+          campaignData = campaign
+        }
+      }
+    } catch (error) {
+      // 에러 발생 시에도 등록 캠페인에서 데이터 가져오기 시도
+      console.log('[WebinarLivePage] 웨비나 조회 에러:', error)
+      const { data: campaign } = await admin
+        .from('event_survey_campaigns')
+        .select('id, title, description, client_id, agency_id, public_path, type')
+        .eq('public_path', '/426307')
+        .eq('type', 'registration')
+        .maybeSingle()
+      
+      if (campaign) {
+        campaignData = campaign
+      }
+    }
+    
+    const { default: OnePredictWebinarLivePage } = await import('@/app/event/[...path]/components/OnePredictWebinarLivePage')
+    const { Suspense } = await import('react')
+    
+    return (
+      <Suspense fallback={
+        <div className="min-h-screen bg-white flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#2936E7] mx-auto mb-4"></div>
+            <p className="text-gray-600">로딩 중...</p>
+          </div>
+        </div>
+      }>
+        <OnePredictWebinarLivePage campaign={campaignData} baseUrl={baseUrl} />
+      </Suspense>
+    )
+  }
   
   const { data: webinar, error } = await queryBuilder.single()
   

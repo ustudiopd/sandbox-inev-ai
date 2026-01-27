@@ -8,6 +8,7 @@ interface SettingsTabProps {
     id: string
     slug?: string | null
     title: string
+    project_name?: string | null
     description?: string
     youtube_url: string
     start_time?: string | null
@@ -25,6 +26,7 @@ interface SettingsTabProps {
 export default function SettingsTab({ webinar, onWebinarUpdate }: SettingsTabProps) {
   const router = useRouter()
   const [formData, setFormData] = useState({
+    projectName: '',
     title: '',
     description: '',
     youtubeUrl: '',
@@ -75,6 +77,7 @@ export default function SettingsTab({ webinar, onWebinarUpdate }: SettingsTabPro
       const initializeFormData = async () => {
         const emails = await loadAllowedEmails()
         setFormData({
+          projectName: webinar.project_name || '',
           title: webinar.title || '',
           description: webinar.description || '',
           youtubeUrl: webinar.youtube_url || '',
@@ -107,6 +110,7 @@ export default function SettingsTab({ webinar, onWebinarUpdate }: SettingsTabPro
       }
 
       const requestBody = {
+        projectName: formData.projectName || null,
         title: formData.title,
         description: formData.description || null,
         youtubeUrl: formData.youtubeUrl,
@@ -187,6 +191,22 @@ export default function SettingsTab({ webinar, onWebinarUpdate }: SettingsTabPro
       <form onSubmit={handleSubmit} className="space-y-6">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
+            프로젝트명
+          </label>
+          <input
+            type="text"
+            value={formData.projectName}
+            onChange={(e) => setFormData({ ...formData, projectName: e.target.value })}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            placeholder="대시보드에 표시될 프로젝트명을 입력하세요"
+          />
+          <p className="mt-1 text-sm text-gray-500">
+            대시보드에 표시되는 프로젝트명입니다. 비워두면 웨비나 제목이 사용됩니다.
+          </p>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
             웨비나 제목 *
           </label>
           <input
@@ -194,9 +214,12 @@ export default function SettingsTab({ webinar, onWebinarUpdate }: SettingsTabPro
             value={formData.title}
             onChange={(e) => setFormData({ ...formData, title: e.target.value })}
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder="웨비나 제목을 입력하세요"
+            placeholder="메인 페이지에 노출될 웨비나 제목을 입력하세요"
             required
           />
+          <p className="mt-1 text-sm text-gray-500">
+            메인 페이지에 노출되는 웨비나 제목입니다.
+          </p>
         </div>
 
         <div>

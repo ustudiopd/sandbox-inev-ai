@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OnePredict Webinar | 원프레딕트 웨비나</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --main-color: #2936E7;
+            --sub-color-1: #12058E;
+            --sub-color-2: #51CADE;
+            --text-bg-color: #333333;
+        }
+
+        body {
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+            color: var(--text-bg-color);
+            background-color: #f8f9fa;
+        }
+
+        .bg-main { background-color: var(--main-color); }
+        .bg-sub-1 { background-color: var(--sub-color-1); }
+        .bg-sub-2 { background-color: var(--sub-color-2); }
+        .text-main { color: var(--main-color); }
+        .text-sub-2 { color: var(--sub-color-2); }
+        
+        .hero-gradient {
+            background: linear-gradient(135deg, var(--sub-color-1) 0%, var(--main-color) 100%);
+        }
+
+        .btn-primary {
+            background-color: var(--main-color);
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--sub-color-1);
+            transform: translateY(-2px);
+        }
+
+        .btn-outline {
+            border: 2px solid var(--sub-color-2);
+            color: white;
+            transition: all 0.3s ease;
+        }
+
+        .btn-outline:hover {
+            background-color: var(--sub-color-2);
+            color: var(--sub-color-1);
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <header class="fixed w-full z-50 bg-white/90 backdrop-blur-sm border-b border-gray-200">
+        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <span class="text-2xl font-bold tracking-tighter text-main">ONEPREDICT</span>
+                <span class="text-sm font-medium text-gray-400">WEBINAR</span>
+            </div>
+            <nav class="hidden md:flex space-x-8 font-medium">
+                <a href="#" class="hover:text-main">홈</a>
+                <a href="#about" class="hover:text-main">소개</a>
+                <a href="#schedule" class="hover:text-main">일정</a>
+            </nav>
+            <button onclick="toggleModal(true)" class="bg-main text-white px-5 py-2 rounded-full text-sm font-bold btn-primary">
+                지금 등록하기
+            </button>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero-gradient pt-32 pb-20 px-6 text-white overflow-hidden relative">
+        <div class="absolute top-0 right-0 w-1/3 h-full opacity-10 pointer-events-none">
+            <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                <path fill="#51CADE" d="M44.7,-76.4C58.1,-69.2,71.1,-59.1,79.6,-45.8C88.1,-32.5,92.1,-16.2,91.4,-0.4C90.7,15.4,85.2,30.8,76.4,44.7C67.6,58.6,55.5,71,41.2,78.2C26.9,85.4,10.4,87.4,-5.4,86.5C-21.2,85.5,-36.3,81.6,-49.6,73.8C-62.9,66,-74.4,54.3,-81.8,40.5C-89.2,26.7,-92.5,10.8,-90.4,-4.3C-88.3,-19.4,-80.8,-33.7,-70.6,-45.6C-60.4,-57.5,-47.5,-67,-33.9,-74C-20.3,-81,-10.1,-85.5,2.3,-89.4C14.7,-93.3,29.4,-96.6,44.7,-76.4Z" transform="translate(100 100)" />
+            </svg>
+        </div>
+        
+        <div class="container mx-auto flex flex-col items-center text-center relative z-10">
+            <div class="inline-block px-4 py-1 rounded-full bg-sub-2/20 text-sub-2 font-bold mb-6 border border-sub-2/30">
+                2025.04.26 SAT | 14:00 PM
+            </div>
+            <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight">
+                산업 AI의 미래,<br>원프레딕트가 제안하는 가동 효율의 극대화
+            </h1>
+            <p class="text-xl md:text-2xl text-white/80 mb-10 max-w-3xl">
+                GuardiOne®을 통한 설비 관리 혁신과 디지털 트랜스포메이션 성공 전략을 공개합니다.
+            </p>
+            <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
+                <button onclick="toggleModal(true)" class="px-10 py-4 rounded-lg bg-white text-main font-bold text-lg shadow-xl hover:bg-gray-100 transition-colors">
+                    무료 참가 신청하기
+                </button>
+                <button onclick="enterWebinar()" class="px-10 py-4 rounded-lg btn-outline font-bold text-lg">
+                    웨비나 입장하기
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="py-12 bg-white shadow-sm relative z-20 -mt-10 mx-6 rounded-2xl max-w-5xl container mx-auto border border-gray-100">
+        <div class="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-gray-100">
+            <div class="p-6 text-center">
+                <div class="text-3xl font-bold text-main mb-2">99.8%</div>
+                <div class="text-gray-500">예지보전 정확도</div>
+            </div>
+            <div class="p-6 text-center">
+                <div class="text-3xl font-bold text-main mb-2">1,500+</div>
+                <div class="text-gray-500">글로벌 구축 설비</div>
+            </div>
+            <div class="p-6 text-center">
+                <div class="text-3xl font-bold text-main mb-2">30%</div>
+                <div class="text-gray-500">운영비용 절감 효과</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="py-24 px-6 bg-[#f0f2f5]">
+        <div class="container mx-auto flex flex-col md:flex-row items-center gap-12">
+            <div class="flex-1">
+                <h2 class="text-3xl font-bold mb-6 text-[#333333]">원프레딕트 <span class="text-main">GuardiOne®</span>이란?</h2>
+                <p class="text-lg text-gray-600 mb-6 leading-relaxed">
+                    원프레딕트의 GuardiOne® 제품군은 물리적 지식과 AI 기술이 결합된 하이브리드 알고리즘을 통해 
+                    산업 현장의 핵심 설비 상태를 고도로 정확하게 진단하고 예측합니다. 
+                </p>
+                <ul class="space-y-4">
+                    <li class="flex items-start space-x-3">
+                        <i class="fas fa-check-circle text-sub-2 mt-1"></i>
+                        <span>변압기, 모터, 터빈 등 다양한 산업 설비 최적화</span>
+                    </li>
+                    <li class="flex items-start space-x-3">
+                        <i class="fas fa-check-circle text-sub-2 mt-1"></i>
+                        <span>데이터 기반의 의사결정 체계 구축</span>
+                    </li>
+                    <li class="flex items-start space-x-3">
+                        <i class="fas fa-check-circle text-sub-2 mt-1"></i>
+                        <span>예기치 못한 셧다운 방지 및 가동률 극대화</span>
+                    </li>
+                </ul>
+            </div>
+            <div class="flex-1 w-full h-64 md:h-96 bg-gray-300 rounded-3xl overflow-hidden shadow-2xl relative">
+                <div class="absolute inset-0 bg-gradient-to-tr from-main/20 to-transparent"></div>
+                <div class="flex items-center justify-center h-full text-gray-400 italic">
+                    [원프레딕트 솔루션 구동 이미지]
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Speaker / Schedule -->
+    <section id="schedule" class="py-24 px-6 bg-white">
+        <div class="container mx-auto">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl font-bold mb-4">웨비나 프로그램</h2>
+                <p class="text-gray-500">최고의 전문가들과 함께하는 세션 안내</p>
+            </div>
+            
+            <div class="max-w-4xl mx-auto space-y-6">
+                <!-- Session 1 -->
+                <div class="flex flex-col md:flex-row border border-gray-100 rounded-xl overflow-hidden hover:border-main/30 transition-colors shadow-sm">
+                    <div class="bg-gray-50 p-6 md:w-48 flex flex-col justify-center items-center text-center">
+                        <span class="text-sm font-bold text-gray-400">SESSION 01</span>
+                        <span class="text-xl font-bold text-main">14:00 - 14:40</span>
+                    </div>
+                    <div class="p-6 flex-1">
+                        <h3 class="text-xl font-bold mb-2">산업 현장 디지털 트랜스포메이션의 실전 사례</h3>
+                        <p class="text-gray-600">성공적인 AI 도입을 위해 고려해야 할 3가지 핵심 요소와 극복 전략</p>
+                        <div class="mt-4 flex items-center space-x-2">
+                            <div class="w-8 h-8 rounded-full bg-main/10 flex items-center justify-center text-main">
+                                <i class="fas fa-user text-xs"></i>
+                            </div>
+                            <span class="text-sm font-medium">원프레딕트 기술본부 수석연구원</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Session 2 -->
+                <div class="flex flex-col md:flex-row border border-gray-100 rounded-xl overflow-hidden hover:border-main/30 transition-colors shadow-sm">
+                    <div class="bg-gray-50 p-6 md:w-48 flex flex-col justify-center items-center text-center">
+                        <span class="text-sm font-bold text-gray-400">SESSION 02</span>
+                        <span class="text-xl font-bold text-main">14:50 - 15:30</span>
+                    </div>
+                    <div class="p-6 flex-1">
+                        <h3 class="text-xl font-bold mb-2">GuardiOne® 신규 기능 업데이트 및 데모 시연</h3>
+                        <p class="text-gray-600">더 직관적이고 강력해진 설비 분석 대시보드와 진단 알고리즘 시연</p>
+                        <div class="mt-4 flex items-center space-x-2">
+                            <div class="w-8 h-8 rounded-full bg-main/10 flex items-center justify-center text-main">
+                                <i class="fas fa-user text-xs"></i>
+                            </div>
+                            <span class="text-sm font-medium">원프레딕트 Product Manager</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-[#333333] text-white py-16 px-6">
+        <div class="container mx-auto">
+            <div class="flex flex-col md:flex-row justify-between items-start border-b border-white/10 pb-10 mb-10">
+                <div class="mb-8 md:mb-0">
+                    <div class="text-2xl font-bold tracking-tighter mb-4">ONEPREDICT</div>
+                    <p class="text-white/60 max-w-sm leading-relaxed">
+                        원프레딕트는 산업 AI를 통해 자산 관리의 새로운 기준을 제시합니다.<br>
+                        더 스마트한 산업 생태계를 만듭니다.
+                    </p>
+                </div>
+                <div class="grid grid-cols-2 gap-12">
+                    <div>
+                        <h4 class="font-bold mb-4">소개</h4>
+                        <ul class="text-white/60 space-y-2 text-sm">
+                            <li><a href="#" class="hover:text-sub-2">회사 개요</a></li>
+                            <li><a href="#" class="hover:text-sub-2">제품 문의</a></li>
+                            <li><a href="#" class="hover:text-sub-2">뉴스룸</a></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 class="font-bold mb-4">소셜</h4>
+                        <div class="flex space-x-4">
+                            <a href="#" class="text-2xl text-white/40 hover:text-white transition-colors"><i class="fab fa-linkedin"></i></a>
+                            <a href="#" class="text-2xl text-white/40 hover:text-white transition-colors"><i class="fab fa-youtube"></i></a>
+                            <a href="#" class="text-2xl text-white/40 hover:text-white transition-colors"><i class="fab fa-facebook"></i></a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="text-sm text-white/40 flex flex-col md:flex-row justify-between items-center">
+                <span>© 2025 OnePredict Inc. All rights reserved.</span>
+                <div class="flex space-x-6 mt-4 md:mt-0">
+                    <a href="#" class="hover:text-white">개인정보처리방침</a>
+                    <a href="#" class="hover:text-white">이용약관</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Registration Modal -->
+    <div id="regModal" class="modal">
+        <div class="bg-white rounded-2xl w-full max-w-md p-8 relative mx-4">
+            <button onclick="toggleModal(false)" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+            <h2 class="text-2xl font-bold mb-2">웨비나 등록</h2>
+            <p class="text-gray-500 mb-6">등록하신 이메일로 접속 링크를 발송해 드립니다.</p>
+            
+            <form onsubmit="handleRegistration(event)" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">성함</label>
+                    <input type="text" required class="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-main/20 focus:border-main">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">회사명</label>
+                    <input type="text" required class="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-main/20 focus:border-main">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">이메일</label>
+                    <input type="email" required class="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-main/20 focus:border-main">
+                </div>
+                <div class="flex items-center space-x-2 pt-2">
+                    <input type="checkbox" id="agree" required class="w-4 h-4 text-main">
+                    <label for="agree" class="text-xs text-gray-500">개인정보 수집 및 이용에 동의합니다.</label>
+                </div>
+                <button type="submit" class="w-full py-4 bg-main text-white font-bold rounded-lg btn-primary mt-4">
+                    등록 완료하기
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Message UI Component -->
+    <div id="messageBox" class="fixed bottom-10 left-1/2 -translate-x-1/2 z-[2000] hidden">
+        <div class="bg-sub-1 text-white px-8 py-4 rounded-full shadow-2xl flex items-center space-x-3">
+            <i class="fas fa-check-circle text-sub-2"></i>
+            <span id="messageContent"></span>
+        </div>
+    </div>
+
+    <script>
+        function toggleModal(show) {
+            const modal = document.getElementById('regModal');
+            if (show) {
+                modal.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            } else {
+                modal.classList.remove('active');
+                document.body.style.overflow = 'auto';
+            }
+        }
+
+        function showMessage(text) {
+            const box = document.getElementById('messageBox');
+            const content = document.getElementById('messageContent');
+            content.innerText = text;
+            box.classList.remove('hidden');
+            setTimeout(() => {
+                box.classList.add('hidden');
+            }, 3000);
+        }
+
+        function handleRegistration(event) {
+            event.preventDefault();
+            toggleModal(false);
+            showMessage('웨비나 등록이 성공적으로 완료되었습니다!');
+        }
+
+        function enterWebinar() {
+            // 실제 환경에서는 등록 여부를 체크하거나 링크로 이동
+            showMessage('웨비나 입장 링크를 생성 중입니다...');
+            setTimeout(() => {
+                const confirmEntry = window.confirm('현재 웨비나가 진행 중입니다. 입장하시겠습니까?');
+                if(confirmEntry) {
+                    location.href = 'https://ko.onepredict.ai/';
+                }
+            }, 500);
+        }
+
+        // Smooth scroll for nav
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+    </script>
+</body>
+</html>

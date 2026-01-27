@@ -18,6 +18,7 @@ interface Webinar {
   id: string
   slug?: string | null
   title: string
+  project_name?: string | null
   description?: string
   youtube_url: string
   start_time?: string | null

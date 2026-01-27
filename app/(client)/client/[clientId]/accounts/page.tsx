@@ -2,6 +2,7 @@ import { requireClientMember } from '@/lib/auth/guards'
 import { createServerSupabase } from '@/lib/supabase/server'
 import { createAdminSupabase } from '@/lib/supabase/admin'
 import Link from 'next/link'
+import ClientMemberAddButton from './components/ClientMemberAddButton'
 
 export default async function ClientAccountsPage({
   params,
@@ -102,8 +103,13 @@ export default async function ClientAccountsPage({
         {/* 1. 이 클라이언트와 관련된 계정들 */}
         <div className="bg-white rounded-xl shadow-lg overflow-hidden mb-6">
           <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-6">
-            <h2 className="text-xl font-semibold text-white">클라이언트 멤버 ({clientMembers?.length || 0})</h2>
-            <p className="text-sm text-blue-100 mt-1">이 클라이언트에 가입된 계정 목록</p>
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-xl font-semibold text-white">클라이언트 멤버 ({clientMembers?.length || 0})</h2>
+                <p className="text-sm text-blue-100 mt-1">이 클라이언트에 가입된 계정 목록</p>
+              </div>
+              <ClientMemberAddButton clientId={clientId} />
+            </div>
           </div>
           <div className="p-6">
             {clientMembers && clientMembers.length > 0 ? (
@@ -152,7 +158,10 @@ export default async function ClientAccountsPage({
             ) : (
               <div className="text-center py-12 text-gray-500">
                 <div className="text-5xl mb-4">👥</div>
-                <p className="text-lg">멤버가 없습니다.</p>
+                <p className="text-lg mb-6">멤버가 없습니다.</p>
+                <div className="flex justify-center">
+                  <ClientMemberAddButton clientId={clientId} />
+                </div>
               </div>
             )}
           </div>

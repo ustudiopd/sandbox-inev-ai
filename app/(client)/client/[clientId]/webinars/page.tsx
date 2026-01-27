@@ -136,7 +136,7 @@ export default function WebinarsPage() {
                     {webinars.map((webinar) => {
                       const status = getWebinarStatus(webinar)
                       const webinarSlug = webinar.slug || webinar.id
-                      const displayTitle = webinarSlug === '149404' ? '0206wert웨비나' : webinarSlug === '149405' ? '149405 웨비나' : webinar.title
+                      const displayTitle = webinarSlug === '149404' ? '0206wert웨비나' : webinarSlug === '149405' ? '149405 웨비나' : (webinar.project_name || webinar.title)
                       return (
                         <tr key={webinar.id} className="hover:bg-gray-50 transition-colors">
                           <td className="px-6 py-4 whitespace-nowrap">

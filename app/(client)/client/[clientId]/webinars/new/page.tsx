@@ -10,6 +10,7 @@ export default function NewWebinarPage() {
   const clientId = params?.clientId as string
   
   const [formData, setFormData] = useState({
+    projectName: '',
     title: '',
     description: '',
     youtubeUrl: '',
@@ -49,7 +50,8 @@ export default function NewWebinarPage() {
 
       const requestBody = {
         clientId,
-        title: formData.title,
+        projectName: formData.projectName || undefined,
+        title: formData.title || undefined,
         description: formData.description || null,
         youtubeUrl: formData.youtubeUrl,
         startTime: convertToUTC(formData.startTime),
@@ -129,16 +131,35 @@ export default function NewWebinarPage() {
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                웨비나 제목 *
+                프로젝트명
+              </label>
+              <input
+                type="text"
+                value={formData.projectName}
+                onChange={(e) => setFormData({ ...formData, projectName: e.target.value })}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                placeholder="대시보드에 표시될 프로젝트명을 입력하세요"
+              />
+              <p className="mt-1 text-sm text-gray-500">
+                대시보드에 표시되는 프로젝트명입니다. 비워두면 웨비나 제목이 사용됩니다.
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                웨비나 제목 <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                placeholder="웨비나 제목을 입력하세요"
-                required
+                placeholder="메인 페이지에 노출될 웨비나 제목을 입력하세요"
+                required={!formData.projectName}
               />
+              <p className="mt-1 text-sm text-gray-500">
+                메인 페이지에 노출되는 웨비나 제목입니다. 프로젝트명이 없으면 필수입니다.
+              </p>
             </div>
             
             <div>

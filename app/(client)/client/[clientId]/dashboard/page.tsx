@@ -174,6 +174,7 @@ export default async function ClientDashboard({
       id: webinar.id,
       slug: webinar.slug,
       title: webinar.title,
+      project_name: webinar.project_name,
       start_time: webinar.start_time,
       created_at: webinar.created_at,
     })),

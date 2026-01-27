@@ -8,6 +8,10 @@ import DonePageClient from './components/DonePageClient'
 import RegistrationPage from './components/RegistrationPage'
 import WelcomePage from './components/WelcomePage'
 import WebinarFormWertPage from '@/app/webinarform/wert/page'
+import OnePredictWebinarPage from './components/OnePredictWebinarPage'
+import OnePredictRegistrationPage from './components/OnePredictRegistrationPage'
+import OnePredictEnterPage from './components/OnePredictEnterPage'
+import OnePredictWebinarLivePage from './components/OnePredictWebinarLivePage'
 import type { Metadata } from 'next'
 
 /**
@@ -63,6 +67,41 @@ export async function generateMetadata({
     }
   }
   
+  // 426307 페이지에 대한 메타데이터
+  if (publicPath === '/426307' || publicPath === '426307') {
+    const thumbnailUrl = 'https://yqsayphssjznthrxpgfb.supabase.co/storage/v1/object/public/webinar-thumbnails/onepredict/thumb2.jpg'
+    return {
+      title: '산업 AI의 미래: 가동 효율 극대화 전략 | 원프레딕트 웨비나',
+      description: '원프레딕트 GuardiOne® 기반 설비 관리 혁신 및 DX 성공 전략 공개',
+      keywords: '원프레딕트, GuardiOne, 산업 AI, 설비 관리, 디지털 트랜스포메이션, 예지보전, 웨비나',
+      metadataBase: new URL('https://eventflow.kr'),
+      openGraph: {
+        title: '산업 AI의 미래: 가동 효율 극대화 전략',
+        description: '원프레딕트 GuardiOne® 기반 설비 관리 혁신 및 DX 성공 전략 공개',
+        type: 'website',
+        url: 'https://eventflow.kr/event/426307',
+        siteName: '원프레딕트 웨비나',
+        images: [
+          {
+            url: thumbnailUrl,
+            width: 1200,
+            height: 630,
+            alt: '원프레딕트 웨비나',
+          },
+        ],
+      },
+      twitter: {
+        card: 'summary_large_image',
+        title: '산업 AI의 미래: 가동 효율 극대화 전략',
+        description: '원프레딕트 GuardiOne® 기반 설비 관리 혁신 및 DX 성공 전략 공개',
+        images: [thumbnailUrl],
+      },
+      alternates: {
+        canonical: 'https://eventflow.kr/event/426307',
+      },
+    }
+  }
+  
   return {}
 }
 
@@ -102,9 +141,9 @@ export default async function SurveyPublicPage({
     return redirect(`/event/dashboard/${dashboardCode}`)
   }
   
-  // 마지막 경로가 survey, register, done, display 중 하나면 subPath로 처리
+  // 마지막 경로가 survey, register, done, display, enter, webinar 중 하나면 subPath로 처리
   const lastPath = path[path.length - 1]
-  const isSubPath = ['survey', 'register', 'done', 'display'].includes(lastPath)
+  const isSubPath = ['survey', 'register', 'done', 'display', 'enter', 'webinar'].includes(lastPath)
   
   const subPath = isSubPath ? lastPath : null
   const publicPath = '/' + (isSubPath ? path.slice(0, -1) : path).join('/')
@@ -287,33 +326,7 @@ export default async function SurveyPublicPage({
     }
   }
   
-  // 캠페인을 찾지 못한 경우 404
-  if (campaignError || !campaign) {
-    const errorInfo = {
-      publicPath,
-      publicPathWithoutSlash: publicPath.startsWith('/') ? publicPath.slice(1) : publicPath,
-      error: campaignError ? {
-        message: campaignError.message,
-        code: campaignError.code,
-        details: campaignError.details,
-        hint: campaignError.hint
-      } : null,
-      searchedPaths: [publicPath, publicPath.startsWith('/') ? publicPath.slice(1) : publicPath],
-      pathArray: path
-    }
-    console.error('[SurveyPublicPage] 캠페인 조회 실패:', JSON.stringify(errorInfo, null, 2))
-    notFound()
-  }
-  
-  console.log('[SurveyPublicPage] 캠페인 조회 성공:', JSON.stringify({
-    campaignId: campaign.id,
-    title: campaign.title,
-    public_path: campaign.public_path,
-    status: campaign.status,
-    type: campaign.type || 'survey'
-  }, null, 2))
-  
-  const campaignType = campaign.type || 'survey' // 기본값은 'survey'
+  const campaignType = campaign?.type || 'survey' // 기본값은 'survey'
   
   // subPath에 따라 다른 페이지 렌더링
   if (!subPath) {
@@ -333,6 +346,28 @@ export default async function SurveyPublicPage({
       )
     }
     
+    // 426307은 OnePredictWebinarPage를 보여줌 (캠페인 조회 실패해도 표시)
+    if (publicPath === '/426307' || publicPath === '426307') {
+      const headersList = await headers()
+      const host = headersList.get('host') || 'localhost:3000'
+      const protocol = headersList.get('x-forwarded-proto') || 'http'
+      const baseUrl = `${protocol}://${host}`
+      
+      // 캠페인이 없어도 페이지 표시
+      return (
+        <Suspense fallback={
+          <div className="min-h-screen bg-white flex items-center justify-center">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#2936E7] mx-auto mb-4"></div>
+              <p className="text-gray-600">로딩 중...</p>
+            </div>
+          </div>
+        }>
+          <OnePredictWebinarPage campaign={campaign} baseUrl={baseUrl} />
+        </Suspense>
+      )
+    }
+    
     // 445870는 WelcomePage를 보여주고, 345870만 설문 페이지로 리다이렉트
     if (publicPath === '/445870') {
       // WelcomePage 표시
@@ -341,7 +376,7 @@ export default async function SurveyPublicPage({
       const protocol = headersList.get('x-forwarded-proto') || 'http'
       const baseUrl = `${protocol}://${host}`
       
-      const isDraft = campaign.status === 'draft'
+      const isDraft = campaign?.status === 'draft'
       
       return (
         <Suspense fallback={
@@ -379,6 +414,32 @@ export default async function SurveyPublicPage({
         </Suspense>
       )
     }
+    
+    // 캠페인을 찾지 못한 경우 404 (특정 경로는 제외)
+    if (campaignError || !campaign) {
+      const errorInfo = {
+        publicPath,
+        publicPathWithoutSlash: publicPath.startsWith('/') ? publicPath.slice(1) : publicPath,
+        error: campaignError ? {
+          message: campaignError.message,
+          code: campaignError.code,
+          details: campaignError.details,
+          hint: campaignError.hint
+        } : null,
+        searchedPaths: [publicPath, publicPath.startsWith('/') ? publicPath.slice(1) : publicPath],
+        pathArray: path
+      }
+      console.error('[SurveyPublicPage] 캠페인 조회 실패:', JSON.stringify(errorInfo, null, 2))
+      notFound()
+    }
+    
+    console.log('[SurveyPublicPage] 캠페인 조회 성공:', JSON.stringify({
+      campaignId: campaign.id,
+      title: campaign.title,
+      public_path: campaign.public_path,
+      status: campaign.status,
+      type: campaign.type || 'survey'
+    }, null, 2))
     
     // 345870는 설문 페이지로 바로 리다이렉트
     return redirect(`/event${publicPath}/survey`)
@@ -419,6 +480,26 @@ export default async function SurveyPublicPage({
       </Suspense>
     )
   } else if (subPath === 'register') {
+    // 426307의 등록 페이지는 OnePredictRegistrationPage를 사용
+    if (publicPath === '/426307' || publicPath === '426307') {
+      const headersList = await headers()
+      const host = headersList.get('host') || 'localhost:3000'
+      const protocol = headersList.get('x-forwarded-proto') || 'http'
+      const baseUrl = `${protocol}://${host}`
+      return (
+        <Suspense fallback={
+          <div className="min-h-screen bg-white flex items-center justify-center">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#2936E7] mx-auto mb-4"></div>
+              <p className="text-gray-600">로딩 중...</p>
+            </div>
+          </div>
+        }>
+          <OnePredictRegistrationPage campaign={campaign} baseUrl={baseUrl} />
+        </Suspense>
+      )
+    }
+    
     // 등록 페이지 (type='registration'인 경우만)
     if (campaignType !== 'registration') {
       notFound()
@@ -439,6 +520,48 @@ export default async function SurveyPublicPage({
         <RegistrationPage campaign={campaign} baseUrl={baseUrl} />
       </Suspense>
     )
+  } else if (subPath === 'enter') {
+    // 426307의 입장 페이지는 OnePredictEnterPage를 사용
+    if (publicPath === '/426307' || publicPath === '426307') {
+      const headersList = await headers()
+      const host = headersList.get('host') || 'localhost:3000'
+      const protocol = headersList.get('x-forwarded-proto') || 'http'
+      const baseUrl = `${protocol}://${host}`
+      return (
+        <Suspense fallback={
+          <div className="min-h-screen bg-white flex items-center justify-center">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#2936E7] mx-auto mb-4"></div>
+              <p className="text-gray-600">로딩 중...</p>
+            </div>
+          </div>
+        }>
+          <OnePredictEnterPage campaign={campaign} baseUrl={baseUrl} />
+        </Suspense>
+      )
+    }
+    notFound()
+  } else if (subPath === 'webinar') {
+    // 426307의 웨비나 라이브 페이지는 OnePredictWebinarLivePage를 사용
+    if (publicPath === '/426307' || publicPath === '426307') {
+      const headersList = await headers()
+      const host = headersList.get('host') || 'localhost:3000'
+      const protocol = headersList.get('x-forwarded-proto') || 'http'
+      const baseUrl = `${protocol}://${host}`
+      return (
+        <Suspense fallback={
+          <div className="min-h-screen bg-white flex items-center justify-center">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#2936E7] mx-auto mb-4"></div>
+              <p className="text-gray-600">로딩 중...</p>
+            </div>
+          </div>
+        }>
+          <OnePredictWebinarLivePage campaign={campaign} baseUrl={baseUrl} />
+        </Suspense>
+      )
+    }
+    notFound()
   } else if (subPath === 'display') {
     // 디스플레이 페이지
     return <DisplayPage campaign={campaign} />

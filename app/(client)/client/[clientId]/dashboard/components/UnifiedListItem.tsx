@@ -9,6 +9,7 @@ interface UnifiedListItemProps {
     id: string
     slug?: string | null
     title: string
+    project_name?: string | null
     start_time?: string | null
     public_path?: string
     created_at: string
@@ -67,7 +68,7 @@ export default function UnifiedListItem({ item, clientId }: UnifiedListItemProps
                 ? 'AI 특허리서치 실무 활용 웨비나'
                 : isWebinar && webinarSlug === '149404'
                 ? '0206wert웨비나'
-                : item.title}
+                : (isWebinar && item.project_name ? item.project_name : item.title)}
             </div>
             <div className="text-xs sm:text-sm text-gray-500 mt-1 truncate">
               {isWebinar 

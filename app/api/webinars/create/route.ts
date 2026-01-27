@@ -14,6 +14,7 @@ export async function POST(req: Request) {
     const { 
       clientId,
       title,
+      projectName,
       description,
       youtubeUrl,
       startTime,
@@ -26,10 +27,16 @@ export async function POST(req: Request) {
       publicPath // 선택사항: 공개 경로 (slug로 사용)
     } = body
     
-    if (!clientId || !title || !youtubeUrl) {
-      console.error('필수 필드 누락:', { clientId, title, youtubeUrl })
+    // title과 projectName 중 하나는 필수
+    // title이 없으면 projectName을 title로 사용
+    // projectName이 없으면 title을 projectName으로 사용 (기본값)
+    let finalTitle = title || projectName || ''
+    let finalProjectName = projectName || title || null
+    
+    if (!clientId || !finalTitle || !youtubeUrl) {
+      console.error('필수 필드 누락:', { clientId, title, projectName, youtubeUrl })
       return NextResponse.json(
-        { error: 'clientId, title, and youtubeUrl are required' },
+        { error: 'clientId, title 또는 projectName, 그리고 youtubeUrl은 필수입니다' },
         { status: 400 }
       )
     }
@@ -159,7 +166,7 @@ export async function POST(req: Request) {
       } else {
         // 2순위: Gemini API로 영문 슬러그 생성
         try {
-          slug = await generateSlugFromTitle(title)
+          slug = await generateSlugFromTitle(finalTitle)
           if (slug) {
             console.log('Gemini로 생성된 slug:', slug)
           }
@@ -170,7 +177,7 @@ export async function POST(req: Request) {
         // 3순위: 데이터베이스 함수 사용
         if (!slug) {
           const { data: slugResult, error: slugError } = await admin
-            .rpc('generate_slug_from_title', { title })
+            .rpc('generate_slug_from_title', { title: finalTitle })
           
           slug = slugResult as string | null
           if (slugError) {
@@ -181,7 +188,7 @@ export async function POST(req: Request) {
         // 4순위: 수동으로 slug 생성 (간단한 버전)
         if (!slug) {
           console.warn('slug 생성 실패, 수동 생성 시도')
-          slug = title
+          slug = finalTitle
             .toLowerCase()
             .replace(/[^가-힣a-z0-9\s]/g, '')
             .replace(/\s+/g, '-')
@@ -222,7 +229,8 @@ export async function POST(req: Request) {
       .insert({
         agency_id: client.agency_id,
         client_id: clientId,
-        title,
+        title: finalTitle,
+        project_name: finalProjectName,
         description: description || null,
         youtube_url: youtubeUrl,
         start_time: startTime || null,
@@ -280,7 +288,7 @@ export async function POST(req: Request) {
           client_id: clientId,
           webinar_id: webinar.id,
           action: 'WEBINAR_CREATE',
-          payload: { title, youtubeUrl }
+          payload: { title: finalTitle, projectName: finalProjectName, youtubeUrl }
         })
     } catch (auditError) {
       console.warn('감사 로그 생성 실패:', auditError)
