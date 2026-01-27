@@ -141,28 +141,16 @@ export default function OnePredictWebinarPage({ campaign, baseUrl = '' }: OnePre
         </div>
         
         <div className="container mx-auto flex flex-col items-center text-center relative z-10 pt-4">
-          {webinar?.start_time && (
-            <div 
-              className="inline-block px-4 max-sm:px-3 py-2 max-sm:py-1.5 rounded-full font-bold mb-6 max-sm:mb-4 border text-sm max-sm:text-xs whitespace-nowrap max-sm:whitespace-normal"
-              style={{ 
-                backgroundColor: 'rgba(81, 202, 222, 0.2)', 
-                color: '#51CADE',
-                borderColor: 'rgba(81, 202, 222, 0.3)'
-              }}
-            >
-              {(() => {
-                const date = new Date(webinar.start_time)
-                const days = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT']
-                const day = days[date.getDay()]
-                const year = date.getFullYear()
-                const month = String(date.getMonth() + 1).padStart(2, '0')
-                const dayNum = String(date.getDate()).padStart(2, '0')
-                const hours = String(date.getHours()).padStart(2, '0')
-                const minutes = String(date.getMinutes()).padStart(2, '0')
-                return `Webinar ${year}.${month}.${dayNum} ${day} | ${hours}:${minutes}`
-              })()}
-            </div>
-          )}
+          <div 
+            className="inline-block px-4 max-sm:px-3 py-2 max-sm:py-1.5 rounded-full font-bold mb-6 max-sm:mb-4 border text-sm max-sm:text-xs whitespace-nowrap max-sm:whitespace-normal"
+            style={{ 
+              backgroundColor: 'rgba(81, 202, 222, 0.2)', 
+              color: '#51CADE',
+              borderColor: 'rgba(81, 202, 222, 0.3)'
+            }}
+          >
+            Webinar 2026.02.25 WED | 14:00
+          </div>
           <h1 className="text-4xl md:text-6xl max-sm:text-2xl max-sm:px-2 font-extrabold mb-6 max-sm:mb-4 leading-tight">
             {webinar?.title === '산업 AI의 미래, 원프레딕트가 제안하는 가동 효율의 극대화' || !webinar?.title ? (
               <>
