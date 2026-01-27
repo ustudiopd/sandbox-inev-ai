@@ -1108,6 +1108,38 @@ export default function WebinarEntry({ webinar, isWertPage: serverIsWertPage }: 
       }
     }
     
+    .hero-title-section {
+      gap: 4px;
+    }
+    
+    @media (min-width: 1024px) {
+      .hero-title-section {
+        gap: 8px;
+      }
+    }
+    
+    .registration-subtitle-text {
+      text-align: center;
+      font-size: 16px;
+      font-weight: 700;
+      color: rgba(0, 0, 0, 0.8);
+      font-family: 'Pretendard', sans-serif;
+      margin: 0;
+    }
+    
+    @media (min-width: 640px) {
+      .registration-subtitle-text {
+        font-size: 18px;
+      }
+    }
+    
+    @media (min-width: 1024px) {
+      .registration-subtitle-text {
+        font-size: 32px;
+        line-height: 48px;
+      }
+    }
+    
     .registration-title {
       text-align: center;
       font-size: 96px;
@@ -1152,6 +1184,12 @@ export default function WebinarEntry({ webinar, isWertPage: serverIsWertPage }: 
       box-shadow: 0px 4px 48px -10px rgba(0, 0, 0, 0.08);
     }
     
+    @media (min-width: 1024px) {
+      .registration-form-container {
+        max-width: 714px;
+      }
+    }
+    
     .registration-form-title {
       font-size: 36px;
       font-weight: 700;
@@ -1192,6 +1230,17 @@ export default function WebinarEntry({ webinar, isWertPage: serverIsWertPage }: 
       color: #999;
     }
     
+    .registration-entry-form {
+      max-width: 500px;
+      margin: 0 auto;
+    }
+    
+    @media (max-width: 768px) {
+      .registration-entry-form {
+        max-width: 100%;
+      }
+    }
+    
     .registration-form-button {
       width: 100%;
       padding: 20px 48px;
@@ -1223,7 +1272,7 @@ export default function WebinarEntry({ webinar, isWertPage: serverIsWertPage }: 
     
     @media (max-width: 768px) {
       .registration-hero {
-        padding-top: 150px;
+        padding-top: 64px;
         padding-bottom: 40px;
         min-height: auto;
       }
@@ -1241,6 +1290,7 @@ export default function WebinarEntry({ webinar, isWertPage: serverIsWertPage }: 
       .registration-content {
         padding: 0 16px;
         gap: 20px;
+        margin-top: 16px;
       }
       
       .hero-main-content {
@@ -1248,12 +1298,12 @@ export default function WebinarEntry({ webinar, isWertPage: serverIsWertPage }: 
       }
       
       .hero-title-section {
-        gap: 20px !important;
+        gap: 4px !important;
       }
       
       .registration-title {
-        font-size: 28px;
-        line-height: 36px;
+        font-size: 36px;
+        line-height: 1.25;
       }
       
       .date-badge {
@@ -1297,9 +1347,9 @@ export default function WebinarEntry({ webinar, isWertPage: serverIsWertPage }: 
         border-radius: 100px;
       }
       
-      .registration-subtitle {
-        font-size: 18px !important;
-        line-height: 26px !important;
+      .registration-subtitle-text {
+        font-size: 16px !important;
+        line-height: 24px !important;
       }
       
       .mobile-text-sm {
@@ -1469,6 +1519,14 @@ export default function WebinarEntry({ webinar, isWertPage: serverIsWertPage }: 
       width: 100%;
     }
     
+    @media (max-width: 768px) {
+      .login-form-container form {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+    }
+    
     .login-form-label {
       font-size: 20px;
       font-weight: 600;
@@ -1518,6 +1576,26 @@ export default function WebinarEntry({ webinar, isWertPage: serverIsWertPage }: 
       margin-top: 24px;
     }
     
+    @media (min-width: 1024px) {
+      .login-form-button {
+        width: auto;
+        padding: 24px 40px 24px 64px;
+        font-size: 36px;
+        line-height: 1.2;
+        gap: 24px;
+        border-radius: 200px;
+      }
+      
+      .login-button-container {
+        display: flex;
+        justify-content: center;
+      }
+      
+      .login-form-container form {
+        align-items: center;
+      }
+    }
+    
     .login-form-button:hover {
       background-color: #008f7a;
       transform: translateY(-2px);
@@ -1531,7 +1609,7 @@ export default function WebinarEntry({ webinar, isWertPage: serverIsWertPage }: 
     
     @media (max-width: 768px) {
       .hero-section {
-        padding-top: 80px;
+        padding-top: 64px;
         padding-bottom: 60px;
       }
       
@@ -1540,12 +1618,12 @@ export default function WebinarEntry({ webinar, isWertPage: serverIsWertPage }: 
       }
       
       .hero-title {
-        font-size: 48px;
-        line-height: 60px;
+        font-size: 36px;
+        line-height: 1.25;
       }
       
       .hero-subtitle {
-        font-size: 24px;
+        font-size: 16px;
       }
       
       .hero-date-badge {
@@ -1563,8 +1641,23 @@ export default function WebinarEntry({ webinar, isWertPage: serverIsWertPage }: 
       }
       
       .login-form-button {
-        font-size: 20px;
-        padding: 16px 40px;
+        width: auto;
+        font-size: 14px;
+        padding: 10px 16px;
+        gap: 8px;
+        border-radius: 9999px;
+        min-height: 44px;
+      }
+      
+      .login-button-container {
+        display: flex;
+        justify-content: center;
+      }
+      
+      .login-form-container form {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
       }
     }
   ` : ''
@@ -1620,12 +1713,10 @@ export default function WebinarEntry({ webinar, isWertPage: serverIsWertPage }: 
                 <div className="registration-hero-content">
                   <div className="registration-content">
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '40px' }} className="hero-main-content">
-                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '32px' }} className="hero-title-section">
-                        {webinar.description && (
-                          <div className="registration-subtitle mobile-text-sm" style={{ textAlign: 'center', fontSize: '36px', fontWeight: 700, color: '#000' }}>
-                            {webinar.description}
-                          </div>
-                        )}
+                      <div className="hero-title-section">
+                        <div className="registration-subtitle-text">
+                          고객사례로 알아보는
+                        </div>
                         <h1 className="registration-title">
                           {webinar.title}
                         </h1>
@@ -1726,7 +1817,7 @@ export default function WebinarEntry({ webinar, isWertPage: serverIsWertPage }: 
                   </Link>
                   
                   <div style={{ marginBottom: '32px' }}>
-                    <h1 className="registration-form-title" style={{ marginBottom: '0', marginTop: '0' }}>웨비나 입장</h1>
+                    <h1 className="registration-form-title" style={{ marginBottom: '8px', marginTop: '0' }}>웨비나 입장</h1>
                     {/* 안내 문구 */}
                     <p style={{ 
                       marginTop: '0',
@@ -1737,11 +1828,11 @@ export default function WebinarEntry({ webinar, isWertPage: serverIsWertPage }: 
                       lineHeight: '20px',
                       fontFamily: 'Pretendard, sans-serif'
                     }} className="entry-notice-text">
-                      웨비나 등록 시 입력했던 이름과 이메일 주소를 작성하시면 입장됩니다.
+                      웨비나 등록 시 입력했던 이름과 이메일 주소를<span className="sm:hidden"><br /></span><span className="hidden sm:inline"> </span>작성하시면 입장됩니다.
                     </p>
                   </div>
                   
-                  <form onSubmit={handleNameEmailAuth} style={{ display: 'flex', flexDirection: 'column', gap: '32px' }} className="mobile-form-gap">
+                  <form onSubmit={handleNameEmailAuth} style={{ display: 'flex', flexDirection: 'column', gap: '32px' }} className="mobile-form-gap registration-entry-form">
                     {error && (
                       <div style={{ padding: '16px', backgroundColor: '#fee', border: '1px solid #fcc', borderRadius: '16px' }}>
                         <p style={{ fontSize: '16px', color: '#c00' }}>{error}</p>
@@ -1781,7 +1872,7 @@ export default function WebinarEntry({ webinar, isWertPage: serverIsWertPage }: 
                     </div>
                     
                     {/* 입장 버튼 */}
-                    <div style={{ marginTop: '32px' }}>
+                    <div style={{ marginTop: '32px' }} className="login-button-container">
                       <button
                         type="submit"
                         disabled={loading}
@@ -1940,11 +2031,12 @@ export default function WebinarEntry({ webinar, isWertPage: serverIsWertPage }: 
                       <p style={{ fontSize: '16px', color: '#c00' }}>{error}</p>
                     </div>
                   )}
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="login-form-button"
-                  >
+                  <div className="login-button-container">
+                    <button
+                      type="submit"
+                      disabled={loading}
+                      className="login-form-button"
+                    >
                     {loading ? '입장 중...' : '웨비나 입장'}
                     <img
                       src={`${supabaseUrl}/storage/v1/object/public/webinar-thumbnails/wert/symbol1.png`}
@@ -1954,6 +2046,7 @@ export default function WebinarEntry({ webinar, isWertPage: serverIsWertPage }: 
                       style={{ width: '14px', height: '20px', objectFit: 'contain' }}
                     />
                   </button>
+                  </div>
                 </form>
               </div>
             </div>

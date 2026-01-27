@@ -128,7 +128,14 @@ export default async function WebinarPage({
     const is426307 = query.column === 'slug' && String(query.value) === '426307'
     const isWertSlug = is149402 || is426307
     
-    // 426307은 OnePredictWebinarPage를 표시
+    // 426307은 등록 페이지로 리다이렉트 (당분간 숨김 처리)
+    if (is426307) {
+      console.log('[WebinarPage] 426307 slug 감지 → 등록 페이지로 리다이렉트')
+      redirect('/webinar/426307/register')
+    }
+    
+    // 아래 코드는 사용하지 않지만 참고용으로 남겨둠 (주석 처리)
+    /*
     if (is426307) {
       console.log('[WebinarPage] 426307 slug 감지 → OnePredictWebinarPage 표시')
       const { headers } = await import('next/headers')
@@ -217,6 +224,7 @@ export default async function WebinarPage({
         </Suspense>
       )
     }
+    */
     
     let { data: webinar, error } = await queryBuilder.single()
     

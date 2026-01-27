@@ -37,6 +37,8 @@ export default function OnePredictRegistrationPage({ campaign, baseUrl = '' }: O
     }, 3000)
   }
 
+  const [isRegistrationComplete, setIsRegistrationComplete] = useState(false)
+
   const handleRegistration = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     // 휴대폰 번호 합치기
@@ -46,11 +48,10 @@ export default function OnePredictRegistrationPage({ campaign, baseUrl = '' }: O
       phone
     }
     console.log('등록 정보:', registrationData)
-    showMessageBox('웨비나 등록이 성공적으로 완료되었습니다!')
-    // 등록 완료 후 메인 페이지로 이동
-    setTimeout(() => {
-      router.push('/webinar/426307')
-    }, 2000)
+    
+    // 등록 완료 상태로 변경
+    setIsRegistrationComplete(true)
+    showMessageBox('등록이 완료되었습니다')
   }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -113,12 +114,27 @@ export default function OnePredictRegistrationPage({ campaign, baseUrl = '' }: O
       <section className="pt-24 max-sm:pt-20 pb-20 max-sm:pb-12 px-6 max-sm:px-4">
         <div className="max-w-3xl mx-auto">
           <div className="bg-white shadow-sm rounded-2xl border border-gray-100 p-8 md:p-12 max-sm:p-6">
-            <div className="text-center mb-8 max-sm:mb-6">
-              <h2 className="text-3xl max-sm:text-2xl font-bold mb-2" style={{ color: '#333333' }}>회원 등록 정보</h2>
-              <p className="text-gray-500 max-sm:text-sm">웨비나 참가를 위한 정보를 입력해주세요</p>
-            </div>
+            {isRegistrationComplete ? (
+              <div className="text-center py-12 max-sm:py-8">
+                <div className="mb-6 max-sm:mb-4">
+                  <i className="fas fa-check-circle text-6xl max-sm:text-5xl" style={{ color: '#2936E7' }}></i>
+                </div>
+                <h2 className="text-3xl max-sm:text-2xl font-bold mb-4 max-sm:mb-3" style={{ color: '#333333' }}>
+                  등록이 완료되었습니다
+                </h2>
+                <p className="text-gray-600 max-sm:text-sm">
+                  웨비나 등록이 성공적으로 완료되었습니다.<br />
+                  감사합니다.
+                </p>
+              </div>
+            ) : (
+              <>
+                <div className="text-center mb-8 max-sm:mb-6">
+                  <h2 className="text-3xl max-sm:text-2xl font-bold mb-2" style={{ color: '#333333' }}>회원 등록 정보</h2>
+                  <p className="text-gray-500 max-sm:text-sm">웨비나 참가를 위한 정보를 입력해주세요</p>
+                </div>
 
-            <form onSubmit={handleRegistration} className="space-y-6 max-sm:space-y-4">
+                <form onSubmit={handleRegistration} className="space-y-6 max-sm:space-y-4">
               {/* 이메일 */}
               <div>
                 <label className="block text-sm font-bold text-gray-700 mb-2">
@@ -354,6 +370,8 @@ export default function OnePredictRegistrationPage({ campaign, baseUrl = '' }: O
                 </button>
               </div>
             </form>
+              </>
+            )}
           </div>
         </div>
       </section>

@@ -101,6 +101,8 @@ export default function WebinarView({ webinar, isAdminMode = false }: WebinarVie
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [mounted, setMounted] = useState(false)
   const [expandedSession, setExpandedSession] = useState<string | null>(null)
+  const [isSessionIntroExpanded, setIsSessionIntroExpanded] = useState(false) // 기본값: 접힘 (모바일만)
+  const [isMobile, setIsMobile] = useState(false)
   
   // slug가 '149402'이거나 registration_campaign_id가 있으면 등록 페이지와 연동된 웨비나로 간주
   const isWertWebinar = webinar.slug === '149402' || !!webinar.registration_campaign_id
@@ -143,6 +145,13 @@ export default function WebinarView({ webinar, isAdminMode = false }: WebinarVie
   
   useEffect(() => {
     setMounted(true)
+    // 모바일 여부 확인
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 1024)
+    }
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
   }, [])
 
   // Presence ping (접속 통계 수집)
@@ -702,12 +711,27 @@ export default function WebinarView({ webinar, isAdminMode = false }: WebinarVie
                 ? 'rounded-lg border border-gray-200' 
                 : 'rounded-lg sm:rounded-xl shadow-lg'
             }`}>
-              <h3 className="text-base sm:text-base lg:text-lg font-semibold text-gray-900 mb-3 sm:mb-3 lg:mb-4">세션 소개</h3>
+              <button
+                onClick={() => setIsSessionIntroExpanded(!isSessionIntroExpanded)}
+                className="w-full flex items-center justify-between mb-3 sm:mb-3 lg:mb-4 lg:hidden"
+              >
+                <h3 className="text-base sm:text-base font-semibold text-gray-900">세션 소개</h3>
+                <svg
+                  className={`w-5 h-5 text-gray-500 transition-transform ${isSessionIntroExpanded ? 'rotate-180' : ''}`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              {/* PC: 제목만 표시 (접기/펼치기 없음) */}
+              <h3 className="hidden lg:block text-base sm:text-base lg:text-lg font-semibold text-gray-900 mb-3 sm:mb-3 lg:mb-4">세션 소개</h3>
               
               {/* registration_campaign_id가 있으면 세션 카드 표시 */}
-              {isWertWebinar ? (
+              {isWertWebinar && (
                 <>
-                  {/* PC: 4개 카드를 1줄로 나란히 표시 */}
+                  {/* PC: 4개 카드를 1줄로 나란히 표시 - 항상 표시 */}
                   <div className="hidden lg:grid lg:grid-cols-4 gap-4 mb-4">
                     {wertSessions.map((session, index) => (
                       <button
@@ -735,7 +759,8 @@ export default function WebinarView({ webinar, isAdminMode = false }: WebinarVie
                     ))}
                   </div>
 
-                  {/* 모바일: 기존 세로 배치 */}
+                  {/* 모바일: 기존 세로 배치 - 접기/펼치기 적용 */}
+                  {(isSessionIntroExpanded || !isMobile) && (
                   <div className="lg:hidden space-y-4">
                     {wertSessions.map((session, index) => (
                       <div 
@@ -804,6 +829,7 @@ export default function WebinarView({ webinar, isAdminMode = false }: WebinarVie
                       </div>
                     ))}
                   </div>
+                  )}
 
                   {/* PC: 세션 상세 모달 */}
                   {expandedSession && mounted && createPortal(
@@ -894,182 +920,179 @@ export default function WebinarView({ webinar, isAdminMode = false }: WebinarVie
                     document.body
                   )}
                 </>
-              ) : (
-                <>
-                  {webinar.description ? (
-                <div className="prose prose-sm max-w-none">
-                  <p className="text-xs sm:text-sm lg:text-base text-gray-700 whitespace-pre-wrap leading-relaxed">
-                    {(() => {
-                      // HTML 태그 제거 및 텍스트 추출 (서버 사이드 호환)
-                      const stripHtml = (html: string) => {
-                        // HTML 태그 제거
-                        return html.replace(/<[^>]*>/g, '').trim()
-                      }
-                      
-                      // HTML 태그가 있으면 제거, 없으면 그대로 사용
-                      const cleanDescription = webinar.description.includes('<') 
-                        ? stripHtml(webinar.description) 
-                        : webinar.description
-                      
-                      // URL을 감지하고 링크로 변환하는 함수
-                      const urlRegex = /(https?:\/\/[^\s<>"']+)/g
-                      const parts: string[] = []
-                      let lastIndex = 0
-                      let match
-                      
-                      // 정규식으로 모든 URL 찾기
-                      while ((match = urlRegex.exec(cleanDescription)) !== null) {
-                        // URL 이전 텍스트 추가
-                        if (match.index > lastIndex) {
-                          parts.push(cleanDescription.substring(lastIndex, match.index))
-                        }
-                        // URL 추가 (특별한 마커로 표시)
-                        parts.push(`__URL__${match[0]}__URL__`)
-                        lastIndex = urlRegex.lastIndex
-                      }
-                      
-                      // 마지막 텍스트 추가
-                      if (lastIndex < cleanDescription.length) {
-                        parts.push(cleanDescription.substring(lastIndex))
-                      }
-                      
-                      // URL이 없으면 원본 반환
-                      if (parts.length === 0) {
-                        parts.push(cleanDescription)
-                      }
-                      
-                      return parts.map((part, index) => {
-                        if (part.startsWith('__URL__') && part.endsWith('__URL__')) {
-                          const url = part.replace(/^__URL__|__URL__$/g, '')
-                          return (
-                            <a
-                              key={index}
-                              href={url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-blue-600 hover:text-blue-800 hover:underline break-all"
-                            >
-                              {url}
-                            </a>
-                          )
-                        }
-                        return <span key={index}>{part}</span>
-                      })
-                    })()}
-                  </p>
-                </div>
-              ) : (
-                <p className="text-xs sm:text-sm text-gray-500 italic">세션 소개가 없습니다.</p>
-              )}
-              {webinar.start_time && (
-                <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-gray-200">
-                  <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-gray-600">
-                    <svg className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                    <span className="truncate">시작: {new Date(webinar.start_time).toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
-                  </div>
-                  {webinar.end_time && (
-                    <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-gray-600 mt-1.5 sm:mt-2">
-                      <svg className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                      </svg>
-                      <span className="truncate">종료: {new Date(webinar.end_time).toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
-                    </div>
-                  )}
-                </div>
               )}
               
-              {/* 설문/퀴즈/발표자료/추첨 버튼 */}
-              <div className="mt-4 pt-4 border-t border-gray-200">
-                <div className="flex flex-wrap gap-2 sm:gap-3">
-                  {openForms.filter((f) => f.kind === 'survey').length > 0 && (
-                    <button
-                      onClick={() => {
-                        const survey = openForms.find((f) => f.kind === 'survey')
-                        if (survey) {
-                          setPopupContent({
-                            type: 'form',
-                            id: survey.id,
-                            title: survey.title,
-                          })
+              {/* isWertWebinar가 아닐 때 세션 소개 표시 */}
+              {!isWertWebinar && (
+                <>
+                  {/* 모바일에서만 접기/펼치기 적용, PC는 항상 표시 */}
+                  {(isSessionIntroExpanded || !isMobile) && (
+                  <>
+                  {webinar.description ? (
+                    <div className="text-xs sm:text-sm text-gray-700 whitespace-pre-line">
+                      {(() => {
+                        const cleanDescription = webinar.description.replace(/\r\n/g, '\n').replace(/\r/g, '\n')
+                        const urlRegex = /(https?:\/\/[^\s]+)/g
+                        const parts: string[] = []
+                        let lastIndex = 0
+                        let match
+                        
+                        while ((match = urlRegex.exec(cleanDescription)) !== null) {
+                          // URL 이전 텍스트 추가
+                          if (match.index > lastIndex) {
+                            parts.push(cleanDescription.substring(lastIndex, match.index))
+                          }
+                          // URL 추가
+                          parts.push(`__URL__${match[0]}__URL__`)
+                          lastIndex = match.index + match[0].length
                         }
-                      }}
-                      className="px-3 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors text-xs sm:text-sm font-medium flex items-center gap-1.5"
-                    >
-                      📋 설문조사
-                      {openForms.filter((f) => f.kind === 'survey').length > 1 && (
-                        <span className="bg-blue-500 text-white text-xs px-1.5 py-0.5 rounded-full">
-                          {openForms.filter((f) => f.kind === 'survey').length}
-                        </span>
-                      )}
-                    </button>
-                  )}
-                  {openForms.filter((f) => f.kind === 'quiz').length > 0 && (
-                    <button
-                      onClick={() => {
-                        const quiz = openForms.find((f) => f.kind === 'quiz')
-                        if (quiz) {
-                          setPopupContent({
-                            type: 'form',
-                            id: quiz.id,
-                            title: quiz.title,
-                          })
+                        
+                        // 마지막 텍스트 추가
+                        if (lastIndex < cleanDescription.length) {
+                          parts.push(cleanDescription.substring(lastIndex))
                         }
-                      }}
-                      className="px-3 py-2 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors text-xs sm:text-sm font-medium flex items-center gap-1.5"
-                    >
-                      ✏️ 퀴즈
-                      {openForms.filter((f) => f.kind === 'quiz').length > 1 && (
-                        <span className="bg-purple-500 text-white text-xs px-1.5 py-0.5 rounded-full">
-                          {openForms.filter((f) => f.kind === 'quiz').length}
-                        </span>
-                      )}
-                    </button>
-                  )}
-                  {files.length > 0 && (
-                    <button
-                      onClick={() => {
-                        setPopupContent({
-                          type: 'file',
-                          id: 'all',
-                          title: '발표자료',
+                        
+                        // URL이 없으면 원본 반환
+                        if (parts.length === 0) {
+                          parts.push(cleanDescription)
+                        }
+                        
+                        return parts.map((part, index) => {
+                          if (part.startsWith('__URL__') && part.endsWith('__URL__')) {
+                            const url = part.replace(/^__URL__|__URL__$/g, '')
+                            return (
+                              <a
+                                key={index}
+                                href={url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-600 hover:text-blue-800 hover:underline break-all"
+                              >
+                                {url}
+                              </a>
+                            )
+                          }
+                          return <span key={index}>{part}</span>
                         })
-                      }}
-                      className="px-3 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors text-xs sm:text-sm font-medium flex items-center gap-1.5"
-                    >
-                      📎 발표자료
-                      {files.length > 1 && (
-                        <span className="bg-green-500 text-white text-xs px-1.5 py-0.5 rounded-full">
-                          {files.length}
-                        </span>
-                      )}
-                    </button>
+                      })()}
+                    </div>
+                  ) : (
+                    <p className="text-xs sm:text-sm text-gray-500 italic">세션 소개가 없습니다.</p>
                   )}
-                  {openGiveaways.length > 0 && (
-                    <button
-                      onClick={() => {
-                        const giveaway = openGiveaways[0]
-                        if (giveaway) {
-                          setPopupContent({
-                            type: 'giveaway',
-                            id: giveaway.id,
-                            title: giveaway.name || giveaway.title || '추첨',
-                          })
-                        }
-                      }}
-                      className="px-3 py-2 bg-yellow-100 text-yellow-700 rounded-lg hover:bg-yellow-200 transition-colors text-xs sm:text-sm font-medium flex items-center gap-1.5"
-                    >
-                      🎁 추첨
-                      {openGiveaways.length > 1 && (
-                        <span className="bg-yellow-500 text-white text-xs px-1.5 py-0.5 rounded-full">
-                          {openGiveaways.length}
-                        </span>
+                  {webinar.start_time && (
+                    <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-gray-200">
+                      <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-gray-600">
+                        <svg className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        <span className="truncate">시작: {new Date(webinar.start_time).toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                      </div>
+                      {webinar.end_time && (
+                        <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-gray-600 mt-1.5 sm:mt-2">
+                          <svg className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                          <span className="truncate">종료: {new Date(webinar.end_time).toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                        </div>
                       )}
-                    </button>
+                    </div>
                   )}
-                </div>
-              </div>
+                  
+                  {/* 설문/퀴즈/발표자료/추첨 버튼 */}
+                  <div className="mt-4 pt-4 border-t border-gray-200">
+                    <div className="flex flex-wrap gap-2 sm:gap-3">
+                      {openForms.filter((f) => f.kind === 'survey').length > 0 && (
+                        <button
+                          onClick={() => {
+                            const survey = openForms.find((f) => f.kind === 'survey')
+                            if (survey) {
+                              setPopupContent({
+                                type: 'form',
+                                id: survey.id,
+                                title: survey.name || survey.title || '설문',
+                              })
+                            }
+                          }}
+                          className="px-3 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors text-xs sm:text-sm font-medium flex items-center gap-1.5"
+                        >
+                          📝 설문
+                          {openForms.filter((f) => f.kind === 'survey').length > 1 && (
+                            <span className="bg-blue-500 text-white text-xs px-1.5 py-0.5 rounded-full">
+                              {openForms.filter((f) => f.kind === 'survey').length}
+                            </span>
+                          )}
+                        </button>
+                      )}
+                      {openForms.filter((f) => f.kind === 'quiz').length > 0 && (
+                        <button
+                          onClick={() => {
+                            const quiz = openForms.find((f) => f.kind === 'quiz')
+                            if (quiz) {
+                              setPopupContent({
+                                type: 'form',
+                                id: quiz.id,
+                                title: quiz.name || quiz.title || '퀴즈',
+                              })
+                            }
+                          }}
+                          className="px-3 py-2 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors text-xs sm:text-sm font-medium flex items-center gap-1.5"
+                        >
+                          🎯 퀴즈
+                          {openForms.filter((f) => f.kind === 'quiz').length > 1 && (
+                            <span className="bg-purple-500 text-white text-xs px-1.5 py-0.5 rounded-full">
+                              {openForms.filter((f) => f.kind === 'quiz').length}
+                            </span>
+                          )}
+                        </button>
+                      )}
+                      {files.length > 0 && (
+                        <button
+                          onClick={() => {
+                            const file = files[0]
+                            if (file) {
+                              setPopupContent({
+                                type: 'file',
+                                id: file.id,
+                                title: file.name || file.title || '발표자료',
+                              })
+                            }
+                          }}
+                          className="px-3 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors text-xs sm:text-sm font-medium flex items-center gap-1.5"
+                        >
+                          📎 발표자료
+                          {files.length > 1 && (
+                            <span className="bg-green-500 text-white text-xs px-1.5 py-0.5 rounded-full">
+                              {files.length}
+                            </span>
+                          )}
+                        </button>
+                      )}
+                      {openGiveaways.length > 0 && (
+                        <button
+                          onClick={() => {
+                            const giveaway = openGiveaways[0]
+                            if (giveaway) {
+                              setPopupContent({
+                                type: 'giveaway',
+                                id: giveaway.id,
+                                title: giveaway.name || giveaway.title || '추첨',
+                              })
+                            }
+                          }}
+                          className="px-3 py-2 bg-yellow-100 text-yellow-700 rounded-lg hover:bg-yellow-200 transition-colors text-xs sm:text-sm font-medium flex items-center gap-1.5"
+                        >
+                          🎁 추첨
+                          {openGiveaways.length > 1 && (
+                            <span className="bg-yellow-500 text-white text-xs px-1.5 py-0.5 rounded-full">
+                              {openGiveaways.length}
+                            </span>
+                          )}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                  </>
+                  )}
                 </>
               )}
             </div>

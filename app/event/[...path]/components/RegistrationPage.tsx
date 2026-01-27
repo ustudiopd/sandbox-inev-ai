@@ -298,6 +298,17 @@ export default function RegistrationPage({ campaign, baseUrl }: RegistrationPage
               padding: 64px;
               box-shadow: 0px 4px 48px -10px rgba(0, 0, 0, 0.08);
             }
+            
+            @media (min-width: 1024px) {
+              .registration-form-container {
+                max-width: 714px;
+              }
+              
+              .registration-entry-form {
+                max-width: 500px;
+                margin: 0 auto;
+              }
+            }
           
             .registration-form-title {
               font-size: 36px;
@@ -354,6 +365,31 @@ export default function RegistrationPage({ campaign, baseUrl }: RegistrationPage
               justify-content: center;
               gap: 16px;
             }
+            
+            @media (min-width: 1024px) {
+              .registration-form-button {
+                width: auto;
+                padding: 24px 40px 24px 64px;
+                font-size: 36px;
+                line-height: 1.2;
+                gap: 24px;
+                border-radius: 200px;
+              }
+              
+              .registration-button-container {
+                display: flex;
+                justify-content: center;
+              }
+              
+              .mobile-country-code {
+                width: 80px !important;
+                padding: 16px 8px !important;
+              }
+              
+              .mobile-phone-gap {
+                gap: 4px !important;
+              }
+            }
           
             .registration-form-button:hover {
               background-color: #008f7a;
@@ -387,7 +423,7 @@ export default function RegistrationPage({ campaign, baseUrl }: RegistrationPage
           
             @media (max-width: 768px) {
               .registration-hero {
-                padding-top: 72px;
+                padding-top: 64px;
                 padding-bottom: 40px;
                 min-height: auto;
               }
@@ -408,8 +444,8 @@ export default function RegistrationPage({ campaign, baseUrl }: RegistrationPage
               }
               
               .registration-title {
-                font-size: 28px;
-                line-height: 36px;
+                font-size: 36px;
+                line-height: 1.25;
               }
               
               .date-badge {
@@ -445,10 +481,17 @@ export default function RegistrationPage({ campaign, baseUrl }: RegistrationPage
               }
               
               .registration-form-button {
-                font-size: 16px;
-                padding: 14px 24px;
+                width: auto;
+                font-size: 14px;
+                padding: 10px 16px;
                 gap: 8px;
-                border-radius: 100px;
+                border-radius: 9999px;
+                min-height: 44px;
+              }
+              
+              .registration-button-container {
+                display: flex;
+                justify-content: center;
               }
               
               .secondary-button {
@@ -870,6 +913,38 @@ export default function RegistrationPage({ campaign, baseUrl }: RegistrationPage
             gap: 40px;
           }
           
+          .hero-title-wrapper {
+            gap: 4px;
+          }
+          
+          @media (min-width: 1024px) {
+            .hero-title-wrapper {
+              gap: 8px;
+            }
+          }
+          
+          .registration-subtitle-text {
+            text-align: center;
+            font-size: 16px;
+            font-weight: 700;
+            color: rgba(0, 0, 0, 0.8);
+            font-family: 'Pretendard', sans-serif;
+            margin: 0;
+          }
+          
+          @media (min-width: 640px) {
+            .registration-subtitle-text {
+              font-size: 18px;
+            }
+          }
+          
+          @media (min-width: 1024px) {
+            .registration-subtitle-text {
+              font-size: 32px;
+              line-height: 48px;
+            }
+          }
+          
           .registration-title {
             text-align: center;
             font-size: 96px;
@@ -910,6 +985,26 @@ export default function RegistrationPage({ campaign, baseUrl }: RegistrationPage
             border-radius: 48px;
             padding: 64px;
             box-shadow: 0px 4px 48px -10px rgba(0, 0, 0, 0.08);
+          }
+          
+          @media (min-width: 1024px) {
+            .registration-form-container {
+              max-width: 714px;
+            }
+            
+            .registration-entry-form {
+              max-width: 500px;
+              margin: 0 auto;
+            }
+            
+            .mobile-country-code {
+              width: 80px !important;
+              padding: 16px 8px !important;
+            }
+            
+            .mobile-phone-gap {
+              gap: 4px !important;
+            }
           }
           
           .registration-form-title {
@@ -968,6 +1063,22 @@ export default function RegistrationPage({ campaign, baseUrl }: RegistrationPage
             gap: 16px;
           }
           
+          @media (min-width: 1024px) {
+            .registration-form-button {
+              width: auto;
+              padding: 24px 40px 24px 64px;
+              font-size: 36px;
+              line-height: 1.2;
+              gap: 24px;
+              border-radius: 200px;
+            }
+            
+            .registration-button-container {
+              display: flex;
+              justify-content: center;
+            }
+          }
+          
           .registration-form-button:hover {
             background-color: #008f7a;
             transform: translateY(-2px);
@@ -994,7 +1105,7 @@ export default function RegistrationPage({ campaign, baseUrl }: RegistrationPage
           
           @media (max-width: 768px) {
             .registration-hero {
-              padding-top: 150px;
+              padding-top: 64px;
               padding-bottom: 40px;
               min-height: auto;
             }
@@ -1012,11 +1123,12 @@ export default function RegistrationPage({ campaign, baseUrl }: RegistrationPage
             .registration-content {
               padding: 0 16px;
               gap: 20px;
+              margin-top: 16px;
             }
             
             .registration-title {
-              font-size: 28px;
-              line-height: 36px;
+              font-size: 36px;
+              line-height: 1.25;
             }
             
             .date-badge {
@@ -1052,10 +1164,17 @@ export default function RegistrationPage({ campaign, baseUrl }: RegistrationPage
             }
             
             .registration-form-button {
-              font-size: 16px;
-              padding: 14px 24px;
+              width: auto;
+              font-size: 14px;
+              padding: 10px 16px;
               gap: 8px;
-              border-radius: 100px;
+              border-radius: 9999px;
+              min-height: 44px;
+            }
+            
+            .registration-button-container {
+              display: flex;
+              justify-content: center;
             }
             
             .back-link {
@@ -1153,9 +1272,9 @@ export default function RegistrationPage({ campaign, baseUrl }: RegistrationPage
           <div className="registration-hero-content">
             <div className="registration-content">
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '40px' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '32px' }}>
-                  <div style={{ textAlign: 'center', fontSize: '36px', fontWeight: 700, color: '#000' }} className="mobile-text-sm">
-                    실제 고객사례로 알아보는
+                <div className="hero-title-wrapper" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                  <div className="registration-subtitle-text">
+                    고객사례로 알아보는
                   </div>
                   <h1 className="registration-title">
                     AI 특허리서치<br />
@@ -1183,7 +1302,7 @@ export default function RegistrationPage({ campaign, baseUrl }: RegistrationPage
             
             <h1 className="registration-form-title">웨비나 등록</h1>
             
-            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '32px' }} className="mobile-form-gap">
+            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '32px' }} className="mobile-form-gap registration-entry-form">
               {error && (
                 <div style={{ padding: '16px', backgroundColor: '#fee', border: '1px solid #fcc', borderRadius: '16px' }}>
                   <p style={{ fontSize: '16px', color: '#c00' }}>{error}</p>
@@ -1394,7 +1513,7 @@ export default function RegistrationPage({ campaign, baseUrl }: RegistrationPage
               </div>
               
               {/* 제출 버튼 */}
-              <div style={{ marginTop: '32px' }}>
+              <div style={{ marginTop: '32px' }} className="registration-button-container">
                 <button
                   type="submit"
                   disabled={submitting}
