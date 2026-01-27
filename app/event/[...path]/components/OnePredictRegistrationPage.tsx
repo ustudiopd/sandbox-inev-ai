@@ -25,7 +25,8 @@ export default function OnePredictRegistrationPage({ campaign, baseUrl = '' }: O
     interestedProducts: [] as string[],
     industry: '',
     address: '',
-    country: ''
+    country: '',
+    message: ''
   })
 
   const showMessageBox = (text: string) => {
@@ -310,6 +311,21 @@ export default function OnePredictRegistrationPage({ campaign, baseUrl = '' }: O
                   onChange={handleInputChange}
                   placeholder="대한민국"
                   className="w-full px-4 max-sm:px-3 py-3 max-sm:py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:border-[#2936E7] max-sm:text-sm"
+                />
+              </div>
+
+              {/* 메시지 */}
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-2">
+                  10. 궁금한 내용이나 미리 전해두고 싶은 메시지가 있다면 남겨주세요 (선별 후 Q&A 세션 중 답변 예정)
+                </label>
+                <textarea
+                  name="message"
+                  value={formData.message}
+                  onChange={handleInputChange}
+                  rows={4}
+                  className="w-full px-4 max-sm:px-3 py-3 max-sm:py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:border-[#2936E7] max-sm:text-sm resize-none"
+                  placeholder="메시지를 입력해주세요"
                 />
               </div>
 
