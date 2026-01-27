@@ -326,21 +326,13 @@ export default function OnePredictRegistrationPage({ campaign, baseUrl = '' }: O
               </div>
 
               {/* 제출 버튼 */}
-              <div className="flex flex-col sm:flex-row gap-4 max-sm:gap-3 pt-4">
+              <div className="pt-4">
                 <button
                   type="submit"
-                  className="flex-1 px-8 max-sm:px-6 py-4 max-sm:py-3 text-white font-bold rounded-lg transition-all hover:bg-[#12058E] hover:-translate-y-0.5 max-sm:text-sm"
+                  className="w-full px-8 max-sm:px-6 py-4 max-sm:py-3 text-white font-bold rounded-lg transition-all hover:bg-[#12058E] hover:-translate-y-0.5 max-sm:text-sm"
                   style={{ backgroundColor: '#2936E7' }}
                 >
                   등록 완료하기
-                </button>
-                <button
-                  type="button"
-                  onClick={() => router.push('/webinar/426307')}
-                  className="px-8 max-sm:px-6 py-4 max-sm:py-3 font-bold rounded-lg border-2 transition-all hover:bg-gray-50 max-sm:text-sm"
-                  style={{ borderColor: '#2936E7', color: '#2936E7' }}
-                >
-                  메인으로 돌아가기
                 </button>
               </div>
             </form>
