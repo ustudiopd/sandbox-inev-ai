@@ -48,12 +48,45 @@ export async function POST(
     
     const admin = createAdminSupabase()
     
-    // 캠페인 조회 (client_id 필요)
-    const { data: campaign, error: campaignError } = await admin
+    // 캠페인 조회 (웨비나 ID인 경우도 처리)
+    let campaign = null
+    let campaignError: any = null
+    let isWebinarId = false // 웨비나 ID인지 여부
+    
+    // 먼저 캠페인으로 조회 시도
+    const { data: campaignData, error: campaignErr } = await admin
       .from('event_survey_campaigns')
       .select('id, type, next_survey_no, client_id, agency_id')
       .eq('id', campaignId)
-      .single()
+      .maybeSingle()
+    
+    if (campaignData) {
+      campaign = campaignData
+    } else {
+      // 캠페인이 없으면 웨비나 ID인지 확인
+      // campaignId가 UUID 형식이고 웨비나 테이블에 존재하는지 확인
+      const { data: webinar } = await admin
+        .from('webinars')
+        .select('id, slug, title, client_id, agency_id')
+        .eq('id', campaignId)
+        .maybeSingle()
+      
+      if (webinar) {
+        // 웨비나 ID인 경우: 웨비나 정보를 campaign처럼 사용
+        // 실제 캠페인은 없지만, 웨비나 정보로 등록 처리
+        isWebinarId = true
+        campaign = {
+          id: webinar.id,
+          type: 'registration',
+          next_survey_no: 1,
+          client_id: webinar.client_id,
+          agency_id: webinar.agency_id,
+        } as any
+        console.log('[register] 웨비나 ID를 캠페인처럼 사용:', { webinar_id: webinar.id, slug: webinar.slug })
+      } else {
+        campaignError = campaignErr || { message: 'Campaign not found' }
+      }
+    }
     
     if (campaignError || !campaign) {
       return NextResponse.json(
@@ -101,6 +134,166 @@ export async function POST(
       // UTM 정규화 실패해도 등록은 계속 진행
     }
     
+    // 웨비나 ID인 경우: registrations에만 저장 (event_survey_entries는 저장하지 않음)
+    if (isWebinarId) {
+      // 이메일이 없으면 에러 반환
+      if (!registration_data?.email) {
+        return NextResponse.json(
+          { error: '이메일은 필수입니다.' },
+          { status: 400 }
+        )
+      }
+      
+      try {
+        // 웨비나 ID로 직접 조회
+        const { data: webinar } = await admin
+          .from('webinars')
+          .select('id, slug, access_policy')
+          .eq('id', campaignId)
+          .maybeSingle()
+        
+        if (!webinar) {
+          return NextResponse.json(
+            { error: '웨비나를 찾을 수 없습니다.' },
+            { status: 404 }
+          )
+        }
+        
+        const emailLower = registration_data.email.trim().toLowerCase()
+        
+        // 이메일로 사용자 찾기 (profiles 테이블)
+        const { data: profile } = await admin
+          .from('profiles')
+          .select('id')
+          .eq('email', emailLower)
+          .maybeSingle()
+        
+        if (!profile?.id) {
+          return NextResponse.json(
+            { error: '사용자 계정을 찾을 수 없습니다. 이메일로 먼저 가입해주세요.' },
+            { status: 400 }
+          )
+        }
+        
+        // 이미 등록한 경우 확인 (registrations만 확인)
+        const { data: existingRegistration } = await admin
+          .from('registrations')
+          .select('webinar_id, user_id')
+          .eq('webinar_id', webinar.id)
+          .eq('user_id', profile.id)
+          .maybeSingle()
+        
+        if (existingRegistration) {
+          return NextResponse.json({
+            success: true,
+            alreadySubmitted: true,
+            message: '이미 등록하셨습니다.',
+          })
+        }
+        
+        // registration_data에 phone 정보 추가 및 정리
+        const completeRegistrationData = {
+          ...(registration_data || {}),
+          // phone 정보 추가 (registration_data에 없을 수 있음)
+          phone: phone || registration_data?.phone || null,
+          phone_norm: phone_norm || registration_data?.phone_norm || null,
+        }
+        
+        // 빈 값 제거 (null, undefined, 빈 문자열만 제거, 배열과 boolean은 유지)
+        const cleanedRegistrationData: Record<string, any> = {}
+        for (const [key, value] of Object.entries(completeRegistrationData)) {
+          // null, undefined, 빈 문자열만 제거
+          // 배열([])과 boolean(false)는 유지
+          if (value !== null && value !== undefined && value !== '') {
+            cleanedRegistrationData[key] = value
+          } else if (Array.isArray(value) || typeof value === 'boolean') {
+            // 빈 배열이나 false도 유지
+            cleanedRegistrationData[key] = value
+          }
+        }
+        
+        // registrations 테이블에만 등록 (모든 폼 데이터 포함)
+        console.log('[register] 저장할 registration_data:', JSON.stringify(cleanedRegistrationData, null, 2))
+        
+        const { error: regError } = await admin
+          .from('registrations')
+          .insert({
+            webinar_id: webinar.id,
+            user_id: profile.id,
+            role: 'attendee',
+            nickname: name ? name.trim() || null : null,
+            registered_via: 'manual', // 등록 페이지를 통한 등록은 'manual'로 처리 (DB 제약: 'email', 'manual', 'invite'만 허용)
+            registration_data: Object.keys(cleanedRegistrationData).length > 0 ? cleanedRegistrationData : null,
+          })
+        
+        if (regError) {
+          console.error('[register] registrations 저장 오류:', {
+            error: regError,
+            message: regError.message,
+            details: regError.details,
+            hint: regError.hint,
+            code: regError.code,
+            webinar_id: webinar.id,
+            user_id: profile.id,
+            registration_data: cleanedRegistrationData
+          })
+          return NextResponse.json(
+            { error: 'Failed to save registration', details: regError.message },
+            { status: 500 }
+          )
+        }
+        
+        // webinar_allowed_emails에 추가 (email_auth 정책인 경우)
+        if (webinar.access_policy === 'email_auth') {
+          const { data: existingEmail } = await admin
+            .from('webinar_allowed_emails')
+            .select('email')
+            .eq('webinar_id', webinar.id)
+            .eq('email', emailLower)
+            .maybeSingle()
+          
+          if (!existingEmail) {
+            await admin
+              .from('webinar_allowed_emails')
+              .insert({
+                webinar_id: webinar.id,
+                email: emailLower,
+                created_by: null,
+              })
+          }
+        }
+        
+        console.log('[register] 웨비나 등록 성공:', { 
+          email: emailLower,
+          webinar_id: webinar.id,
+          slug: webinar.slug,
+          timestamp: new Date().toISOString()
+        })
+        
+        return NextResponse.json({
+          success: true,
+          message: '등록이 완료되었습니다.',
+        })
+      } catch (error: any) {
+        console.error('[register] 웨비나 등록 오류:', {
+          error,
+          message: error?.message,
+          stack: error?.stack,
+          campaignId,
+          registration_data,
+          name,
+          phone,
+          phone_norm
+        })
+        return NextResponse.json(
+          { error: error?.message || 'Internal server error', details: error?.stack },
+          { status: 500 }
+        )
+      }
+    }
+    
+    // 웨비나 ID가 아닌 경우: 일반 캠페인 등록 처리
+    // name, phone, phone_norm 필수 검증
     if (!name || !phone || !phone_norm) {
       return NextResponse.json(
         { error: 'name, phone, and phone_norm are required' },
@@ -126,6 +319,153 @@ export async function POST(
       )
     }
     
+    // 원프레딕트 웨비나(426307) 확인: registration_campaign_id로 연결된 웨비나 찾기
+    const { data: linkedWebinars } = await admin
+      .from('webinars')
+      .select('id, slug, access_policy')
+      .eq('registration_campaign_id', campaignId)
+    
+    const onePredictWebinar = linkedWebinars?.find(w => w.slug === '426307')
+    const isOnePredictWebinar = !!onePredictWebinar
+    
+    // 원프레딕트 웨비나인 경우: registrations에만 저장 (event_survey_entries는 저장하지 않음)
+    if (isOnePredictWebinar && registration_data?.email) {
+      try {
+        const emailLower = registration_data.email.trim().toLowerCase()
+        
+        // 이메일로 사용자 찾기 (profiles 테이블)
+        const { data: profile } = await admin
+          .from('profiles')
+          .select('id')
+          .eq('email', emailLower)
+          .maybeSingle()
+        
+        if (!profile?.id) {
+          return NextResponse.json(
+            { error: '사용자 계정을 찾을 수 없습니다. 이메일로 먼저 가입해주세요.' },
+            { status: 400 }
+          )
+        }
+        
+        // 이미 등록한 경우 확인 (registrations만 확인)
+        const { data: existingRegistration } = await admin
+          .from('registrations')
+          .select('webinar_id, user_id')
+          .eq('webinar_id', onePredictWebinar.id)
+          .eq('user_id', profile.id)
+          .maybeSingle()
+        
+        if (existingRegistration) {
+          return NextResponse.json({
+            success: true,
+            alreadySubmitted: true,
+            message: '이미 등록하셨습니다.',
+          })
+        }
+        
+        // registration_data에 phone 정보 추가 및 정리
+        // registration_data가 없으면 빈 객체로 시작
+        const baseData = registration_data && typeof registration_data === 'object' ? registration_data : {}
+        const completeRegistrationData = {
+          ...baseData,
+          // phone 정보 추가 (registration_data에 없을 수 있음)
+          phone: phone || baseData?.phone || null,
+          phone_norm: phone_norm || baseData?.phone_norm || null,
+        }
+        
+        // 빈 값 제거 (null, undefined, 빈 문자열만 제거, 배열과 boolean은 유지)
+        const cleanedRegistrationData: Record<string, any> = {}
+        for (const [key, value] of Object.entries(completeRegistrationData)) {
+          // null, undefined, 빈 문자열만 제거
+          // 배열([])과 boolean(false)는 유지
+          if (value !== null && value !== undefined && value !== '') {
+            cleanedRegistrationData[key] = value
+          } else if (Array.isArray(value) || typeof value === 'boolean') {
+            // 빈 배열이나 false도 유지
+            cleanedRegistrationData[key] = value
+          }
+        }
+        
+        // registrations 테이블에만 등록 (모든 폼 데이터 포함)
+        console.log('[register] 저장할 registration_data:', JSON.stringify(cleanedRegistrationData, null, 2))
+        
+        const { error: regError } = await admin
+          .from('registrations')
+          .insert({
+            webinar_id: onePredictWebinar.id,
+            user_id: profile.id,
+            role: 'attendee',
+            nickname: name ? name.trim() || null : null,
+            registered_via: 'manual', // 등록 페이지를 통한 등록은 'manual'로 처리 (DB 제약: 'email', 'manual', 'invite'만 허용)
+            registration_data: Object.keys(cleanedRegistrationData).length > 0 ? cleanedRegistrationData : null,
+          })
+        
+        if (regError) {
+          console.error('[register] registrations 저장 오류:', {
+            error: regError,
+            message: regError.message,
+            details: regError.details,
+            hint: regError.hint,
+            code: regError.code,
+            webinar_id: onePredictWebinar.id,
+            user_id: profile.id,
+            registration_data: cleanedRegistrationData
+          })
+          return NextResponse.json(
+            { error: 'Failed to save registration', details: regError.message },
+            { status: 500 }
+          )
+        }
+        
+        // webinar_allowed_emails에 추가 (email_auth 정책인 경우)
+        if (onePredictWebinar.access_policy === 'email_auth') {
+          const { data: existingEmail } = await admin
+            .from('webinar_allowed_emails')
+            .select('email')
+            .eq('webinar_id', onePredictWebinar.id)
+            .eq('email', emailLower)
+            .maybeSingle()
+          
+          if (!existingEmail) {
+            await admin
+              .from('webinar_allowed_emails')
+              .insert({
+                webinar_id: onePredictWebinar.id,
+                email: emailLower,
+                created_by: null,
+              })
+          }
+        }
+        
+        console.log('[register] 원프레딕트 웨비나 등록 성공:', { 
+          email: emailLower,
+          webinar_id: onePredictWebinar.id,
+          timestamp: new Date().toISOString()
+        })
+        
+        return NextResponse.json({
+          success: true,
+          message: '등록이 완료되었습니다.',
+        })
+      } catch (error: any) {
+        console.error('[register] 원프레딕트 웨비나 등록 오류:', {
+          error,
+          message: error?.message,
+          stack: error?.stack,
+          campaignId,
+          registration_data,
+          name,
+          phone,
+          phone_norm
+        })
+        return NextResponse.json(
+          { error: error?.message || 'Internal server error', details: error?.stack },
+          { status: 500 }
+        )
+      }
+    }
+    
+    // 원프레딕트 웨비나가 아닌 경우: 기존 로직대로 event_survey_entries에 저장
     // 이미 등록한 경우 확인 (멱등성)
     const { data: existingEntry } = await admin
       .from('event_survey_entries')
@@ -283,8 +623,8 @@ export async function POST(
                       webinar_id: webinar.id,
                       user_id: profile.id,
                       role: 'attendee',
-                      nickname: name.trim() || null,
-                      registered_via: 'registration_page',
+                      nickname: name ? name.trim() || null : null,
+                      registered_via: 'manual', // 등록 페이지를 통한 등록은 'manual'로 처리 (DB 제약: 'email', 'manual', 'invite'만 허용)
                     })
                   
                   if (regError) {
@@ -453,7 +793,7 @@ export async function POST(
                     user_id: profile.id,
                     role: 'attendee',
                     nickname: name.trim() || null,
-                    registered_via: 'registration_page',
+                    registered_via: 'manual', // 등록 페이지를 통한 등록은 'manual'로 처리 (DB 제약: 'email', 'manual', 'invite'만 허용)
                   })
                 
                 if (regError) {

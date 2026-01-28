@@ -40,29 +40,79 @@ export async function POST(
     
     const admin = createAdminSupabase()
     
-    // 캠페인 존재 확인
-    const { data: campaign, error: campaignError } = await admin
+    // 캠페인 또는 웨비나 존재 확인
+    let campaign = null
+    let clientId: string | null = null
+    let actualCampaignId = campaignId // 실제로 저장할 campaign_id
+    
+    // 먼저 캠페인으로 조회 시도
+    const { data: campaignData, error: campaignError } = await admin
       .from('event_survey_campaigns')
       .select('id, client_id')
       .eq('id', campaignId)
       .maybeSingle()
     
-    if (campaignError || !campaign) {
-      // 캠페인이 없어도 Visit 기록은 실패하지만 에러는 반환하지 않음 (graceful)
-      console.warn('[visit] 캠페인 조회 실패:', campaignError)
-      return NextResponse.json({ success: false, error: 'Campaign not found' }, { status: 404 })
+    if (campaignData) {
+      campaign = campaignData
+      clientId = campaignData.client_id
+    } else {
+      // 캠페인이 없으면 웨비나 ID인지 확인
+      const { data: webinar } = await admin
+        .from('webinars')
+        .select('id, slug, client_id, registration_campaign_id')
+        .eq('id', campaignId)
+        .maybeSingle()
+      
+      if (webinar) {
+        // 웨비나인 경우: registration_campaign_id가 있으면 사용, 없으면 웨비나 ID 사용
+        clientId = webinar.client_id
+        if (webinar.registration_campaign_id) {
+          // registration_campaign_id로 캠페인 조회
+          const { data: linkedCampaign } = await admin
+            .from('event_survey_campaigns')
+            .select('id, client_id')
+            .eq('id', webinar.registration_campaign_id)
+            .maybeSingle()
+          
+          if (linkedCampaign) {
+            campaign = linkedCampaign
+            actualCampaignId = linkedCampaign.id
+            console.log('[visit] 웨비나의 registration_campaign_id 사용:', linkedCampaign.id)
+          } else {
+            // registration_campaign_id가 있지만 캠페인을 찾지 못한 경우
+            console.warn('[visit] 웨비나의 registration_campaign_id 캠페인을 찾을 수 없음:', webinar.registration_campaign_id)
+            // 웨비나 ID를 그대로 사용 (FK 제약 때문에 저장 실패할 수 있음)
+            actualCampaignId = campaignId
+          }
+        } else {
+          // registration_campaign_id가 없는 경우 웨비나 ID 사용
+          console.log('[visit] 웨비나 ID 사용 (registration_campaign_id 없음):', webinar.id)
+          actualCampaignId = campaignId
+        }
+      }
+    }
+    
+    if (!campaign && !clientId) {
+      // 캠페인도 웨비나도 없으면 에러
+      console.warn('[visit] 캠페인/웨비나 조회 실패:', campaignError)
+      return NextResponse.json({ success: false, error: 'Campaign or Webinar not found' }, { status: 404 })
+    }
+    
+    // client_id가 없으면 에러
+    if (!clientId) {
+      return NextResponse.json({ success: false, error: 'Client ID not found' }, { status: 404 })
     }
     
     // cid로 링크 lookup
     let marketingCampaignLinkId: string | null = null
-    if (cid) {
+    if (cid && clientId) {
       try {
         const normalizedCid = normalizeCID(cid)
         if (normalizedCid) {
           const { data: link } = await admin
             .from('campaign_link_meta')
             .select('id')
-            .eq('client_id', campaign.client_id)
+            .eq('client_id', clientId)
             .eq('cid', normalizedCid)
             .eq('status', 'active')
             .maybeSingle()
@@ -95,7 +145,6 @@ export async function POST(
     // Visit 기록 저장
     try {
       const insertData: any = {
-        campaign_id: campaignId,
         session_id: session_id,
         utm_source: normalizedUTM.utm_source || null,
         utm_medium: normalizedUTM.utm_medium || null,
@@ -106,6 +155,15 @@ export async function POST(
         referrer: referrer || null,
         user_agent: user_agent || null,
         accessed_at: new Date().toISOString(),
+      }
+      
+      // 캠페인이 있으면 campaign_id 사용, 없으면 webinar_id 사용
+      if (campaign) {
+        insertData.campaign_id = actualCampaignId
+      } else {
+        // 웨비나만 있는 경우 webinar_id 사용
+        insertData.webinar_id = campaignId
+        console.log('[visit] 웨비나 ID로 Visit 기록:', campaignId)
       }
       
       // marketing_campaign_link_id가 있을 때만 추가 (컬럼이 없을 수 있음)

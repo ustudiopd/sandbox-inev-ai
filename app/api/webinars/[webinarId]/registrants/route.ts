@@ -162,10 +162,13 @@ export async function GET(
       }
     }
     
-    // registration_campaign_id가 있으면 등록 페이지 참여자만, 없으면 웨비나 등록자만 사용
+    // 원프레딕트 웨비나(426307)는 registrations 테이블만 사용
+    const isOnePredictWebinar = webinar.slug === '426307'
+    
+    // registration_campaign_id가 있고 원프레딕트 웨비나가 아니면 등록 페이지 참여자만, 없으면 웨비나 등록자만 사용
     let registrants: any[] = []
     
-    if (webinar.registration_campaign_id) {
+    if (webinar.registration_campaign_id && !isOnePredictWebinar) {
       // 등록 페이지 참여자의 이메일 수집
       const entryEmails = registrationEntries
         .map((e: any) => e.registration_data?.email?.toLowerCase()?.trim())

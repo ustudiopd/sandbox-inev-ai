@@ -93,8 +93,11 @@ export default async function RegistrantsPage({
 
   let registrations: any[] = []
   
-  // registration_campaign_id가 있으면 등록 캠페인 데이터만 사용 (event_survey_entries만 표시)
-  if (webinar.registration_campaign_id) {
+  // 원프레딕트 웨비나(426307)는 registrations 테이블만 사용
+  const isOnePredictWebinar = webinar.slug === '426307'
+  
+  // registration_campaign_id가 있고 원프레딕트 웨비나가 아니면 등록 캠페인 데이터 사용 (event_survey_entries만 표시)
+  if (webinar.registration_campaign_id && !isOnePredictWebinar) {
     const { data: entries } = await admin
       .from('event_survey_entries')
       .select('id, name, registration_data, completed_at, created_at')

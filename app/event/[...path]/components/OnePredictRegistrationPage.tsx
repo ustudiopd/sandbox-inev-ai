@@ -11,12 +11,13 @@ interface OnePredictRegistrationPageProps {
   utmParams?: Record<string, string>
 }
 
-export default function OnePredictRegistrationPage({ campaign, baseUrl = '', utmParams = {} }: OnePredictRegistrationPageProps) {
+export default function OnePredictRegistrationPage({ campaign: initialCampaign, baseUrl = '', utmParams = {} }: OnePredictRegistrationPageProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const cid = searchParams.get('cid')
   const [showMessage, setShowMessage] = useState(false)
   const [messageText, setMessageText] = useState('')
+  const [campaign, setCampaign] = useState(initialCampaign)
   
   // 등록 폼 상태
   const [formData, setFormData] = useState({
@@ -39,6 +40,7 @@ export default function OnePredictRegistrationPage({ campaign, baseUrl = '', utm
   
   // 세션 ID 상태 관리 (Visit과 등록에서 동일한 세션 ID 사용 보장)
   const [sessionId, setSessionId] = useState<string | null>(null)
+  
   
   // 세션 ID 초기화 (컴포넌트 마운트 시 한 번만)
   useEffect(() => {
@@ -78,6 +80,7 @@ export default function OnePredictRegistrationPage({ campaign, baseUrl = '', utm
   }, [campaign?.id, utmParams])
   
   // Visit 수집 (Phase 3) - 에러 발생해도 등록은 계속 진행
+  // 웨비나 ID도 Visit API를 지원하므로 호출
   useEffect(() => {
     if (!campaign?.id) return
     
@@ -122,7 +125,7 @@ export default function OnePredictRegistrationPage({ campaign, baseUrl = '', utm
       // Visit 수집 초기화 실패도 무시
       console.warn('[OnePredictRegistrationPage] Visit 수집 초기화 실패 (무시):', error)
     }
-  }, [campaign?.id, cid, utmParams, sessionId]) // sessionId 의존성 추가
+  }, [campaign?.id, campaign?.public_path, cid, utmParams, sessionId]) // campaign.public_path 의존성 추가
   
   const showMessageBox = (text: string) => {
     setMessageText(text)
@@ -144,6 +147,34 @@ export default function OnePredictRegistrationPage({ campaign, baseUrl = '', utm
     }
     
     // 필수 필드 검증
+    if (!formData.email.trim()) {
+      showMessageBox('이메일을 입력해주세요.')
+      return
+    }
+    
+    // 이메일 형식 검증
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(formData.email.trim())) {
+      showMessageBox('올바른 이메일 형식을 입력해주세요.')
+      return
+    }
+    
+    if (!formData.name.trim()) {
+      showMessageBox('이름을 입력해주세요.')
+      return
+    }
+    
+    // 휴대폰 번호 검증
+    if (!formData.phone1.trim() || !formData.phone2.trim() || !formData.phone3.trim()) {
+      showMessageBox('휴대폰 번호를 모두 입력해주세요.')
+      return
+    }
+    
+    if (!formData.company.trim()) {
+      showMessageBox('회사를 입력해주세요.')
+      return
+    }
+    
     if (!formData.position) {
       showMessageBox('직급을 선택해주세요.')
       return
@@ -291,23 +322,42 @@ export default function OnePredictRegistrationPage({ campaign, baseUrl = '', utm
         throw new Error(result.error || `등록에 실패했습니다. (${response.status})`)
       }
       
-      // 성공 응답 검증
-      if (!result.survey_no || !result.code6) {
-        console.error('[OnePredictRegistrationPage] 잘못된 응답:', result)
-        throw new Error('서버에서 잘못된 응답을 받았습니다.')
-      }
-      
-      console.log('[OnePredictRegistrationPage] 등록 성공:', {
-        survey_no: result.survey_no,
-        code6: result.code6,
-        email: formData.email.trim()
+      // 성공 응답 확인
+      console.log('[OnePredictRegistrationPage] API 응답:', {
+        status: response.status,
+        ok: response.ok,
+        result,
+        resultType: typeof result,
+        resultKeys: result ? Object.keys(result) : []
       })
       
-      // 등록 완료 상태로 변경
-      setIsRegistrationComplete(true)
-      showMessageBox('등록이 완료되었습니다')
+      if (result.success || result.survey_no) {
+        console.log('[OnePredictRegistrationPage] 등록 성공:', {
+          success: result.success,
+          survey_no: result.survey_no,
+          code6: result.code6,
+          email: formData.email.trim(),
+          result
+        })
+        
+        // 등록 완료 상태로 변경
+        setIsRegistrationComplete(true)
+        showMessageBox('등록이 완료되었습니다')
+      } else {
+        console.error('[OnePredictRegistrationPage] 잘못된 응답:', {
+          result,
+          responseStatus: response.status,
+          responseOk: response.ok
+        })
+        throw new Error(result.message || result.error || '서버에서 잘못된 응답을 받았습니다.')
+      }
     } catch (err: any) {
-      console.error('[OnePredictRegistrationPage] 등록 제출 오류:', err)
+      console.error('[OnePredictRegistrationPage] 등록 제출 오류:', {
+        error: err,
+        message: err.message,
+        stack: err.stack,
+        name: err.name
+      })
       showMessageBox(err.message || '등록 중 오류가 발생했습니다. 다시 시도해주세요.')
     } finally {
       setIsSubmitting(false)
@@ -667,7 +717,7 @@ export default function OnePredictRegistrationPage({ campaign, baseUrl = '', utm
               <div className="pt-4">
                 <button
                   type="submit"
-                  disabled={isSubmitting || !campaign?.id}
+                  disabled={isSubmitting}
                   className="w-full px-8 max-sm:px-6 py-4 max-sm:py-3 text-white font-bold rounded-lg transition-all hover:bg-[#12058E] hover:-translate-y-0.5 max-sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                   style={{ backgroundColor: '#2936E7' }}
                 >

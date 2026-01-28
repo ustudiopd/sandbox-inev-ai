@@ -9,7 +9,10 @@ import DonePageClient from './components/DonePageClient'
 import RegistrationPage from './components/RegistrationPage'
 import WelcomePage from './components/WelcomePage'
 import WebinarFormWertPage from '@/app/webinarform/wert/page'
-import ClientWrapper from './components/ClientWrapper'
+import OnePredictRegistrationPage from './components/OnePredictRegistrationPage'
+import OnePredictWebinarPage from './components/OnePredictWebinarPage'
+import OnePredictEnterPage from './components/OnePredictEnterPage'
+import OnePredictWebinarLivePage from './components/OnePredictWebinarLivePage'
 import type { Metadata } from 'next'
 
 /**
@@ -402,21 +405,13 @@ export default async function SurveyPublicPage({
       )
     }
     
-    // 426307은 OnePredictWebinarPage를 보여줌 (캠페인 조회 실패해도 표시)
+    // 426307은 /register로 리다이렉트
     if (publicPath === '/426307' || publicPath === '426307') {
-      const headersList = await headers()
-      const host = headersList.get('host') || 'localhost:3000'
-      const protocol = headersList.get('x-forwarded-proto') || 'http'
-      const baseUrl = `${protocol}://${host}`
-      
-      // 캠페인이 없어도 페이지 표시 - 동적 import로 샌드박스화
-      return (
-        <ClientWrapper
-          clientName="원프레딕트"
-          loader={() => import('./components/OnePredictWebinarPage')}
-          props={{ campaign, baseUrl }}
-        />
-      )
+      // UTM 파라미터가 있으면 함께 전달
+      const utmQueryString = Object.keys(utmParams).length > 0
+        ? '?' + new URLSearchParams(utmParams as Record<string, string>).toString()
+        : ''
+      return redirect(`/event/426307/register${utmQueryString}`)
     }
     
     // 445870는 WelcomePage를 보여주고, 345870만 설문 페이지로 리다이렉트
@@ -531,18 +526,51 @@ export default async function SurveyPublicPage({
       </Suspense>
     )
   } else if (subPath === 'register') {
-    // 426307의 등록 페이지는 OnePredictRegistrationPage를 사용
+    // 426307의 등록 페이지는 OnePredictRegistrationPage를 사용 (웨비나 정보 직접 사용)
     if (publicPath === '/426307' || publicPath === '426307') {
       const headersList = await headers()
       const host = headersList.get('host') || 'localhost:3000'
       const protocol = headersList.get('x-forwarded-proto') || 'http'
       const baseUrl = `${protocol}://${host}`
+      
+      // 웨비나 정보를 직접 사용 (캠페인 없이)
+      // 웨비나 slug 426307 조회하여 웨비나 정보를 campaign처럼 전달
+      let campaignData = null
+      try {
+        const { data: webinar } = await admin
+          .from('webinars')
+          .select('id, slug, title, description, client_id, agency_id')
+          .eq('slug', '426307')
+          .maybeSingle()
+        
+        if (webinar) {
+          // 웨비나 정보를 campaign 형태로 변환
+          campaignData = {
+            id: webinar.id, // 웨비나 ID를 campaign ID로 사용
+            title: webinar.title,
+            description: webinar.description,
+            client_id: webinar.client_id,
+            agency_id: webinar.agency_id,
+            public_path: '/426307',
+            type: 'registration',
+          }
+          console.log('[SurveyPublicPage] 웨비나 426307 정보 사용:', webinar.id)
+        }
+      } catch (error) {
+        console.error('[SurveyPublicPage] 웨비나 조회 오류:', error)
+      }
+      
       return (
-        <ClientWrapper
-          clientName="원프레딕트 등록"
-          loader={() => import('./components/OnePredictRegistrationPage')}
-          props={{ campaign, baseUrl }}
-        />
+        <Suspense fallback={
+          <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-rose-50 flex items-center justify-center">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+              <p className="text-gray-600">로딩 중...</p>
+            </div>
+          </div>
+        }>
+          <OnePredictRegistrationPage campaign={campaignData} baseUrl={baseUrl} utmParams={utmParams} />
+        </Suspense>
       )
     }
     
@@ -574,11 +602,16 @@ export default async function SurveyPublicPage({
       const protocol = headersList.get('x-forwarded-proto') || 'http'
       const baseUrl = `${protocol}://${host}`
       return (
-        <ClientWrapper
-          clientName="원프레딕트 입장"
-          loader={() => import('./components/OnePredictEnterPage')}
-          props={{ campaign, baseUrl }}
-        />
+        <Suspense fallback={
+          <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-rose-50 flex items-center justify-center">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+              <p className="text-gray-600">로딩 중...</p>
+            </div>
+          </div>
+        }>
+          <OnePredictEnterPage campaign={campaign} baseUrl={baseUrl} />
+        </Suspense>
       )
     }
     notFound()
@@ -590,11 +623,16 @@ export default async function SurveyPublicPage({
       const protocol = headersList.get('x-forwarded-proto') || 'http'
       const baseUrl = `${protocol}://${host}`
       return (
-        <ClientWrapper
-          clientName="원프레딕트 라이브"
-          loader={() => import('./components/OnePredictWebinarLivePage')}
-          props={{ campaign, baseUrl }}
-        />
+        <Suspense fallback={
+          <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-rose-50 flex items-center justify-center">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+              <p className="text-gray-600">로딩 중...</p>
+            </div>
+          </div>
+        }>
+          <OnePredictWebinarLivePage campaign={campaign} baseUrl={baseUrl} />
+        </Suspense>
       )
     }
     notFound()
