@@ -411,7 +411,7 @@ export default function OnePredictRegistrationPage({ campaign: initialCampaign, 
           <div className="max-w-3xl mx-auto w-full flex items-center">
             <div className="flex items-center cursor-pointer" onClick={() => router.push('/webinar/426307')}>
               <img 
-                src="https://yqsayphssjznthrxpgfb.supabase.co/storage/v1/object/public/webinar-thumbnails/onepredict/be6b22396f779.png" 
+                src="https://yqsayphssjznthrxpgfb.supabase.co/storage/v1/object/public/webinar-thumbnails/onepredict/onepredict_logo.png" 
                 alt="원프레딕트 로고"
                 className="w-[120px] max-sm:w-[100px] h-auto"
               />
