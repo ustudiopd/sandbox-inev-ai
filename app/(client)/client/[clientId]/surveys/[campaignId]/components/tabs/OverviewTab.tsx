@@ -169,7 +169,7 @@ export default function OverviewTab({ campaign, onCampaignUpdate }: OverviewTabP
         }))
       : []
     
-    // CSV 헤더 생성
+    // CSV 헤더 생성 - 기본 필드
     const baseHeaders = [
       '순번',
       '확인코드',
@@ -179,6 +179,47 @@ export default function OverviewTab({ campaign, onCampaignUpdate }: OverviewTabP
       '완료일시',
       '스캔일시',
       '경품명',
+      '경품기록일시',
+      '생성일시',
+    ]
+    
+    // registration_data 필드 헤더
+    const registrationHeaders = [
+      '이메일',
+      '직책',
+      '부서',
+      '조직명',
+      '경력',
+      '질문/메시지',
+      '전화번호국가코드',
+      '이메일수신동의',
+      '전화수신동의',
+      '개인정보동의',
+    ]
+    
+    // consent_data 필드 헤더
+    const consentHeaders = [
+      '개인정보공유동의',
+      '개인정보취급위탁동의',
+      '전화이메일SMS수신동의',
+      '동의일시',
+    ]
+    
+    // UTM 추적 필드 헤더
+    const utmHeaders = [
+      'UTM_Source',
+      'UTM_Medium',
+      'UTM_Campaign',
+      'UTM_Term',
+      'UTM_Content',
+      'UTM_Referrer',
+      'UTM_최초방문일시',
+      '마케팅캠페인링크ID',
+    ]
+    
+    // 추가 필드
+    const additionalHeaders = [
+      '마지막로그인일시',
     ]
     
     // 문항별 헤더 추가
@@ -186,10 +227,18 @@ export default function OverviewTab({ campaign, onCampaignUpdate }: OverviewTabP
       .sort((a: any, b: any) => a.orderNo - b.orderNo)
       .map((q: any) => `문항 ${q.orderNo}: ${q.body}`)
     
-    const headers = [...baseHeaders, ...questionHeaders]
+    const headers = [
+      ...baseHeaders,
+      ...registrationHeaders,
+      ...consentHeaders,
+      ...utmHeaders,
+      ...additionalHeaders,
+      ...questionHeaders
+    ]
     
     // CSV 데이터 행 생성
     const rows = allEntries.map((entry: any) => {
+      // 기본 필드
       const baseRow = [
         entry.survey_no || '',
         entry.code6 || '',
@@ -199,6 +248,49 @@ export default function OverviewTab({ campaign, onCampaignUpdate }: OverviewTabP
         entry.completed_at ? new Date(entry.completed_at).toLocaleString('ko-KR') : '',
         entry.verified_at ? new Date(entry.verified_at).toLocaleString('ko-KR') : '',
         entry.prize_label || '',
+        entry.prize_recorded_at ? new Date(entry.prize_recorded_at).toLocaleString('ko-KR') : '',
+        entry.created_at ? new Date(entry.created_at).toLocaleString('ko-KR') : '',
+      ]
+      
+      // registration_data 필드
+      const registrationData = entry.registration_data || {}
+      const registrationRow = [
+        registrationData.email || '',
+        registrationData.position || registrationData.jobTitle || '',
+        registrationData.department || '',
+        registrationData.organization || '',
+        registrationData.yearsOfExperience || '',
+        registrationData.question || '',
+        registrationData.phoneCountryCode || '',
+        registrationData.consentEmail ? '동의' : (registrationData.consentEmail === false ? '비동의' : ''),
+        registrationData.consentPhone ? '동의' : (registrationData.consentPhone === false ? '비동의' : ''),
+        registrationData.privacyConsent ? '동의' : (registrationData.privacyConsent === false ? '비동의' : ''),
+      ]
+      
+      // consent_data 필드
+      const consentData = entry.consent_data || {}
+      const consentRow = [
+        consentData.consent1 ? '동의' : (consentData.consent1 === false ? '비동의' : ''),
+        consentData.consent2 ? '동의' : (consentData.consent2 === false ? '비동의' : ''),
+        consentData.consent3 ? '동의' : (consentData.consent3 === false ? '비동의' : ''),
+        consentData.consented_at ? new Date(consentData.consented_at).toLocaleString('ko-KR') : '',
+      ]
+      
+      // UTM 필드
+      const utmRow = [
+        entry.utm_source || '',
+        entry.utm_medium || '',
+        entry.utm_campaign || '',
+        entry.utm_term || '',
+        entry.utm_content || '',
+        entry.utm_referrer || '',
+        entry.utm_first_visit_at ? new Date(entry.utm_first_visit_at).toLocaleString('ko-KR') : '',
+        entry.marketing_campaign_link_id || '',
+      ]
+      
+      // 추가 필드
+      const additionalRow = [
+        entry.last_login_at ? new Date(entry.last_login_at).toLocaleString('ko-KR') : '',
       ]
       
       // 문항별 답변 추가 (entries에 이미 answers가 포함되어 있음)
@@ -210,7 +302,14 @@ export default function OverviewTab({ campaign, onCampaignUpdate }: OverviewTabP
         .sort((a: any, b: any) => a.orderNo - b.orderNo)
         .map((q: any) => answerMap.get(q.id) || '답변 없음')
       
-      return [...baseRow, ...answerRow]
+      return [
+        ...baseRow,
+        ...registrationRow,
+        ...consentRow,
+        ...utmRow,
+        ...additionalRow,
+        ...answerRow
+      ]
     })
     
     // CSV 내용 생성
@@ -223,7 +322,7 @@ export default function OverviewTab({ campaign, onCampaignUpdate }: OverviewTabP
     const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' })
     const link = document.createElement('a')
     link.href = URL.createObjectURL(blob)
-    link.download = `${campaign.title || '설문조사'}_참여자_${new Date().toISOString().split('T')[0]}.csv`
+    link.download = `${campaign.title || '설문조사'}_참여자_전체데이터_${new Date().toISOString().split('T')[0]}.csv`
     link.click()
   }
   
