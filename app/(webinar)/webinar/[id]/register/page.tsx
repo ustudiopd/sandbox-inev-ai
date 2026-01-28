@@ -162,12 +162,30 @@ export default async function WebinarRegisterPage({
         campaignData = webinar
       } else {
         // 웨비나가 없으면 등록 캠페인에서 데이터 가져오기
-        const { data: campaign } = await admin
+        // /426307 경로를 찾지 못하면 /149403 경로의 캠페인 사용 (동일한 웨비나)
+        let campaign = null
+        const { data: campaign426307 } = await admin
           .from('event_survey_campaigns')
           .select('id, title, description, client_id, agency_id, public_path, type')
           .eq('public_path', '/426307')
           .eq('type', 'registration')
           .maybeSingle()
+        
+        if (campaign426307) {
+          campaign = campaign426307
+        } else {
+          // /426307이 없으면 /149403 경로의 캠페인 사용
+          const { data: campaign149403 } = await admin
+            .from('event_survey_campaigns')
+            .select('id, title, description, client_id, agency_id, public_path, type')
+            .eq('public_path', '/149403')
+            .eq('type', 'registration')
+            .maybeSingle()
+          
+          if (campaign149403) {
+            campaign = campaign149403
+          }
+        }
         
         if (campaign) {
           campaignData = campaign
@@ -176,12 +194,29 @@ export default async function WebinarRegisterPage({
     } catch (error) {
       // 에러 발생 시에도 등록 캠페인에서 데이터 가져오기 시도
       console.log('[WebinarRegisterPage] 웨비나 조회 에러:', error)
-      const { data: campaign } = await admin
+      let campaign = null
+      const { data: campaign426307 } = await admin
         .from('event_survey_campaigns')
         .select('id, title, description, client_id, agency_id, public_path, type')
         .eq('public_path', '/426307')
         .eq('type', 'registration')
         .maybeSingle()
+      
+      if (campaign426307) {
+        campaign = campaign426307
+      } else {
+        // /426307이 없으면 /149403 경로의 캠페인 사용
+        const { data: campaign149403 } = await admin
+          .from('event_survey_campaigns')
+          .select('id, title, description, client_id, agency_id, public_path, type')
+          .eq('public_path', '/149403')
+          .eq('type', 'registration')
+          .maybeSingle()
+        
+        if (campaign149403) {
+          campaign = campaign149403
+        }
+      }
       
       if (campaign) {
         campaignData = campaign
