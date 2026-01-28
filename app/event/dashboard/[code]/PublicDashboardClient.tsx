@@ -1441,7 +1441,7 @@ export default function PublicDashboardClient({ campaign }: PublicDashboardClien
                             {entry.company || '-'}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {entry.registration_data?.position || '-'}
+                            {entry.registration_data?.position || entry.registration_data?.jobTitle || '-'}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                             {entry.phone_norm && entry.phone_norm.length >= 4
