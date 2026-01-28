@@ -1418,9 +1418,6 @@ export default function PublicDashboardClient({ campaign }: PublicDashboardClien
                           직책
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          이메일
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           전화번호
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -1445,9 +1442,6 @@ export default function PublicDashboardClient({ campaign }: PublicDashboardClien
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                             {entry.registration_data?.position || entry.registration_data?.jobTitle || '-'}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {entry.registration_data?.email || '-'}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                             {entry.phone_norm && entry.phone_norm.length >= 4
