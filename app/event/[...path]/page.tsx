@@ -122,7 +122,7 @@ export async function generateMetadata({
   
   // 426307 페이지에 대한 메타데이터
   if (publicPath === '/426307' || publicPath === '426307') {
-    const thumbnailUrl = 'https://yqsayphssjznthrxpgfb.supabase.co/storage/v1/object/public/webinar-thumbnails/onepredict/fb0be79a9dfc8.jpg'
+    const thumbnailUrl = 'https://yqsayphssjznthrxpgfb.supabase.co/storage/v1/object/public/webinar-thumbnails/onepredict/thumb4.png'
     return {
       title: '산업 AI의 미래: 가동 효율 극대화 전략 | 원프레딕트 웨비나',
       description: '원프레딕트 GuardiOne® 기반 설비 관리 혁신 및 DX 성공 전략 공개',

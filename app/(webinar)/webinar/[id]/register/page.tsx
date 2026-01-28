@@ -77,7 +77,7 @@ export async function generateMetadata({
     
     // 426307 slug인 경우 fallback 메타데이터 설정 (웨비나가 DB에 없을 때)
     if (id === '426307') {
-      const thumbnailUrl = 'https://yqsayphssjznthrxpgfb.supabase.co/storage/v1/object/public/webinar-thumbnails/onepredict/fb0be79a9dfc8.jpg'
+      const thumbnailUrl = 'https://yqsayphssjznthrxpgfb.supabase.co/storage/v1/object/public/webinar-thumbnails/onepredict/thumb4.png'
       return {
         title: '[원프레딕트] 2월 웨비나 | EventFlow 웨비나 등록',
         description: 'AI가 움직이는 공장: AI native factory I - AI Ready Data',
