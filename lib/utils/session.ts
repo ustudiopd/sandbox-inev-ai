@@ -98,10 +98,41 @@ export function generateSessionId(): string {
 }
 
 /**
+ * 스토리지에서 안전하게 읽기 (모바일 브라우저 호환)
+ */
+function safeStorageGet(storage: Storage | null, key: string): string | null {
+  if (!storage) return null
+  try {
+    return storage.getItem(key)
+  } catch (error) {
+    // 모바일 브라우저에서 localStorage가 비활성화된 경우
+    return null
+  }
+}
+
+/**
+ * 스토리지에 안전하게 저장 (모바일 브라우저 호환)
+ */
+function safeStorageSet(storage: Storage | null, key: string, value: string): boolean {
+  if (!storage) return false
+  try {
+    storage.setItem(key, value)
+    // 저장 확인 (모바일 브라우저에서 쿼터 제한 등으로 실패할 수 있음)
+    return storage.getItem(key) === value
+  } catch (error) {
+    // 모바일 브라우저에서 localStorage가 비활성화되거나 쿼터 초과
+    return false
+  }
+}
+
+/**
  * 세션 ID 가져오기 또는 생성
  * 
- * 쿠키를 우선 사용하되, 실패 시 localStorage를 폴백으로 사용합니다.
- * 크롬의 엄격한 쿠키 정책에 대응합니다.
+ * 모바일 브라우저 호환성을 위해 다중 폴백 전략 사용:
+ * 1. localStorage (데스크톱 크롬 호환)
+ * 2. sessionStorage (모바일 브라우저 호환)
+ * 3. 쿠키 (보조 수단)
+ * 4. 메모리 기반 (최후의 수단)
  * 
  * @param cookieName - 쿠키 이름 (기본값: 'ef_session_id')
  * @param ttlMinutes - 세션 TTL (분 단위, 기본값: 30분)
@@ -111,75 +142,107 @@ export function getOrCreateSessionId(
   cookieName: string = 'ef_session_id',
   ttlMinutes: number = 30
 ): string {
-  // 크롬 호환성: localStorage를 우선 사용하고 쿠키는 보조로 사용
-  // 크롬의 엄격한 쿠키 정책 때문에 localStorage가 더 안정적입니다.
+  // 모바일 브라우저 호환성: 다중 폴백 전략
+  // localStorage -> sessionStorage -> 쿠키 -> 메모리
   
   try {
-    // 1. localStorage에서 먼저 확인 (크롬 호환성 우선)
-    let sessionId: string | null = null
-    try {
-      sessionId = localStorage.getItem(cookieName)
-      if (sessionId && sessionId.trim()) {
-        // localStorage에 유효한 값이 있으면 사용
-        // 쿠키에도 동기화 시도 (실패해도 무시)
-        try {
-          const isSecure = typeof window !== 'undefined' && window.location.protocol === 'https:'
-          setCookie(cookieName, sessionId, {
-            maxAge: ttlMinutes * 60,
-            path: '/',
-            sameSite: 'lax',
-            secure: isSecure,
-          })
-        } catch (cookieError) {
-          // 쿠키 동기화 실패는 무시 (localStorage가 있으면 충분)
-        }
-        return sessionId
-      }
-    } catch (lsError) {
-      // localStorage 읽기 실패는 무시하고 쿠키 확인으로 진행
-      console.warn('[session] localStorage 읽기 실패:', lsError)
+    const isClient = typeof window !== 'undefined'
+    if (!isClient) {
+      // 서버 사이드에서는 항상 새 세션 ID 생성
+      return generateSessionId()
     }
     
-    // 2. localStorage가 없으면 쿠키에서 확인
-    sessionId = getCookie(cookieName)
+    const localStorage = isClient ? window.localStorage : null
+    const sessionStorage = isClient ? window.sessionStorage : null
+    
+    let sessionId: string | null = null
+    
+    // 1. localStorage에서 확인 (데스크톱 크롬 호환)
+    sessionId = safeStorageGet(localStorage, cookieName)
     if (sessionId && sessionId.trim()) {
-      // 쿠키에서 읽기 성공 - localStorage에 저장 (크롬 호환성)
+      // 다른 스토리지에도 동기화 시도 (실패해도 무시)
+      safeStorageSet(sessionStorage, cookieName, sessionId)
       try {
-        localStorage.setItem(cookieName, sessionId)
-      } catch (lsError) {
-        // localStorage 저장 실패해도 쿠키 값 사용
-        console.warn('[session] localStorage 저장 실패 (쿠키 값 사용):', lsError)
+        const isSecure = window.location.protocol === 'https:'
+        setCookie(cookieName, sessionId, {
+          maxAge: ttlMinutes * 60,
+          path: '/',
+          sameSite: 'lax',
+          secure: isSecure,
+        })
+      } catch (cookieError) {
+        // 쿠키 동기화 실패는 무시
       }
       return sessionId
     }
     
-    // 3. 둘 다 없으면 새로 생성
-    sessionId = generateSessionId()
-    
-    // localStorage에 먼저 저장 (크롬 호환성 우선)
-    let localStorageSuccess = false
-    try {
-      localStorage.setItem(cookieName, sessionId)
-      localStorageSuccess = true
-    } catch (lsError) {
-      console.warn('[session] localStorage 저장 실패:', lsError)
+    // 2. sessionStorage에서 확인 (모바일 브라우저 호환)
+    sessionId = safeStorageGet(sessionStorage, cookieName)
+    if (sessionId && sessionId.trim()) {
+      // localStorage에도 동기화 시도 (실패해도 무시)
+      safeStorageSet(localStorage, cookieName, sessionId)
+      try {
+        const isSecure = window.location.protocol === 'https:'
+        setCookie(cookieName, sessionId, {
+          maxAge: ttlMinutes * 60,
+          path: '/',
+          sameSite: 'lax',
+          secure: isSecure,
+        })
+      } catch (cookieError) {
+        // 쿠키 동기화 실패는 무시
+      }
+      return sessionId
     }
     
-    // 쿠키에도 저장 시도 (실패해도 localStorage가 있으면 OK)
+    // 3. 쿠키에서 확인
+    sessionId = getCookie(cookieName)
+    if (sessionId && sessionId.trim()) {
+      // 모든 스토리지에 동기화 시도 (실패해도 무시)
+      safeStorageSet(localStorage, cookieName, sessionId)
+      safeStorageSet(sessionStorage, cookieName, sessionId)
+      return sessionId
+    }
+    
+    // 4. 새로 생성
+    sessionId = generateSessionId()
+    
+    // 모든 스토리지에 저장 시도 (하나라도 성공하면 OK)
+    let saved = false
+    
+    // localStorage 저장 시도
+    if (safeStorageSet(localStorage, cookieName, sessionId)) {
+      saved = true
+    }
+    
+    // sessionStorage 저장 시도 (모바일 브라우저 호환)
+    if (safeStorageSet(sessionStorage, cookieName, sessionId)) {
+      saved = true
+    }
+    
+    // 쿠키 저장 시도
     try {
-      const isSecure = typeof window !== 'undefined' && window.location.protocol === 'https:'
+      const isSecure = window.location.protocol === 'https:'
       setCookie(cookieName, sessionId, {
         maxAge: ttlMinutes * 60,
         path: '/',
         sameSite: 'lax',
         secure: isSecure,
       })
+      // 쿠키 저장 확인
+      if (getCookie(cookieName) === sessionId) {
+        saved = true
+      }
     } catch (cookieError) {
-      // 쿠키 저장 실패는 무시 (localStorage가 있으면 충분)
-      console.warn('[session] 쿠키 저장 실패 (localStorage 사용):', cookieError)
+      // 쿠키 저장 실패는 무시
     }
     
-    // localStorage 저장이 성공했으면 OK, 실패했어도 sessionId는 반환
+    // 모든 스토리지가 실패해도 세션 ID는 반환 (메모리 기반)
+    // 다음 요청에서 다시 생성되지만, 최소한 등록은 진행 가능
+    if (!saved) {
+      console.warn('[session] 모든 스토리지 저장 실패 (메모리 기반 세션 사용)')
+    }
+    
     return sessionId
   } catch (error) {
     console.warn('[session] 세션 ID 생성 오류:', error)
