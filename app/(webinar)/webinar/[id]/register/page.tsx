@@ -159,11 +159,32 @@ export default async function WebinarRegisterPage({
       
       // 웨비나가 있으면 사용
       if (webinar && !webinarError) {
-        campaignData = webinar
+        // registration_campaign_id가 있으면 해당 캠페인 조회
+        if (webinar.registration_campaign_id) {
+          const { data: campaign } = await admin
+            .from('event_survey_campaigns')
+            .select('id, title, description, client_id, agency_id, public_path, type')
+            .eq('id', webinar.registration_campaign_id)
+            .maybeSingle()
+          
+          if (campaign) {
+            campaignData = campaign
+            console.log('[WebinarRegisterPage] 웨비나의 registration_campaign_id로 캠페인 찾음:', campaign.id)
+          } else {
+            // 캠페인을 찾지 못하면 웨비나 데이터 사용
+            campaignData = webinar
+            console.log('[WebinarRegisterPage] registration_campaign_id 캠페인을 찾지 못함, 웨비나 데이터 사용')
+          }
+        } else {
+          // registration_campaign_id가 없으면 웨비나 데이터 사용
+          campaignData = webinar
+        }
       } else {
         // 웨비나가 없으면 등록 캠페인에서 데이터 가져오기
         // /426307 경로를 찾지 못하면 /149403 경로의 캠페인 사용 (동일한 웨비나)
         let campaign = null
+        
+        // 먼저 /426307 경로의 캠페인 찾기
         const { data: campaign426307 } = await admin
           .from('event_survey_campaigns')
           .select('id, title, description, client_id, agency_id, public_path, type')
@@ -173,6 +194,7 @@ export default async function WebinarRegisterPage({
         
         if (campaign426307) {
           campaign = campaign426307
+          console.log('[WebinarRegisterPage] /426307 캠페인 찾음:', campaign426307.id)
         } else {
           // /426307이 없으면 /149403 경로의 캠페인 사용
           const { data: campaign149403 } = await admin
@@ -184,6 +206,9 @@ export default async function WebinarRegisterPage({
           
           if (campaign149403) {
             campaign = campaign149403
+            console.log('[WebinarRegisterPage] /149403 캠페인 찾음 (fallback):', campaign149403.id)
+          } else {
+            console.warn('[WebinarRegisterPage] 등록 캠페인을 찾을 수 없음 (/426307, /149403 모두 없음)')
           }
         }
         
@@ -195,6 +220,8 @@ export default async function WebinarRegisterPage({
       // 에러 발생 시에도 등록 캠페인에서 데이터 가져오기 시도
       console.log('[WebinarRegisterPage] 웨비나 조회 에러:', error)
       let campaign = null
+      
+      // 먼저 /426307 경로의 캠페인 찾기
       const { data: campaign426307 } = await admin
         .from('event_survey_campaigns')
         .select('id, title, description, client_id, agency_id, public_path, type')
@@ -204,6 +231,7 @@ export default async function WebinarRegisterPage({
       
       if (campaign426307) {
         campaign = campaign426307
+        console.log('[WebinarRegisterPage] 에러 처리 중 /426307 캠페인 찾음:', campaign426307.id)
       } else {
         // /426307이 없으면 /149403 경로의 캠페인 사용
         const { data: campaign149403 } = await admin
@@ -215,6 +243,9 @@ export default async function WebinarRegisterPage({
         
         if (campaign149403) {
           campaign = campaign149403
+          console.log('[WebinarRegisterPage] 에러 처리 중 /149403 캠페인 찾음 (fallback):', campaign149403.id)
+        } else {
+          console.warn('[WebinarRegisterPage] 에러 처리 중 등록 캠페인을 찾을 수 없음 (/426307, /149403 모두 없음)')
         }
       }
       
