@@ -162,17 +162,129 @@ export async function POST(
         const emailLower = registration_data.email.trim().toLowerCase()
         
         // 이메일로 사용자 찾기 (profiles 테이블)
-        const { data: profile } = await admin
+        let { data: profile } = await admin
           .from('profiles')
           .select('id')
           .eq('email', emailLower)
           .maybeSingle()
         
+        // 프로필이 없으면 자동 생성 (웨비나 등록 페이지용)
         if (!profile?.id) {
-          return NextResponse.json(
-            { error: '사용자 계정을 찾을 수 없습니다. 이메일로 먼저 가입해주세요.' },
-            { status: 400 }
-          )
+          // auth.users에서 이메일로 사용자 확인 (페이지네이션 사용)
+          let existingAuthUser = null
+          let page = 1
+          const perPage = 1000
+          
+          while (!existingAuthUser && page <= 10) {
+            const { data: authUsers, error: listError } = await admin.auth.admin.listUsers({
+              page,
+              perPage,
+            })
+            
+            if (listError) {
+              console.error('[register] 사용자 목록 조회 실패:', listError)
+              break
+            }
+            
+            existingAuthUser = authUsers?.users.find(u => u.email?.toLowerCase() === emailLower)
+            
+            if (existingAuthUser) {
+              break
+            }
+            
+            // 더 이상 사용자가 없으면 중단
+            if (!authUsers?.users || authUsers.users.length < perPage) {
+              break
+            }
+            
+            page++
+          }
+          
+          let userId: string
+          
+          if (existingAuthUser) {
+            // auth.users에는 있지만 profiles에는 없는 경우
+            userId = existingAuthUser.id
+          } else {
+            // auth.users에도 없는 경우 새로 생성
+            // 임시 비밀번호 생성 (나중에 비밀번호 재설정 필요)
+            const tempPassword = `Temp${Math.random().toString(36).slice(-12)}!`
+            
+            const { data: newUser, error: createError } = await admin.auth.admin.createUser({
+              email: emailLower,
+              password: tempPassword,
+              email_confirm: true, // 이메일 인증 없이 바로 활성화
+              user_metadata: {
+                display_name: registration_data.name || emailLower.split('@')[0],
+                nickname: registration_data.name || null,
+              }
+            })
+            
+            if (createError || !newUser.user) {
+              console.error('[register] auth.users 생성 실패:', createError)
+              return NextResponse.json(
+                { error: '사용자 계정 생성에 실패했습니다. 잠시 후 다시 시도해주세요.' },
+                { status: 500 }
+              )
+            }
+            
+            userId = newUser.user.id
+            console.log('[register] 새 사용자 생성:', userId)
+          }
+          
+          // profiles에 프로필 생성
+          const { error: profileError } = await admin
+            .from('profiles')
+            .insert({
+              id: userId,
+              email: emailLower,
+              display_name: registration_data.name || emailLower.split('@')[0],
+              nickname: registration_data.name || null,
+            })
+          
+          if (profileError) {
+            // 이미 존재하는 경우 (race condition) 다시 조회
+            if (profileError.code === '23505') {
+              const { data: existingProfile } = await admin
+                .from('profiles')
+                .select('id')
+                .eq('email', emailLower)
+                .maybeSingle()
+              
+              if (existingProfile) {
+                profile = existingProfile
+              } else {
+                console.error('[register] 프로필 생성 실패:', profileError)
+                return NextResponse.json(
+                  { error: '프로필 생성에 실패했습니다. 잠시 후 다시 시도해주세요.' },
+                  { status: 500 }
+                )
+              }
+            } else {
+              console.error('[register] 프로필 생성 실패:', profileError)
+              return NextResponse.json(
+                { error: '프로필 생성에 실패했습니다. 잠시 후 다시 시도해주세요.' },
+                { status: 500 }
+              )
+            }
+          } else {
+            // 생성 성공, 다시 조회
+            const { data: newProfile } = await admin
+              .from('profiles')
+              .select('id')
+              .eq('id', userId)
+              .maybeSingle()
+            
+            if (!newProfile) {
+              return NextResponse.json(
+                { error: '프로필 생성 후 조회에 실패했습니다. 잠시 후 다시 시도해주세요.' },
+                { status: 500 }
+              )
+            }
+            
+            profile = newProfile
+            console.log('[register] 프로필 자동 생성 완료:', profile.id)
+          }
         }
         
         // 이미 등록한 경우 확인 (registrations만 확인)
@@ -334,17 +446,129 @@ export async function POST(
         const emailLower = registration_data.email.trim().toLowerCase()
         
         // 이메일로 사용자 찾기 (profiles 테이블)
-        const { data: profile } = await admin
+        let { data: profile } = await admin
           .from('profiles')
           .select('id')
           .eq('email', emailLower)
           .maybeSingle()
         
+        // 프로필이 없으면 자동 생성 (웨비나 등록 페이지용)
         if (!profile?.id) {
-          return NextResponse.json(
-            { error: '사용자 계정을 찾을 수 없습니다. 이메일로 먼저 가입해주세요.' },
-            { status: 400 }
-          )
+          // auth.users에서 이메일로 사용자 확인 (페이지네이션 사용)
+          let existingAuthUser = null
+          let page = 1
+          const perPage = 1000
+          
+          while (!existingAuthUser && page <= 10) {
+            const { data: authUsers, error: listError } = await admin.auth.admin.listUsers({
+              page,
+              perPage,
+            })
+            
+            if (listError) {
+              console.error('[register] 사용자 목록 조회 실패:', listError)
+              break
+            }
+            
+            existingAuthUser = authUsers?.users.find(u => u.email?.toLowerCase() === emailLower)
+            
+            if (existingAuthUser) {
+              break
+            }
+            
+            // 더 이상 사용자가 없으면 중단
+            if (!authUsers?.users || authUsers.users.length < perPage) {
+              break
+            }
+            
+            page++
+          }
+          
+          let userId: string
+          
+          if (existingAuthUser) {
+            // auth.users에는 있지만 profiles에는 없는 경우
+            userId = existingAuthUser.id
+          } else {
+            // auth.users에도 없는 경우 새로 생성
+            // 임시 비밀번호 생성 (나중에 비밀번호 재설정 필요)
+            const tempPassword = `Temp${Math.random().toString(36).slice(-12)}!`
+            
+            const { data: newUser, error: createError } = await admin.auth.admin.createUser({
+              email: emailLower,
+              password: tempPassword,
+              email_confirm: true, // 이메일 인증 없이 바로 활성화
+              user_metadata: {
+                display_name: registration_data.name || emailLower.split('@')[0],
+                nickname: registration_data.name || null,
+              }
+            })
+            
+            if (createError || !newUser.user) {
+              console.error('[register] auth.users 생성 실패:', createError)
+              return NextResponse.json(
+                { error: '사용자 계정 생성에 실패했습니다. 잠시 후 다시 시도해주세요.' },
+                { status: 500 }
+              )
+            }
+            
+            userId = newUser.user.id
+            console.log('[register] 새 사용자 생성:', userId)
+          }
+          
+          // profiles에 프로필 생성
+          const { error: profileError } = await admin
+            .from('profiles')
+            .insert({
+              id: userId,
+              email: emailLower,
+              display_name: registration_data.name || emailLower.split('@')[0],
+              nickname: registration_data.name || null,
+            })
+          
+          if (profileError) {
+            // 이미 존재하는 경우 (race condition) 다시 조회
+            if (profileError.code === '23505') {
+              const { data: existingProfile } = await admin
+                .from('profiles')
+                .select('id')
+                .eq('email', emailLower)
+                .maybeSingle()
+              
+              if (existingProfile) {
+                profile = existingProfile
+              } else {
+                console.error('[register] 프로필 생성 실패:', profileError)
+                return NextResponse.json(
+                  { error: '프로필 생성에 실패했습니다. 잠시 후 다시 시도해주세요.' },
+                  { status: 500 }
+                )
+              }
+            } else {
+              console.error('[register] 프로필 생성 실패:', profileError)
+              return NextResponse.json(
+                { error: '프로필 생성에 실패했습니다. 잠시 후 다시 시도해주세요.' },
+                { status: 500 }
+              )
+            }
+          } else {
+            // 생성 성공, 다시 조회
+            const { data: newProfile } = await admin
+              .from('profiles')
+              .select('id')
+              .eq('id', userId)
+              .maybeSingle()
+            
+            if (!newProfile) {
+              return NextResponse.json(
+                { error: '프로필 생성 후 조회에 실패했습니다. 잠시 후 다시 시도해주세요.' },
+                { status: 500 }
+              )
+            }
+            
+            profile = newProfile
+            console.log('[register] 프로필 자동 생성 완료:', profile.id)
+          }
         }
         
         // 이미 등록한 경우 확인 (registrations만 확인)
