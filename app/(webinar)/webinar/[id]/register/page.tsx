@@ -15,40 +15,101 @@ export async function generateMetadata({
   params: Promise<{ id: string }>
 }): Promise<Metadata> {
   const { id } = await params
+  const admin = createAdminSupabase()
   
-  // 426307 slug인 경우 메타데이터 설정
-  if (id === '426307') {
-    const thumbnailUrl = 'https://yqsayphssjznthrxpgfb.supabase.co/storage/v1/object/public/webinar-thumbnails/onepredict/fb0be79a9dfc8.jpg'
-    return {
-      title: '산업 AI의 미래: 가동 효율 극대화 전략 | 원프레딕트 웨비나 등록',
-      description: '원프레딕트 GuardiOne® 기반 설비 관리 혁신 및 DX 성공 전략 공개 - 웨비나 등록',
-      keywords: '원프레딕트, GuardiOne, 산업 AI, 설비 관리, 디지털 트랜스포메이션, 예지보전, 웨비나',
-      metadataBase: new URL('https://eventflow.kr'),
-      openGraph: {
-        title: '산업 AI의 미래: 가동 효율 극대화 전략',
-        description: '원프레딕트 GuardiOne® 기반 설비 관리 혁신 및 DX 성공 전략 공개',
-        type: 'website',
-        url: 'https://eventflow.kr/webinar/426307/register',
-        siteName: '원프레딕트 웨비나',
-        images: [
-          {
-            url: thumbnailUrl,
-            width: 1200,
-            height: 630,
-            alt: '원프레딕트 웨비나',
-          },
-        ],
-      },
-      twitter: {
-        card: 'summary_large_image',
-        title: '산업 AI의 미래: 가동 효율 극대화 전략',
-        description: '원프레딕트 GuardiOne® 기반 설비 관리 혁신 및 DX 성공 전략 공개',
-        images: [thumbnailUrl],
-      },
-      alternates: {
-        canonical: 'https://eventflow.kr/webinar/426307/register',
-      },
+  try {
+    // UUID 또는 slug로 웨비나 조회
+    const query = getWebinarQuery(id)
+    
+    let queryBuilder = admin
+      .from('webinars')
+      .select('id, slug, title, description, meta_title, meta_description, meta_thumbnail_url, email_thumbnail_url')
+    
+    if (query.column === 'slug') {
+      queryBuilder = queryBuilder.eq('slug', String(query.value)).not('slug', 'is', null)
+    } else {
+      queryBuilder = queryBuilder.eq(query.column, query.value)
     }
+    
+    const { data: webinar } = await queryBuilder.maybeSingle()
+    
+    if (webinar) {
+      // 메타데이터 우선순위: meta_title/meta_description > title/description
+      const metaTitle = webinar.meta_title || webinar.title || '웨비나'
+      const metaDescription = webinar.meta_description || webinar.description || 'EventFlow 웨비나에 참여하세요'
+      // 썸네일 우선순위: meta_thumbnail_url > email_thumbnail_url > 기본 이미지
+      const thumbnailUrl = webinar.meta_thumbnail_url || webinar.email_thumbnail_url || 'https://eventflow.kr/og-image.png'
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://eventflow.kr'
+      const webinarPath = webinar.slug || webinar.id
+      const canonicalUrl = `${appUrl}/webinar/${webinarPath}/register`
+      
+      return {
+        title: `${metaTitle} | EventFlow 웨비나 등록`,
+        description: metaDescription,
+        metadataBase: new URL(appUrl),
+        openGraph: {
+          title: metaTitle,
+          description: metaDescription,
+          type: 'website',
+          url: canonicalUrl,
+          siteName: 'EventFlow',
+          images: [
+            {
+              url: thumbnailUrl,
+              width: 1200,
+              height: 630,
+              alt: metaTitle,
+            },
+          ],
+        },
+        twitter: {
+          card: 'summary_large_image',
+          title: metaTitle,
+          description: metaDescription,
+          images: [thumbnailUrl],
+        },
+        alternates: {
+          canonical: canonicalUrl,
+        },
+      }
+    }
+    
+    // 426307 slug인 경우 fallback 메타데이터 설정 (웨비나가 DB에 없을 때)
+    if (id === '426307') {
+      const thumbnailUrl = 'https://yqsayphssjznthrxpgfb.supabase.co/storage/v1/object/public/webinar-thumbnails/onepredict/fb0be79a9dfc8.jpg'
+      return {
+        title: 'AI가 움직이는 공장: AI native factory I - AI Ready Data | 원프레딕트 웨비나 등록',
+        description: '[원프레딕트] 2월 웨비나',
+        keywords: '원프레딕트, GuardiOne, 산업 AI, 설비 관리, 디지털 트랜스포메이션, 예지보전, 웨비나',
+        metadataBase: new URL('https://eventflow.kr'),
+        openGraph: {
+          title: 'AI가 움직이는 공장: AI native factory I - AI Ready Data',
+          description: '[원프레딕트] 2월 웨비나',
+          type: 'website',
+          url: 'https://eventflow.kr/webinar/426307/register',
+          siteName: '원프레딕트 웨비나',
+          images: [
+            {
+              url: thumbnailUrl,
+              width: 1200,
+              height: 630,
+              alt: '원프레딕트 웨비나',
+            },
+          ],
+        },
+        twitter: {
+          card: 'summary_large_image',
+          title: 'AI가 움직이는 공장: AI native factory I - AI Ready Data',
+          description: '[원프레딕트] 2월 웨비나',
+          images: [thumbnailUrl],
+        },
+        alternates: {
+          canonical: 'https://eventflow.kr/webinar/426307/register',
+        },
+      }
+    }
+  } catch (error) {
+    console.error('[generateMetadata] 웨비나 메타데이터 조회 오류:', error)
   }
   
   return {}

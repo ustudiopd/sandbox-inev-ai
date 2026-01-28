@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClientSupabase } from '@/lib/supabase/client'
+import { extractUTMParams, appendUTMToURL } from '@/lib/utils/utm'
 
 interface Webinar {
   id: string
@@ -654,8 +655,12 @@ export default function WebinarEntry({ webinar, isWertPage: serverIsWertPage }: 
           setLoading(false)
           
           // 2초 후 리다이렉트 (에러 메시지 확인 시간 제공)
+          // UTM 파라미터 pass-through
           setTimeout(() => {
-            window.location.href = '/event/149403'
+            const searchParams = new URLSearchParams(window.location.search)
+            const utmParams = extractUTMParams(searchParams)
+            const redirectUrl = appendUTMToURL('/event/149403', utmParams)
+            window.location.href = redirectUrl
           }, 2000)
           return
         }

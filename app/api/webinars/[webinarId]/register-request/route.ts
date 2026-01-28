@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createAdminSupabase } from '@/lib/supabase/admin'
-import { sendWebinarRegistrationEmail } from '@/lib/email'
+// import { sendWebinarRegistrationEmail } from '@/lib/email' // 이메일 발송 비활성화
 import { getWebinarIdFromIdOrSlug } from '@/lib/utils/webinar-query'
 
 export const runtime = 'nodejs'
@@ -101,23 +101,23 @@ export async function POST(
     // slug가 있으면 slug를 사용하고, 없으면 id를 사용
     const webinarSlug = webinar.slug || actualWebinarId
     
-    // 이메일 발송 (실패해도 등록은 성공으로 처리)
-    try {
-      await sendWebinarRegistrationEmail(
-        email.trim(),
-        displayName.trim(),
-        webinar.title || '웨비나',
-        webinarSlug,
-        webinar.start_time
-      )
-    } catch (emailError) {
-      console.error('이메일 발송 실패 (등록은 성공):', emailError)
-      // 이메일 발송 실패는 경고만 하고 등록은 성공으로 처리
-    }
+    // 이메일 발송 비활성화
+    // try {
+    //   await sendWebinarRegistrationEmail(
+    //     email.trim(),
+    //     displayName.trim(),
+    //     webinar.title || '웨비나',
+    //     webinarSlug,
+    //     webinar.start_time
+    //   )
+    // } catch (emailError) {
+    //   console.error('이메일 발송 실패 (등록은 성공):', emailError)
+    //   // 이메일 발송 실패는 경고만 하고 등록은 성공으로 처리
+    // }
     
     return NextResponse.json({ 
       success: true,
-      message: '등록 신청이 완료되었습니다. 이메일로 입장 안내가 발송되었습니다.'
+      message: '등록 신청이 완료되었습니다.'
     })
   } catch (error: any) {
     console.error('웨비나 등록 신청 오류:', error)

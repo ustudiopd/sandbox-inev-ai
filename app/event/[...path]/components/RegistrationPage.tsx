@@ -15,6 +15,9 @@ export default function RegistrationPage({ campaign, baseUrl, utmParams = {} }: 
   const searchParams = useSearchParams()
   const isLookup = searchParams.get('lookup') === 'true'
   
+  // cid 추출 (querystring에서)
+  const cid = searchParams.get('cid')
+  
   // UTM 파라미터 localStorage 저장 (서버에서 추출한 값 사용)
   useEffect(() => {
     if (Object.keys(utmParams).length > 0) {
@@ -170,9 +173,7 @@ export default function RegistrationPage({ campaign, baseUrl, utmParams = {} }: 
     const storedUTM = localStorage.getItem(`utm:${campaign.id}`)
     const utmData = storedUTM ? JSON.parse(storedUTM) : {}
     
-    // URL에서 _link_id 파라미터 읽기 (Phase 2: 링크 ID)
-    const urlParams = new URLSearchParams(window.location.search)
-    const linkId = urlParams.get('_link_id')
+    // cid는 이미 위에서 추출됨 (searchParams.get('cid'))
     
     setSubmitting(true)
     setError(null)
@@ -209,7 +210,7 @@ export default function RegistrationPage({ campaign, baseUrl, utmParams = {} }: 
           utm_content: utmData.utm_content || null,
           utm_first_visit_at: utmData.first_visit_at || null,
           utm_referrer: utmData.referrer_domain || null,
-          _link_id: linkId || null, // Phase 2: 링크 ID
+          cid: cid || null, // cid 파라미터 전달
         }),
       })
       

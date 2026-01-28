@@ -29,6 +29,7 @@ export async function PUT(
       utm_campaign,
       utm_term,
       utm_content,
+      start_date,
       status,
     } = body
     
@@ -85,6 +86,7 @@ export async function PUT(
     if (utm_campaign !== undefined) updateData.utm_campaign = normalizedUTM.utm_campaign || null
     if (utm_term !== undefined) updateData.utm_term = normalizedUTM.utm_term || null
     if (utm_content !== undefined) updateData.utm_content = normalizedUTM.utm_content || null
+    if (start_date !== undefined) updateData.start_date = start_date || null
     if (status !== undefined) updateData.status = status
     
     // 링크 업데이트
@@ -120,26 +122,40 @@ export async function PUT(
       .eq('id', updatedLink.target_campaign_id)
       .single()
     
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://eventflow.kr'
+    // URL 생성 (항상 eventflow.kr 사용)
+    const baseUrl = 'https://eventflow.kr'
     const landingPath = updatedLink.landing_variant === 'welcome' 
       ? targetCampaign?.public_path || ''
       : updatedLink.landing_variant === 'survey'
       ? `${targetCampaign?.public_path}/survey`
       : `${targetCampaign?.public_path}/register`
     
+    // 공유용 URL (cid만 포함)
+    const shareParams = new URLSearchParams()
+    if (updatedLink.cid) {
+      shareParams.set('cid', updatedLink.cid)
+    }
+    const shareUrl = `${baseUrl}/event${landingPath}?${shareParams.toString()}`
+    
+    // 광고용 URL (cid + UTM 포함)
     const utmParams = new URLSearchParams()
+    // cid를 첫 번째 파라미터로 추가
+    if (updatedLink.cid) {
+      utmParams.set('cid', updatedLink.cid)
+    }
     if (updatedLink.utm_source) utmParams.set('utm_source', updatedLink.utm_source)
     if (updatedLink.utm_medium) utmParams.set('utm_medium', updatedLink.utm_medium)
     if (updatedLink.utm_campaign) utmParams.set('utm_campaign', updatedLink.utm_campaign)
     if (updatedLink.utm_term) utmParams.set('utm_term', updatedLink.utm_term)
     if (updatedLink.utm_content) utmParams.set('utm_content', updatedLink.utm_content)
-    utmParams.set('_link_id', updatedLink.id)
     
-    const url = `${baseUrl}/event${landingPath}?${utmParams.toString()}`
+    const campaignUrl = `${baseUrl}/event${landingPath}?${utmParams.toString()}`
     
     return NextResponse.json({
       ...updatedLink,
-      url,
+      url: campaignUrl, // 기본 URL (광고용)
+      share_url: shareUrl, // 공유용 URL (cid만)
+      campaign_url: campaignUrl, // 광고용 URL (cid + UTM)
     })
   } catch (err: any) {
     console.error('API 오류:', err)

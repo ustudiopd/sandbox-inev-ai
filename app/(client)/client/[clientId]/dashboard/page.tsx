@@ -313,6 +313,10 @@ export default async function ClientDashboard({
     </div>
     )
   } catch (error: any) {
+    // NEXT_REDIRECT는 정상적인 리다이렉트이므로 에러로 처리하지 않음
+    if (error?.digest?.startsWith('NEXT_REDIRECT')) {
+      throw error // 리다이렉트는 그대로 전파
+    }
     console.error('[ClientDashboard] 대시보드 로드 오류:', error)
     console.error('[ClientDashboard] 에러 상세:', {
       message: error?.message,

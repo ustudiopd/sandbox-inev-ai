@@ -2,6 +2,7 @@ import { notFound, redirect } from 'next/navigation'
 import { headers } from 'next/headers'
 import { Suspense } from 'react'
 import { createAdminSupabase } from '@/lib/supabase/admin'
+import { extractUTMParams } from '@/lib/utils/utm'
 import QRCodeDisplay from './components/QRCodeDisplay'
 import SurveyPage from './components/SurveyPage'
 import DonePageClient from './components/DonePageClient'
@@ -29,7 +30,59 @@ export async function generateMetadata({
   const isSubPath = ['survey', 'register', 'done', 'display'].includes(lastPath)
   const publicPath = '/' + (isSubPath ? path.slice(0, -1) : path).join('/')
   
-  // 149403 페이지에 대한 메타데이터
+  // 캠페인 메타데이터 조회
+  try {
+    const admin = createAdminSupabase()
+    const { data: campaign } = await admin
+      .from('event_survey_campaigns')
+      .select('id, title, meta_title, meta_description, meta_thumbnail_url, public_path')
+      .eq('public_path', publicPath)
+      .eq('status', 'published')
+      .maybeSingle()
+    
+    if (campaign) {
+      // 메타데이터 우선순위: meta_title/meta_description > title
+      const metaTitle = campaign.meta_title || campaign.title || '이벤트'
+      const metaDescription = campaign.meta_description || `${campaign.title} - EventFlow 이벤트에 참여하세요`
+      const thumbnailUrl = campaign.meta_thumbnail_url || 'https://eventflow.kr/og-image.png'
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://eventflow.kr'
+      const canonicalUrl = `${appUrl}/event${publicPath}`
+      
+      return {
+        title: `${metaTitle} | EventFlow`,
+        description: metaDescription,
+        metadataBase: new URL(appUrl),
+        openGraph: {
+          title: metaTitle,
+          description: metaDescription,
+          type: 'website',
+          url: canonicalUrl,
+          siteName: 'EventFlow',
+          images: [
+            {
+              url: thumbnailUrl,
+              width: 1200,
+              height: 630,
+              alt: metaTitle,
+            },
+          ],
+        },
+        twitter: {
+          card: 'summary_large_image',
+          title: metaTitle,
+          description: metaDescription,
+          images: [thumbnailUrl],
+        },
+        alternates: {
+          canonical: canonicalUrl,
+        },
+      }
+    }
+  } catch (error) {
+    console.error('[generateMetadata] 캠페인 메타데이터 조회 오류:', error)
+  }
+  
+  // 149403 페이지에 대한 메타데이터 (fallback)
   if (publicPath === '/149403' || publicPath === '149403') {
     const thumbnailUrl = 'https://yqsayphssjznthrxpgfb.supabase.co/storage/v1/object/public/webinar-thumbnails/wert/thumb.png'
     return {
@@ -121,6 +174,9 @@ export default async function SurveyPublicPage({
 }) {
   const { path } = await params
   const searchParamsData = searchParams ? await searchParams : {}
+  
+  // UTM 파라미터 추출 (서버 사이드)
+  const utmParams = extractUTMParams(searchParamsData)
   
   // 경로가 없으면 404
   if (!path || path.length === 0) {
@@ -453,7 +509,7 @@ export default async function SurveyPublicPage({
           </div>
         </div>
       }>
-        <SurveyPage campaign={campaign} baseUrl={baseUrl} />
+        <SurveyPage campaign={campaign} baseUrl={baseUrl} utmParams={utmParams} />
       </Suspense>
     )
   } else if (subPath === 'done') {
@@ -507,7 +563,7 @@ export default async function SurveyPublicPage({
           </div>
         </div>
       }>
-        <RegistrationPage campaign={campaign} baseUrl={baseUrl} />
+        <RegistrationPage campaign={campaign} baseUrl={baseUrl} utmParams={utmParams} />
       </Suspense>
     )
   } else if (subPath === 'enter') {

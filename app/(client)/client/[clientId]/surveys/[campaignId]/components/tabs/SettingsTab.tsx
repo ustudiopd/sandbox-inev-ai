@@ -11,6 +11,9 @@ interface SettingsTabProps {
     public_path: string
     status: string
     client_id: string
+    meta_title?: string | null
+    meta_description?: string | null
+    meta_thumbnail_url?: string | null
   }
   onCampaignUpdate?: (campaign: any) => void
 }
@@ -21,9 +24,13 @@ export default function SettingsTab({ campaign, onCampaignUpdate }: SettingsTabP
     title: campaign.title || '',
     host: campaign.host || '',
     status: campaign.status || 'draft',
+    metaTitle: campaign.meta_title || '',
+    metaDescription: campaign.meta_description || '',
+    metaThumbnailUrl: campaign.meta_thumbnail_url || '',
   })
   const [loading, setLoading] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [uploadingMetaThumbnail, setUploadingMetaThumbnail] = useState(false)
   const [error, setError] = useState('')
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -39,6 +46,9 @@ export default function SettingsTab({ campaign, onCampaignUpdate }: SettingsTabP
           title: formData.title.trim(),
           host: formData.host?.trim() || null,
           status: formData.status,
+          meta_title: formData.metaTitle?.trim() || null,
+          meta_description: formData.metaDescription?.trim() || null,
+          meta_thumbnail_url: formData.metaThumbnailUrl?.trim() || null,
         }),
       })
 
@@ -148,6 +158,99 @@ export default function SettingsTab({ campaign, onCampaignUpdate }: SettingsTabP
             <p className="font-mono text-blue-600">{campaign.public_path}</p>
             <p className="mt-2 text-xs text-gray-500">
               공개 경로는 변경할 수 없습니다.
+            </p>
+          </div>
+        </div>
+
+        <div className="border-t pt-6 mt-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">메타 링크 설정</h3>
+          <p className="text-sm text-gray-600 mb-4">
+            소셜 미디어 공유 및 메타 링크에 사용될 제목, 설명, 썸네일을 설정합니다. 비워두면 캠페인 제목과 설명이 사용됩니다.
+          </p>
+          
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              메타 제목
+            </label>
+            <input
+              type="text"
+              value={formData.metaTitle}
+              onChange={(e) => setFormData({ ...formData, metaTitle: e.target.value })}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="소셜 미디어 공유 시 표시될 제목을 입력하세요"
+            />
+            <p className="mt-1 text-sm text-gray-500">
+              비워두면 캠페인 제목이 사용됩니다.
+            </p>
+          </div>
+
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              메타 설명
+            </label>
+            <textarea
+              value={formData.metaDescription}
+              onChange={(e) => setFormData({ ...formData, metaDescription: e.target.value })}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="소셜 미디어 공유 시 표시될 설명을 입력하세요"
+              rows={3}
+            />
+            <p className="mt-1 text-sm text-gray-500">
+              비워두면 캠페인 설명이 사용됩니다.
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              메타 썸네일 이미지
+            </label>
+            {formData.metaThumbnailUrl && (
+              <div className="mb-4">
+                <img 
+                  src={formData.metaThumbnailUrl} 
+                  alt="메타 썸네일 미리보기"
+                  className="max-w-md h-auto rounded-lg border border-gray-300"
+                />
+              </div>
+            )}
+            <input
+              type="file"
+              accept="image/*"
+              onChange={async (e) => {
+                const file = e.target.files?.[0]
+                if (!file) return
+                
+                setUploadingMetaThumbnail(true)
+                setError('')
+                
+                try {
+                  const formDataToUpload = new FormData()
+                  formDataToUpload.append('file', file)
+                  
+                  const response = await fetch(`/api/event-survey/campaigns/${campaign.id}/meta-thumbnail/upload`, {
+                    method: 'POST',
+                    body: formDataToUpload,
+                  })
+                  
+                  const result = await response.json()
+                  
+                  if (!response.ok) {
+                    throw new Error(result.error || '메타 썸네일 업로드 실패')
+                  }
+                  
+                  setFormData({ ...formData, metaThumbnailUrl: result.url })
+                  alert('메타 썸네일이 성공적으로 업로드되었습니다.')
+                } catch (err: any) {
+                  setError(err.message || '메타 썸네일 업로드 중 오류가 발생했습니다')
+                } finally {
+                  setUploadingMetaThumbnail(false)
+                }
+              }}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              disabled={uploadingMetaThumbnail}
+            />
+            <p className="mt-1 text-sm text-gray-500">
+              소셜 미디어 공유 시 표시될 썸네일 이미지를 업로드하세요. (최대 5MB, 권장 크기: 1200x630px)
             </p>
           </div>
         </div>

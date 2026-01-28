@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createAdminSupabase } from '@/lib/supabase/admin'
 import { normalizeUTM } from '@/lib/utils/utm'
+import { normalizeCID } from '@/lib/utils/cid'
 
 export const runtime = 'nodejs'
 
@@ -30,7 +31,48 @@ export async function POST(
       utm_first_visit_at,
       utm_referrer,
       marketing_campaign_link_id,
+      cid, // cid 파라미터 추가
     } = await req.json()
+    
+    const admin = createAdminSupabase()
+    
+    // 캠페인 조회 (client_id 필요)
+    const { data: campaign, error: campaignError } = await admin
+      .from('event_survey_campaigns')
+      .select('id, form_id, next_survey_no, client_id, agency_id')
+      .eq('id', campaignId)
+      .single()
+    
+    if (campaignError || !campaign) {
+      return NextResponse.json(
+        { error: 'Campaign not found' },
+        { status: 404 }
+      )
+    }
+    
+    // cid로 링크 lookup (명세서 요구사항)
+    let resolvedMarketingCampaignLinkId: string | null = marketing_campaign_link_id || null
+    if (cid && !resolvedMarketingCampaignLinkId) {
+      try {
+        const normalizedCid = normalizeCID(cid)
+        if (normalizedCid) {
+          const { data: link } = await admin
+            .from('campaign_link_meta')
+            .select('id')
+            .eq('client_id', campaign.client_id)
+            .eq('cid', normalizedCid)
+            .eq('status', 'active')
+            .maybeSingle()
+          
+          if (link) {
+            resolvedMarketingCampaignLinkId = link.id
+          }
+        }
+      } catch (cidError) {
+        console.error('cid lookup 오류 (무시하고 계속):', cidError)
+        // cid lookup 실패해도 제출은 계속 진행
+      }
+    }
     
     // UTM 파라미터 정규화 (graceful: 실패해도 계속 진행)
     let normalizedUTM: Record<string, string | null> = {}
@@ -51,22 +93,6 @@ export async function POST(
       return NextResponse.json(
         { error: 'name and phone are required' },
         { status: 400 }
-      )
-    }
-    
-    const admin = createAdminSupabase()
-    
-    // 캠페인 조회
-    const { data: campaign, error: campaignError } = await admin
-      .from('event_survey_campaigns')
-      .select('id, form_id, next_survey_no, client_id, agency_id')
-      .eq('id', campaignId)
-      .single()
-    
-    if (campaignError || !campaign) {
-      return NextResponse.json(
-        { error: 'Campaign not found' },
-        { status: 404 }
       )
     }
     
@@ -243,7 +269,7 @@ export async function POST(
         utm_content: normalizedUTM.utm_content || null,
         utm_first_visit_at: utm_first_visit_at || null,
         utm_referrer: utm_referrer || null,
-        marketing_campaign_link_id: marketing_campaign_link_id || null,
+        marketing_campaign_link_id: resolvedMarketingCampaignLinkId,
       })
       .select()
       .single()

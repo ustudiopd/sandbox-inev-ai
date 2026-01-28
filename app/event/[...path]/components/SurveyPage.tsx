@@ -8,11 +8,30 @@ import { extractDomain } from '@/lib/utils/utm'
 interface SurveyPageProps {
   campaign: any
   baseUrl: string
+  utmParams?: Record<string, string>
 }
 
-export default function SurveyPage({ campaign, baseUrl }: SurveyPageProps) {
+export default function SurveyPage({ campaign, baseUrl, utmParams = {} }: SurveyPageProps) {
   const searchParams = useSearchParams()
   const isLookup = searchParams.get('lookup') === 'true'
+  
+  // UTM 파라미터 localStorage 저장 (서버에서 추출한 값 사용)
+  useEffect(() => {
+    if (Object.keys(utmParams).length > 0) {
+      const existingUTM = localStorage.getItem(`utm:${campaign.id}`)
+      const existingData = existingUTM ? JSON.parse(existingUTM) : null
+      
+      const utmData = {
+        ...utmParams,
+        captured_at: new Date().toISOString(),
+        first_visit_at: existingData?.first_visit_at || new Date().toISOString(),
+        referrer_domain: extractDomain(document.referrer),
+      }
+      
+      // last-touch 정책: 기존 값이 있으면 overwrite
+      localStorage.setItem(`utm:${campaign.id}`, JSON.stringify(utmData))
+    }
+  }, [campaign.id, utmParams])
   
   const [submitted, setSubmitted] = useState(false)
   const [result, setResult] = useState<{ survey_no: number; code6: string } | null>(null)

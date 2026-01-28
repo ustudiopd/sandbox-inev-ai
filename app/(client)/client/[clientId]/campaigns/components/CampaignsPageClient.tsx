@@ -133,7 +133,7 @@ export default function CampaignsPageClient({ clientId, clientName, clientCreate
         
         {/* 탭 컨텐츠 */}
         {activeTab === 'links' ? (
-          <CampaignLinksTab clientId={clientId} />
+          <CampaignLinksTab clientId={clientId} clientName={clientName} />
         ) : (
           <>
         

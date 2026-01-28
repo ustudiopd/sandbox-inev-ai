@@ -42,20 +42,41 @@ export async function middleware(req: NextRequest) {
     // (JWT 토큰 갱신 전까지 임시 조치)
     if (!isSuperAdmin) {
       try {
+        // 환경 변수 확인
+        if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+          console.error('[Middleware] SUPABASE_SERVICE_ROLE_KEY가 설정되지 않았습니다')
+          throw new Error('환경 변수 설정 오류')
+        }
+        
         const { createClient } = await import('@supabase/supabase-js')
         const admin = createClient(
           process.env.NEXT_PUBLIC_SUPABASE_URL!,
           process.env.SUPABASE_SERVICE_ROLE_KEY!
         )
-        const { data: profile } = await admin
+        const { data: profile, error: profileError } = await admin
           .from('profiles')
           .select('is_super_admin')
           .eq('id', user.id)
           .maybeSingle()
         
+        if (profileError) {
+          console.error('[Middleware] 프로필 조회 오류:', profileError)
+        }
+        
         isSuperAdmin = !!profile?.is_super_admin
-      } catch (error) {
-        console.error('미들웨어 프로필 확인 오류:', error)
+        
+        console.log('[Middleware] 슈퍼 관리자 권한 확인:', { 
+          userId: user.id, 
+          email: user.email, 
+          isSuperAdmin 
+        })
+      } catch (error: any) {
+        console.error('[Middleware] 프로필 확인 오류:', error)
+        console.error('[Middleware] 에러 상세:', {
+          message: error?.message,
+          stack: error?.stack,
+          name: error?.name,
+        })
       }
     }
 

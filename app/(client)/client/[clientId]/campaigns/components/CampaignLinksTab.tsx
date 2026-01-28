@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { CHANNEL_TEMPLATES, CONTENT_OPTIONS, generateUTMCampaign, generateHumanReadableDescription, type ChannelTemplate } from '@/lib/utils/utmTemplate'
 
 interface CampaignLink {
   id: string
@@ -12,8 +13,11 @@ interface CampaignLink {
   utm_campaign: string | null
   utm_term: string | null
   utm_content: string | null
+  start_date: string | null
   status: string
   url: string
+  share_url?: string // 공유용 URL (cid만)
+  campaign_url?: string // 광고용 URL (cid + UTM)
   conversion_count?: number
   created_at: string
 }
@@ -26,14 +30,20 @@ interface Campaign {
 
 interface CampaignLinksTabProps {
   clientId: string
+  clientName?: string
 }
 
-export default function CampaignLinksTab({ clientId }: CampaignLinksTabProps) {
+export default function CampaignLinksTab({ clientId, clientName = '' }: CampaignLinksTabProps) {
   const [activeTab, setActiveTab] = useState<'list' | 'create'>('list')
   const [links, setLinks] = useState<CampaignLink[]>([])
   const [campaigns, setCampaigns] = useState<Campaign[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  
+  // 템플릿 관련 상태
+  const [selectedTemplate, setSelectedTemplate] = useState<ChannelTemplate | null>(null)
+  const [showAdvanced, setShowAdvanced] = useState(false)
+  const [duplicateWarning, setDuplicateWarning] = useState<string | null>(null)
   
   // 링크 생성 폼 상태
   const [formData, setFormData] = useState({
@@ -45,6 +55,7 @@ export default function CampaignLinksTab({ clientId }: CampaignLinksTabProps) {
     utm_campaign: '',
     utm_term: '',
     utm_content: '',
+    start_date: '2026-01-16', // 워트인텔리전트 기본 시작일
   })
   const [submitting, setSubmitting] = useState(false)
   const [createError, setCreateError] = useState<string | null>(null)
@@ -55,6 +66,86 @@ export default function CampaignLinksTab({ clientId }: CampaignLinksTabProps) {
   useEffect(() => {
     loadData()
   }, [clientId])
+
+  // 클라이언트 이름 가져오기
+  useEffect(() => {
+    if (!clientName && clientId) {
+      fetch(`/api/clients/${clientId}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.name) {
+            // clientName이 props로 전달되지 않았을 때만 설정
+          }
+        })
+        .catch(() => {})
+    }
+  }, [clientId, clientName])
+
+  // 템플릿 선택 핸들러
+  const handleTemplateSelect = (template: ChannelTemplate) => {
+    setSelectedTemplate(template)
+    
+    if (template.id !== 'custom') {
+      // 템플릿에서 source/medium 자동 채우기
+      setFormData(prev => ({
+        ...prev,
+        utm_source: template.utm_source,
+        utm_medium: template.utm_medium,
+      }))
+    } else {
+      // 커스텀 선택 시 초기화
+      setFormData(prev => ({
+        ...prev,
+        utm_source: '',
+        utm_medium: '',
+      }))
+    }
+  }
+
+  // 링크 이름 변경 핸들러
+  const handleNameChange = (name: string) => {
+    setFormData(prev => ({ ...prev, name }))
+  }
+
+  // 캠페인 선택 핸들러
+  const handleCampaignChange = (campaignId: string) => {
+    setFormData(prev => ({ ...prev, target_campaign_id: campaignId }))
+  }
+
+  // 링크 이름 또는 캠페인 변경 시 utm_campaign 업데이트
+  useEffect(() => {
+    if (formData.name && formData.target_campaign_id && selectedTemplate) {
+      const campaign = campaigns.find(c => c.id === formData.target_campaign_id)
+      if (campaign) {
+        const generatedCampaign = generateUTMCampaign(
+          formData.name,
+          clientName || 'client',
+          campaign.title,
+          selectedTemplate.id
+        )
+        setFormData(prev => ({
+          ...prev,
+          utm_campaign: generatedCampaign,
+        }))
+        
+        // 중복 감지
+        const duplicate = links.find(link => 
+          link.target_campaign_id === formData.target_campaign_id &&
+          link.utm_source === (selectedTemplate?.utm_source || formData.utm_source) &&
+          link.utm_medium === (selectedTemplate?.utm_medium || formData.utm_medium) &&
+          link.utm_campaign === generatedCampaign &&
+          link.utm_content === (formData.utm_content || null) &&
+          link.status !== 'archived'
+        )
+        
+        if (duplicate) {
+          setDuplicateWarning(`이미 같은 캠페인 링크가 있습니다: "${duplicate.name}"`)
+        } else {
+          setDuplicateWarning(null)
+        }
+      }
+    }
+  }, [formData.name, formData.target_campaign_id, selectedTemplate?.id, clientName, campaigns, links, formData.utm_content])
   
   const loadData = async () => {
     setLoading(true)
@@ -101,6 +192,18 @@ export default function CampaignLinksTab({ clientId }: CampaignLinksTabProps) {
       setSubmitting(false)
       return
     }
+
+    if (!selectedTemplate) {
+      setCreateError('채널 템플릿을 선택해주세요')
+      setSubmitting(false)
+      return
+    }
+
+    // 중복 경고가 있을 때 확인
+    if (duplicateWarning && !confirm('중복된 링크가 있습니다. 계속하시겠습니까?')) {
+      setSubmitting(false)
+      return
+    }
     
     try {
       const response = await fetch(`/api/clients/${clientId}/campaigns/links`, {
@@ -126,7 +229,11 @@ export default function CampaignLinksTab({ clientId }: CampaignLinksTabProps) {
         utm_campaign: '',
         utm_term: '',
         utm_content: '',
+        start_date: '2026-01-16', // 워트인텔리전트 기본 시작일
       })
+      setSelectedTemplate(null)
+      setShowAdvanced(false)
+      setDuplicateWarning(null)
       setActiveTab('list')
     } catch (err: any) {
       setCreateError(err.message || '링크 생성 중 오류가 발생했습니다')
@@ -269,6 +376,9 @@ export default function CampaignLinksTab({ clientId }: CampaignLinksTabProps) {
                           </p>
                           <div className="flex items-center gap-4 text-sm text-gray-500 mb-2">
                             <span>랜딩: {link.landing_variant}</span>
+                            {link.start_date && (
+                              <span>시작일: {new Date(link.start_date).toLocaleDateString('ko-KR')}</span>
+                            )}
                             <span>전환: {link.conversion_count || 0}개</span>
                             <span className={`px-2 py-1 rounded ${
                               link.status === 'active' ? 'bg-green-100 text-green-800' :
@@ -278,9 +388,77 @@ export default function CampaignLinksTab({ clientId }: CampaignLinksTabProps) {
                               {link.status === 'active' ? '활성' : link.status === 'paused' ? '일시정지' : '보관'}
                             </span>
                           </div>
-                          <div className="bg-gray-50 rounded p-2 mb-2">
-                            <p className="text-xs text-gray-500 mb-1">생성된 URL:</p>
-                            <p className="text-sm font-mono text-gray-700 break-all">{link.url}</p>
+                          <div className="bg-gray-50 rounded p-2 mb-2 space-y-2">
+                            {/* 템플릿에 따라 추천 링크 결정 */}
+                            {(() => {
+                              // 링크의 UTM 정보로 템플릿 찾기
+                              const matchedTemplate = CHANNEL_TEMPLATES.find(
+                                t => t.utm_source === link.utm_source && t.utm_medium === link.utm_medium
+                              ) || CHANNEL_TEMPLATES.find(
+                                t => t.id === 'sms' && (link.utm_source === 'sms' || link.utm_medium === 'sms')
+                              ) || null
+                              
+                              // 템플릿의 preferredLinkType에 따라 추천 링크 결정
+                              const preferredType = matchedTemplate?.preferredLinkType || 'campaign'
+                              const recommendedUrl = preferredType === 'share'
+                                ? (link.share_url || link.url)
+                                : (link.campaign_url || link.url)
+                              const recommendedLabel = preferredType === 'share'
+                                ? `📱 추천 링크 (공유용 - 짧음)${matchedTemplate ? ` - ${matchedTemplate.name}` : ''}`
+                                : `📊 추천 링크 (광고용 - UTM 포함)${matchedTemplate ? ` - ${matchedTemplate.name}` : ''}`
+                              
+                              return (
+                                <>
+                                  {/* 추천 링크 (템플릿에 따라) */}
+                                  <div className="border-l-4 border-blue-500 pl-2">
+                                    <p className="text-xs font-semibold text-blue-700 mb-1">{recommendedLabel}</p>
+                                    <p className="text-sm font-mono text-gray-700 break-all">{recommendedUrl}</p>
+                                    <button
+                                      onClick={() => copyToClipboard(recommendedUrl)}
+                                      className="mt-1 px-3 py-1 bg-blue-600 text-white rounded text-xs hover:bg-blue-700 transition-colors"
+                                    >
+                                      복사
+                                    </button>
+                                  </div>
+                                  
+                                  {/* 공유용 링크 (광고용이 추천인 경우에만 표시) */}
+                                  {preferredType === 'campaign' && link.share_url && (
+                                    <div>
+                                      <p className="text-xs text-gray-500 mb-1">공유용 링크 (짧음):</p>
+                                      <p className="text-sm font-mono text-gray-700 break-all">{link.share_url}</p>
+                                      <button
+                                        onClick={() => copyToClipboard(link.share_url!)}
+                                        className="mt-1 text-xs text-blue-600 hover:text-blue-700"
+                                      >
+                                        복사
+                                      </button>
+                                    </div>
+                                  )}
+                                  
+                                  {/* 광고용 링크 (공유용이 추천인 경우에만 표시) */}
+                                  {preferredType === 'share' && link.campaign_url && (
+                                    <div>
+                                      <p className="text-xs text-gray-500 mb-1">광고용 링크 (표준 UTM 포함):</p>
+                                      <p className="text-sm font-mono text-gray-700 break-all">{link.campaign_url}</p>
+                                      <button
+                                        onClick={() => copyToClipboard(link.campaign_url!)}
+                                        className="mt-1 text-xs text-blue-600 hover:text-blue-700"
+                                      >
+                                        복사
+                                      </button>
+                                    </div>
+                                  )}
+                                  
+                                  {/* 둘 다 없는 경우 (하위 호환성) */}
+                                  {!link.share_url && !link.campaign_url && (
+                                    <div>
+                                      <p className="text-xs text-gray-500 mb-1">생성된 URL:</p>
+                                      <p className="text-sm font-mono text-gray-700 break-all">{link.url}</p>
+                                    </div>
+                                  )}
+                                </>
+                              )
+                            })()}
                           </div>
                           {(link.utm_source || link.utm_medium || link.utm_campaign) && (
                             <div className="text-xs text-gray-500">
@@ -338,8 +516,57 @@ export default function CampaignLinksTab({ clientId }: CampaignLinksTabProps) {
               <p className="text-red-800">{createError}</p>
             </div>
           )}
+
+          {duplicateWarning && (
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+              <p className="text-yellow-800">⚠️ {duplicateWarning}</p>
+            </div>
+          )}
           
           <form onSubmit={handleCreateLink} className="space-y-6">
+            {/* 채널 템플릿 선택 */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-3">
+                채널 선택 <span className="text-red-500">*</span>
+              </label>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                {CHANNEL_TEMPLATES.map(template => (
+                  <button
+                    key={template.id}
+                    type="button"
+                    onClick={() => handleTemplateSelect(template)}
+                    className={`p-4 border-2 rounded-lg text-left transition-all ${
+                      selectedTemplate?.id === template.id
+                        ? 'border-blue-500 bg-blue-50'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="text-2xl mb-1">{template.icon}</div>
+                    <div className="font-medium text-gray-900">{template.name}</div>
+                    <div className="text-xs text-gray-500 mt-1">{template.description}</div>
+                  </button>
+                ))}
+              </div>
+              {selectedTemplate && (
+                <p className="mt-2 text-sm text-gray-600">
+                  선택됨: {selectedTemplate.name} ({selectedTemplate.utm_source || '직접 입력'}, {selectedTemplate.utm_medium || '직접 입력'})
+                </p>
+              )}
+            </div>
+
+            {/* 실시간 미리보기 */}
+            {formData.name && formData.target_campaign_id && selectedTemplate && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <p className="text-sm text-blue-900">
+                  {generateHumanReadableDescription(
+                    formData.name,
+                    selectedTemplate,
+                    campaigns.find(c => c.id === formData.target_campaign_id)?.title || ''
+                  )}
+                </p>
+              </div>
+            )}
+            
             {/* 링크 이름 */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -348,11 +575,14 @@ export default function CampaignLinksTab({ clientId }: CampaignLinksTabProps) {
               <input
                 type="text"
                 value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                onChange={(e) => handleNameChange(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 placeholder="예: 26년 1월 뉴스레터"
                 required
               />
+              <p className="mt-1 text-xs text-gray-500">
+                링크 이름을 입력하면 UTM Campaign이 자동으로 생성됩니다.
+              </p>
             </div>
             
             {/* 전환 타겟 */}
@@ -362,7 +592,7 @@ export default function CampaignLinksTab({ clientId }: CampaignLinksTabProps) {
               </label>
               <select
                 value={formData.target_campaign_id}
-                onChange={(e) => setFormData({ ...formData, target_campaign_id: e.target.value })}
+                onChange={(e) => handleCampaignChange(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 required
               >
@@ -390,63 +620,119 @@ export default function CampaignLinksTab({ clientId }: CampaignLinksTabProps) {
                 <option value="survey">설문 페이지</option>
               </select>
             </div>
+
+            {/* 광고 시작일 */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                광고 시작일
+              </label>
+              <input
+                type="date"
+                value={formData.start_date}
+                onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+              <p className="mt-1 text-xs text-gray-500">
+                해당 날짜부터 링크가 활성화됩니다.
+              </p>
+            </div>
             
             {/* UTM 파라미터 */}
             <div className="border-t border-gray-200 pt-6">
-              <div className="mb-4">
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">UTM 파라미터</h3>
-                <p className="text-sm text-gray-600">
-                  UTM 파라미터는 마케팅 캠페인의 성과를 추적하는 데 사용됩니다. 각 파라미터는 트래픽의 출처와 특성을 식별하는 데 도움이 됩니다.
-                </p>
+              <div className="mb-4 flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">UTM 파라미터</h3>
+                  <p className="text-sm text-gray-600">
+                    채널 템플릿을 선택하면 Source와 Medium이 자동으로 채워집니다.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowAdvanced(!showAdvanced)}
+                  className="text-sm text-blue-600 hover:text-blue-700"
+                >
+                  {showAdvanced ? '고급 옵션 숨기기' : '고급 옵션 보기'}
+                </button>
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     UTM Source <span className="text-gray-500 font-normal">(출처)</span>
+                    {selectedTemplate && selectedTemplate.id !== 'custom' && (
+                      <span className="ml-2 text-xs text-gray-500">🔒 템플릿에서 자동 설정</span>
+                    )}
                   </label>
                   <p className="text-xs text-gray-500 mb-2">
-                    트래픽이 발생한 출처를 식별합니다. 예: google, facebook, newsletter, blog, naver
+                    트래픽이 발생한 출처를 식별합니다.
                   </p>
-                  <input
-                    type="text"
-                    value={formData.utm_source}
-                    onChange={(e) => setFormData({ ...formData, utm_source: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="예: newsletter"
-                  />
+                  {showAdvanced || !selectedTemplate || selectedTemplate.id === 'custom' ? (
+                    <input
+                      type="text"
+                      value={formData.utm_source}
+                      onChange={(e) => setFormData({ ...formData, utm_source: e.target.value })}
+                      className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                        selectedTemplate && selectedTemplate.id !== 'custom' && !showAdvanced ? 'bg-gray-100' : ''
+                      }`}
+                      placeholder="예: newsletter"
+                      disabled={!!(selectedTemplate && selectedTemplate.id !== 'custom' && !showAdvanced)}
+                    />
+                  ) : (
+                    <div className="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg text-gray-700">
+                      {formData.utm_source || '(자동 생성됨)'}
+                    </div>
+                  )}
                 </div>
                 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     UTM Medium <span className="text-gray-500 font-normal">(매체)</span>
+                    {selectedTemplate && selectedTemplate.id !== 'custom' && (
+                      <span className="ml-2 text-xs text-gray-500">🔒 템플릿에서 자동 설정</span>
+                    )}
                   </label>
                   <p className="text-xs text-gray-500 mb-2">
-                    트래픽을 유도하는 데 사용된 매체를 식별합니다. 예: email, cpc(유료검색), organic(자연검색), social, banner
+                    트래픽을 유도하는 데 사용된 매체를 식별합니다.
                   </p>
-                  <input
-                    type="text"
-                    value={formData.utm_medium}
-                    onChange={(e) => setFormData({ ...formData, utm_medium: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="예: email"
-                  />
+                  {showAdvanced || !selectedTemplate || selectedTemplate.id === 'custom' ? (
+                    <input
+                      type="text"
+                      value={formData.utm_medium}
+                      onChange={(e) => setFormData({ ...formData, utm_medium: e.target.value })}
+                      className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                        selectedTemplate && selectedTemplate.id !== 'custom' && !showAdvanced ? 'bg-gray-100' : ''
+                      }`}
+                      placeholder="예: email"
+                      disabled={!!(selectedTemplate && selectedTemplate.id !== 'custom' && !showAdvanced)}
+                    />
+                  ) : (
+                    <div className="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg text-gray-700">
+                      {formData.utm_medium || '(자동 생성됨)'}
+                    </div>
+                  )}
                 </div>
                 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     UTM Campaign <span className="text-gray-500 font-normal">(캠페인)</span>
+                    <span className="ml-2 text-xs text-green-600">✨ 자동 생성</span>
                   </label>
                   <p className="text-xs text-gray-500 mb-2">
-                    특정 캠페인이나 프로모션을 식별합니다. 예: january_2026, product_launch, summer_sale
+                    링크 이름과 캠페인 정보로부터 자동 생성됩니다.
                   </p>
                   <input
                     type="text"
                     value={formData.utm_campaign}
                     onChange={(e) => setFormData({ ...formData, utm_campaign: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="예: january_2026"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-green-50"
+                    placeholder="자동 생성됨"
+                    readOnly={!showAdvanced}
                   />
+                  {!showAdvanced && (
+                    <p className="mt-1 text-xs text-green-600">
+                      링크 이름과 전환 타겟을 입력하면 자동으로 생성됩니다.
+                    </p>
+                  )}
                 </div>
                 
                 <div>
@@ -454,7 +740,7 @@ export default function CampaignLinksTab({ clientId }: CampaignLinksTabProps) {
                     UTM Term <span className="text-gray-500 font-normal">(키워드, 선택)</span>
                   </label>
                   <p className="text-xs text-gray-500 mb-2">
-                    주로 유료 검색 캠페인에서 사용되는 키워드를 식별합니다. 예: 마케팅자동화, 이벤트플랫폼
+                    주로 유료 검색 캠페인에서 사용되는 키워드를 식별합니다.
                   </p>
                   <input
                     type="text"
@@ -470,31 +756,22 @@ export default function CampaignLinksTab({ clientId }: CampaignLinksTabProps) {
                     UTM Content <span className="text-gray-500 font-normal">(콘텐츠, 선택)</span>
                   </label>
                   <p className="text-xs text-gray-500 mb-2">
-                    동일한 캠페인 내에서 다른 버전의 콘텐츠를 구별합니다. 예: banner_ad, text_link, sidebar_ad
+                    A/B 테스트나 링크 위치 구분이 필요한 경우에만 선택하세요.
                   </p>
-                  <input
-                    type="text"
+                  <select
                     value={formData.utm_content}
                     onChange={(e) => setFormData({ ...formData, utm_content: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="예: banner_ad"
-                  />
+                  >
+                    {CONTENT_OPTIONS.map(option => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
               
-              {/* UTM 파라미터 예시 */}
-              <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                <p className="text-sm font-medium text-blue-900 mb-2">💡 예시</p>
-                <p className="text-xs text-blue-800 mb-1">
-                  <strong>뉴스레터 이메일:</strong> Source=newsletter, Medium=email, Campaign=january_2026
-                </p>
-                <p className="text-xs text-blue-800 mb-1">
-                  <strong>페이스북 광고:</strong> Source=facebook, Medium=cpc, Campaign=product_launch, Content=banner_ad
-                </p>
-                <p className="text-xs text-blue-800">
-                  <strong>구글 검색:</strong> Source=google, Medium=organic, Campaign=brand_search
-                </p>
-              </div>
             </div>
             
             {/* 제출 버튼 */}
@@ -545,6 +822,7 @@ function LinkEditForm({
     utm_campaign: link.utm_campaign || '',
     utm_term: link.utm_term || '',
     utm_content: link.utm_content || '',
+    start_date: link.start_date || '',
     status: link.status,
   })
   
@@ -595,6 +873,16 @@ function LinkEditForm({
             <option value="archived">보관</option>
           </select>
         </div>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">광고 시작일</label>
+        <input
+          type="date"
+          value={formData.start_date}
+          onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+        />
       </div>
       
       <div className="flex gap-2">

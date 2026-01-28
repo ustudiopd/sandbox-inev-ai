@@ -675,7 +675,7 @@
 - ✅ 한글 slug 문제로 인한 임시 UUID 리다이렉트 적용
   - 한글 slug 리다이렉트 문제 해결 전까지 UUID 사용
   - 원래 UUID 링크: `/webinar/7d4ad9e9-2f69-49db-87a9-8d25cb82edee`
-  - 예: `https://must.ai.kr/s/903514?email=ad@ustudio.co.kr` → UUID 링크로 리다이렉트
+  - 예: `https://eventflow.kr/s/903514?email=ad@ustudio.co.kr` → UUID 링크로 리다이렉트
   - 한글 slug 문제 해결 후 다시 slug로 변경 예정
 - ⚠️ 알려진 이슈
   - 한글 slug를 포함한 URL 리다이렉트 시 문제 발생 가능
@@ -697,11 +697,11 @@
   - 중복 체크 및 충돌 처리 로직 추가
 - ✅ 이메일 템플릿 개선
   - 등록 확인 이메일에서 slug 주소 사용
-  - 예: `https://must.ai.kr/webinar/인간지능x인공지능-토크쇼-2025년-ai-결산/live?email=...`
+  - 예: `https://eventflow.kr/webinar/인간지능x인공지능-토크쇼-2025년-ai-결산/live?email=...`
 - ✅ 짧은 링크 개선 (`/s/[code]`)
   - 짧은 링크를 통해 접속 시 UUID로 리다이렉트 (임시, 한글 slug 문제 해결 전까지)
   - URL 파라미터(이메일 등) 유지하면서 리다이렉트
-  - 예: `https://must.ai.kr/s/903514?email=ad@ustudio.co.kr` → UUID 주소로 리다이렉트
+  - 예: `https://eventflow.kr/s/903514?email=ad@ustudio.co.kr` → UUID 주소로 리다이렉트
   - 한글 slug 문제 해결 후 다시 slug로 변경 예정
 - ✅ 주요 개선사항
   - 웨비나 접속 주소를 UUID 대신 읽기 쉬운 slug로 사용 가능

@@ -19,6 +19,9 @@ interface SettingsTabProps {
     client_id: string
     email_template_text?: string | null
     email_thumbnail_url?: string | null
+    meta_title?: string | null
+    meta_description?: string | null
+    meta_thumbnail_url?: string | null
   }
   onWebinarUpdate?: (webinar: any) => void
 }
@@ -38,10 +41,15 @@ export default function SettingsTab({ webinar, onWebinarUpdate }: SettingsTabPro
     allowedEmails: [] as string[],
     emailTemplateText: '',
     emailThumbnailUrl: '',
+    metaTitle: '',
+    metaDescription: '',
+    metaThumbnailUrl: '',
   })
   const [loading, setLoading] = useState(false)
+  const [savingMeta, setSavingMeta] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [uploadingThumbnail, setUploadingThumbnail] = useState(false)
+  const [uploadingMetaThumbnail, setUploadingMetaThumbnail] = useState(false)
   const [error, setError] = useState('')
 
   useEffect(() => {
@@ -89,6 +97,9 @@ export default function SettingsTab({ webinar, onWebinarUpdate }: SettingsTabPro
           allowedEmails: emails,
           emailTemplateText: webinar.email_template_text || '',
           emailThumbnailUrl: webinar.email_thumbnail_url || '',
+          metaTitle: webinar.meta_title || '',
+          metaDescription: webinar.meta_description || '',
+          metaThumbnailUrl: webinar.meta_thumbnail_url || '',
         })
       }
       
@@ -96,6 +107,7 @@ export default function SettingsTab({ webinar, onWebinarUpdate }: SettingsTabPro
     }
   }, [webinar])
 
+  // 웨비나 기본 설정 저장
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
@@ -144,12 +156,53 @@ export default function SettingsTab({ webinar, onWebinarUpdate }: SettingsTabPro
         onWebinarUpdate(result.webinar)
       }
       
-      alert('웨비나가 성공적으로 수정되었습니다')
+      alert('웨비나 설정이 성공적으로 저장되었습니다')
     } catch (err: any) {
-      console.error('웨비나 수정 오류:', err)
-      setError(err.message || '웨비나 수정 중 오류가 발생했습니다')
+      console.error('웨비나 설정 저장 오류:', err)
+      setError(err.message || '웨비나 설정 저장 중 오류가 발생했습니다')
     } finally {
       setLoading(false)
+    }
+  }
+
+  // 메타링크 설정 저장
+  const handleSaveMeta = async () => {
+    setError('')
+    setSavingMeta(true)
+
+    try {
+      const requestBody = {
+        metaTitle: formData.metaTitle || null,
+        metaDescription: formData.metaDescription || null,
+        metaThumbnailUrl: formData.metaThumbnailUrl || null,
+      }
+
+      const response = await fetch(`/api/webinars/${webinar.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(requestBody),
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || `서버 오류 (${response.status})`)
+      }
+
+      if (result.error) {
+        throw new Error(result.error)
+      }
+
+      if (onWebinarUpdate && result.webinar) {
+        onWebinarUpdate(result.webinar)
+      }
+      
+      alert('메타링크 설정이 성공적으로 저장되었습니다')
+    } catch (err: any) {
+      console.error('메타링크 설정 저장 오류:', err)
+      setError(err.message || '메타링크 설정 저장 중 오류가 발생했습니다')
+    } finally {
+      setSavingMeta(false)
     }
   }
 
@@ -233,6 +286,111 @@ export default function SettingsTab({ webinar, onWebinarUpdate }: SettingsTabPro
             placeholder="웨비나에 대한 설명을 입력하세요"
             rows={3}
           />
+        </div>
+
+        <div className="border-t pt-6 mt-6">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900">메타 링크 설정</h3>
+              <p className="text-sm text-gray-600 mt-1">
+                소셜 미디어 공유 및 메타 링크에 사용될 제목과 설명을 설정합니다. 비워두면 웨비나 제목과 설명이 사용됩니다.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={handleSaveMeta}
+              disabled={savingMeta}
+              className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 transition-colors font-medium whitespace-nowrap"
+            >
+              {savingMeta ? '저장 중...' : '메타링크 저장'}
+            </button>
+          </div>
+          
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              메타 제목
+            </label>
+            <input
+              type="text"
+              value={formData.metaTitle}
+              onChange={(e) => setFormData({ ...formData, metaTitle: e.target.value })}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="소셜 미디어 공유 시 표시될 제목을 입력하세요"
+            />
+            <p className="mt-1 text-sm text-gray-500">
+              비워두면 웨비나 제목이 사용됩니다.
+            </p>
+          </div>
+
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              메타 설명
+            </label>
+            <textarea
+              value={formData.metaDescription}
+              onChange={(e) => setFormData({ ...formData, metaDescription: e.target.value })}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="소셜 미디어 공유 시 표시될 설명을 입력하세요"
+              rows={3}
+            />
+            <p className="mt-1 text-sm text-gray-500">
+              비워두면 웨비나 설명이 사용됩니다.
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              메타 썸네일 이미지
+            </label>
+            {formData.metaThumbnailUrl && (
+              <div className="mb-4">
+                <img 
+                  src={formData.metaThumbnailUrl} 
+                  alt="메타 썸네일 미리보기"
+                  className="max-w-md h-auto rounded-lg border border-gray-300"
+                />
+              </div>
+            )}
+            <input
+              type="file"
+              accept="image/*"
+              onChange={async (e) => {
+                const file = e.target.files?.[0]
+                if (!file) return
+                
+                setUploadingMetaThumbnail(true)
+                setError('')
+                
+                try {
+                  const formDataToUpload = new FormData()
+                  formDataToUpload.append('file', file)
+                  
+                  const response = await fetch(`/api/webinars/${webinar.id}/meta-thumbnail/upload`, {
+                    method: 'POST',
+                    body: formDataToUpload,
+                  })
+                  
+                  const result = await response.json()
+                  
+                  if (!response.ok) {
+                    throw new Error(result.error || '메타 썸네일 업로드 실패')
+                  }
+                  
+                  setFormData({ ...formData, metaThumbnailUrl: result.url })
+                  alert('메타 썸네일이 성공적으로 업로드되었습니다.')
+                } catch (err: any) {
+                  setError(err.message || '메타 썸네일 업로드 중 오류가 발생했습니다')
+                } finally {
+                  setUploadingMetaThumbnail(false)
+                }
+              }}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              disabled={uploadingMetaThumbnail}
+            />
+            <p className="mt-1 text-sm text-gray-500">
+              소셜 미디어 공유 시 표시될 썸네일 이미지를 업로드하세요. (최대 5MB, 권장 크기: 1200x630px) 비워두면 이메일 썸네일이 사용됩니다.
+            </p>
+          </div>
         </div>
 
         <div className="border-t pt-6 mt-6">
@@ -453,7 +611,7 @@ ${webinar.title}
             disabled={loading}
             className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors font-medium"
           >
-            {loading ? '수정 중...' : '수정하기'}
+            {loading ? '저장 중...' : '웨비나 설정 저장'}
           </button>
         </div>
       </form>

@@ -21,7 +21,7 @@ export async function GET(
     // UUID 또는 slug로 웨비나 조회
     const query = getWebinarQuery(webinarId)
     
-    // 웨비나 정보 조회
+    // 웨비나 정보 조회 (메타데이터 필드 포함)
     let queryBuilder = admin
       .from('webinars')
       .select('*')
@@ -77,7 +77,10 @@ export async function PUT(
       accessPolicy,
       allowedEmails,
       emailTemplateText,
-      emailThumbnailUrl
+      emailThumbnailUrl,
+      metaTitle,
+      metaDescription,
+      metaThumbnailUrl
     } = await req.json()
     
     const admin = createAdminSupabase()
@@ -169,6 +172,9 @@ export async function PUT(
     if (accessPolicy !== undefined) updateData.access_policy = accessPolicy
     if (emailTemplateText !== undefined) updateData.email_template_text = emailTemplateText || null
     if (emailThumbnailUrl !== undefined) updateData.email_thumbnail_url = emailThumbnailUrl || null
+    if (metaTitle !== undefined) updateData.meta_title = metaTitle || null
+    if (metaDescription !== undefined) updateData.meta_description = metaDescription || null
+    if (metaThumbnailUrl !== undefined) updateData.meta_thumbnail_url = metaThumbnailUrl || null
     
     const { data: updatedWebinar, error: updateError } = await admin
       .from('webinars')

@@ -136,7 +136,7 @@ export async function PUT(
   try {
     const { campaignId } = await params
     const body = await req.json()
-    const { title, host, status, form_id, welcome_schema, completion_schema, display_schema } = body
+    const { title, host, status, form_id, welcome_schema, completion_schema, display_schema, meta_title, meta_description, meta_thumbnail_url } = body
     
     const admin = createAdminSupabase()
     
@@ -208,6 +208,9 @@ export async function PUT(
     if (welcome_schema !== undefined) updateData.welcome_schema = welcome_schema
     if (completion_schema !== undefined) updateData.completion_schema = completion_schema
     if (display_schema !== undefined) updateData.display_schema = display_schema
+    if (meta_title !== undefined) updateData.meta_title = meta_title?.trim() || null
+    if (meta_description !== undefined) updateData.meta_description = meta_description?.trim() || null
+    if (meta_thumbnail_url !== undefined) updateData.meta_thumbnail_url = meta_thumbnail_url?.trim() || null
     updateData.updated_at = new Date().toISOString()
     
     // 캠페인 업데이트

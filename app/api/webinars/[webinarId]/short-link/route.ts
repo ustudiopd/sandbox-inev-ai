@@ -94,11 +94,12 @@ export async function POST(
 
     if (existingLink) {
       const webinarPath = webinar.slug || actualWebinarId
-      const shortUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://eventflow.kr'}/s/${existingLink.code}`
+      // 항상 eventflow.kr 사용
+      const shortUrl = `https://eventflow.kr/s/${existingLink.code}`
       return NextResponse.json({
         code: existingLink.code,
         shortUrl,
-        fullUrl: `${process.env.NEXT_PUBLIC_APP_URL || 'https://eventflow.kr'}/webinar/${webinarPath}`,
+        fullUrl: `https://eventflow.kr/webinar/${webinarPath}`,
         webinarTitle: webinar.title,
       })
     }
@@ -152,12 +153,13 @@ export async function POST(
     }
 
     const webinarPath = webinar.slug || actualWebinarId
-    const shortUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://eventflow.kr'}/s/${savedLink.code}`
-
+    // 항상 eventflow.kr 사용
+    const shortUrl = `https://eventflow.kr/s/${savedLink.code}`
+    
     return NextResponse.json({
       code: savedLink.code,
       shortUrl,
-      fullUrl: `${process.env.NEXT_PUBLIC_APP_URL || 'https://eventflow.kr'}/webinar/${webinarPath}`,
+      fullUrl: `https://eventflow.kr/webinar/${webinarPath}`,
       webinarTitle: webinar.title,
     })
   } catch (error: any) {

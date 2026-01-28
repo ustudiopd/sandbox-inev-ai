@@ -24,26 +24,42 @@ export default function Header() {
     
     try {
       // API를 통해 대시보드 경로 가져오기 (DashboardButton과 동일한 로직)
-      const response = await fetch('/api/auth/dashboard')
-      const { dashboard, error } = await response.json()
+      const response = await fetch('/api/auth/dashboard', {
+        method: 'GET',
+        credentials: 'include', // 쿠키 포함
+      })
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'API 요청 실패' }))
+        console.error('대시보드 API 오류:', response.status, errorData)
+        alert(errorData.error || `대시보드 접근 실패 (${response.status})`)
+        setDashboardLoading(false)
+        return
+      }
+      
+      const data = await response.json()
+      const { dashboard, error } = data
       
       if (error) {
+        console.error('대시보드 API 에러:', error)
         alert(error)
         setDashboardLoading(false)
         return
       }
       
       if (dashboard) {
+        console.log('대시보드로 이동:', dashboard)
         router.push(dashboard)
-        router.refresh()
+        // router.refresh()는 push 후 자동으로 발생하므로 제거
         return
       }
       
       // 대시보드가 없으면 홈으로
+      console.warn('접근 가능한 대시보드가 없습니다.')
       alert('접근 가능한 대시보드가 없습니다.')
     } catch (err) {
       console.error('대시보드 리다이렉트 오류:', err)
-      alert('대시보드 접근 중 오류가 발생했습니다.')
+      alert('대시보드 접근 중 오류가 발생했습니다: ' + (err instanceof Error ? err.message : '알 수 없는 오류'))
     } finally {
       setDashboardLoading(false)
     }

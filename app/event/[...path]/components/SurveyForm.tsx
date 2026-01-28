@@ -415,9 +415,9 @@ export default function SurveyForm({
       const storedUTM = localStorage.getItem(`utm:${campaignId}`)
       const utmData = storedUTM ? JSON.parse(storedUTM) : {}
       
-      // URL에서 _link_id 파라미터 읽기 (Phase 2: 링크 ID)
+      // URL에서 cid 파라미터 읽기 (명세서 요구사항)
       const urlParams = new URLSearchParams(window.location.search)
-      const linkId = urlParams.get('_link_id')
+      const cid = urlParams.get('cid')
       
       const response = await fetch(`/api/public/event-survey/${campaignId}/submit`, {
         method: 'POST',
@@ -436,7 +436,7 @@ export default function SurveyForm({
           utm_content: utmData.utm_content || null,
           utm_first_visit_at: utmData.first_visit_at || null,
           utm_referrer: utmData.referrer_domain || null,
-          _link_id: linkId || null, // Phase 2: 링크 ID
+          cid: cid || null, // cid 파라미터 전달
         }),
       })
       
