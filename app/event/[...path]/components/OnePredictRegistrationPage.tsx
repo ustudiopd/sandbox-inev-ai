@@ -187,10 +187,17 @@ export default function OnePredictRegistrationPage({ campaign, baseUrl = '', utm
       
       // 등록 API 호출
       const apiUrl = `/api/public/event-survey/${campaign.id}/register`
-      const response = await fetch(apiUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+      
+      // 네트워크 요청 타임아웃 설정 (30초)
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 30000)
+      
+      let response: Response
+      try {
+        response = await fetch(apiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
           name: formData.name.trim(),
           company: formData.company.trim() || null,
           phone: phone,
@@ -222,7 +229,19 @@ export default function OnePredictRegistrationPage({ campaign, baseUrl = '', utm
           cid: cid || null,
           session_id: sessionId || null, // Visit 연결용 (Phase 3) - 없어도 등록 성공
         }),
-      })
+          signal: controller.signal,
+        })
+        clearTimeout(timeoutId)
+      } catch (fetchError: any) {
+        clearTimeout(timeoutId)
+        if (fetchError.name === 'AbortError') {
+          throw new Error('요청 시간이 초과되었습니다. 네트워크 연결을 확인해주세요.')
+        }
+        if (fetchError.name === 'TypeError' && fetchError.message.includes('Failed to fetch')) {
+          throw new Error('네트워크 연결에 실패했습니다. 인터넷 연결을 확인해주세요.')
+        }
+        throw fetchError
+      }
       
       console.log('[OnePredictRegistrationPage] 응답 수신:', {
         status: response.status,
@@ -603,7 +622,7 @@ export default function OnePredictRegistrationPage({ campaign, baseUrl = '', utm
                       type="radio"
                       name="privacyConsent"
                       value="yes"
-                      checked={privacyConsent === 'yes'}
+                      checked={privacyConsent === 'yes' as const}
                       onChange={(e) => setPrivacyConsent('yes')}
                       style={{ width: '20px', height: '20px', marginRight: '12px', accentColor: '#2936E7', flexShrink: 0 }}
                       required
@@ -615,7 +634,7 @@ export default function OnePredictRegistrationPage({ campaign, baseUrl = '', utm
                       type="radio"
                       name="privacyConsent"
                       value="no"
-                      checked={privacyConsent === 'no'}
+                      checked={privacyConsent === 'no' as const}
                       onChange={(e) => setPrivacyConsent('no')}
                       style={{ width: '20px', height: '20px', marginRight: '12px', accentColor: '#2936E7', flexShrink: 0 }}
                     />

@@ -289,11 +289,29 @@ export default function RegistrationPage({ campaign, baseUrl, utmParams = {} }: 
       const apiUrl = `/api/public/event-survey/${campaign.id}/register`
       console.log('[RegistrationPage] API URL:', apiUrl)
       
-      const response = await fetch(apiUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(requestBody),
-      })
+      // 네트워크 요청 타임아웃 설정 (30초)
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 30000)
+      
+      let response: Response
+      try {
+        response = await fetch(apiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(requestBody),
+          signal: controller.signal,
+        })
+        clearTimeout(timeoutId)
+      } catch (fetchError: any) {
+        clearTimeout(timeoutId)
+        if (fetchError.name === 'AbortError') {
+          throw new Error('요청 시간이 초과되었습니다. 네트워크 연결을 확인해주세요.')
+        }
+        if (fetchError.name === 'TypeError' && fetchError.message.includes('Failed to fetch')) {
+          throw new Error('네트워크 연결에 실패했습니다. 인터넷 연결을 확인해주세요.')
+        }
+        throw fetchError
+      }
       
       console.log('[RegistrationPage] 응답 수신:', {
         status: response.status,

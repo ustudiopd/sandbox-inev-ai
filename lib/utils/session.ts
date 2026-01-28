@@ -111,86 +111,75 @@ export function getOrCreateSessionId(
   cookieName: string = 'ef_session_id',
   ttlMinutes: number = 30
 ): string {
+  // 크롬 호환성: localStorage를 우선 사용하고 쿠키는 보조로 사용
+  // 크롬의 엄격한 쿠키 정책 때문에 localStorage가 더 안정적입니다.
+  
   try {
-    // 1. 쿠키에서 먼저 시도
-    let sessionId = getCookie(cookieName)
-    
-    if (sessionId) {
-      // 쿠키에서 읽기 성공 - localStorage에도 동기화
-      try {
-        localStorage.setItem(cookieName, sessionId)
-      } catch (lsError) {
-        // localStorage 동기화 실패는 무시
-      }
-      return sessionId
-    }
-    
-    // 2. 쿠키가 없으면 localStorage에서 확인
+    // 1. localStorage에서 먼저 확인 (크롬 호환성 우선)
+    let sessionId: string | null = null
     try {
-      const storedSessionId = localStorage.getItem(cookieName)
-      if (storedSessionId) {
-        // localStorage에 있으면 쿠키에도 저장 시도
+      sessionId = localStorage.getItem(cookieName)
+      if (sessionId && sessionId.trim()) {
+        // localStorage에 유효한 값이 있으면 사용
+        // 쿠키에도 동기화 시도 (실패해도 무시)
         try {
           const isSecure = typeof window !== 'undefined' && window.location.protocol === 'https:'
-          setCookie(cookieName, storedSessionId, {
+          setCookie(cookieName, sessionId, {
             maxAge: ttlMinutes * 60,
             path: '/',
             sameSite: 'lax',
-            secure: isSecure, // HTTPS인 경우에만 secure 플래그
+            secure: isSecure,
           })
         } catch (cookieError) {
-          // 쿠키 저장 실패해도 localStorage 값 사용
-          console.warn('[session] 쿠키 저장 실패 (localStorage 사용):', cookieError)
+          // 쿠키 동기화 실패는 무시 (localStorage가 있으면 충분)
         }
-        return storedSessionId
+        return sessionId
       }
     } catch (lsError) {
-      // localStorage 읽기 실패는 무시하고 계속 진행
+      // localStorage 읽기 실패는 무시하고 쿠키 확인으로 진행
       console.warn('[session] localStorage 읽기 실패:', lsError)
+    }
+    
+    // 2. localStorage가 없으면 쿠키에서 확인
+    sessionId = getCookie(cookieName)
+    if (sessionId && sessionId.trim()) {
+      // 쿠키에서 읽기 성공 - localStorage에 저장 (크롬 호환성)
+      try {
+        localStorage.setItem(cookieName, sessionId)
+      } catch (lsError) {
+        // localStorage 저장 실패해도 쿠키 값 사용
+        console.warn('[session] localStorage 저장 실패 (쿠키 값 사용):', lsError)
+      }
+      return sessionId
     }
     
     // 3. 둘 다 없으면 새로 생성
     sessionId = generateSessionId()
     
-    // 쿠키에 저장 시도
+    // localStorage에 먼저 저장 (크롬 호환성 우선)
+    let localStorageSuccess = false
+    try {
+      localStorage.setItem(cookieName, sessionId)
+      localStorageSuccess = true
+    } catch (lsError) {
+      console.warn('[session] localStorage 저장 실패:', lsError)
+    }
+    
+    // 쿠키에도 저장 시도 (실패해도 localStorage가 있으면 OK)
     try {
       const isSecure = typeof window !== 'undefined' && window.location.protocol === 'https:'
       setCookie(cookieName, sessionId, {
         maxAge: ttlMinutes * 60,
         path: '/',
         sameSite: 'lax',
-        secure: isSecure, // HTTPS인 경우에만 secure 플래그
+        secure: isSecure,
       })
-      
-      // 쿠키 저장 확인 (크롬에서 쿠키가 실제로 저장되었는지 검증)
-      const verifyCookie = getCookie(cookieName)
-      if (!verifyCookie || verifyCookie !== sessionId) {
-        // 쿠키 저장 실패 - localStorage에 저장
-        console.warn('[session] 쿠키 저장 검증 실패 (localStorage로 폴백)')
-        try {
-          localStorage.setItem(cookieName, sessionId)
-        } catch (lsError) {
-          console.warn('[session] localStorage 저장 실패:', lsError)
-        }
-      }
     } catch (cookieError) {
-      // 쿠키 저장 실패해도 localStorage에 저장
-      console.warn('[session] 쿠키 저장 실패 (localStorage로 폴백):', cookieError)
-      try {
-        localStorage.setItem(cookieName, sessionId)
-      } catch (lsError) {
-        console.warn('[session] localStorage 저장 실패:', lsError)
-      }
+      // 쿠키 저장 실패는 무시 (localStorage가 있으면 충분)
+      console.warn('[session] 쿠키 저장 실패 (localStorage 사용):', cookieError)
     }
     
-    // localStorage에도 저장 (쿠키 실패 시 대비)
-    try {
-      localStorage.setItem(cookieName, sessionId)
-    } catch (lsError) {
-      // localStorage도 실패하면 그냥 sessionId 반환
-      console.warn('[session] localStorage 저장 실패:', lsError)
-    }
-    
+    // localStorage 저장이 성공했으면 OK, 실패했어도 sessionId는 반환
     return sessionId
   } catch (error) {
     console.warn('[session] 세션 ID 생성 오류:', error)
