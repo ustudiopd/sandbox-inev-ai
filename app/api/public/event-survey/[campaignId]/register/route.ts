@@ -235,35 +235,72 @@ export async function POST(
             .from('webinars')
             .select('id, slug, access_policy')
             .eq('registration_campaign_id', campaignId)
-            .eq('access_policy', 'email_auth')
           
           if (webinars && webinars.length > 0) {
+            // 이메일로 사용자 찾기 (profiles 테이블)
+            const { data: profile } = await admin
+              .from('profiles')
+              .select('id')
+              .eq('email', emailLower)
+              .maybeSingle()
+            
             for (const webinar of webinars) {
-              // 이미 등록된 이메일인지 확인
-              const { data: existingEmail } = await admin
-                .from('webinar_allowed_emails')
-                .select('email')
-                .eq('webinar_id', webinar.id)
-                .eq('email', emailLower)
-                .maybeSingle()
-              
-              if (!existingEmail) {
-                // 웨비나 허용 이메일 목록에 추가
-                await admin
+              // 1. webinar_allowed_emails에 추가 (email_auth 정책인 경우)
+              if (webinar.access_policy === 'email_auth') {
+                const { data: existingEmail } = await admin
                   .from('webinar_allowed_emails')
-                  .insert({
-                    webinar_id: webinar.id,
-                    email: emailLower,
-                    created_by: null,
-                  })
+                  .select('email')
+                  .eq('webinar_id', webinar.id)
+                  .eq('email', emailLower)
+                  .maybeSingle()
                 
-                console.log(`웨비나 연동: ${emailLower}를 웨비나 ${webinar.slug || webinar.id}에 등록했습니다`)
+                if (!existingEmail) {
+                  await admin
+                    .from('webinar_allowed_emails')
+                    .insert({
+                      webinar_id: webinar.id,
+                      email: emailLower,
+                      created_by: null,
+                    })
+                  
+                  console.log(`[register] webinar_allowed_emails 추가: ${emailLower} → 웨비나 ${webinar.slug || webinar.id}`)
+                }
+              }
+              
+              // 2. registrations 테이블에 등록 (사용자가 있는 경우)
+              if (profile?.id) {
+                const { data: existingRegistration } = await admin
+                  .from('registrations')
+                  .select('webinar_id, user_id')
+                  .eq('webinar_id', webinar.id)
+                  .eq('user_id', profile.id)
+                  .maybeSingle()
+                
+                if (!existingRegistration) {
+                  const { error: regError } = await admin
+                    .from('registrations')
+                    .insert({
+                      webinar_id: webinar.id,
+                      user_id: profile.id,
+                      role: 'attendee',
+                      nickname: name.trim() || null,
+                      registered_via: 'registration_page',
+                    })
+                  
+                  if (regError) {
+                    console.warn(`[register] registrations 저장 실패 (등록은 성공):`, regError)
+                  } else {
+                    console.log(`[register] registrations 추가: ${emailLower} → 웨비나 ${webinar.slug || webinar.id}`)
+                  }
+                }
+              } else {
+                console.log(`[register] 사용자 없음 (${emailLower}), registrations 건너뜀`)
               }
             }
           }
         } catch (webinarError) {
           // 웨비나 연동 실패는 경고만 하고 등록은 성공으로 처리
-          console.warn('웨비나 연동 실패 (등록은 성공):', webinarError)
+          console.warn('[register] 웨비나 연동 실패 (등록은 성공):', webinarError)
         }
       }
       
@@ -353,49 +390,86 @@ export async function POST(
     console.log('[register] 등록 성공:', { 
       survey_no: entry?.survey_no, 
       code6: entry?.code6,
-      email: registration_data?.email,
+      email: normalizedRegistrationData?.email,
       timestamp: new Date().toISOString()
     })
     
     // 웨비나 연동: 등록 데이터에 이메일이 있으면 이 캠페인과 연동된 웨비나에도 등록
-    if (registration_data?.email) {
+    if (normalizedRegistrationData?.email) {
       try {
-        const emailLower = registration_data.email.trim().toLowerCase()
+        const emailLower = normalizedRegistrationData.email.trim().toLowerCase()
         
         // 이 캠페인과 연동된 웨비나 찾기 (registration_campaign_id로 연결된 웨비나)
         const { data: webinars } = await admin
           .from('webinars')
           .select('id, slug, access_policy')
           .eq('registration_campaign_id', campaignId)
-          .eq('access_policy', 'email_auth')
         
         if (webinars && webinars.length > 0) {
+          // 이메일로 사용자 찾기 (profiles 테이블)
+          const { data: profile } = await admin
+            .from('profiles')
+            .select('id')
+            .eq('email', emailLower)
+            .maybeSingle()
+          
           for (const webinar of webinars) {
-            // 이미 등록된 이메일인지 확인
-            const { data: existingEmail } = await admin
-              .from('webinar_allowed_emails')
-              .select('email')
-              .eq('webinar_id', webinar.id)
-              .eq('email', emailLower)
-              .maybeSingle()
-            
-            if (!existingEmail) {
-              // 웨비나 허용 이메일 목록에 추가
-              await admin
+            // 1. webinar_allowed_emails에 추가 (email_auth 정책인 경우)
+            if (webinar.access_policy === 'email_auth') {
+              const { data: existingEmail } = await admin
                 .from('webinar_allowed_emails')
-                .insert({
-                  webinar_id: webinar.id,
-                  email: emailLower,
-                  created_by: null,
-                })
+                .select('email')
+                .eq('webinar_id', webinar.id)
+                .eq('email', emailLower)
+                .maybeSingle()
               
-              console.log(`웨비나 연동: ${emailLower}를 웨비나 ${webinar.slug || webinar.id}에 등록했습니다`)
+              if (!existingEmail) {
+                await admin
+                  .from('webinar_allowed_emails')
+                  .insert({
+                    webinar_id: webinar.id,
+                    email: emailLower,
+                    created_by: null,
+                  })
+                
+                console.log(`[register] webinar_allowed_emails 추가: ${emailLower} → 웨비나 ${webinar.slug || webinar.id}`)
+              }
+            }
+            
+            // 2. registrations 테이블에 등록 (사용자가 있는 경우)
+            if (profile?.id) {
+              const { data: existingRegistration } = await admin
+                .from('registrations')
+                .select('webinar_id, user_id')
+                .eq('webinar_id', webinar.id)
+                .eq('user_id', profile.id)
+                .maybeSingle()
+              
+              if (!existingRegistration) {
+                const { error: regError } = await admin
+                  .from('registrations')
+                  .insert({
+                    webinar_id: webinar.id,
+                    user_id: profile.id,
+                    role: 'attendee',
+                    nickname: name.trim() || null,
+                    registered_via: 'registration_page',
+                  })
+                
+                if (regError) {
+                  console.warn(`[register] registrations 저장 실패 (등록은 성공):`, regError)
+                } else {
+                  console.log(`[register] registrations 추가: ${emailLower} → 웨비나 ${webinar.slug || webinar.id}`)
+                }
+              }
+            } else {
+              console.log(`[register] 사용자 없음 (${emailLower}), registrations 건너뜀`)
             }
           }
         }
       } catch (webinarError) {
         // 웨비나 연동 실패는 경고만 하고 등록은 성공으로 처리
-        console.warn('웨비나 연동 실패 (등록은 성공):', webinarError)
+        console.warn('[register] 웨비나 연동 실패 (등록은 성공):', webinarError)
       }
     }
     
