@@ -280,35 +280,47 @@ export async function GET(
         })
       }
       
-      // 등록 페이지 참여자 데이터 포맷팅
+      // 등록 페이지 참여자 데이터 포맷팅 (event_survey_entries만 사용)
       registrants = registrationEntries.map((entry: any) => {
         const email = entry.registration_data?.email?.toLowerCase()?.trim()
+        const registrationData = entry.registration_data || {}
+        
         // 이름 우선순위: entry.name > registration_data.name > registration_data.firstName + lastName > firstName
         let name = entry.name
-        if (!name && entry.registration_data) {
-          if (entry.registration_data.name) {
-            name = entry.registration_data.name
-          } else if (entry.registration_data.firstName && entry.registration_data.lastName) {
-            name = `${entry.registration_data.lastName}${entry.registration_data.firstName}`
-          } else if (entry.registration_data.firstName) {
-            name = entry.registration_data.firstName
-          } else if (entry.registration_data.lastName) {
-            name = entry.registration_data.lastName
+        if (!name && registrationData) {
+          if (registrationData.name) {
+            name = registrationData.name
+          } else if (registrationData.firstName && registrationData.lastName) {
+            name = `${registrationData.lastName}${registrationData.firstName}`
+          } else if (registrationData.firstName) {
+            name = registrationData.firstName
+          } else if (registrationData.lastName) {
+            name = registrationData.lastName
           }
         }
         name = name || '익명'
         
-        // 역할 결정: 멤버십이 있으면 해당 역할, 없으면 attendee
-        const memberRole = email ? memberRolesMap.get(email) : null
+        // 역할 결정: registration_data의 role 우선, 없으면 멤버십 확인
         let role = 'attendee'
-        if (memberRole === 'super_admin') {
+        if (registrationData.role === '관리자') {
           role = '관리자'
-        } else if (memberRole === 'owner' || memberRole === 'admin') {
-          role = '관리자'
-        } else if (memberRole === 'operator') {
-          role = '운영자'
-        } else if (memberRole === 'analyst') {
-          role = '분석가'
+        } else if (email) {
+          // pd@ustudio.co.kr, eventflow@onepredict.com은 관리자로 설정
+          if (email === 'pd@ustudio.co.kr' || email === 'eventflow@onepredict.com') {
+            role = '관리자'
+          } else {
+            // 멤버십 확인
+            const memberRole = memberRolesMap.get(email)
+            if (memberRole === 'super_admin') {
+              role = '관리자'
+            } else if (memberRole === 'owner' || memberRole === 'admin') {
+              role = '관리자'
+            } else if (memberRole === 'operator') {
+              role = '운영자'
+            } else if (memberRole === 'analyst') {
+              role = '분석가'
+            }
+          }
         }
         
         return {
@@ -316,85 +328,14 @@ export async function GET(
           name: name,
           email: entry.registration_data?.email || null,
           role: role,
-          registered_via: 'registration_page',
+          registered_via: registrationData.registered_via || 'registration_page',
           registered_at: entry.completed_at || entry.created_at,
           last_login_at: email ? lastLoginMap.get(email) || null : null,
           source: 'registration' as const,
         }
       })
       
-      // registrations 테이블의 관리자도 추가 (등록 캠페인에는 없지만 관리자인 경우)
-      const { data: adminRegistrations } = await admin
-        .from('registrations')
-        .select('user_id, nickname, role, registered_via, created_at')
-        .eq('webinar_id', webinar.id)
-      
-      if (adminRegistrations && adminRegistrations.length > 0) {
-        const adminUserIds = adminRegistrations.map((r: any) => r.user_id).filter(Boolean)
-        if (adminUserIds.length > 0) {
-          const { data: adminProfiles } = await admin
-            .from('profiles')
-            .select('id, email, display_name')
-            .in('id', adminUserIds)
-          
-          if (adminProfiles) {
-            const profileMap = new Map(adminProfiles.map((p: any) => [p.id, p]))
-            
-            adminRegistrations.forEach((reg: any) => {
-              const profile = profileMap.get(reg.user_id)
-              if (profile) {
-                const email = profile.email?.toLowerCase()?.trim()
-                // 등록 캠페인에 이미 있으면 스킵
-                if (email && entryEmails.includes(email)) {
-                  return
-                }
-                
-                // DB에 저장된 role을 우선 사용, 없으면 멤버십 기반으로 계산
-                let role = reg.role || null
-                
-                // DB에 role이 없을 때만 멤버십 기반으로 계산
-                if (!role) {
-                  const memberRole = email ? memberRolesMap.get(email) : null
-                  if (memberRole === 'super_admin') {
-                    role = '관리자'
-                  } else if (memberRole === 'owner' || memberRole === 'admin') {
-                    role = '관리자'
-                  } else if (memberRole === 'operator') {
-                    role = '운영자'
-                  } else if (memberRole === 'analyst') {
-                    role = '분석가'
-                  } else {
-                    role = 'attendee'
-                  }
-                }
-                
-                // manual 등록 처리: pd@ustudio.co.kr만 관리자, 나머지는 참여자
-                if (reg.registered_via === 'manual') {
-                  const isPdAccount = email === 'pd@ustudio.co.kr'
-                  if (isPdAccount) {
-                    role = '관리자'
-                    console.log(`[registrants API] manual 등록 감지 (PD 계정): ${email} → 역할을 "관리자"로 설정`)
-                  } else {
-                    role = 'attendee'
-                    console.log(`[registrants API] manual 등록 감지: ${email} → 역할을 "참여자"로 설정`)
-                  }
-                }
-                
-                registrants.push({
-                  id: reg.user_id || `reg-${reg.user_id}`,
-                  name: reg.nickname || profile.display_name || profile.email || '익명',
-                  email: profile.email || null,
-                  role: role,
-                  registered_via: reg.registered_via || 'webinar',
-                  registered_at: reg.created_at,
-                  last_login_at: email ? lastLoginMap.get(email) || null : null,
-                  source: 'webinar' as const,
-                })
-              }
-            })
-          }
-        }
-      }
+      // registrations 테이블의 관리자는 추가하지 않음 (event_survey_entries만 표시)
     } else {
       // 웨비나 등록자 사용자 ID 수집
       const userIds = (registrations || []).map((r: any) => r.user_id).filter(Boolean)
