@@ -1012,7 +1012,7 @@ export default function WebinarFormWertPage() {
                 {/* 1달 무료 체험 */}
                 <div className="self-stretch h-[128px] sm:h-40 lg:h-56 p-4 sm:p-6 lg:p-10 bg-gradient-to-r from-black/5 to-black/10 rounded-xl sm:rounded-2xl lg:rounded-[32px] outline outline-1 outline-offset-[-1px] outline-white/20 flex flex-row justify-start items-center gap-3 sm:gap-3 lg:gap-2.5 overflow-hidden">
                   <div className="flex-1 justify-start text-white font-bold text-[17px] sm:text-xl lg:text-[36px] leading-relaxed sm:leading-relaxed lg:leading-[60px] text-left" style={{ fontFamily: 'Pretendard, sans-serif' }}>
-                    키워트 인사이트 신규회원 대상<br />1달 무료 체험 제공
+                    키워트 인사이트 신규회원 대상<br />무료 체험 제공
                   </div>
                   <img
                     src="https://yqsayphssjznthrxpgfb.supabase.co/storage/v1/object/public/webinar-thumbnails/wert/image 49.png"
