@@ -1,14 +1,16 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { extractDomain } from '@/lib/utils/utm'
 
 interface OnePredictRegistrationPageProps {
   campaign?: any
   baseUrl?: string
+  utmParams?: Record<string, string>
 }
 
-export default function OnePredictRegistrationPage({ campaign, baseUrl = '' }: OnePredictRegistrationPageProps) {
+export default function OnePredictRegistrationPage({ campaign, baseUrl = '', utmParams = {} }: OnePredictRegistrationPageProps) {
   const router = useRouter()
   const [showMessage, setShowMessage] = useState(false)
   const [messageText, setMessageText] = useState('')
@@ -31,7 +33,8 @@ export default function OnePredictRegistrationPage({ campaign, baseUrl = '' }: O
   
   // 개인정보 활용 동의 상태
   const [privacyConsent, setPrivacyConsent] = useState<'yes' | 'no' | null>(null)
-
+  
+  
   const showMessageBox = (text: string) => {
     setMessageText(text)
     setShowMessage(true)

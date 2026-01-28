@@ -39,6 +39,7 @@ export default function RegistrationPage({ campaign, baseUrl }: RegistrationPage
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   
+  
   const handleSubmitted = (submissionResult: { survey_no: number; code6: string }) => {
     setResult(submissionResult)
     setSubmitted(true)
@@ -140,6 +141,14 @@ export default function RegistrationPage({ campaign, baseUrl }: RegistrationPage
     const phone = `${phone1}-${phone2}-${phone3}`
     const phoneNorm = phone.replace(/\D/g, '')
     
+    // localStorage에서 UTM 읽기
+    const storedUTM = localStorage.getItem(`utm:${campaign.id}`)
+    const utmData = storedUTM ? JSON.parse(storedUTM) : {}
+    
+    // URL에서 _link_id 파라미터 읽기 (Phase 2: 링크 ID)
+    const urlParams = new URLSearchParams(window.location.search)
+    const linkId = urlParams.get('_link_id')
+    
     setSubmitting(true)
     setError(null)
     
@@ -164,6 +173,15 @@ export default function RegistrationPage({ campaign, baseUrl }: RegistrationPage
             phoneCountryCode: phoneCountryCode,
             privacyConsent: privacyConsent === 'yes',
           },
+          // UTM 파라미터 추가
+          utm_source: utmData.utm_source || null,
+          utm_medium: utmData.utm_medium || null,
+          utm_campaign: utmData.utm_campaign || null,
+          utm_term: utmData.utm_term || null,
+          utm_content: utmData.utm_content || null,
+          utm_first_visit_at: utmData.first_visit_at || null,
+          utm_referrer: utmData.referrer_domain || null,
+          _link_id: linkId || null, // Phase 2: 링크 ID
         }),
       })
       

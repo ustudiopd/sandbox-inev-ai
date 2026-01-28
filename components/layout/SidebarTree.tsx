@@ -499,6 +499,14 @@ export default function SidebarTree({ organizations }: SidebarTreeProps) {
                 href: `/client/${client.id}/settings/branding`,
                 icon: '🎨',
                 active: pathname.includes(`/client/${client.id}/settings/branding`)
+              },
+              {
+                id: `client-${client.id}-campaigns`,
+                label: '광고/캠페인',
+                type: 'page',
+                href: `/client/${client.id}/campaigns`,
+                icon: '📈',
+                active: pathname === `/client/${client.id}/campaigns`
               }
             ]
           }

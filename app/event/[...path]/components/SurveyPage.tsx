@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
 import SurveyForm from './SurveyForm'
+import { extractDomain } from '@/lib/utils/utm'
 
 interface SurveyPageProps {
   campaign: any
@@ -22,6 +23,7 @@ export default function SurveyPage({ campaign, baseUrl }: SurveyPageProps) {
   const [lookupPhone3, setLookupPhone3] = useState('')
   const [lookupLoading, setLookupLoading] = useState(false)
   const [lookupError, setLookupError] = useState<string | null>(null)
+  
   
   const handleSubmitted = (submissionResult: { survey_no: number; code6: string }) => {
     setResult(submissionResult)

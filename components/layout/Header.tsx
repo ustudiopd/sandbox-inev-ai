@@ -1,13 +1,15 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { createClientSupabase } from '@/lib/supabase/client'
 import { useEffect, useState, useMemo } from 'react'
 
 export default function Header() {
   const pathname = usePathname()
+  const router = useRouter()
   const [user, setUser] = useState<any>(null)
+  const [dashboardLoading, setDashboardLoading] = useState(false)
   const supabase = useMemo(() => createClientSupabase(), [])
   
   useEffect(() => {
@@ -15,6 +17,37 @@ export default function Header() {
       setUser(data.user)
     })
   }, [supabase])
+  
+  const handleDashboardClick = async (e: React.MouseEvent) => {
+    e.preventDefault()
+    setDashboardLoading(true)
+    
+    try {
+      // API를 통해 대시보드 경로 가져오기 (DashboardButton과 동일한 로직)
+      const response = await fetch('/api/auth/dashboard')
+      const { dashboard, error } = await response.json()
+      
+      if (error) {
+        alert(error)
+        setDashboardLoading(false)
+        return
+      }
+      
+      if (dashboard) {
+        router.push(dashboard)
+        router.refresh()
+        return
+      }
+      
+      // 대시보드가 없으면 홈으로
+      alert('접근 가능한 대시보드가 없습니다.')
+    } catch (err) {
+      console.error('대시보드 리다이렉트 오류:', err)
+      alert('대시보드 접근 중 오류가 발생했습니다.')
+    } finally {
+      setDashboardLoading(false)
+    }
+  }
   
   const handleLogout = async () => {
     try {
@@ -62,9 +95,13 @@ export default function Header() {
             <div className="flex gap-4">
               {user ? (
                 <>
-                  <Link href="/" className="px-4 py-2 text-gray-700 hover:text-blue-600 transition-colors">
-                    대시보드
-                  </Link>
+                  <button
+                    onClick={handleDashboardClick}
+                    disabled={dashboardLoading}
+                    className="px-4 py-2 text-gray-700 hover:text-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {dashboardLoading ? '로딩 중...' : '대시보드'}
+                  </button>
                   <button
                     onClick={handleLogout}
                     className="px-4 py-2 text-gray-700 hover:text-blue-600 transition-colors"

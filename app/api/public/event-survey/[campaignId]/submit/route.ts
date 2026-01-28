@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createAdminSupabase } from '@/lib/supabase/admin'
+import { normalizeUTM } from '@/lib/utils/utm'
 
 export const runtime = 'nodejs'
 
@@ -14,7 +15,37 @@ export async function POST(
 ) {
   try {
     const { campaignId } = await params
-    const { name, company, phone, answers, consentData } = await req.json()
+    const { 
+      name, 
+      company, 
+      phone, 
+      answers, 
+      consentData,
+      // UTM 파라미터
+      utm_source,
+      utm_medium,
+      utm_campaign,
+      utm_term,
+      utm_content,
+      utm_first_visit_at,
+      utm_referrer,
+      marketing_campaign_link_id,
+    } = await req.json()
+    
+    // UTM 파라미터 정규화 (graceful: 실패해도 계속 진행)
+    let normalizedUTM: Record<string, string | null> = {}
+    try {
+      normalizedUTM = normalizeUTM({
+        utm_source,
+        utm_medium,
+        utm_campaign,
+        utm_term,
+        utm_content,
+      })
+    } catch (utmError) {
+      console.error('UTM 정규화 오류 (무시하고 계속):', utmError)
+      // UTM 정규화 실패해도 제출은 계속 진행
+    }
     
     if (!name || !phone) {
       return NextResponse.json(
@@ -204,6 +235,15 @@ export async function POST(
           ...consentData,
           consented_at: new Date().toISOString(),
         } : null,
+        // UTM 파라미터 저장 (graceful: 저장 실패해도 제출은 성공)
+        utm_source: normalizedUTM.utm_source || null,
+        utm_medium: normalizedUTM.utm_medium || null,
+        utm_campaign: normalizedUTM.utm_campaign || null,
+        utm_term: normalizedUTM.utm_term || null,
+        utm_content: normalizedUTM.utm_content || null,
+        utm_first_visit_at: utm_first_visit_at || null,
+        utm_referrer: utm_referrer || null,
+        marketing_campaign_link_id: marketing_campaign_link_id || null,
       })
       .select()
       .single()

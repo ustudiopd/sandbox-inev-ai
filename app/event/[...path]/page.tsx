@@ -114,10 +114,13 @@ export async function generateMetadata({
  */
 export default async function SurveyPublicPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ path: string[] }>
+  searchParams?: Promise<{ [key: string]: string | string[] | undefined }>
 }) {
   const { path } = await params
+  const searchParamsData = searchParams ? await searchParams : {}
   
   // 경로가 없으면 404
   if (!path || path.length === 0) {

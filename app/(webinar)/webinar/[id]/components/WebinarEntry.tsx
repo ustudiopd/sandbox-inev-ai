@@ -652,6 +652,11 @@ export default function WebinarEntry({ webinar, isWertPage: serverIsWertPage }: 
         if (!checkResult.registered) {
           setError(checkResult.message || '등록 페이지에서 먼저 등록해주세요.')
           setLoading(false)
+          
+          // 2초 후 리다이렉트 (에러 메시지 확인 시간 제공)
+          setTimeout(() => {
+            window.location.href = '/event/149403'
+          }, 2000)
           return
         }
       }

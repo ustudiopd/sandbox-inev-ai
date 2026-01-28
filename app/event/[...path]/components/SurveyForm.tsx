@@ -411,6 +411,14 @@ export default function SurveyForm({
         else if (consent.id === 'consent3') consentData.consent3 = consent3
       })
       
+      // localStorage에서 UTM 읽기
+      const storedUTM = localStorage.getItem(`utm:${campaignId}`)
+      const utmData = storedUTM ? JSON.parse(storedUTM) : {}
+      
+      // URL에서 _link_id 파라미터 읽기 (Phase 2: 링크 ID)
+      const urlParams = new URLSearchParams(window.location.search)
+      const linkId = urlParams.get('_link_id')
+      
       const response = await fetch(`/api/public/event-survey/${campaignId}/submit`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -420,6 +428,15 @@ export default function SurveyForm({
           phone: phone,
           answers: answerArray,
           consentData,
+          // UTM 파라미터 추가
+          utm_source: utmData.utm_source || null,
+          utm_medium: utmData.utm_medium || null,
+          utm_campaign: utmData.utm_campaign || null,
+          utm_term: utmData.utm_term || null,
+          utm_content: utmData.utm_content || null,
+          utm_first_visit_at: utmData.first_visit_at || null,
+          utm_referrer: utmData.referrer_domain || null,
+          _link_id: linkId || null, // Phase 2: 링크 ID
         }),
       })
       
