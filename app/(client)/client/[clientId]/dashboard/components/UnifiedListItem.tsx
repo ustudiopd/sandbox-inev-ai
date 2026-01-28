@@ -66,6 +66,8 @@ export default function UnifiedListItem({ item, clientId }: UnifiedListItemProps
             <div className="font-medium text-gray-800 truncate">
               {!isWebinar && item.public_path === '/149403' 
                 ? 'AI 특허리서치 실무 활용 웨비나'
+                : isWebinar && webinarSlug === '149402'
+                ? 'Wert 웨비나'
                 : isWebinar && webinarSlug === '149404'
                 ? '0206wert웨비나'
                 : (isWebinar && item.project_name ? item.project_name : item.title)}

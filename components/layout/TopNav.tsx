@@ -97,9 +97,9 @@ export default function TopNav({ organizations: propOrganizations }: TopNavProps
     if (clientId && organizations.clients?.some(c => c.id === clientId)) {
       return [
         { name: '대시보드', href: `/client/${clientId}/dashboard`, icon: '📊' },
-        { name: '이벤트', href: `/client/${clientId}/webinars`, icon: '🎥' },
         { name: '가입계정관리', href: `/client/${clientId}/accounts`, icon: '👥' },
         { name: '브랜딩', href: `/client/${clientId}/settings/branding`, icon: '🎨' },
+        { name: '광고/캠페인', href: `/client/${clientId}/campaigns`, icon: '📈' },
       ]
     }
 

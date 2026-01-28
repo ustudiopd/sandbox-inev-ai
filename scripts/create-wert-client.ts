@@ -13,7 +13,7 @@ dotenv.config({ path: '.env.local' })
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 
-const email = 'eventflow@wert.co.kr'
+const email = 'eventflow-ops@wert.co.kr'
 const password = 'eventflow1@'
 const clientName = '워트인텔리전트'
 const agencyName = '워트인텔리전트'

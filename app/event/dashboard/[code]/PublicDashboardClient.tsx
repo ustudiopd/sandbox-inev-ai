@@ -1619,7 +1619,7 @@ export default function PublicDashboardClient({ campaign }: PublicDashboardClien
             </div>
 
             {/* 통계 카드 */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
               <div className="bg-white rounded-xl shadow-lg p-6">
             <div className="text-sm text-gray-600 mb-1">총 참여자</div>
             <div className="text-3xl font-bold text-gray-900">{campaignStats.total_completed || 0}</div>
@@ -1630,15 +1630,6 @@ export default function PublicDashboardClient({ campaign }: PublicDashboardClien
             {campaignStats.total_completed > 0 && (
               <div className="text-xs text-gray-500 mt-1">
                 ({((campaignStats.total_verified || 0) / campaignStats.total_completed * 100).toFixed(1)}%)
-              </div>
-            )}
-          </div>
-          <div className="bg-white rounded-xl shadow-lg p-6">
-            <div className="text-sm text-gray-600 mb-1">경품 기록</div>
-            <div className="text-3xl font-bold text-green-600">{campaignStats.total_prize_recorded || 0}</div>
-            {campaignStats.total_completed > 0 && (
-              <div className="text-xs text-gray-500 mt-1">
-                ({((campaignStats.total_prize_recorded || 0) / campaignStats.total_completed * 100).toFixed(1)}%)
               </div>
             )}
           </div>
@@ -1737,95 +1728,24 @@ export default function PublicDashboardClient({ campaign }: PublicDashboardClien
             </div>
 
             {/* 통계 카드 */}
-            {!loadingManualEntries && manualEntries.length > 0 && (() => {
-              const totalParticipants = manualEntries.length
-              const umbrellaCount = manualEntries.filter((e: any) => e.prize_label === '우산').length
-              const washbagCount = manualEntries.filter((e: any) => e.prize_label === '워시백').length
-              const totalPrizeGiven = umbrellaCount + washbagCount
-              const umbrellaMax = 50
-              const washbagMax = 250
-              
-              return (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                  {/* 총 참여자 */}
-                  <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-medium text-gray-600">총 참여자</p>
-                        <p className="text-3xl font-bold text-gray-900 mt-2">{totalParticipants}</p>
-                      </div>
-                      <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                        <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                        </svg>
-                      </div>
+            {!loadingManualEntries && (
+              <div className="grid grid-cols-1 md:grid-cols-1 gap-4 mb-6">
+                {/* 총 참여자 */}
+                <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-gray-600">총 참여자</p>
+                      <p className="text-3xl font-bold text-gray-900 mt-2">{campaignStats.total_completed || 0}</p>
                     </div>
-                  </div>
-
-                  {/* 경품 지급 */}
-                  <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-medium text-gray-600">경품 지급</p>
-                        <p className="text-3xl font-bold text-gray-900 mt-2">{totalPrizeGiven}</p>
-                        <p className="text-xs text-gray-500 mt-1">우산 {umbrellaCount}개 / 워시백 {washbagCount}개</p>
-                      </div>
-                      <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-                        <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" />
-                        </svg>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* 우산 현황 */}
-                  <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-gray-600">우산</p>
-                        <p className="text-2xl font-bold text-gray-900 mt-2">
-                          {umbrellaCount} / {umbrellaMax}
-                        </p>
-                        <div className="mt-2 w-full bg-gray-200 rounded-full h-2">
-                          <div
-                            className={`h-2 rounded-full ${
-                              umbrellaCount >= umbrellaMax ? 'bg-red-500' : 'bg-blue-500'
-                            }`}
-                            style={{ width: `${Math.min((umbrellaCount / umbrellaMax) * 100, 100)}%` }}
-                          />
-                        </div>
-                        <p className="text-xs text-gray-500 mt-1">
-                          {umbrellaMax - umbrellaCount}개 남음
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* 워시백 현황 */}
-                  <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-gray-600">워시백</p>
-                        <p className="text-2xl font-bold text-gray-900 mt-2">
-                          {washbagCount} / {washbagMax}
-                        </p>
-                        <div className="mt-2 w-full bg-gray-200 rounded-full h-2">
-                          <div
-                            className={`h-2 rounded-full ${
-                              washbagCount >= washbagMax ? 'bg-red-500' : 'bg-purple-500'
-                            }`}
-                            style={{ width: `${Math.min((washbagCount / washbagMax) * 100, 100)}%` }}
-                          />
-                        </div>
-                        <p className="text-xs text-gray-500 mt-1">
-                          {washbagMax - washbagCount}개 남음
-                        </p>
-                      </div>
+                    <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                      <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                      </svg>
                     </div>
                   </div>
                 </div>
-              )
-            })()}
+              </div>
+            )}
 
             {/* 참여자 목록 테이블 */}
             {loadingManualEntries ? (
@@ -1857,9 +1777,6 @@ export default function PublicDashboardClient({ campaign }: PublicDashboardClien
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           완료일시
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          경품
                         </th>
                       </tr>
                     </thead>
@@ -1893,35 +1810,6 @@ export default function PublicDashboardClient({ campaign }: PublicDashboardClien
                                   minute: '2-digit',
                                 })
                               : '-'}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="flex items-center gap-4">
-                              <label className="flex items-center gap-2 cursor-pointer">
-                                <input
-                                  type="radio"
-                                  name={`prize-${entry.id}`}
-                                  checked={entry.prize_label === '우산'}
-                                  onChange={() => updatePrize(entry.id, '우산')}
-                                  disabled={updatingPrize === entry.id}
-                                  className="w-4 h-4 text-blue-600 focus:ring-blue-500"
-                                />
-                                <span className="text-sm text-gray-700">우산</span>
-                              </label>
-                              <label className="flex items-center gap-2 cursor-pointer">
-                                <input
-                                  type="radio"
-                                  name={`prize-${entry.id}`}
-                                  checked={entry.prize_label === '워시백'}
-                                  onChange={() => updatePrize(entry.id, '워시백')}
-                                  disabled={updatingPrize === entry.id}
-                                  className="w-4 h-4 text-blue-600 focus:ring-blue-500"
-                                />
-                                <span className="text-sm text-gray-700">워시백</span>
-                              </label>
-                              <span className="text-xs text-gray-500 w-20 text-right">
-                                {updatingPrize === entry.id ? '저장 중...' : ''}
-                              </span>
-                            </div>
                           </td>
                         </tr>
                       ))}

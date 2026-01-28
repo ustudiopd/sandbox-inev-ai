@@ -242,6 +242,12 @@ export default async function ClientDashboard({
             >
               🎨 브랜딩 설정
             </Link>
+            <Link 
+              href={`/client/${clientId}/campaigns`}
+              className="w-full md:w-auto px-4 py-2.5 md:px-6 md:py-3 bg-gradient-to-r from-orange-600 to-red-600 text-white rounded-xl hover:from-orange-700 hover:to-red-700 shadow-lg hover:shadow-xl transition-all duration-200 font-medium min-h-[44px] flex items-center justify-center"
+            >
+              📈 광고/캠페인
+            </Link>
           </div>
         </div>
         
