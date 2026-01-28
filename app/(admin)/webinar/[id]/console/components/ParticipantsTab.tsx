@@ -114,7 +114,6 @@ export default function ParticipantsTab({ webinarId }: ParticipantsTabProps) {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">역할</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">등록일시</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">등록 출처</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">마지막 로그인</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
@@ -154,12 +153,6 @@ export default function ParticipantsTab({ webinarId }: ParticipantsTabProps) {
                       {registrant.registered_via === 'registration_page' ? '등록 페이지' : 
                        registrant.registered_via === 'webinar' ? '웨비나 직접' : 
                        registrant.registered_via || '-'}
-                    </td>
-                    <td 
-                      className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 cursor-pointer"
-                      onClick={() => handleRegistrantClick(registrant)}
-                    >
-                      {registrant.last_login_at ? new Date(registrant.last_login_at).toLocaleString('ko-KR') : '-'}
                     </td>
                   </tr>
                 ))}
@@ -220,12 +213,6 @@ export default function ParticipantsTab({ webinarId }: ParticipantsTabProps) {
                     {selectedRegistrant.registered_via === 'registration_page' ? '등록 페이지' : 
                      selectedRegistrant.registered_via === 'webinar' ? '웨비나 직접' : 
                      selectedRegistrant.registered_via || '-'}
-                  </span>
-                </div>
-                <div>
-                  <span className="text-sm text-gray-600">마지막 로그인:</span>
-                  <span className="ml-2 text-sm font-medium text-gray-900">
-                    {selectedRegistrant.last_login_at ? new Date(selectedRegistrant.last_login_at).toLocaleString('ko-KR') : '-'}
                   </span>
                 </div>
               </div>
