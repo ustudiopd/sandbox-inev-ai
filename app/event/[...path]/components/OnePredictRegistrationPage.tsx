@@ -114,9 +114,15 @@ export default function OnePredictRegistrationPage({ campaign, baseUrl = '', utm
   }
 
   const [isRegistrationComplete, setIsRegistrationComplete] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const handleRegistration = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleRegistration = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+    
+    if (!campaign?.id) {
+      showMessageBox('캠페인 정보를 찾을 수 없습니다.')
+      return
+    }
     
     // 필수 필드 검증
     if (!formData.position) {
@@ -145,17 +151,131 @@ export default function OnePredictRegistrationPage({ campaign, baseUrl = '', utm
       return
     }
     
-    // 휴대폰 번호 합치기
-    const phone = `${formData.phone1}-${formData.phone2}-${formData.phone3}`
-    const registrationData = {
-      ...formData,
-      phone
-    }
-    console.log('등록 정보:', registrationData)
+    setIsSubmitting(true)
     
-    // 등록 완료 상태로 변경
-    setIsRegistrationComplete(true)
-    showMessageBox('등록이 완료되었습니다')
+    try {
+      // 휴대폰 번호 합치기
+      const phone = `${formData.phone1}-${formData.phone2}-${formData.phone3}`
+      const phoneNorm = phone.replace(/\D/g, '')
+      
+      // localStorage에서 UTM 읽기
+      let utmData: Record<string, any> = {}
+      try {
+        const storedUTM = localStorage.getItem(`utm:${campaign.id}`)
+        if (storedUTM) {
+          utmData = JSON.parse(storedUTM)
+        }
+      } catch (parseError) {
+        console.warn('[OnePredictRegistrationPage] UTM 파싱 실패:', parseError)
+      }
+      
+      // session_id 가져오기 (Visit 연결용) - 에러 발생해도 등록은 계속 진행
+      let sessionId: string | null = null
+      try {
+        sessionId = getOrCreateSessionId('ef_session_id', 30)
+      } catch (sessionError) {
+        console.warn('[OnePredictRegistrationPage] session_id 생성 실패 (무시):', sessionError)
+      }
+      
+      console.log('[OnePredictRegistrationPage] 등록 요청 시작:', {
+        campaignId: campaign.id,
+        email: formData.email.trim(),
+        name: formData.name.trim(),
+        phone: phoneNorm,
+        timestamp: new Date().toISOString()
+      })
+      
+      // 등록 API 호출
+      const apiUrl = `/api/public/event-survey/${campaign.id}/register`
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: formData.name.trim(),
+          company: formData.company.trim() || null,
+          phone: phone,
+          phone_norm: phoneNorm,
+          registration_data: {
+            email: formData.email.trim(),
+            name: formData.name.trim(),
+            company: formData.company.trim(),
+            position: formData.position,
+            jobTitle: formData.position,
+            industry: formData.industry,
+            address: formData.address.trim(),
+            country: formData.country.trim(),
+            interestedProducts: formData.interestedProducts,
+            message: formData.message.trim() || undefined,
+            phoneCountryCode: '+82',
+            privacyConsent: privacyConsent === 'yes',
+            consentEmail: false,
+            consentPhone: false,
+          },
+          // UTM 파라미터 추가
+          utm_source: utmData.utm_source || utmParams.utm_source || null,
+          utm_medium: utmData.utm_medium || utmParams.utm_medium || null,
+          utm_campaign: utmData.utm_campaign || utmParams.utm_campaign || null,
+          utm_term: utmData.utm_term || utmParams.utm_term || null,
+          utm_content: utmData.utm_content || utmParams.utm_content || null,
+          utm_first_visit_at: utmData.first_visit_at || null,
+          utm_referrer: utmData.referrer_domain || null,
+          cid: cid || null,
+          session_id: sessionId || null, // Visit 연결용 (Phase 3) - 없어도 등록 성공
+        }),
+      })
+      
+      console.log('[OnePredictRegistrationPage] 응답 수신:', {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok,
+      })
+      
+      // 응답 본문 읽기 시도
+      let result: any
+      try {
+        const text = await response.text()
+        console.log('[OnePredictRegistrationPage] 응답 본문:', text.substring(0, 500))
+        if (text) {
+          result = JSON.parse(text)
+        } else {
+          result = {}
+        }
+      } catch (parseError) {
+        console.error('[OnePredictRegistrationPage] 응답 파싱 오류:', parseError)
+        throw new Error('서버 응답을 읽을 수 없습니다.')
+      }
+      
+      if (!response.ok) {
+        console.error('[OnePredictRegistrationPage] 등록 실패:', {
+          status: response.status,
+          statusText: response.statusText,
+          error: result.error || '알 수 없는 오류',
+          result
+        })
+        throw new Error(result.error || `등록에 실패했습니다. (${response.status})`)
+      }
+      
+      // 성공 응답 검증
+      if (!result.survey_no || !result.code6) {
+        console.error('[OnePredictRegistrationPage] 잘못된 응답:', result)
+        throw new Error('서버에서 잘못된 응답을 받았습니다.')
+      }
+      
+      console.log('[OnePredictRegistrationPage] 등록 성공:', {
+        survey_no: result.survey_no,
+        code6: result.code6,
+        email: formData.email.trim()
+      })
+      
+      // 등록 완료 상태로 변경
+      setIsRegistrationComplete(true)
+      showMessageBox('등록이 완료되었습니다')
+    } catch (err: any) {
+      console.error('[OnePredictRegistrationPage] 등록 제출 오류:', err)
+      showMessageBox(err.message || '등록 중 오류가 발생했습니다. 다시 시도해주세요.')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -511,10 +631,11 @@ export default function OnePredictRegistrationPage({ campaign, baseUrl = '', utm
               <div className="pt-4">
                 <button
                   type="submit"
-                  className="w-full px-8 max-sm:px-6 py-4 max-sm:py-3 text-white font-bold rounded-lg transition-all hover:bg-[#12058E] hover:-translate-y-0.5 max-sm:text-sm"
+                  disabled={isSubmitting || !campaign?.id}
+                  className="w-full px-8 max-sm:px-6 py-4 max-sm:py-3 text-white font-bold rounded-lg transition-all hover:bg-[#12058E] hover:-translate-y-0.5 max-sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                   style={{ backgroundColor: '#2936E7' }}
                 >
-                  등록 완료하기
+                  {isSubmitting ? '등록 중...' : '등록 완료하기'}
                 </button>
               </div>
             </form>

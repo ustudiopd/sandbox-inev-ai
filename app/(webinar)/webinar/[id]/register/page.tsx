@@ -3,6 +3,7 @@ import { headers } from 'next/headers'
 import { Suspense } from 'react'
 import { createAdminSupabase } from '@/lib/supabase/admin'
 import { getWebinarQuery } from '@/lib/utils/webinar'
+import { extractUTMParams } from '@/lib/utils/utm'
 import OnePredictRegistrationPage from '@/app/event/[...path]/components/OnePredictRegistrationPage'
 import type { Metadata } from 'next'
 
@@ -117,12 +118,18 @@ export async function generateMetadata({
 
 export default async function WebinarRegisterPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }) {
   const { id } = await params
+  const searchParamsData = await searchParams
   const admin = createAdminSupabase()
   const query = getWebinarQuery(id)
+  
+  // UTM 파라미터 추출
+  const utmParams = extractUTMParams(searchParamsData)
   
   // 426307 slug인 경우 OnePredictRegistrationPage를 표시
   const is426307 = query.column === 'slug' && String(query.value) === '426307'
@@ -190,7 +197,7 @@ export default async function WebinarRegisterPage({
           </div>
         </div>
       }>
-        <OnePredictRegistrationPage campaign={campaignData} baseUrl={baseUrl} />
+        <OnePredictRegistrationPage campaign={campaignData} baseUrl={baseUrl} utmParams={utmParams} />
       </Suspense>
     )
   }
