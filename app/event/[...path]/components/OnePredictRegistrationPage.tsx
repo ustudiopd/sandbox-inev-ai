@@ -37,6 +37,23 @@ export default function OnePredictRegistrationPage({ campaign, baseUrl = '', utm
   // 개인정보 활용 동의 상태
   const [privacyConsent, setPrivacyConsent] = useState<'yes' | 'no' | null>(null)
   
+  // 세션 ID 상태 관리 (Visit과 등록에서 동일한 세션 ID 사용 보장)
+  const [sessionId, setSessionId] = useState<string | null>(null)
+  
+  // 세션 ID 초기화 (컴포넌트 마운트 시 한 번만)
+  useEffect(() => {
+    try {
+      const id = getOrCreateSessionId('ef_session_id', 30)
+      setSessionId(id)
+      console.log('[OnePredictRegistrationPage] 세션 ID 초기화:', id)
+    } catch (error) {
+      console.warn('[OnePredictRegistrationPage] 세션 ID 초기화 실패:', error)
+      // 실패해도 새로 생성
+      const fallbackId = getOrCreateSessionId('ef_session_id', 30)
+      setSessionId(fallbackId)
+    }
+  }, []) // 빈 의존성 배열: 마운트 시 한 번만 실행
+  
   // UTM 파라미터 localStorage 저장 (서버에서 추출한 값 사용)
   useEffect(() => {
     if (Object.keys(utmParams).length > 0 && campaign?.id) {
@@ -62,11 +79,10 @@ export default function OnePredictRegistrationPage({ campaign, baseUrl = '', utm
   
   // Visit 수집 (Phase 3) - 에러 발생해도 등록은 계속 진행
   useEffect(() => {
-    if (!campaign?.id) return
+    if (!campaign?.id || !sessionId) return
     
     try {
-      // session_id 생성/조회 (cookie 기반, 30분 TTL)
-      const sessionId = getOrCreateSessionId('ef_session_id', 30)
+      // 상태에서 관리하는 session_id 사용 (쿠키 최신화 문제 해결)
       
       // localStorage에서 UTM 읽기
       let utmData: Record<string, any> = {}
@@ -85,7 +101,7 @@ export default function OnePredictRegistrationPage({ campaign, baseUrl = '', utm
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          session_id: sessionId,
+          session_id: sessionId, // 상태에서 관리하는 세션 ID 사용
           utm_source: utmData.utm_source || utmParams.utm_source || null,
           utm_medium: utmData.utm_medium || utmParams.utm_medium || null,
           utm_campaign: utmData.utm_campaign || utmParams.utm_campaign || null,
@@ -103,7 +119,7 @@ export default function OnePredictRegistrationPage({ campaign, baseUrl = '', utm
       // Visit 수집 초기화 실패도 무시
       console.warn('[OnePredictRegistrationPage] Visit 수집 초기화 실패 (무시):', error)
     }
-  }, [campaign?.id, cid, utmParams])
+  }, [campaign?.id, cid, utmParams, sessionId]) // sessionId 의존성 추가
   
   const showMessageBox = (text: string) => {
     setMessageText(text)
@@ -169,19 +185,14 @@ export default function OnePredictRegistrationPage({ campaign, baseUrl = '', utm
         console.warn('[OnePredictRegistrationPage] UTM 파싱 실패:', parseError)
       }
       
-      // session_id 가져오기 (Visit 연결용) - 에러 발생해도 등록은 계속 진행
-      let sessionId: string | null = null
-      try {
-        sessionId = getOrCreateSessionId('ef_session_id', 30)
-      } catch (sessionError) {
-        console.warn('[OnePredictRegistrationPage] session_id 생성 실패 (무시):', sessionError)
-      }
-      
+      // 상태에서 관리하는 session_id 사용 (Visit과 동일한 세션 ID 보장)
+      // 쿠키 최신화 문제 해결: 한 번 생성한 세션 ID를 재사용
       console.log('[OnePredictRegistrationPage] 등록 요청 시작:', {
         campaignId: campaign.id,
         email: formData.email.trim(),
         name: formData.name.trim(),
         phone: phoneNorm,
+        sessionId: sessionId, // 상태에서 관리하는 세션 ID
         timestamp: new Date().toISOString()
       })
       
@@ -227,7 +238,7 @@ export default function OnePredictRegistrationPage({ campaign, baseUrl = '', utm
           utm_first_visit_at: utmData.first_visit_at || null,
           utm_referrer: utmData.referrer_domain || null,
           cid: cid || null,
-          session_id: sessionId || null, // Visit 연결용 (Phase 3) - 없어도 등록 성공
+          session_id: sessionId || null, // 상태에서 관리하는 세션 ID (Visit과 동일) - 없어도 등록 성공
         }),
           signal: controller.signal,
         })
