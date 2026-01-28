@@ -79,13 +79,13 @@ export async function generateMetadata({
     if (id === '426307') {
       const thumbnailUrl = 'https://yqsayphssjznthrxpgfb.supabase.co/storage/v1/object/public/webinar-thumbnails/onepredict/fb0be79a9dfc8.jpg'
       return {
-        title: 'AI가 움직이는 공장: AI native factory I - AI Ready Data | 원프레딕트 웨비나 등록',
-        description: '[원프레딕트] 2월 웨비나',
+        title: '[원프레딕트] 2월 웨비나 | EventFlow 웨비나 등록',
+        description: 'AI가 움직이는 공장: AI native factory I - AI Ready Data',
         keywords: '원프레딕트, GuardiOne, 산업 AI, 설비 관리, 디지털 트랜스포메이션, 예지보전, 웨비나',
         metadataBase: new URL('https://eventflow.kr'),
         openGraph: {
-          title: 'AI가 움직이는 공장: AI native factory I - AI Ready Data',
-          description: '[원프레딕트] 2월 웨비나',
+          title: '[원프레딕트] 2월 웨비나',
+          description: 'AI가 움직이는 공장: AI native factory I - AI Ready Data',
           type: 'website',
           url: 'https://eventflow.kr/webinar/426307/register',
           siteName: '원프레딕트 웨비나',
@@ -94,14 +94,14 @@ export async function generateMetadata({
               url: thumbnailUrl,
               width: 1200,
               height: 630,
-              alt: '원프레딕트 웨비나',
+              alt: '[원프레딕트] 2월 웨비나',
             },
           ],
         },
         twitter: {
           card: 'summary_large_image',
-          title: 'AI가 움직이는 공장: AI native factory I - AI Ready Data',
-          description: '[원프레딕트] 2월 웨비나',
+          title: '[원프레딕트] 2월 웨비나',
+          description: 'AI가 움직이는 공장: AI native factory I - AI Ready Data',
           images: [thumbnailUrl],
         },
         alternates: {
