@@ -3,15 +3,35 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
+import { extractDomain } from '@/lib/utils/utm'
 
 interface RegistrationPageProps {
   campaign: any
   baseUrl: string
+  utmParams?: Record<string, string>
 }
 
-export default function RegistrationPage({ campaign, baseUrl }: RegistrationPageProps) {
+export default function RegistrationPage({ campaign, baseUrl, utmParams = {} }: RegistrationPageProps) {
   const searchParams = useSearchParams()
   const isLookup = searchParams.get('lookup') === 'true'
+  
+  // UTM 파라미터 localStorage 저장 (서버에서 추출한 값 사용)
+  useEffect(() => {
+    if (Object.keys(utmParams).length > 0) {
+      const existingUTM = localStorage.getItem(`utm:${campaign.id}`)
+      const existingData = existingUTM ? JSON.parse(existingUTM) : null
+      
+      const utmData = {
+        ...utmParams,
+        captured_at: new Date().toISOString(),
+        first_visit_at: existingData?.first_visit_at || new Date().toISOString(),
+        referrer_domain: extractDomain(document.referrer),
+      }
+      
+      // last-touch 정책: 기존 값이 있으면 overwrite
+      localStorage.setItem(`utm:${campaign.id}`, JSON.stringify(utmData))
+    }
+  }, [campaign.id, utmParams])
   
   const [submitted, setSubmitted] = useState(false)
   const [result, setResult] = useState<{ survey_no: number; code6: string } | null>(null)
@@ -168,10 +188,13 @@ export default function RegistrationPage({ campaign, baseUrl }: RegistrationPage
             organization: organization.trim(),
             department: department.trim(),
             position: position.trim(),
+            jobTitle: position.trim(), // 직책 (position과 동일, 호환성)
             yearsOfExperience: yearsOfExperience.trim(),
             question: question.trim() || undefined, // 선택 필드 (빈 문자열이면 undefined)
             phoneCountryCode: phoneCountryCode,
             privacyConsent: privacyConsent === 'yes',
+            consentEmail: false, // 이메일 수신 동의 (등록 페이지에서는 별도 필드 없음)
+            consentPhone: false, // 전화 수신 동의 (등록 페이지에서는 별도 필드 없음)
           },
           // UTM 파라미터 추가
           utm_source: utmData.utm_source || null,

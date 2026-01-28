@@ -242,12 +242,25 @@ export async function POST(
     // 등록자 정보 저장 (설문 답변 없이)
     // registration_data의 이메일을 소문자로 정규화
     let normalizedRegistrationData = registration_data
-    if (normalizedRegistrationData?.email) {
-      normalizedRegistrationData = {
-        ...normalizedRegistrationData,
-        email: normalizedRegistrationData.email.trim().toLowerCase(),
+    if (normalizedRegistrationData) {
+      // 빈 문자열 필드 제거 및 정규화
+      const cleanedData: Record<string, any> = {}
+      for (const [key, value] of Object.entries(normalizedRegistrationData)) {
+        if (value !== null && value !== undefined && value !== '') {
+          cleanedData[key] = value
+        }
       }
+      
+      // 이메일 소문자 정규화
+      if (cleanedData.email) {
+        cleanedData.email = cleanedData.email.trim().toLowerCase()
+      }
+      
+      normalizedRegistrationData = Object.keys(cleanedData).length > 0 ? cleanedData : null
     }
+    
+    // 디버깅: registration_data 확인
+    console.log('[register] registration_data:', JSON.stringify(normalizedRegistrationData, null, 2))
     
     const { data: entry, error: entryError } = await admin
       .from('event_survey_entries')
@@ -259,7 +272,7 @@ export async function POST(
         survey_no: surveyNo,
         code6: code6,
         completed_at: new Date().toISOString(),
-        registration_data: normalizedRegistrationData || null,
+        registration_data: normalizedRegistrationData,
         // UTM 파라미터 저장 (graceful: 저장 실패해도 등록은 성공)
         utm_source: normalizedUTM.utm_source || null,
         utm_medium: normalizedUTM.utm_medium || null,
