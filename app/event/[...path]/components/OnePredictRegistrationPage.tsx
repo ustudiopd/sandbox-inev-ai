@@ -22,7 +22,7 @@ export default function OnePredictRegistrationPage({ campaign, baseUrl = '', utm
   const [formData, setFormData] = useState({
     email: '',
     name: '',
-    phone1: '',
+    phone1: '010', // 기본값: 010
     phone2: '',
     phone3: '',
     company: '',
@@ -30,7 +30,7 @@ export default function OnePredictRegistrationPage({ campaign, baseUrl = '', utm
     interestedProducts: [] as string[],
     industry: '',
     address: '',
-    country: '',
+    country: '대한민국', // 기본값: 대한민국 (수정 가능)
     message: ''
   })
   
