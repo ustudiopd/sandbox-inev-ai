@@ -117,33 +117,38 @@ export default function RegistrationPage({ campaign, baseUrl, utmParams = {} }: 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    // 필수 필드 검증
-    if (!email.trim()) {
+    // 필수 필드 검증 (빈 문자열 및 플레이스홀더 값 체크)
+    const isValidValue = (value: string) => {
+      const trimmed = value.trim()
+      return trimmed && trimmed !== '-' && trimmed !== '없음' && trimmed !== 'N/A' && trimmed !== 'n/a'
+    }
+    
+    if (!isValidValue(email)) {
       setError('이메일을 입력해주세요.')
       return
     }
     
-    if (!name.trim()) {
+    if (!isValidValue(name)) {
       setError('이름을 입력해주세요.')
       return
     }
     
-    if (!organization.trim()) {
+    if (!isValidValue(organization)) {
       setError('소속을 입력해주세요.')
       return
     }
     
-    if (!department.trim()) {
+    if (!isValidValue(department)) {
       setError('부서를 입력해주세요.')
       return
     }
     
-    if (!position.trim()) {
+    if (!isValidValue(position)) {
       setError('직함을 입력해주세요.')
       return
     }
     
-    if (!yearsOfExperience.trim()) {
+    if (!isValidValue(yearsOfExperience)) {
       setError('연차(경력)를 입력해주세요.')
       return
     }
