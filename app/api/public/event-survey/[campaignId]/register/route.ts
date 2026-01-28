@@ -17,6 +17,9 @@ export async function POST(
 ) {
   try {
     const { campaignId } = await params
+    console.log('[register] 등록 요청 시작:', { campaignId, timestamp: new Date().toISOString() })
+    
+    const body = await req.json()
     const { 
       name, 
       company, 
@@ -33,7 +36,14 @@ export async function POST(
       utm_referrer,
       marketing_campaign_link_id,
       cid, // cid 파라미터 추가
-    } = await req.json()
+    } = body
+    
+    console.log('[register] 요청 데이터:', { 
+      name, 
+      email: registration_data?.email,
+      phone_norm,
+      hasRegistrationData: !!registration_data
+    })
     
     const admin = createAdminSupabase()
     
@@ -314,12 +324,19 @@ export async function POST(
       .single()
     
     if (entryError) {
-      console.error('등록자 정보 저장 오류:', entryError)
+      console.error('[register] 등록자 정보 저장 오류:', entryError)
       return NextResponse.json(
         { error: 'Failed to save registration' },
         { status: 500 }
       )
     }
+    
+    console.log('[register] 등록 성공:', { 
+      survey_no: entry?.survey_no, 
+      code6: entry?.code6,
+      email: registration_data?.email,
+      timestamp: new Date().toISOString()
+    })
     
     // 웨비나 연동: 등록 데이터에 이메일이 있으면 이 캠페인과 연동된 웨비나에도 등록
     if (registration_data?.email) {
