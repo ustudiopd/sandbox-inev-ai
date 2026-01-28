@@ -11,13 +11,44 @@ export const runtime = 'nodejs'
  * 
  * 페이지 방문 시 호출되어 Visit을 기록합니다.
  * 등록/전환 시 이 Visit과 연결됩니다.
+ * 
+ * Visit Dedup 규칙:
+ * - 하나의 session_id는 하나의 캠페인에 대해 최대 1회 Visit으로 집계됩니다.
+ * - API 레벨의 중복 방지 로직은 DB write 폭주 방지용이며,
+ *   집계 기준은 session_id 기준입니다.
+ * - 즉, 같은 session_id로 여러 번 호출되어도 집계 시에는 1회로 계산됩니다.
  */
 export async function POST(
   req: Request,
   { params }: { params: Promise<{ campaignId: string }> }
 ) {
+  const { campaignId } = await params
   try {
-    const { campaignId } = await params
+    
+    // 강제 실패 모드 (회귀 테스트용)
+    // 쿼리스트링 또는 헤더로 활성화: ?__debug_visit_fail=1 또는 x-debug-visit-fail: 1
+    // 보안: 개발 환경 또는 특정 환경 변수에서만 활성화
+    const url = new URL(req.url)
+    const debugFailQuery = url.searchParams.get('__debug_visit_fail')
+    const debugFailHeader = req.headers.get('x-debug-visit-fail')
+    const debugFailEnabled = process.env.DEBUG_VISIT_FAIL_ENABLED === 'true' || process.env.NODE_ENV === 'development'
+    
+    if (debugFailEnabled && (debugFailQuery === '1' || debugFailHeader === '1')) {
+      // 구조화 로그: 강제 실패 모드
+      console.error('[VisitTrackFail]', JSON.stringify({
+        campaignId,
+        sessionId: 'N/A',
+        reason: 'FORCED_FAILURE_MODE',
+        status: 500,
+        timestamp: new Date().toISOString(),
+        mode: 'debug'
+      }))
+      return NextResponse.json(
+        { success: false, error: 'Forced failure mode (debug)' },
+        { status: 500 }
+      )
+    }
+    
     const {
       session_id,
       utm_source,
@@ -176,19 +207,46 @@ export async function POST(
         .insert(insertData)
       
       if (insertError) {
-        console.error('[visit] Visit 저장 실패:', insertError)
+        // 구조화 로그: Visit 저장 실패
+        console.error('[VisitTrackFail]', JSON.stringify({
+          campaignId: actualCampaignId,
+          sessionId: session_id,
+          reason: 'DB_INSERT_FAILED',
+          status: 500,
+          error: insertError.message,
+          code: insertError.code,
+          timestamp: new Date().toISOString()
+        }))
         // Visit 저장 실패해도 200 반환 (graceful failure)
         return NextResponse.json({ success: false, error: 'Failed to save visit' })
       }
       
       return NextResponse.json({ success: true })
     } catch (insertException: any) {
-      console.error('[visit] Visit 저장 예외:', insertException)
+      // 구조화 로그: Visit 저장 예외
+      console.error('[VisitTrackFail]', JSON.stringify({
+        campaignId: actualCampaignId,
+        sessionId: session_id,
+        reason: 'EXCEPTION',
+        status: 500,
+        error: insertException.message,
+        stack: insertException.stack?.substring(0, 200),
+        timestamp: new Date().toISOString()
+      }))
       // 예외 발생해도 200 반환 (graceful failure)
       return NextResponse.json({ success: false, error: insertException.message || 'Failed to save visit' })
     }
   } catch (error: any) {
-    console.error('[visit] Visit API 오류:', error)
+    // 구조화 로그: Visit API 전체 오류
+    console.error('[VisitTrackFail]', JSON.stringify({
+      campaignId,
+      sessionId: 'N/A',
+      reason: 'API_ERROR',
+      status: 500,
+      error: error.message,
+      stack: error.stack?.substring(0, 200),
+      timestamp: new Date().toISOString()
+    }))
     // 에러 발생해도 200 반환 (Visit 실패해도 페이지는 정상 동작)
     return NextResponse.json({ success: false, error: error.message || 'Internal server error' })
   }

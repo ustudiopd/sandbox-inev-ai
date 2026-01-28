@@ -35,12 +35,12 @@ export default function PublicDashboardClient({ webinar }: PublicDashboardClient
     }
   }
 
-  // 전화번호 마스킹 함수 (뒷자리 4개만 표시)
+  // 전화번호 마스킹 함수 (뒷자리만 표시)
   const maskPhone = (phone: string | null | undefined): string => {
     if (!phone) return '-'
     const phoneNorm = phone.replace(/\D/g, '')
     if (phoneNorm.length >= 4) {
-      return `****-****-${phoneNorm.slice(-4)}`
+      return phoneNorm.slice(-4)
     }
     return phone
   }
@@ -126,12 +126,6 @@ export default function PublicDashboardClient({ webinar }: PublicDashboardClient
                     <thead className="bg-gray-50">
                       <tr>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          완료번호
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          확인코드
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           이름
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -155,12 +149,6 @@ export default function PublicDashboardClient({ webinar }: PublicDashboardClient
                         
                         return (
                           <tr key={entry.id} className="hover:bg-gray-50">
-                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                              {entry.survey_no || '-'}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-mono">
-                              {entry.code6 || '-'}
-                            </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                               {entry.name || '-'}
                             </td>

@@ -282,12 +282,16 @@ export default function ParticipantsTab({ webinarId }: ParticipantsTabProps) {
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">완료번호</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">확인코드</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">이름</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">이메일</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">회사명</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">직책</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">전화번호</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">산업</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">주소</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">국가</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">관심제품</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">메시지</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">완료일시</th>
                 </tr>
               </thead>
@@ -300,22 +304,16 @@ export default function ParticipantsTab({ webinarId }: ParticipantsTabProps) {
                       className="hover:bg-gray-50 transition-colors"
                     >
                       <td 
-                        className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 cursor-pointer"
-                        onClick={() => handleRegistrantClick(registrant)}
-                      >
-                        {registrant.survey_no || '-'}
-                      </td>
-                      <td 
-                        className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-mono cursor-pointer"
-                        onClick={() => handleRegistrantClick(registrant)}
-                      >
-                        {registrant.code6 || '-'}
-                      </td>
-                      <td 
                         className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 cursor-pointer"
                         onClick={() => handleRegistrantClick(registrant)}
                       >
                         {registrant.name || '-'}
+                      </td>
+                      <td 
+                        className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 cursor-pointer"
+                        onClick={() => handleRegistrantClick(registrant)}
+                      >
+                        {registrant.email || regData.email || '-'}
                       </td>
                       <td 
                         className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 cursor-pointer"
@@ -334,6 +332,38 @@ export default function ParticipantsTab({ webinarId }: ParticipantsTabProps) {
                         onClick={() => handleRegistrantClick(registrant)}
                       >
                         {regData.phone || regData.phone_norm || registrant.phone_norm || '-'}
+                      </td>
+                      <td 
+                        className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 cursor-pointer"
+                        onClick={() => handleRegistrantClick(registrant)}
+                      >
+                        {regData.industry || '-'}
+                      </td>
+                      <td 
+                        className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 cursor-pointer"
+                        onClick={() => handleRegistrantClick(registrant)}
+                      >
+                        {regData.address || '-'}
+                      </td>
+                      <td 
+                        className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 cursor-pointer"
+                        onClick={() => handleRegistrantClick(registrant)}
+                      >
+                        {regData.country || '-'}
+                      </td>
+                      <td 
+                        className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 cursor-pointer"
+                        onClick={() => handleRegistrantClick(registrant)}
+                      >
+                        {Array.isArray(regData.interestedProducts) 
+                          ? regData.interestedProducts.join(', ') 
+                          : regData.interestedProducts || '-'}
+                      </td>
+                      <td 
+                        className="px-6 py-4 text-sm text-gray-500 cursor-pointer"
+                        onClick={() => handleRegistrantClick(registrant)}
+                      >
+                        {regData.message || '-'}
                       </td>
                       <td 
                         className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 cursor-pointer"
