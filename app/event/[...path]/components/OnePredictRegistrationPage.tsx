@@ -1,8 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { extractDomain } from '@/lib/utils/utm'
+import { getOrCreateSessionId } from '@/lib/utils/session'
 
 interface OnePredictRegistrationPageProps {
   campaign?: any
@@ -12,6 +13,8 @@ interface OnePredictRegistrationPageProps {
 
 export default function OnePredictRegistrationPage({ campaign, baseUrl = '', utmParams = {} }: OnePredictRegistrationPageProps) {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const cid = searchParams.get('cid')
   const [showMessage, setShowMessage] = useState(false)
   const [messageText, setMessageText] = useState('')
   
@@ -34,6 +37,73 @@ export default function OnePredictRegistrationPage({ campaign, baseUrl = '', utm
   // 개인정보 활용 동의 상태
   const [privacyConsent, setPrivacyConsent] = useState<'yes' | 'no' | null>(null)
   
+  // UTM 파라미터 localStorage 저장 (서버에서 추출한 값 사용)
+  useEffect(() => {
+    if (Object.keys(utmParams).length > 0 && campaign?.id) {
+      try {
+        const existingUTM = localStorage.getItem(`utm:${campaign.id}`)
+        const existingData = existingUTM ? JSON.parse(existingUTM) : null
+        
+        const utmData = {
+          ...utmParams,
+          captured_at: new Date().toISOString(),
+          first_visit_at: existingData?.first_visit_at || new Date().toISOString(),
+          referrer_domain: extractDomain(document.referrer),
+        }
+        
+        // last-touch 정책: 기존 값이 있으면 overwrite
+        localStorage.setItem(`utm:${campaign.id}`, JSON.stringify(utmData))
+      } catch (error) {
+        // localStorage 저장 실패는 무시 (graceful)
+        console.warn('[OnePredictRegistrationPage] UTM 저장 실패:', error)
+      }
+    }
+  }, [campaign?.id, utmParams])
+  
+  // Visit 수집 (Phase 3) - 에러 발생해도 등록은 계속 진행
+  useEffect(() => {
+    if (!campaign?.id) return
+    
+    try {
+      // session_id 생성/조회 (cookie 기반, 30분 TTL)
+      const sessionId = getOrCreateSessionId('ef_session_id', 30)
+      
+      // localStorage에서 UTM 읽기
+      let utmData: Record<string, any> = {}
+      try {
+        const storedUTM = localStorage.getItem(`utm:${campaign.id}`)
+        if (storedUTM) {
+          utmData = JSON.parse(storedUTM)
+        }
+      } catch (parseError) {
+        // localStorage 파싱 실패는 무시
+        console.warn('[OnePredictRegistrationPage] UTM 파싱 실패:', parseError)
+      }
+      
+      // Visit 수집 (비동기, 실패해도 계속 진행)
+      fetch(`/api/public/campaigns/${campaign.id}/visit`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          session_id: sessionId,
+          utm_source: utmData.utm_source || utmParams.utm_source || null,
+          utm_medium: utmData.utm_medium || utmParams.utm_medium || null,
+          utm_campaign: utmData.utm_campaign || utmParams.utm_campaign || null,
+          utm_term: utmData.utm_term || utmParams.utm_term || null,
+          utm_content: utmData.utm_content || utmParams.utm_content || null,
+          cid: cid || null,
+          referrer: typeof document !== 'undefined' ? document.referrer || null : null,
+          user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
+        }),
+      }).catch((error) => {
+        // Visit 수집 실패는 무시 (graceful failure)
+        console.warn('[OnePredictRegistrationPage] Visit 수집 실패 (무시):', error)
+      })
+    } catch (error) {
+      // Visit 수집 초기화 실패도 무시
+      console.warn('[OnePredictRegistrationPage] Visit 수집 초기화 실패 (무시):', error)
+    }
+  }, [campaign?.id, cid, utmParams])
   
   const showMessageBox = (text: string) => {
     setMessageText(text)

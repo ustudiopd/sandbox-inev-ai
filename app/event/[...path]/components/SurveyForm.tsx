@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { getOrCreateSessionId } from '@/lib/utils/session'
 
 interface FormQuestion {
   id: string
@@ -412,8 +413,25 @@ export default function SurveyForm({
       })
       
       // localStorage에서 UTM 읽기
-      const storedUTM = localStorage.getItem(`utm:${campaignId}`)
-      const utmData = storedUTM ? JSON.parse(storedUTM) : {}
+      let utmData: Record<string, any> = {}
+      try {
+        const storedUTM = localStorage.getItem(`utm:${campaignId}`)
+        if (storedUTM) {
+          utmData = JSON.parse(storedUTM)
+        }
+      } catch (parseError) {
+        // localStorage 파싱 실패는 무시
+        console.warn('[SurveyForm] UTM 파싱 실패:', parseError)
+      }
+      
+      // session_id 가져오기 (Visit 연결용) - 에러 발생해도 제출은 계속 진행
+      let sessionId: string | null = null
+      try {
+        sessionId = getOrCreateSessionId('ef_session_id', 30)
+      } catch (sessionError) {
+        // session_id 생성 실패는 무시 (제출은 계속 진행)
+        console.warn('[SurveyForm] session_id 생성 실패 (무시):', sessionError)
+      }
       
       // URL에서 cid 파라미터 읽기 (명세서 요구사항)
       const urlParams = new URLSearchParams(window.location.search)
@@ -437,6 +455,7 @@ export default function SurveyForm({
           utm_first_visit_at: utmData.first_visit_at || null,
           utm_referrer: utmData.referrer_domain || null,
           cid: cid || null, // cid 파라미터 전달
+          session_id: sessionId || null, // Visit 연결용 (Phase 3) - 없어도 제출 성공
         }),
       })
       

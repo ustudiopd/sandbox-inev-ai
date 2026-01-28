@@ -36,6 +36,7 @@ export async function POST(
       utm_referrer,
       marketing_campaign_link_id,
       cid, // cid 파라미터 추가
+      session_id, // Visit 연결용 (Phase 3) - optional
     } = body
     
     console.log('[register] 요청 데이터:', { 
@@ -320,7 +321,7 @@ export async function POST(
         utm_referrer: utm_referrer || null,
         marketing_campaign_link_id: resolvedMarketingCampaignLinkId,
       })
-      .select('survey_no, code6')
+      .select('id, survey_no, code6')
       .single()
     
     if (entryError) {
@@ -329,6 +330,24 @@ export async function POST(
         { error: 'Failed to save registration' },
         { status: 500 }
       )
+    }
+    
+    // 전환 시 Visit과 연결 (Phase 3) - 실패해도 등록은 성공
+    if (session_id && entry?.id) {
+      try {
+        await admin
+          .from('event_access_logs')
+          .update({
+            converted_at: new Date().toISOString(),
+            entry_id: entry.id,
+          })
+          .eq('campaign_id', campaignId)
+          .eq('session_id', session_id)
+          .is('converted_at', null) // 아직 전환되지 않은 것만
+      } catch (visitError) {
+        // Visit 연결 실패는 경고만 하고 등록은 성공으로 처리
+        console.warn('[register] Visit 연결 실패 (등록은 성공):', visitError)
+      }
     }
     
     console.log('[register] 등록 성공:', { 

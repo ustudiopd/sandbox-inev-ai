@@ -32,6 +32,7 @@ export async function POST(
       utm_referrer,
       marketing_campaign_link_id,
       cid, // cid 파라미터 추가
+      session_id, // Visit 연결용 (Phase 3) - optional
     } = await req.json()
     
     const admin = createAdminSupabase()
@@ -271,7 +272,7 @@ export async function POST(
         utm_referrer: utm_referrer || null,
         marketing_campaign_link_id: resolvedMarketingCampaignLinkId,
       })
-      .select()
+      .select('id, survey_no, code6')
       .single()
     
     if (entryError) {
@@ -279,6 +280,24 @@ export async function POST(
         { error: entryError.message },
         { status: 500 }
       )
+    }
+    
+    // 전환 시 Visit과 연결 (Phase 3) - 실패해도 제출은 성공
+    if (session_id && entry?.id) {
+      try {
+        await admin
+          .from('event_access_logs')
+          .update({
+            converted_at: new Date().toISOString(),
+            entry_id: entry.id,
+          })
+          .eq('campaign_id', campaignId)
+          .eq('session_id', session_id)
+          .is('converted_at', null) // 아직 전환되지 않은 것만
+      } catch (visitError) {
+        // Visit 연결 실패는 경고만 하고 제출은 성공으로 처리
+        console.warn('[submit] Visit 연결 실패 (제출은 성공):', visitError)
+      }
     }
     
     return NextResponse.json({

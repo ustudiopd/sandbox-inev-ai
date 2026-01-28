@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { extractDomain } from '@/lib/utils/utm'
+import { getOrCreateSessionId } from '@/lib/utils/session'
 
 interface RegistrationPageProps {
   campaign: any
@@ -20,21 +21,71 @@ export default function RegistrationPage({ campaign, baseUrl, utmParams = {} }: 
   
   // UTM 파라미터 localStorage 저장 (서버에서 추출한 값 사용)
   useEffect(() => {
-    if (Object.keys(utmParams).length > 0) {
-      const existingUTM = localStorage.getItem(`utm:${campaign.id}`)
-      const existingData = existingUTM ? JSON.parse(existingUTM) : null
+    if (Object.keys(utmParams).length > 0 && campaign?.id) {
+      try {
+        const existingUTM = localStorage.getItem(`utm:${campaign.id}`)
+        const existingData = existingUTM ? JSON.parse(existingUTM) : null
+        
+        const utmData = {
+          ...utmParams,
+          captured_at: new Date().toISOString(),
+          first_visit_at: existingData?.first_visit_at || new Date().toISOString(),
+          referrer_domain: extractDomain(document.referrer),
+        }
+        
+        // last-touch 정책: 기존 값이 있으면 overwrite
+        localStorage.setItem(`utm:${campaign.id}`, JSON.stringify(utmData))
+      } catch (error) {
+        // localStorage 저장 실패는 무시 (graceful)
+        console.warn('[RegistrationPage] UTM 저장 실패:', error)
+      }
+    }
+  }, [campaign?.id, utmParams])
+  
+  // Visit 수집 (Phase 3) - 에러 발생해도 등록은 계속 진행
+  useEffect(() => {
+    if (!campaign?.id) return
+    
+    try {
+      // session_id 생성/조회 (cookie 기반, 30분 TTL)
+      const sessionId = getOrCreateSessionId('ef_session_id', 30)
       
-      const utmData = {
-        ...utmParams,
-        captured_at: new Date().toISOString(),
-        first_visit_at: existingData?.first_visit_at || new Date().toISOString(),
-        referrer_domain: extractDomain(document.referrer),
+      // localStorage에서 UTM 읽기
+      let utmData: Record<string, any> = {}
+      try {
+        const storedUTM = localStorage.getItem(`utm:${campaign.id}`)
+        if (storedUTM) {
+          utmData = JSON.parse(storedUTM)
+        }
+      } catch (parseError) {
+        // localStorage 파싱 실패는 무시
+        console.warn('[RegistrationPage] UTM 파싱 실패:', parseError)
       }
       
-      // last-touch 정책: 기존 값이 있으면 overwrite
-      localStorage.setItem(`utm:${campaign.id}`, JSON.stringify(utmData))
+      // Visit 수집 (비동기, 실패해도 계속 진행)
+      fetch(`/api/public/campaigns/${campaign.id}/visit`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          session_id: sessionId,
+          utm_source: utmData.utm_source || utmParams.utm_source || null,
+          utm_medium: utmData.utm_medium || utmParams.utm_medium || null,
+          utm_campaign: utmData.utm_campaign || utmParams.utm_campaign || null,
+          utm_term: utmData.utm_term || utmParams.utm_term || null,
+          utm_content: utmData.utm_content || utmParams.utm_content || null,
+          cid: cid || null,
+          referrer: typeof document !== 'undefined' ? document.referrer || null : null,
+          user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
+        }),
+      }).catch((error) => {
+        // Visit 수집 실패는 무시 (graceful failure)
+        console.warn('[RegistrationPage] Visit 수집 실패 (무시):', error)
+      })
+    } catch (error) {
+      // Visit 수집 초기화 실패도 무시
+      console.warn('[RegistrationPage] Visit 수집 초기화 실패 (무시):', error)
     }
-  }, [campaign.id, utmParams])
+  }, [campaign?.id, cid, utmParams])
   
   const [submitted, setSubmitted] = useState(false)
   const [result, setResult] = useState<{ survey_no: number; code6: string } | null>(null)
@@ -170,62 +221,135 @@ export default function RegistrationPage({ campaign, baseUrl, utmParams = {} }: 
     const phoneNorm = phone.replace(/\D/g, '')
     
     // localStorage에서 UTM 읽기
-    const storedUTM = localStorage.getItem(`utm:${campaign.id}`)
-    const utmData = storedUTM ? JSON.parse(storedUTM) : {}
+    let utmData: Record<string, any> = {}
+    try {
+      const storedUTM = localStorage.getItem(`utm:${campaign.id}`)
+      if (storedUTM) {
+        utmData = JSON.parse(storedUTM)
+      }
+    } catch (parseError) {
+      // localStorage 파싱 실패는 무시
+      console.warn('[RegistrationPage] UTM 파싱 실패:', parseError)
+    }
     
-    // cid는 이미 위에서 추출됨 (searchParams.get('cid'))
+    // session_id 가져오기 (Visit 연결용) - 에러 발생해도 등록은 계속 진행
+    let sessionId: string | null = null
+    try {
+      sessionId = getOrCreateSessionId('ef_session_id', 30)
+    } catch (sessionError) {
+      // session_id 생성 실패는 무시 (등록은 계속 진행)
+      console.warn('[RegistrationPage] session_id 생성 실패 (무시):', sessionError)
+    }
     
     setSubmitting(true)
     setError(null)
     
+    // 요청 데이터 준비
+    const requestBody = {
+      name: name.trim(),
+      company: organization.trim(), // 소속을 company 필드에 저장 (기존 API 호환성)
+      phone: phone,
+      phone_norm: phoneNorm,
+      registration_data: {
+        email: email.trim(),
+        name: name.trim(),
+        organization: organization.trim(),
+        department: department.trim(),
+        position: position.trim(),
+        jobTitle: position.trim(), // 직책 (position과 동일, 호환성)
+        yearsOfExperience: yearsOfExperience.trim(),
+        question: question.trim() || undefined, // 선택 필드 (빈 문자열이면 undefined)
+        phoneCountryCode: phoneCountryCode,
+        privacyConsent: privacyConsent === 'yes',
+        consentEmail: false, // 이메일 수신 동의 (등록 페이지에서는 별도 필드 없음)
+        consentPhone: false, // 전화 수신 동의 (등록 페이지에서는 별도 필드 없음)
+      },
+      // UTM 파라미터 추가
+      utm_source: utmData.utm_source || utmParams.utm_source || null,
+      utm_medium: utmData.utm_medium || utmParams.utm_medium || null,
+      utm_campaign: utmData.utm_campaign || utmParams.utm_campaign || null,
+      utm_term: utmData.utm_term || utmParams.utm_term || null,
+      utm_content: utmData.utm_content || utmParams.utm_content || null,
+      utm_first_visit_at: utmData.first_visit_at || null,
+      utm_referrer: utmData.referrer_domain || null,
+      cid: cid || null, // cid 파라미터 전달
+      session_id: sessionId || null, // Visit 연결용 (Phase 3) - 없어도 등록 성공
+    }
+    
+    console.log('[RegistrationPage] 등록 요청 시작:', {
+      campaignId: campaign.id,
+      email: email.trim(),
+      name: name.trim(),
+      phone: phoneNorm,
+      timestamp: new Date().toISOString()
+    })
+    
     try {
       // 등록 페이지는 상세 정보 제출
-      const response = await fetch(`/api/public/event-survey/${campaign.id}/register`, {
+      const apiUrl = `/api/public/event-survey/${campaign.id}/register`
+      console.log('[RegistrationPage] API URL:', apiUrl)
+      
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: name.trim(),
-          company: organization.trim(), // 소속을 company 필드에 저장 (기존 API 호환성)
-          phone: phone,
-          phone_norm: phoneNorm,
-          registration_data: {
-            email: email.trim(),
-            name: name.trim(),
-            organization: organization.trim(),
-            department: department.trim(),
-            position: position.trim(),
-            jobTitle: position.trim(), // 직책 (position과 동일, 호환성)
-            yearsOfExperience: yearsOfExperience.trim(),
-            question: question.trim() || undefined, // 선택 필드 (빈 문자열이면 undefined)
-            phoneCountryCode: phoneCountryCode,
-            privacyConsent: privacyConsent === 'yes',
-            consentEmail: false, // 이메일 수신 동의 (등록 페이지에서는 별도 필드 없음)
-            consentPhone: false, // 전화 수신 동의 (등록 페이지에서는 별도 필드 없음)
-          },
-          // UTM 파라미터 추가
-          utm_source: utmData.utm_source || null,
-          utm_medium: utmData.utm_medium || null,
-          utm_campaign: utmData.utm_campaign || null,
-          utm_term: utmData.utm_term || null,
-          utm_content: utmData.utm_content || null,
-          utm_first_visit_at: utmData.first_visit_at || null,
-          utm_referrer: utmData.referrer_domain || null,
-          cid: cid || null, // cid 파라미터 전달
-        }),
+        body: JSON.stringify(requestBody),
       })
       
-      const result = await response.json()
+      console.log('[RegistrationPage] 응답 수신:', {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok,
+        headers: Object.fromEntries(response.headers.entries())
+      })
+      
+      // 응답 본문 읽기 시도
+      let result: any
+      try {
+        const text = await response.text()
+        console.log('[RegistrationPage] 응답 본문:', text.substring(0, 500))
+        if (text) {
+          result = JSON.parse(text)
+        } else {
+          result = {}
+        }
+      } catch (parseError) {
+        console.error('[RegistrationPage] 응답 파싱 오류:', parseError)
+        throw new Error('서버 응답을 읽을 수 없습니다.')
+      }
       
       if (!response.ok) {
-        throw new Error(result.error || '등록에 실패했습니다.')
+        console.error('[RegistrationPage] 등록 실패:', {
+          status: response.status,
+          statusText: response.statusText,
+          error: result.error || '알 수 없는 오류',
+          result
+        })
+        throw new Error(result.error || `등록에 실패했습니다. (${response.status})`)
       }
+      
+      // 성공 응답 검증
+      if (!result.survey_no || !result.code6) {
+        console.error('[RegistrationPage] 잘못된 응답:', result)
+        throw new Error('서버에서 잘못된 응답을 받았습니다.')
+      }
+      
+      console.log('[RegistrationPage] 등록 성공:', {
+        survey_no: result.survey_no,
+        code6: result.code6,
+        email: email.trim()
+      })
       
       handleSubmitted({
         survey_no: result.survey_no,
         code6: result.code6,
       })
     } catch (err: any) {
-      console.error('등록 제출 오류:', err)
+      console.error('[RegistrationPage] 등록 제출 오류:', {
+        error: err,
+        message: err.message,
+        stack: err.stack,
+        name: err.name
+      })
       setError(err.message || '등록 중 오류가 발생했습니다. 다시 시도해주세요.')
     } finally {
       setSubmitting(false)
