@@ -101,19 +101,67 @@ export default async function RegistrantsPage({
       .eq('campaign_id', webinar.registration_campaign_id)
       .order('completed_at', { ascending: false })
     
+    // 클라이언트 멤버십 정보 조회 (역할 확인용)
+    const memberRolesMap = new Map<string, string>()
+    
+    if (webinar.client_id) {
+      const { data: clientMembers } = await admin
+        .from('client_members')
+        .select('user_id, role')
+        .eq('client_id', webinar.client_id)
+      
+      if (clientMembers && clientMembers.length > 0) {
+        const memberUserIds = clientMembers.map((m: any) => m.user_id)
+        const { data: memberProfiles } = await admin
+          .from('profiles')
+          .select('id, email')
+          .in('id', memberUserIds)
+        
+        if (memberProfiles) {
+          const profileMap = new Map(memberProfiles.map((p: any) => [p.id, p.email?.toLowerCase()?.trim()]))
+          clientMembers.forEach((member: any) => {
+            const email = profileMap.get(member.user_id)
+            if (email) {
+              // 가장 높은 역할로 저장 (owner > admin > operator > analyst > viewer)
+              const rolePriority: Record<string, number> = {
+                owner: 5,
+                admin: 4,
+                operator: 3,
+                analyst: 2,
+                viewer: 1,
+              }
+              const currentPriority = rolePriority[memberRolesMap.get(email) || ''] || 0
+              const newPriority = rolePriority[member.role] || 0
+              if (newPriority > currentPriority) {
+                memberRolesMap.set(email, member.role)
+              }
+            }
+          })
+        }
+      }
+    }
+    
     // 등록 캠페인 데이터를 registrations 형식으로 변환
     registrations = (entries || []).map((entry: any) => {
-      const email = entry.registration_data?.email
+      const email = entry.registration_data?.email?.toLowerCase()?.trim()
       const registrationData = entry.registration_data || {}
       
-      // registration_data에서 role 확인 (manual 등록의 경우 role이 저장되어 있음)
-      // pd@ustudio.co.kr, eventflow@onepredict.com은 관리자로 설정
+      // 역할 결정: registration_data의 role 우선, 없으면 멤버십 확인
       let role = 'attendee'
       if (registrationData.role === '관리자') {
         role = '관리자'
       } else if (email) {
-        const emailLower = email.toLowerCase().trim()
-        if (emailLower === 'pd@ustudio.co.kr' || emailLower === 'eventflow@onepredict.com') {
+        // 멤버십 확인 (클라이언트 멤버십 우선)
+        const memberRole = memberRolesMap.get(email)
+        if (memberRole === 'owner' || memberRole === 'admin') {
+          role = '관리자'
+        } else if (memberRole === 'operator') {
+          role = '운영자'
+        } else if (memberRole === 'analyst') {
+          role = '분석가'
+        }
+        // 멤버십이 없으면 하드코딩된 이메일 체크 (pd@ustudio.co.kr만, eventflow@onepredict.com은 클라이언트 멤버십으로 처리)
+        else if (email === 'pd@ustudio.co.kr') {
           role = '관리자'
         }
       }
@@ -128,7 +176,7 @@ export default async function RegistrantsPage({
         created_at: entry.completed_at || entry.created_at,
         profiles: email ? {
           id: null,
-          email: email,
+          email: entry.registration_data?.email,
           display_name: entry.name || registrationData.name || registrationData.firstName || '익명',
         } : null,
       }
@@ -148,14 +196,69 @@ export default async function RegistrantsPage({
       .eq('webinar_id', webinar.id)
       .order('created_at', { ascending: false })
     
-    // DB에 저장된 role을 우선 사용, manual 등록 처리: pd@ustudio.co.kr만 관리자, 나머지는 참여자
+    // 클라이언트 멤버십 정보 조회 (역할 확인용)
+    const memberRolesMap = new Map<string, string>()
+    
+    if (webinar.client_id) {
+      const { data: clientMembers } = await admin
+        .from('client_members')
+        .select('user_id, role')
+        .eq('client_id', webinar.client_id)
+      
+      if (clientMembers && clientMembers.length > 0) {
+        const memberUserIds = clientMembers.map((m: any) => m.user_id)
+        const { data: memberProfiles } = await admin
+          .from('profiles')
+          .select('id, email')
+          .in('id', memberUserIds)
+        
+        if (memberProfiles) {
+          const profileMap = new Map(memberProfiles.map((p: any) => [p.id, p.email?.toLowerCase()?.trim()]))
+          clientMembers.forEach((member: any) => {
+            const email = profileMap.get(member.user_id)
+            if (email) {
+              // 가장 높은 역할로 저장 (owner > admin > operator > analyst > viewer)
+              const rolePriority: Record<string, number> = {
+                owner: 5,
+                admin: 4,
+                operator: 3,
+                analyst: 2,
+                viewer: 1,
+              }
+              const currentPriority = rolePriority[memberRolesMap.get(email) || ''] || 0
+              const newPriority = rolePriority[member.role] || 0
+              if (newPriority > currentPriority) {
+                memberRolesMap.set(email, member.role)
+              }
+            }
+          })
+        }
+      }
+    }
+    
+    // DB에 저장된 role을 우선 사용, 없으면 멤버십 확인
     registrations = (webinarRegistrations || []).map((reg: any) => {
       let role = reg.role || 'attendee'
-      if (reg.registered_via === 'manual') {
-        const email = reg.profiles?.email?.toLowerCase()?.trim()
-        const isPdAccount = email === 'pd@ustudio.co.kr'
-        role = isPdAccount ? '관리자' : 'attendee'
+      const email = reg.profiles?.email?.toLowerCase()?.trim()
+      
+      // DB에 role이 없거나 'attendee'인 경우 멤버십 확인
+      if (!reg.role || reg.role === 'attendee') {
+        if (email) {
+          const memberRole = memberRolesMap.get(email)
+          if (memberRole === 'owner' || memberRole === 'admin') {
+            role = '관리자'
+          } else if (memberRole === 'operator') {
+            role = '운영자'
+          } else if (memberRole === 'analyst') {
+            role = '분석가'
+          }
+          // 멤버십이 없으면 하드코딩된 이메일 체크 (pd@ustudio.co.kr만)
+          else if (email === 'pd@ustudio.co.kr') {
+            role = '관리자'
+          }
+        }
       }
+      
       return {
         ...reg,
         role: role,

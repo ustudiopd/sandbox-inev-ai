@@ -305,21 +305,20 @@ export async function GET(
         if (registrationData.role === '관리자') {
           role = '관리자'
         } else if (email) {
-          // pd@ustudio.co.kr, eventflow@onepredict.com은 관리자로 설정
-          if (email === 'pd@ustudio.co.kr' || email === 'eventflow@onepredict.com') {
+          // 멤버십 확인 (클라이언트 멤버십 우선)
+          const memberRole = memberRolesMap.get(email)
+          if (memberRole === 'super_admin') {
             role = '관리자'
-          } else {
-            // 멤버십 확인
-            const memberRole = memberRolesMap.get(email)
-            if (memberRole === 'super_admin') {
-              role = '관리자'
-            } else if (memberRole === 'owner' || memberRole === 'admin') {
-              role = '관리자'
-            } else if (memberRole === 'operator') {
-              role = '운영자'
-            } else if (memberRole === 'analyst') {
-              role = '분석가'
-            }
+          } else if (memberRole === 'owner' || memberRole === 'admin') {
+            role = '관리자'
+          } else if (memberRole === 'operator') {
+            role = '운영자'
+          } else if (memberRole === 'analyst') {
+            role = '분석가'
+          }
+          // 멤버십이 없으면 하드코딩된 이메일 체크 (pd@ustudio.co.kr만, eventflow@onepredict.com은 클라이언트 멤버십으로 처리)
+          else if (email === 'pd@ustudio.co.kr') {
+            role = '관리자'
           }
         }
         
@@ -469,11 +468,11 @@ export async function GET(
         const profile = profilesMap.get(reg.user_id) || {}
         const email = profile.email?.toLowerCase()?.trim()
         
-        // DB에 저장된 role을 우선 사용, 없으면 멤버십 기반으로 계산
+        // 역할 결정: DB에 저장된 role 우선, 없으면 멤버십 확인
         let role = reg.role || null
         
-        // DB에 role이 없을 때만 멤버십 기반으로 계산
-        if (!role) {
+        // DB에 role이 없거나 'attendee'인 경우 멤버십 확인
+        if (!role || role === 'attendee') {
           const memberRole = email ? memberRolesMap.get(email) : null
           if (memberRole === 'super_admin') {
             role = '관리자'
@@ -484,19 +483,12 @@ export async function GET(
           } else if (memberRole === 'analyst') {
             role = '분석가'
           } else {
-            role = 'attendee'
-          }
-        }
-        
-        // manual 등록 처리: pd@ustudio.co.kr만 관리자, 나머지는 참여자
-        if (reg.registered_via === 'manual') {
-          const isPdAccount = email === 'pd@ustudio.co.kr'
-          if (isPdAccount) {
-            role = '관리자'
-            console.log(`[registrants API] manual 등록 감지 (PD 계정): ${email} → 역할을 "관리자"로 설정`)
-          } else {
-            role = 'attendee'
-            console.log(`[registrants API] manual 등록 감지: ${email} → 역할을 "참여자"로 설정`)
+            // 멤버십이 없으면 manual 등록 처리: pd@ustudio.co.kr만 관리자
+            if (reg.registered_via === 'manual' && email === 'pd@ustudio.co.kr') {
+              role = '관리자'
+            } else {
+              role = 'attendee'
+            }
           }
         }
         
