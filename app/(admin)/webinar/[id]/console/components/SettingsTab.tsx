@@ -23,6 +23,7 @@ interface SettingsTabProps {
     meta_title?: string | null
     meta_description?: string | null
     meta_thumbnail_url?: string | null
+    dashboard_code?: string | null
   }
   onWebinarUpdate?: (webinar: any) => void
 }
@@ -244,6 +245,88 @@ export default function SettingsTab({ webinar, onWebinarUpdate }: SettingsTabPro
           {error}
         </div>
       )}
+
+      {/* 공개 대시보드 링크 */}
+      <div className="mb-6 bg-blue-50 rounded-lg p-4 border border-blue-200">
+        <h4 className="text-base font-semibold text-gray-900 mb-2">공개 대시보드</h4>
+        <p className="text-sm text-gray-600 mb-3">
+          아래 링크를 공유하면 로그인 없이 참여자 목록을 볼 수 있습니다.
+        </p>
+        {webinar.dashboard_code ? (
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              readOnly
+              value={`${typeof window !== 'undefined' ? window.location.origin : ''}/webinar/dashboard/${webinar.dashboard_code}`}
+              className="flex-1 px-3 py-2 bg-white border border-gray-300 rounded text-sm font-mono text-gray-700"
+              onClick={(e) => (e.target as HTMLInputElement).select()}
+            />
+            <button
+              type="button"
+              onClick={() => {
+                const url = `${window.location.origin}/webinar/dashboard/${webinar.dashboard_code}`
+                navigator.clipboard.writeText(url)
+                alert('링크가 클립보드에 복사되었습니다.')
+              }}
+              className="px-3 py-2 bg-blue-600 text-white rounded text-sm font-medium hover:bg-blue-700 transition-colors whitespace-nowrap"
+            >
+              복사
+            </button>
+            <a
+              href={`/webinar/dashboard/${webinar.dashboard_code}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-3 py-2 bg-green-600 text-white rounded text-sm font-medium hover:bg-green-700 transition-colors whitespace-nowrap"
+            >
+              열기
+            </a>
+          </div>
+        ) : (
+          <div>
+            <button
+              type="button"
+              onClick={async () => {
+                if (!webinar.id) {
+                  alert('웨비나 ID가 없습니다.')
+                  return
+                }
+                
+                try {
+                  console.log('대시보드 코드 생성 요청:', webinar.id)
+                  const response = await fetch(`/api/webinars/${webinar.id}/generate-dashboard-code`, {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                    },
+                  })
+                  
+                  console.log('대시보드 코드 생성 응답:', response.status, response.statusText)
+                  
+                  const result = await response.json()
+                  console.log('대시보드 코드 생성 결과:', result)
+                  
+                  if (!response.ok) {
+                    throw new Error(result.error || `서버 오류 (${response.status})`)
+                  }
+                  
+                  if (result.success) {
+                    alert('대시보드 코드가 생성되었습니다. 페이지를 새로고침합니다.')
+                    window.location.reload()
+                  } else {
+                    alert(result.error || '대시보드 코드 생성에 실패했습니다.')
+                  }
+                } catch (error: any) {
+                  console.error('대시보드 코드 생성 오류:', error)
+                  alert(`대시보드 코드 생성에 실패했습니다: ${error.message || '알 수 없는 오류'}`)
+                }
+              }}
+              className="px-4 py-2 bg-blue-600 text-white rounded text-sm font-medium hover:bg-blue-700 transition-colors"
+            >
+              대시보드 코드 생성
+            </button>
+          </div>
+        )}
+      </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <div>

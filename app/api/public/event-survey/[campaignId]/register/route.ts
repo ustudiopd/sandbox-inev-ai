@@ -574,7 +574,7 @@ export async function POST(
         // 이미 등록한 경우 확인 (registrations만 확인)
         const { data: existingRegistration } = await admin
           .from('registrations')
-          .select('webinar_id, user_id')
+          .select('webinar_id, user_id, survey_no, code6')
           .eq('webinar_id', onePredictWebinar.id)
           .eq('user_id', profile.id)
           .maybeSingle()
@@ -583,9 +583,21 @@ export async function POST(
           return NextResponse.json({
             success: true,
             alreadySubmitted: true,
+            survey_no: existingRegistration.survey_no,
+            code6: existingRegistration.code6,
             message: '이미 등록하셨습니다.',
           })
         }
+        
+        // survey_no 발급: 해당 웨비나의 기존 등록 수를 세어서 +1
+        const { count: existingCount } = await admin
+          .from('registrations')
+          .select('*', { count: 'exact', head: true })
+          .eq('webinar_id', onePredictWebinar.id)
+          .not('survey_no', 'is', null)
+        
+        const surveyNo = (existingCount || 0) + 1
+        const code6 = String(surveyNo).padStart(6, '0')
         
         // registration_data에 phone 정보 추가 및 정리
         // registration_data가 없으면 빈 객체로 시작
@@ -613,7 +625,7 @@ export async function POST(
         // registrations 테이블에만 등록 (모든 폼 데이터 포함)
         console.log('[register] 저장할 registration_data:', JSON.stringify(cleanedRegistrationData, null, 2))
         
-        const { error: regError } = await admin
+        const { data: newRegistration, error: regError } = await admin
           .from('registrations')
           .insert({
             webinar_id: onePredictWebinar.id,
@@ -622,7 +634,11 @@ export async function POST(
             nickname: name ? name.trim() || null : null,
             registered_via: 'manual', // 등록 페이지를 통한 등록은 'manual'로 처리 (DB 제약: 'email', 'manual', 'invite'만 허용)
             registration_data: Object.keys(cleanedRegistrationData).length > 0 ? cleanedRegistrationData : null,
+            survey_no: surveyNo,
+            code6: code6,
           })
+          .select('survey_no, code6')
+          .single()
         
         if (regError) {
           console.error('[register] registrations 저장 오류:', {
@@ -664,11 +680,15 @@ export async function POST(
         console.log('[register] 원프레딕트 웨비나 등록 성공:', { 
           email: emailLower,
           webinar_id: onePredictWebinar.id,
+          survey_no: newRegistration?.survey_no,
+          code6: newRegistration?.code6,
           timestamp: new Date().toISOString()
         })
         
         return NextResponse.json({
           success: true,
+          survey_no: newRegistration?.survey_no,
+          code6: newRegistration?.code6,
           message: '등록이 완료되었습니다.',
         })
       } catch (error: any) {

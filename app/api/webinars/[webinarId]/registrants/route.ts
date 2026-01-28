@@ -40,12 +40,65 @@ export async function GET(
     let registrations: any[] = []
     let registrationEntries: any[] = []
     
-    // registration_campaign_id가 있으면 등록 캠페인 데이터만 사용
-    if (webinar.registration_campaign_id) {
+    // 원프레딕트 웨비나(426307)는 항상 registrations 테이블만 사용
+    const isOnePredictWebinar = webinar.slug === '426307'
+    
+    if (isOnePredictWebinar) {
+      // 원프레딕트 웨비나는 registrations 테이블만 사용
+      console.log('[registrants API] 원프레딕트 웨비나 → registrations 테이블 사용')
+      
+      // survey_no와 code6 컬럼이 없을 수 있으므로 안전하게 처리
+      let selectFields = 'user_id, nickname, role, registered_via, created_at, registration_data'
+      try {
+        // 먼저 survey_no와 code6를 포함해서 시도
+        const { data: webinarRegistrations, error: registrationsError } = await admin
+          .from('registrations')
+          .select('user_id, nickname, role, registered_via, created_at, registration_data, survey_no, code6')
+          .eq('webinar_id', webinar.id)
+          .order('created_at', { ascending: false })
+        
+        if (registrationsError) {
+          // 컬럼이 없으면 survey_no와 code6 없이 재시도
+          if (registrationsError.message?.includes('column') || registrationsError.code === '42703') {
+            console.log('[registrants API] survey_no/code6 컬럼 없음, 기본 필드만 사용')
+            const { data: retryRegistrations, error: retryError } = await admin
+              .from('registrations')
+              .select('user_id, nickname, role, registered_via, created_at, registration_data')
+              .eq('webinar_id', webinar.id)
+              .order('created_at', { ascending: false })
+            
+            if (retryError) {
+              return NextResponse.json(
+                { success: false, error: retryError.message },
+                { status: 500 }
+              )
+            }
+            
+            registrations = retryRegistrations || []
+          } else {
+            return NextResponse.json(
+              { success: false, error: registrationsError.message },
+              { status: 500 }
+            )
+          }
+        } else {
+          registrations = webinarRegistrations || []
+        }
+      } catch (error: any) {
+        console.error('[registrants API] registrations 조회 오류:', error)
+        return NextResponse.json(
+          { success: false, error: error.message || 'Failed to fetch registrations' },
+          { status: 500 }
+        )
+      }
+      
+      console.log('[registrants API] registrations 테이블 참여자 수:', registrations.length)
+    } else if (webinar.registration_campaign_id) {
+      // 원프레딕트가 아니고 registration_campaign_id가 있으면 등록 캠페인 데이터 사용
       console.log('[registrants API] 등록 캠페인 데이터 사용:', webinar.registration_campaign_id)
       const { data: entries, error: entriesError } = await admin
         .from('event_survey_entries')
-        .select('id, name, registration_data, completed_at, created_at')
+        .select('id, name, company, phone_norm, registration_data, completed_at, created_at, survey_no, code6')
         .eq('campaign_id', webinar.registration_campaign_id)
         .order('completed_at', { ascending: false })
       
@@ -61,27 +114,81 @@ export async function GET(
     } else {
       // registration_campaign_id가 없으면 registrations 테이블 조회
       console.log('[registrants API] registrations 테이블 사용 (registration_campaign_id 없음)')
-      const { data: webinarRegistrations, error: registrationsError } = await admin
-        .from('registrations')
-        .select('user_id, nickname, role, registered_via, created_at')
-        .eq('webinar_id', webinar.id)
-        .order('created_at', { ascending: false })
       
-      if (registrationsError) {
+      try {
+        // 먼저 survey_no와 code6를 포함해서 시도
+        const { data: webinarRegistrations, error: registrationsError } = await admin
+          .from('registrations')
+          .select('user_id, nickname, role, registered_via, created_at, registration_data, survey_no, code6')
+          .eq('webinar_id', webinar.id)
+          .order('created_at', { ascending: false })
+        
+        if (registrationsError) {
+          // 컬럼이 없으면 survey_no와 code6 없이 재시도
+          if (registrationsError.message?.includes('column') || registrationsError.code === '42703') {
+            console.log('[registrants API] survey_no/code6 컬럼 없음, 기본 필드만 사용')
+            const { data: retryRegistrations, error: retryError } = await admin
+              .from('registrations')
+              .select('user_id, nickname, role, registered_via, created_at, registration_data')
+              .eq('webinar_id', webinar.id)
+              .order('created_at', { ascending: false })
+            
+            if (retryError) {
+              return NextResponse.json(
+                { success: false, error: retryError.message },
+                { status: 500 }
+              )
+            }
+            
+            registrations = retryRegistrations || []
+          } else {
+            return NextResponse.json(
+              { success: false, error: registrationsError.message },
+              { status: 500 }
+            )
+          }
+        } else {
+          registrations = webinarRegistrations || []
+        }
+      } catch (error: any) {
+        console.error('[registrants API] registrations 조회 오류:', error)
         return NextResponse.json(
-          { success: false, error: registrationsError.message },
+          { success: false, error: error.message || 'Failed to fetch registrations' },
           { status: 500 }
         )
       }
       
-      registrations = webinarRegistrations || []
       console.log('[registrants API] registrations 테이블 참여자 수:', registrations.length)
     }
     
-    // 이메일 수집 (registration_campaign_id가 있으면 registrationEntries만, 없으면 registrations만)
+    // 이메일 수집 (원프레딕트 웨비나는 registrations만, 그 외는 registration_campaign_id가 있으면 registrationEntries만, 없으면 registrations만)
     let allEmails: string[] = []
     
-    if (webinar.registration_campaign_id) {
+    if (isOnePredictWebinar) {
+      // 원프레딕트 웨비나는 registrations만 사용
+      const userIds = (registrations || []).map((r: any) => r.user_id).filter(Boolean)
+      
+      // 프로필 정보 조회
+      let profilesMap = new Map<string, any>()
+      if (userIds.length > 0) {
+        const { data: profiles, error: profilesError } = await admin
+          .from('profiles')
+          .select('id, display_name, email')
+          .in('id', userIds)
+        
+        if (!profilesError && profiles) {
+          profiles.forEach((p: any) => {
+            profilesMap.set(p.id, p)
+          })
+        }
+      }
+      
+      // 웨비나 등록자의 이메일 수집
+      allEmails = Array.from(profilesMap.values())
+        .map((p: any) => p.email)
+        .filter(Boolean)
+        .map((email: string) => email.toLowerCase().trim())
+    } else if (webinar.registration_campaign_id) {
       // 등록 페이지 참여자의 이메일만 수집
       allEmails = registrationEntries
         .map((e: any) => e.registration_data?.email)
@@ -161,9 +268,6 @@ export async function GET(
         console.error('마지막 로그인 정보 조회 오류:', error)
       }
     }
-    
-    // 원프레딕트 웨비나(426307)는 registrations 테이블만 사용
-    const isOnePredictWebinar = webinar.slug === '426307'
     
     // registration_campaign_id가 있고 원프레딕트 웨비나가 아니면 등록 페이지 참여자만, 없으면 웨비나 등록자만 사용
     let registrants: any[] = []
@@ -334,6 +438,11 @@ export async function GET(
           registered_at: entry.completed_at || entry.created_at,
           last_login_at: email ? lastLoginMap.get(email) || null : null,
           source: 'registration' as const,
+          registration_data: entry.registration_data || null,
+          company: entry.company || null,
+          phone_norm: entry.phone_norm || null,
+          survey_no: entry.survey_no || null,
+          code6: entry.code6 || null,
         }
       })
       
@@ -495,6 +604,9 @@ export async function GET(
           }
         }
         
+        // registration_data에서 company, phone_norm 추출
+        const regData = reg.registration_data || {}
+        
         return {
           id: reg.user_id || `reg-${reg.user_id}`,
           name: reg.nickname || profile.display_name || profile.email || '익명',
@@ -504,6 +616,11 @@ export async function GET(
           registered_at: reg.created_at,
           last_login_at: email ? lastLoginMap.get(email) || null : null,
           source: 'webinar' as const,
+          registration_data: reg.registration_data || null,
+          company: regData.company || null,
+          phone_norm: regData.phone_norm || regData.phone || null,
+          survey_no: reg.survey_no || null,
+          code6: reg.code6 || null,
         }
       })
     }
