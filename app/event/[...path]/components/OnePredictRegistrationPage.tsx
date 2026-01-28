@@ -79,7 +79,10 @@ export default function OnePredictRegistrationPage({ campaign, baseUrl = '', utm
   
   // Visit 수집 (Phase 3) - 에러 발생해도 등록은 계속 진행
   useEffect(() => {
-    if (!campaign?.id || !sessionId) return
+    if (!campaign?.id) return
+    
+    // sessionId가 없으면 여기서 생성 (초기화가 늦을 경우 대비)
+    const currentSessionId = sessionId || getOrCreateSessionId('ef_session_id', 30)
     
     try {
       // 상태에서 관리하는 session_id 사용 (쿠키 최신화 문제 해결)
@@ -101,7 +104,7 @@ export default function OnePredictRegistrationPage({ campaign, baseUrl = '', utm
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          session_id: sessionId, // 상태에서 관리하는 세션 ID 사용
+          session_id: currentSessionId, // 상태에서 관리하는 세션 ID 사용 (없으면 여기서 생성)
           utm_source: utmData.utm_source || utmParams.utm_source || null,
           utm_medium: utmData.utm_medium || utmParams.utm_medium || null,
           utm_campaign: utmData.utm_campaign || utmParams.utm_campaign || null,
@@ -187,12 +190,15 @@ export default function OnePredictRegistrationPage({ campaign, baseUrl = '', utm
       
       // 상태에서 관리하는 session_id 사용 (Visit과 동일한 세션 ID 보장)
       // 쿠키 최신화 문제 해결: 한 번 생성한 세션 ID를 재사용
+      // sessionId가 없으면 여기서 생성 (초기화가 늦을 경우 대비)
+      const currentSessionId = sessionId || getOrCreateSessionId('ef_session_id', 30)
+      
       console.log('[OnePredictRegistrationPage] 등록 요청 시작:', {
         campaignId: campaign.id,
         email: formData.email.trim(),
         name: formData.name.trim(),
         phone: phoneNorm,
-        sessionId: sessionId, // 상태에서 관리하는 세션 ID
+        sessionId: currentSessionId, // 상태에서 관리하는 세션 ID (없으면 여기서 생성)
         timestamp: new Date().toISOString()
       })
       
@@ -238,7 +244,7 @@ export default function OnePredictRegistrationPage({ campaign, baseUrl = '', utm
           utm_first_visit_at: utmData.first_visit_at || null,
           utm_referrer: utmData.referrer_domain || null,
           cid: cid || null,
-          session_id: sessionId || null, // 상태에서 관리하는 세션 ID (Visit과 동일) - 없어도 등록 성공
+          session_id: currentSessionId || null, // 상태에서 관리하는 세션 ID (Visit과 동일) - 없어도 등록 성공
         }),
           signal: controller.signal,
         })
