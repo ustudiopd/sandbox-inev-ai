@@ -807,9 +807,8 @@ export default function PublicDashboardClient({ campaign }: PublicDashboardClien
       loadQuestionStats()
     }
     loadPublicReports()
-    if (activeTab === 'participants') {
-      loadParticipantEntries()
-    }
+    // 참석자 명단은 항상 로드 (통계 탭에서도 사용)
+    loadParticipantEntries()
   }, [campaign.id, campaign.form_id, activeTab])
 
   
@@ -861,6 +860,11 @@ export default function PublicDashboardClient({ campaign }: PublicDashboardClien
       
       if (result.success && result.entries) {
         setParticipantEntries(result.entries)
+        // 참석자 명단 로드 시 통계도 함께 업데이트 (실제 개수 반영)
+        setCampaignStats(prev => ({
+          ...prev,
+          total_completed: result.entries?.length || prev.total_completed,
+        }))
       }
     } catch (error) {
       console.error('참석자 명단 로드 오류:', error)
@@ -1264,16 +1268,21 @@ export default function PublicDashboardClient({ campaign }: PublicDashboardClien
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
               <div className="bg-white rounded-xl shadow-lg p-6">
             <div className="text-sm text-gray-600 mb-1">총 참여자</div>
-            <div className="text-3xl font-bold text-gray-900">{campaignStats.total_completed || 0}</div>
+            <div className="text-3xl font-bold text-gray-900">
+              {participantEntries.length > 0 ? participantEntries.length : (campaignStats.total_completed || 0)}
+            </div>
           </div>
           <div className="bg-white rounded-xl shadow-lg p-6">
             <div className="text-sm text-gray-600 mb-1">스캔 완료</div>
             <div className="text-3xl font-bold text-blue-600">{campaignStats.total_verified || 0}</div>
-            {campaignStats.total_completed > 0 && (
-              <div className="text-xs text-gray-500 mt-1">
-                ({((campaignStats.total_verified || 0) / campaignStats.total_completed * 100).toFixed(1)}%)
-              </div>
-            )}
+            {(() => {
+              const totalCount = participantEntries.length > 0 ? participantEntries.length : (campaignStats.total_completed || 0)
+              return totalCount > 0 && (
+                <div className="text-xs text-gray-500 mt-1">
+                  ({((campaignStats.total_verified || 0) / totalCount * 100).toFixed(1)}%)
+                </div>
+              )
+            })()}
           </div>
         </div>
         
@@ -1377,7 +1386,9 @@ export default function PublicDashboardClient({ campaign }: PublicDashboardClien
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm font-medium text-gray-600">총 참여자</p>
-                      <p className="text-3xl font-bold text-gray-900 mt-2">{campaignStats.total_completed || 0}</p>
+                      <p className="text-3xl font-bold text-gray-900 mt-2">
+                        {participantEntries.length > 0 ? participantEntries.length : (campaignStats.total_completed || 0)}
+                      </p>
                     </div>
                     <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
                       <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
