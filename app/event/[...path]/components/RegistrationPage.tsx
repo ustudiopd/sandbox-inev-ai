@@ -273,7 +273,7 @@ export default function RegistrationPage({ campaign, baseUrl, utmParams = {} }: 
         position: position.trim(),
         jobTitle: position.trim(), // 직책 (position과 동일, 호환성)
         yearsOfExperience: yearsOfExperience.trim(),
-        question: question.trim() || undefined, // 선택 필드 (빈 문자열이면 undefined)
+        question: question.trim() || '', // 선택 필드 (빈 문자열도 저장)
         phoneCountryCode: phoneCountryCode,
         privacyConsent: privacyConsent === 'yes',
         consentEmail: false, // 이메일 수신 동의 (등록 페이지에서는 별도 필드 없음)
