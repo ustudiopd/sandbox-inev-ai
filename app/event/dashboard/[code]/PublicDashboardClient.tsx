@@ -861,7 +861,7 @@ export default function PublicDashboardClient({ campaign }: PublicDashboardClien
       if (result.success && result.entries) {
         setParticipantEntries(result.entries)
         // 참석자 명단 로드 시 통계도 함께 업데이트 (실제 개수 반영)
-        setCampaignStats(prev => ({
+        setCampaignStats((prev: { total_completed: number; total_verified: number; total_prize_recorded: number }) => ({
           ...prev,
           total_completed: result.entries?.length || prev.total_completed,
         }))
