@@ -260,7 +260,7 @@ export default function OverviewTab({ campaign, onCampaignUpdate }: OverviewTabP
         registrationData.department || '',
         registrationData.organization || '',
         registrationData.yearsOfExperience || '',
-        registrationData.question || '',
+        registrationData.question || registrationData.message || '', // question 또는 message 필드 확인
         registrationData.phoneCountryCode || '',
         registrationData.consentEmail ? '동의' : (registrationData.consentEmail === false ? '비동의' : ''),
         registrationData.consentPhone ? '동의' : (registrationData.consentPhone === false ? '비동의' : ''),
