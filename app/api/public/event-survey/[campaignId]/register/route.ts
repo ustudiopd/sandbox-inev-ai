@@ -101,13 +101,27 @@ export async function POST(
       try {
         const normalizedCid = normalizeCID(cid)
         if (normalizedCid) {
-          const { data: link } = await admin
+          // 웨비나 ID인 경우와 캠페인 ID인 경우 모두 처리
+          let linkQuery = admin
             .from('campaign_link_meta')
-            .select('id')
+            .select('id, target_type, target_campaign_id, target_webinar_id')
             .eq('client_id', campaign.client_id)
             .eq('cid', normalizedCid)
             .eq('status', 'active')
-            .maybeSingle()
+          
+          // 웨비나 ID인 경우: target_type이 'webinar'이고 target_webinar_id가 일치하는 링크 찾기
+          // 캠페인 ID인 경우: target_type이 'campaign'이고 target_campaign_id가 일치하는 링크 찾기
+          if (isWebinarId) {
+            linkQuery = linkQuery
+              .eq('target_type', 'webinar')
+              .eq('target_webinar_id', campaignId)
+          } else {
+            linkQuery = linkQuery
+              .or(`target_type.is.null,target_type.eq.campaign`)
+              .eq('target_campaign_id', campaignId)
+          }
+          
+          const { data: link } = await linkQuery.maybeSingle()
           
           if (link) {
             resolvedMarketingCampaignLinkId = link.id
@@ -336,6 +350,8 @@ export async function POST(
             nickname: name ? name.trim() || null : null,
             registered_via: 'manual', // 등록 페이지를 통한 등록은 'manual'로 처리 (DB 제약: 'email', 'manual', 'invite'만 허용)
             registration_data: Object.keys(cleanedRegistrationData).length > 0 ? cleanedRegistrationData : null,
+            // 마케팅 캠페인 링크 추적 (전환 추적용)
+            marketing_campaign_link_id: resolvedMarketingCampaignLinkId || null,
           })
         
         if (regError) {
@@ -902,11 +918,17 @@ export async function POST(
     // registration_data의 이메일을 소문자로 정규화
     let normalizedRegistrationData = registration_data
     if (normalizedRegistrationData) {
-      // 빈 문자열 필드 제거 및 정규화
+      // 정규화 (빈 문자열도 유지 - 필수 필드일 수 있음)
       const cleanedData: Record<string, any> = {}
       for (const [key, value] of Object.entries(normalizedRegistrationData)) {
-        if (value !== null && value !== undefined && value !== '') {
-          cleanedData[key] = value
+        // null과 undefined만 제거, 빈 문자열은 유지 (필수 필드일 수 있음)
+        if (value !== null && value !== undefined) {
+          // 문자열인 경우 trim만 수행
+          if (typeof value === 'string') {
+            cleanedData[key] = value.trim()
+          } else {
+            cleanedData[key] = value
+          }
         }
       }
       
@@ -956,7 +978,7 @@ export async function POST(
     // 전환 시 Visit과 연결 (Phase 3) - 실패해도 등록은 성공
     if (session_id && entry?.id) {
       try {
-        await admin
+        const { data: visitUpdate, error: visitUpdateError } = await admin
           .from('event_access_logs')
           .update({
             converted_at: new Date().toISOString(),
@@ -965,10 +987,39 @@ export async function POST(
           .eq('campaign_id', campaignId)
           .eq('session_id', session_id)
           .is('converted_at', null) // 아직 전환되지 않은 것만
-      } catch (visitError) {
+          .select('id')
+        
+        // Visit이 없거나 연결 실패한 경우 경고 로그
+        if (visitUpdateError || !visitUpdate || visitUpdate.length === 0) {
+          console.warn('[VisitMissingOnConvert]', JSON.stringify({
+            campaignId,
+            sessionId: session_id,
+            entryId: entry.id,
+            reason: visitUpdateError ? 'VISIT_UPDATE_FAILED' : 'VISIT_NOT_FOUND',
+            error: visitUpdateError?.message || null,
+            timestamp: new Date().toISOString()
+          }))
+        }
+      } catch (visitError: any) {
         // Visit 연결 실패는 경고만 하고 등록은 성공으로 처리
-        console.warn('[register] Visit 연결 실패 (등록은 성공):', visitError)
+        console.warn('[VisitMissingOnConvert]', JSON.stringify({
+          campaignId,
+          sessionId: session_id,
+          entryId: entry?.id,
+          reason: 'VISIT_CONNECTION_EXCEPTION',
+          error: visitError.message,
+          timestamp: new Date().toISOString()
+        }))
       }
+    } else if (!session_id && entry?.id) {
+      // session_id가 없어서 Visit 연결이 불가능한 경우 (정상 케이스일 수 있음)
+      console.warn('[VisitMissingOnConvert]', JSON.stringify({
+        campaignId,
+        sessionId: null,
+        entryId: entry.id,
+        reason: 'NO_SESSION_ID',
+        timestamp: new Date().toISOString()
+      }))
     }
     
     console.log('[register] 등록 성공:', { 
