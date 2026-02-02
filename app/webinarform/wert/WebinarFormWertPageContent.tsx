@@ -254,7 +254,9 @@ export function WebinarFormWertPageContent() {
   useEffect(() => {
     try {
       const sessionId = getOrCreateSessionId("ef_session_id", 30)
-      fetch(`/api/public/campaigns/${WERT_CAMPAIGN_ID}/visit`, {
+      const visitUrl = `/api/public/campaigns/${WERT_CAMPAIGN_ID}/visit`
+      
+      fetch(visitUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -268,24 +270,49 @@ export function WebinarFormWertPageContent() {
           referrer: typeof document !== "undefined" ? document.referrer || null : null,
           user_agent: typeof navigator !== "undefined" ? navigator.userAgent : null,
         }),
-      }).catch(() => {
-        // Visit 실패해도 페이지 동작에는 영향 없음
       })
-    } catch {
+        .then(async (response) => {
+          if (!response.ok) {
+            const errorText = await response.text()
+            console.error('[워트 Visit API 실패]', {
+              status: response.status,
+              statusText: response.statusText,
+              error: errorText,
+              url: visitUrl,
+              campaignId: WERT_CAMPAIGN_ID,
+            })
+          } else {
+            const result = await response.json()
+            console.log('[워트 Visit API 성공]', {
+              success: result.success,
+              campaignId: WERT_CAMPAIGN_ID,
+            })
+          }
+        })
+        .catch((error) => {
+          // Visit 실패해도 페이지 동작에는 영향 없음
+          console.error('[워트 Visit API 네트워크 오류]', {
+            error: error.message,
+            url: visitUrl,
+            campaignId: WERT_CAMPAIGN_ID,
+          })
+        })
+    } catch (error: any) {
       // 초기화 실패 무시
+      console.error('[워트 Visit API 초기화 오류]', {
+        error: error?.message,
+        campaignId: WERT_CAMPAIGN_ID,
+      })
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps -- 랜딩 1회 방문만 기록
   }, [])
 
-  // 등록 페이지 링크에 UTM 파라미터 포함
+  // 등록 페이지 링크에 UTM 파라미터 및 CID 포함
   const getRegisterLink = () => {
     const baseUrl = "/event/149403/register"
-    if (Object.keys(utmParams).length === 0) {
-      return baseUrl
-    }
-    
     const params = new URLSearchParams()
-    // cid가 있으면 포함
+    
+    // cid가 있으면 항상 포함 (UTM이 없어도)
     const cid = searchParams.get('cid')
     if (cid) {
       params.set('cid', cid)
@@ -293,10 +320,14 @@ export function WebinarFormWertPageContent() {
     
     // UTM 파라미터 추가
     Object.entries(utmParams).forEach(([key, value]) => {
-      params.set(key, value)
+      if (value) {
+        params.set(key, value)
+      }
     })
     
-    return `${baseUrl}?${params.toString()}`
+    // 파라미터가 있으면 쿼리스트링 추가, 없으면 baseUrl만 반환
+    const queryString = params.toString()
+    return queryString ? `${baseUrl}?${queryString}` : baseUrl
   }
   
   return (
