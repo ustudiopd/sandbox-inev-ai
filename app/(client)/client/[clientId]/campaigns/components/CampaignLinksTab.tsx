@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { CHANNEL_TEMPLATES, CONTENT_OPTIONS, generateUTMCampaign, generateHumanReadableDescription, type ChannelTemplate } from '@/lib/utils/utmTemplate'
+import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 
 interface CampaignLink {
   id: string
@@ -19,6 +20,8 @@ interface CampaignLink {
   share_url?: string // 공유용 URL (cid만)
   campaign_url?: string // 광고용 URL (cid + UTM)
   conversion_count?: number
+  visits_count?: number
+  cvr?: number
   created_at: string
 }
 
@@ -31,14 +34,26 @@ interface Campaign {
 interface CampaignLinksTabProps {
   clientId: string
   clientName?: string
+  dateFrom?: string
+  dateTo?: string
 }
 
-export default function CampaignLinksTab({ clientId, clientName = '' }: CampaignLinksTabProps) {
+export default function CampaignLinksTab({ clientId, clientName = '', dateFrom, dateTo }: CampaignLinksTabProps) {
   const [activeTab, setActiveTab] = useState<'list' | 'create'>('list')
   const [links, setLinks] = useState<CampaignLink[]>([])
   const [campaigns, setCampaigns] = useState<Campaign[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [expandedLinkId, setExpandedLinkId] = useState<string | null>(null)
+  const [linkStats, setLinkStats] = useState<Record<string, any>>({})
+  const [loadingStats, setLoadingStats] = useState<Record<string, boolean>>({})
+  
+  // 검색 및 필터 상태
+  const [searchQuery, setSearchQuery] = useState('')
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'paused' | 'archived'>('all')
+  const [sortBy, setSortBy] = useState<'name' | 'created_at' | 'conversions' | 'visits' | 'cvr'>('created_at')
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   
   // 템플릿 관련 상태
   const [selectedTemplate, setSelectedTemplate] = useState<ChannelTemplate | null>(null)
@@ -65,7 +80,7 @@ export default function CampaignLinksTab({ clientId, clientName = '' }: Campaign
   
   useEffect(() => {
     loadData()
-  }, [clientId])
+  }, [clientId, dateFrom, dateTo])
 
   // 클라이언트 이름 가져오기
   useEffect(() => {
@@ -166,8 +181,11 @@ export default function CampaignLinksTab({ clientId, clientName = '' }: Campaign
         console.error('캠페인 목록 조회 실패:', campaignsResult)
       }
       
-      // 링크 목록 조회
-      const linksResponse = await fetch(`/api/clients/${clientId}/campaigns/links`)
+      // 링크 목록 조회 (날짜 범위 포함)
+      const linksUrl = dateFrom && dateTo
+        ? `/api/clients/${clientId}/campaigns/links?from=${dateFrom}&to=${dateTo}`
+        : `/api/clients/${clientId}/campaigns/links`
+      const linksResponse = await fetch(linksUrl)
       const linksResult = await linksResponse.json()
       
       if (!linksResponse.ok) {
@@ -293,6 +311,84 @@ export default function CampaignLinksTab({ clientId, clientName = '' }: Campaign
     })
   }
   
+  // 필터링 및 정렬된 링크 목록
+  const getFilteredAndSortedLinks = () => {
+    let filtered = links.filter(link => {
+      if (statusFilter !== 'all' && link.status !== statusFilter) return false
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase()
+        const campaignTitle = campaigns.find(c => c.id === link.target_campaign_id)?.title || ''
+        const utmText = [
+          link.utm_source,
+          link.utm_medium,
+          link.utm_campaign
+        ].filter(Boolean).join(' ').toLowerCase()
+        
+        return (
+          link.name.toLowerCase().includes(query) ||
+          campaignTitle.toLowerCase().includes(query) ||
+          utmText.includes(query)
+        )
+      }
+      return true
+    })
+    
+    filtered.sort((a, b) => {
+      let comparison = 0
+      switch (sortBy) {
+        case 'name':
+          comparison = (a.name || '').localeCompare(b.name || '')
+          break
+        case 'created_at':
+          comparison = new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+          break
+        case 'conversions':
+          comparison = (a.conversion_count || 0) - (b.conversion_count || 0)
+          break
+        case 'visits':
+          comparison = (a.visits_count || 0) - (b.visits_count || 0)
+          break
+        case 'cvr':
+          comparison = (a.cvr || 0) - (b.cvr || 0)
+          break
+      }
+      return sortOrder === 'asc' ? comparison : -comparison
+    })
+    
+    return filtered
+  }
+  
+  const filteredLinks = getFilteredAndSortedLinks()
+
+  const loadLinkStats = async (linkId: string) => {
+    if (linkStats[linkId]) {
+      return // 이미 로드됨
+    }
+
+    setLoadingStats(prev => ({ ...prev, [linkId]: true }))
+    try {
+      const response = await fetch(`/api/clients/${clientId}/campaigns/links/${linkId}/stats`)
+      const result = await response.json()
+      
+      if (response.ok) {
+        setLinkStats(prev => ({ ...prev, [linkId]: result }))
+      }
+    } catch (err) {
+      console.error('링크 통계 로드 실패:', err)
+    } finally {
+      setLoadingStats(prev => ({ ...prev, [linkId]: false }))
+    }
+  }
+
+  const handleLinkExpand = (linkId: string) => {
+    if (expandedLinkId === linkId) {
+      setExpandedLinkId(null)
+    } else {
+      setExpandedLinkId(linkId)
+      loadLinkStats(linkId)
+    }
+  }
+  
   if (loading) {
     return (
       <div className="bg-white rounded-lg shadow-sm p-8 text-center">
@@ -332,30 +428,327 @@ export default function CampaignLinksTab({ clientId, clientName = '' }: Campaign
       
       {/* 링크 목록 탭 */}
       {activeTab === 'list' && (
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">생성된 링크 목록</h2>
-          
-          {error && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
-              <p className="text-red-800">{error}</p>
+        <div className="space-y-6">
+          {/* 전체 통계 요약 */}
+          {links.length > 0 && (
+            <div className="bg-white rounded-lg shadow-sm p-6">
+              <h2 className="text-xl font-bold text-gray-900 mb-4">전체 통계 요약</h2>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="bg-blue-50 rounded-lg p-4">
+                  <div className="text-sm text-gray-600 mb-1">총 Visits</div>
+                  <div className="text-2xl font-bold text-blue-600">
+                    {links.reduce((sum, link) => sum + (link.visits_count || 0), 0).toLocaleString()}
+                  </div>
+                </div>
+                <div className="bg-green-50 rounded-lg p-4">
+                  <div className="text-sm text-gray-600 mb-1">총 전환</div>
+                  <div className="text-2xl font-bold text-green-600">
+                    {links.reduce((sum, link) => sum + (link.conversion_count || 0), 0).toLocaleString()}
+                  </div>
+                </div>
+                <div className="bg-purple-50 rounded-lg p-4">
+                  <div className="text-sm text-gray-600 mb-1">평균 CVR</div>
+                  <div className="text-2xl font-bold text-purple-600">
+                    {(() => {
+                      const totalVisits = links.reduce((sum, link) => sum + (link.visits_count || 0), 0)
+                      const totalConversions = links.reduce((sum, link) => sum + (link.conversion_count || 0), 0)
+                      return totalVisits > 0 ? ((totalConversions / totalVisits) * 100).toFixed(2) : '0.00'
+                    })()}%
+                  </div>
+                </div>
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <div className="text-sm text-gray-600 mb-1">활성 링크</div>
+                  <div className="text-2xl font-bold text-gray-600">
+                    {links.filter(link => link.status === 'active').length}
+                  </div>
+                </div>
+              </div>
             </div>
           )}
-          
-          {links.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-gray-500 mb-4">생성된 링크가 없습니다</p>
-              <button
-                onClick={() => setActiveTab('create')}
-                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                + 새 링크 생성
-              </button>
+
+          {/* 링크별 성과 비교 차트 */}
+          {links.length > 0 && (
+            <div className="bg-white rounded-lg shadow-sm p-6">
+              <h2 className="text-xl font-bold text-gray-900 mb-4">링크별 성과 비교</h2>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={links.filter(link => link.status !== 'archived').map(link => ({
+                  name: link.name.length > 20 ? link.name.substring(0, 20) + '...' : link.name,
+                  visits: link.visits_count || 0,
+                  conversions: link.conversion_count || 0,
+                }))}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" angle={-45} textAnchor="end" height={100} />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Bar dataKey="visits" fill="#3b82f6" name="Visits" />
+                  <Bar dataKey="conversions" fill="#10b981" name="전환" />
+                </BarChart>
+              </ResponsiveContainer>
             </div>
-          ) : (
-            <div className="space-y-4">
-              {links
-                .filter(link => link.status !== 'archived')
-                .map(link => (
+          )}
+
+          {/* 링크 목록 */}
+          <div className="bg-white rounded-lg shadow-sm p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-gray-900">생성된 링크 목록</h2>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setViewMode('grid')}
+                  className={`p-2 rounded ${viewMode === 'grid' ? 'bg-blue-100 text-blue-600' : 'text-gray-600 hover:bg-gray-100'}`}
+                  title="그리드 뷰"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                  </svg>
+                </button>
+                <button
+                  onClick={() => setViewMode('list')}
+                  className={`p-2 rounded ${viewMode === 'list' ? 'bg-blue-100 text-blue-600' : 'text-gray-600 hover:bg-gray-100'}`}
+                  title="리스트 뷰"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+            
+            {/* 검색 및 필터 바 */}
+            <div className="mb-4 flex flex-col sm:flex-row gap-3">
+              <div className="flex-1">
+                <input
+                  type="text"
+                  placeholder="링크 이름, UTM, 캠페인으로 검색..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value as any)}
+                className="px-4 py-2 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="all">전체 상태</option>
+                <option value="active">활성</option>
+                <option value="paused">일시정지</option>
+                <option value="archived">보관</option>
+              </select>
+              <select
+                value={`${sortBy}_${sortOrder}`}
+                onChange={(e) => {
+                  const [by, order] = e.target.value.split('_')
+                  setSortBy(by as any)
+                  setSortOrder(order as any)
+                }}
+                className="px-4 py-2 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="created_at_desc">최신순</option>
+                <option value="created_at_asc">오래된순</option>
+                <option value="name_asc">이름순 (가나다)</option>
+                <option value="name_desc">이름순 (역순)</option>
+                <option value="conversions_desc">전환 많은순</option>
+                <option value="visits_desc">Visits 많은순</option>
+                <option value="cvr_desc">CVR 높은순</option>
+              </select>
+            </div>
+            
+            {error && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+                <p className="text-red-800">{error}</p>
+              </div>
+            )}
+            
+            {filteredLinks.length === 0 ? (
+              <div className="text-center py-12">
+                <p className="text-gray-500 mb-4">
+                  {searchQuery || statusFilter !== 'all' 
+                    ? '검색 결과가 없습니다' 
+                    : '생성된 링크가 없습니다'}
+                </p>
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery('')}
+                    className="text-blue-600 hover:text-blue-700 mr-4"
+                  >
+                    검색 초기화
+                  </button>
+                )}
+                {statusFilter !== 'all' && (
+                  <button
+                    onClick={() => setStatusFilter('all')}
+                    className="text-blue-600 hover:text-blue-700"
+                  >
+                    필터 초기화
+                  </button>
+                )}
+                {!searchQuery && statusFilter === 'all' && (
+                  <button
+                    onClick={() => setActiveTab('create')}
+                    className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    + 새 링크 생성
+                  </button>
+                )}
+              </div>
+            ) : viewMode === 'grid' ? (
+              <div className="space-y-3">
+                {filteredLinks.map(link => (
+                  <div
+                    key={link.id}
+                    className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow bg-white"
+                  >
+                    <div className="flex items-center gap-4">
+                      {/* 왼쪽: 기본 정보 */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-3 mb-2">
+                          <h3 className="text-lg font-semibold text-gray-900 truncate" title={link.name}>
+                            {link.name}
+                          </h3>
+                          <span className={`px-2 py-1 rounded text-xs flex-shrink-0 ${
+                            link.status === 'active' ? 'bg-green-100 text-green-800' :
+                            link.status === 'paused' ? 'bg-yellow-100 text-yellow-800' :
+                            'bg-gray-100 text-gray-800'
+                          }`}>
+                            {link.status === 'active' ? '활성' : link.status === 'paused' ? '일시정지' : '보관'}
+                          </span>
+                        </div>
+                        <p className="text-sm text-gray-600 mb-1 truncate" title={campaigns.find(c => c.id === link.target_campaign_id)?.title}>
+                          {campaigns.find(c => c.id === link.target_campaign_id)?.title || link.target_campaign_id}
+                        </p>
+                        {(link.utm_source || link.utm_medium) && (
+                          <div className="text-xs text-gray-500 truncate">
+                            {link.utm_source}/{link.utm_medium}
+                            {link.utm_campaign && ` • ${link.utm_campaign}`}
+                          </div>
+                        )}
+                      </div>
+                      
+                      {/* 중간: 통계 */}
+                      <div className="flex items-center gap-6 px-4 border-l border-r border-gray-200">
+                        <div className="text-center min-w-[80px]">
+                          <div className="text-xs text-gray-500 mb-1">Visits</div>
+                          <div className="text-lg font-bold text-blue-600">{link.visits_count || 0}</div>
+                        </div>
+                        <div className="text-center min-w-[80px]">
+                          <div className="text-xs text-gray-500 mb-1">전환</div>
+                          <div className="text-lg font-bold text-green-600">{link.conversion_count || 0}</div>
+                        </div>
+                        <div className="text-center min-w-[80px]">
+                          <div className="text-xs text-gray-500 mb-1">CVR</div>
+                          <div className="text-lg font-bold text-purple-600">
+                            {link.cvr ? `${link.cvr.toFixed(1)}%` : '0%'}
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* 오른쪽: 액션 버튼 */}
+                      <div className="flex gap-2 flex-shrink-0">
+                        <button
+                          onClick={() => handleLinkExpand(link.id)}
+                          className="px-4 py-2 bg-blue-50 text-blue-600 rounded text-sm hover:bg-blue-100 transition-colors whitespace-nowrap"
+                        >
+                          {expandedLinkId === link.id ? '접기' : '상세'}
+                        </button>
+                        {(() => {
+                          // 템플릿 매칭: source + medium 정확히 일치하는 경우
+                          let matchedTemplate = CHANNEL_TEMPLATES.find(
+                            t => t.utm_source === link.utm_source && t.utm_medium === link.utm_medium
+                          )
+                          
+                          // 매칭 실패 시 medium만으로 매칭 시도
+                          if (!matchedTemplate && link.utm_medium) {
+                            matchedTemplate = CHANNEL_TEMPLATES.find(
+                              t => t.utm_medium === link.utm_medium && t.id !== 'custom'
+                            )
+                          }
+                          
+                          // medium이 'email'인 경우 뉴스레터로 간주
+                          if (!matchedTemplate && link.utm_medium === 'email') {
+                            matchedTemplate = CHANNEL_TEMPLATES.find(t => t.id === 'newsletter')
+                          }
+                          
+                          // medium이 'sms'인 경우 SMS로 간주
+                          if (!matchedTemplate && link.utm_medium === 'sms') {
+                            matchedTemplate = CHANNEL_TEMPLATES.find(t => t.id === 'sms')
+                          }
+                          
+                          const preferredType = matchedTemplate?.preferredLinkType || 'campaign'
+                          const isShareType = preferredType === 'share'
+                          const url = isShareType 
+                            ? (link.share_url || link.url)
+                            : (link.campaign_url || link.url)
+                          
+                          return (
+                            <button
+                              onClick={() => copyToClipboard(url)}
+                              className={`px-4 py-2 rounded text-sm transition-colors whitespace-nowrap ${
+                                isShareType
+                                  ? 'bg-green-100 text-green-700 hover:bg-green-200'
+                                  : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                              }`}
+                              title={isShareType ? '공유용 링크 복사 (짧음)' : '광고용 링크 복사 (UTM 포함)'}
+                            >
+                              복사 {isShareType ? '(공유용)' : '(광고용)'}
+                            </button>
+                          )
+                        })()}
+                      </div>
+                    </div>
+                    
+                    {/* 확장된 상세 정보 */}
+                    {expandedLinkId === link.id && (
+                      <div className="mt-4 pt-4 border-t border-gray-200">
+                        <div className="space-y-3 text-sm">
+                          <div>
+                            <span className="text-gray-500">랜딩:</span> {link.landing_variant}
+                          </div>
+                          {(link.utm_source || link.utm_medium || link.utm_campaign) && (
+                            <div>
+                              <span className="text-gray-500">UTM:</span>{' '}
+                              {[
+                                link.utm_source && `source=${link.utm_source}`,
+                                link.utm_medium && `medium=${link.utm_medium}`,
+                                link.utm_campaign && `campaign=${link.utm_campaign}`,
+                              ].filter(Boolean).join(', ')}
+                            </div>
+                          )}
+                          <div className="bg-gray-50 rounded p-2">
+                            <p className="text-xs text-gray-500 mb-1">링크 URL:</p>
+                            <p className="text-xs font-mono text-gray-700 break-all">
+                              {link.campaign_url || link.share_url || link.url}
+                            </p>
+                          </div>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => setEditingLink(link)}
+                              className="flex-1 px-3 py-1.5 bg-gray-200 text-gray-700 rounded text-xs hover:bg-gray-300"
+                            >
+                              수정
+                            </button>
+                            <button
+                              onClick={() => handleUpdateLink(link, { status: link.status === 'active' ? 'paused' : 'active' })}
+                              className="flex-1 px-3 py-1.5 bg-yellow-100 text-yellow-800 rounded text-xs hover:bg-yellow-200"
+                            >
+                              {link.status === 'active' ? '일시정지' : '재개'}
+                            </button>
+                            <button
+                              onClick={() => handleDeleteLink(link)}
+                              className="flex-1 px-3 py-1.5 bg-red-100 text-red-800 rounded text-xs hover:bg-red-200"
+                            >
+                              삭제
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {filteredLinks.map(link => (
                 <div key={link.id} className="border border-gray-200 rounded-lg p-4">
                   {editingLink?.id === link.id ? (
                     <LinkEditForm
@@ -367,9 +760,9 @@ export default function CampaignLinksTab({ clientId, clientName = '' }: Campaign
                   ) : (
                     <>
                       <div className="flex items-start justify-between mb-3">
-                        <div className="flex-1">
-                          <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                            {link.name}
+                        <div className="flex-1 cursor-pointer" onClick={() => handleLinkExpand(link.id)}>
+                          <h3 className="text-lg font-semibold text-gray-900 mb-1 hover:text-blue-600">
+                            {link.name} {expandedLinkId === link.id ? '▼' : '▶'}
                           </h3>
                           <p className="text-sm text-gray-600 mb-2">
                             전환 타겟: {campaigns.find(c => c.id === link.target_campaign_id)?.title || link.target_campaign_id}
@@ -379,7 +772,9 @@ export default function CampaignLinksTab({ clientId, clientName = '' }: Campaign
                             {link.start_date && (
                               <span>시작일: {new Date(link.start_date).toLocaleDateString('ko-KR')}</span>
                             )}
-                            <span>전환: {link.conversion_count || 0}개</span>
+                            <span className="font-semibold text-blue-600">Visits: {link.visits_count || 0}</span>
+                            <span className="font-semibold text-green-600">전환: {link.conversion_count || 0}</span>
+                            <span className="font-semibold text-purple-600">CVR: {link.cvr ? `${link.cvr.toFixed(2)}%` : '0.00%'}</span>
                             <span className={`px-2 py-1 rounded ${
                               link.status === 'active' ? 'bg-green-100 text-green-800' :
                               link.status === 'paused' ? 'bg-yellow-100 text-yellow-800' :
@@ -471,6 +866,67 @@ export default function CampaignLinksTab({ clientId, clientName = '' }: Campaign
                           )}
                         </div>
                       </div>
+                      
+                      {/* 상세 통계 (확장 시 표시) */}
+                      {expandedLinkId === link.id && (
+                        <div className="mt-4 pt-4 border-t border-gray-200">
+                          {loadingStats[link.id] ? (
+                            <div className="text-center py-8">
+                              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+                              <p className="text-sm text-gray-600">통계를 불러오는 중...</p>
+                            </div>
+                          ) : linkStats[link.id] ? (
+                            <div className="space-y-4">
+                              <div className="grid grid-cols-3 gap-4">
+                                <div className="bg-blue-50 rounded-lg p-3">
+                                  <div className="text-xs text-gray-600 mb-1">Visits</div>
+                                  <div className="text-xl font-bold text-blue-600">{linkStats[link.id].stats.visits.toLocaleString()}</div>
+                                </div>
+                                <div className="bg-green-50 rounded-lg p-3">
+                                  <div className="text-xs text-gray-600 mb-1">전환</div>
+                                  <div className="text-xl font-bold text-green-600">{linkStats[link.id].stats.conversions.toLocaleString()}</div>
+                                </div>
+                                <div className="bg-purple-50 rounded-lg p-3">
+                                  <div className="text-xs text-gray-600 mb-1">CVR</div>
+                                  <div className="text-xl font-bold text-purple-600">{linkStats[link.id].stats.cvr.toFixed(2)}%</div>
+                                </div>
+                              </div>
+                              
+                              {linkStats[link.id].daily_data && linkStats[link.id].daily_data.length > 0 && (
+                                <div>
+                                  <h4 className="text-sm font-semibold text-gray-700 mb-2">일별 추이</h4>
+                                  <ResponsiveContainer width="100%" height={200}>
+                                    <LineChart data={linkStats[link.id].daily_data}>
+                                      <CartesianGrid strokeDasharray="3 3" />
+                                      <XAxis 
+                                        dataKey="date" 
+                                        tickFormatter={(value) => {
+                                          const date = new Date(value)
+                                          return `${date.getMonth() + 1}/${date.getDate()}`
+                                        }}
+                                      />
+                                      <YAxis />
+                                      <Tooltip 
+                                        labelFormatter={(value) => {
+                                          const date = new Date(value)
+                                          return date.toLocaleDateString('ko-KR')
+                                        }}
+                                      />
+                                      <Legend />
+                                      <Line type="monotone" dataKey="visits" stroke="#3b82f6" name="Visits" strokeWidth={2} />
+                                      <Line type="monotone" dataKey="conversions" stroke="#10b981" name="전환" strokeWidth={2} />
+                                    </LineChart>
+                                  </ResponsiveContainer>
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            <div className="text-center py-4 text-sm text-gray-500">
+                              통계 데이터가 없습니다
+                            </div>
+                          )}
+                        </div>
+                      )}
                       <div className="flex gap-2">
                         <button
                           onClick={() => copyToClipboard(link.url)}
@@ -503,6 +959,7 @@ export default function CampaignLinksTab({ clientId, clientName = '' }: Campaign
               ))}
             </div>
           )}
+        </div>
         </div>
       )}
       
@@ -813,7 +1270,18 @@ function LinkEditForm({
   onSave: (updates: Partial<CampaignLink>) => void
   onCancel: () => void
 }) {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    name: string
+    target_campaign_id: string
+    landing_variant: string
+    utm_source: string
+    utm_medium: string
+    utm_campaign: string
+    utm_term: string
+    utm_content: string
+    start_date: string
+    status: string
+  }>({
     name: link.name,
     target_campaign_id: link.target_campaign_id,
     landing_variant: link.landing_variant,

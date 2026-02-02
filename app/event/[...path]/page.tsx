@@ -45,14 +45,15 @@ export async function generateMetadata({
     
     if (campaign) {
       // 메타데이터 우선순위: meta_title/meta_description > title
-      const metaTitle = campaign.meta_title || campaign.title || '이벤트'
-      const metaDescription = campaign.meta_description || `${campaign.title} - EventFlow 이벤트에 참여하세요`
-      const thumbnailUrl = campaign.meta_thumbnail_url || 'https://eventflow.kr/og-image.png'
+      const metaTitle = campaign.meta_title || campaign.title || 'AI 특허리서치 실무 활용 웨비나'
+      const metaDescription = campaign.meta_description || 'Keywert Insight'
+      // 기본 썸네일: Keywert Insight 썸네일 사용
+      const thumbnailUrl = campaign.meta_thumbnail_url || 'https://yqsayphssjznthrxpgfb.supabase.co/storage/v1/object/public/webinar-thumbnails/wert/thumb_wert1.png'
       const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://eventflow.kr'
       const canonicalUrl = `${appUrl}/event${publicPath}`
       
       return {
-        title: `${metaTitle} | EventFlow`,
+        title: `${metaTitle} | Keywert Insight`,
         description: metaDescription,
         metadataBase: new URL(appUrl),
         openGraph: {
@@ -60,7 +61,7 @@ export async function generateMetadata({
           description: metaDescription,
           type: 'website',
           url: canonicalUrl,
-          siteName: 'EventFlow',
+          siteName: 'Keywert Insight',
           images: [
             {
               url: thumbnailUrl,
@@ -87,18 +88,18 @@ export async function generateMetadata({
   
   // 149403 페이지에 대한 메타데이터 (fallback)
   if (publicPath === '/149403' || publicPath === '149403') {
-    const thumbnailUrl = 'https://yqsayphssjznthrxpgfb.supabase.co/storage/v1/object/public/webinar-thumbnails/wert/thumb.png'
+    const thumbnailUrl = 'https://yqsayphssjznthrxpgfb.supabase.co/storage/v1/object/public/webinar-thumbnails/wert/thumb_wert1.png'
     return {
-      title: '실제 고객사례로 알아보는 AI 특허리서치 실무 활용 웨비나 | keywert Insight',
-      description: '2026년 2월 6일(금) 오후 2시-3시 30분, 온라인 LIVE로 진행되는 무료 웨비나. IP팀·특허사무소·R&D팀의 키워트 인사이트 활용 방식을 실제 고객사례를 통해 알아보세요.',
-      keywords: 'AI 특허리서치, 키워트 인사이트, 특허 분석, IP팀, 특허사무소, R&D, 웨비나, keywert Insight',
+      title: 'AI 특허리서치 실무 활용 웨비나 | Keywert Insight',
+      description: 'Keywert Insight',
+      keywords: 'AI 특허리서치, 키워트 인사이트, 특허 분석, IP팀, 특허사무소, R&D, 웨비나, Keywert Insight',
       metadataBase: new URL('https://eventflow.kr'),
       openGraph: {
-        title: '실제 고객사례로 알아보는 AI 특허리서치 실무 활용 웨비나',
-        description: '2026년 2월 6일(금) 오후 2시-3시 30분, 온라인 LIVE | 무료 참가 | IP팀·특허사무소·R&D팀의 키워트 인사이트 활용 방식을 실제 고객사례를 통해 알아보세요.',
+        title: 'AI 특허리서치 실무 활용 웨비나',
+        description: 'Keywert Insight',
         type: 'website',
         url: 'https://eventflow.kr/event/149403',
-        siteName: 'keywert Insight',
+        siteName: 'Keywert Insight',
         images: [
           {
             url: thumbnailUrl,
@@ -110,8 +111,8 @@ export async function generateMetadata({
       },
       twitter: {
         card: 'summary_large_image',
-        title: '실제 고객사례로 알아보는 AI 특허리서치 실무 활용 웨비나',
-        description: '2026년 2월 6일(금) 오후 2시-3시 30분, 온라인 LIVE | 무료 참가',
+        title: 'AI 특허리서치 실무 활용 웨비나',
+        description: 'Keywert Insight',
         images: [thumbnailUrl],
       },
       alternates: {
@@ -487,8 +488,38 @@ export default async function SurveyPublicPage({
       type: campaign.type || 'survey'
     }, null, 2))
     
-    // 345870는 설문 페이지로 바로 리다이렉트
-    return redirect(`/event${publicPath}/survey`)
+    // 설문 페이지로 리다이렉트 (UTM 파라미터 포함)
+    // searchParamsData에서 직접 UTM 파라미터 추출 (extractUTMParams가 빈 객체를 반환할 수 있음)
+    const utmQueryParams = new URLSearchParams()
+    const utmKeys = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 'cid']
+    utmKeys.forEach(key => {
+      const value = searchParamsData[key]
+      if (value) {
+        const paramValue = Array.isArray(value) ? value[0] : value
+        if (paramValue && typeof paramValue === 'string') {
+          utmQueryParams.set(key, paramValue)
+        }
+      }
+    })
+    
+    // utmParams도 추가 (서버에서 추출한 값)
+    Object.entries(utmParams).forEach(([key, value]) => {
+      if (value && typeof value === 'string' && !utmQueryParams.has(key)) {
+        utmQueryParams.set(key, value)
+      }
+    })
+    
+    const utmQueryString = utmQueryParams.toString() ? `?${utmQueryParams.toString()}` : ''
+    
+    console.log('[SurveyPublicPage] 리다이렉트 URL 생성:', {
+      publicPath,
+      utmParams,
+      searchParamsData: Object.keys(searchParamsData),
+      utmQueryString,
+      finalUrl: `/event${publicPath}/survey${utmQueryString}`
+    })
+    
+    return redirect(`/event${publicPath}/survey${utmQueryString}`)
   } else if (subPath === 'survey') {
     // 설문 페이지
     const headersList = await headers()

@@ -36,16 +36,16 @@ export async function generateMetadata({
     
     if (webinar) {
       // 메타데이터 우선순위: meta_title/meta_description > title/description
-      const metaTitle = webinar.meta_title || webinar.title || '웨비나'
-      const metaDescription = webinar.meta_description || webinar.description || 'EventFlow 웨비나에 참여하세요'
-      // 썸네일 우선순위: meta_thumbnail_url > email_thumbnail_url > 기본 이미지
-      const thumbnailUrl = webinar.meta_thumbnail_url || webinar.email_thumbnail_url || 'https://eventflow.kr/og-image.png'
+      const metaTitle = webinar.meta_title || webinar.title || 'AI 특허리서치 실무 활용 웨비나'
+      const metaDescription = webinar.meta_description || webinar.description || 'Keywert Insight'
+      // 썸네일 우선순위: meta_thumbnail_url > email_thumbnail_url > 기본 이미지 (Keywert Insight 썸네일)
+      const thumbnailUrl = webinar.meta_thumbnail_url || webinar.email_thumbnail_url || 'https://yqsayphssjznthrxpgfb.supabase.co/storage/v1/object/public/webinar-thumbnails/wert/thumb_wert1.png'
       const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://eventflow.kr'
       const webinarPath = webinar.slug || webinar.id
       const canonicalUrl = `${appUrl}/webinar/${webinarPath}/register`
       
       return {
-        title: `${metaTitle} | EventFlow 웨비나 등록`,
+        title: `${metaTitle} | Keywert Insight`,
         description: metaDescription,
         metadataBase: new URL(appUrl),
         openGraph: {
@@ -53,7 +53,7 @@ export async function generateMetadata({
           description: metaDescription,
           type: 'website',
           url: canonicalUrl,
-          siteName: 'EventFlow',
+          siteName: 'Keywert Insight',
           images: [
             {
               url: thumbnailUrl,
@@ -109,11 +109,73 @@ export async function generateMetadata({
         },
       }
     }
+    
+    // 기본 fallback 메타데이터 (웨비나가 DB에 없을 때)
+    const defaultThumbnailUrl = 'https://yqsayphssjznthrxpgfb.supabase.co/storage/v1/object/public/webinar-thumbnails/wert/thumb_wert1.png'
+    return {
+      title: 'AI 특허리서치 실무 활용 웨비나 | Keywert Insight',
+      description: 'Keywert Insight',
+      metadataBase: new URL('https://eventflow.kr'),
+      openGraph: {
+        title: 'AI 특허리서치 실무 활용 웨비나',
+        description: 'Keywert Insight',
+        type: 'website',
+        url: `https://eventflow.kr/webinar/${id}/register`,
+        siteName: 'Keywert Insight',
+        images: [
+          {
+            url: defaultThumbnailUrl,
+            width: 1200,
+            height: 630,
+            alt: 'AI 특허리서치 실무 활용 웨비나',
+          },
+        ],
+      },
+      twitter: {
+        card: 'summary_large_image',
+        title: 'AI 특허리서치 실무 활용 웨비나',
+        description: 'Keywert Insight',
+        images: [defaultThumbnailUrl],
+      },
+      alternates: {
+        canonical: `https://eventflow.kr/webinar/${id}/register`,
+      },
+    }
   } catch (error) {
     console.error('[generateMetadata] 웨비나 메타데이터 조회 오류:', error)
   }
   
-  return {}
+  // 기본 fallback 메타데이터 (웨비나가 DB에 없을 때)
+  const defaultThumbnailUrl = 'https://yqsayphssjznthrxpgfb.supabase.co/storage/v1/object/public/webinar-thumbnails/wert/thumb_wert1.png'
+  return {
+    title: 'AI 특허리서치 실무 활용 웨비나 | Keywert Insight',
+    description: 'Keywert Insight',
+    metadataBase: new URL('https://eventflow.kr'),
+    openGraph: {
+      title: 'AI 특허리서치 실무 활용 웨비나',
+      description: 'Keywert Insight',
+      type: 'website',
+      url: `https://eventflow.kr/webinar/${id}/register`,
+      siteName: 'Keywert Insight',
+      images: [
+        {
+          url: defaultThumbnailUrl,
+          width: 1200,
+          height: 630,
+          alt: 'AI 특허리서치 실무 활용 웨비나',
+        },
+      ],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: 'AI 특허리서치 실무 활용 웨비나',
+      description: 'Keywert Insight',
+      images: [defaultThumbnailUrl],
+    },
+    alternates: {
+      canonical: `https://eventflow.kr/webinar/${id}/register`,
+    },
+  }
 }
 
 export default async function WebinarRegisterPage({
