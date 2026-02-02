@@ -208,17 +208,35 @@ export async function POST(
       
       if (insertError) {
         // 구조화 로그: Visit 저장 실패
-        console.error('[VisitTrackFail]', JSON.stringify({
+        const errorDetails = {
           campaignId: actualCampaignId,
           sessionId: session_id,
           reason: 'DB_INSERT_FAILED',
           status: 500,
           error: insertError.message,
           code: insertError.code,
+          details: insertError.details,
+          hint: insertError.hint,
+          insertData: insertData, // 디버깅용
           timestamp: new Date().toISOString()
-        }))
+        }
+        console.error('[VisitTrackFail]', JSON.stringify(errorDetails, null, 2))
         // Visit 저장 실패해도 200 반환 (graceful failure)
-        return NextResponse.json({ success: false, error: 'Failed to save visit' })
+        // 개발 환경에서는 상세 에러 메시지 반환
+        const errorMessage = process.env.NODE_ENV === 'development' 
+          ? `Failed to save visit: ${insertError.message} (${insertError.code})`
+          : 'Failed to save visit'
+        // Cursor 직렬화 문제 방지: 숫자 코드를 문자열로 변환
+        const responseData: any = { 
+          success: false, 
+          error: errorMessage
+        }
+        if (process.env.NODE_ENV === 'development') {
+          if (insertError.details) responseData.details = String(insertError.details)
+          if (insertError.hint) responseData.hint = String(insertError.hint)
+          if (insertError.code) responseData.code = String(insertError.code)
+        }
+        return NextResponse.json(responseData)
       }
       
       return NextResponse.json({ success: true })
