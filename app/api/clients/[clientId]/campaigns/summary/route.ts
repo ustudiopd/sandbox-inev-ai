@@ -48,13 +48,49 @@ export async function GET(
       return await getSummaryFromRaw(clientId, fromDateUTC, toDateUTC, from, to)
     }
     
-    // 집계 테이블에 데이터가 있으면 사용
+    // 집계 테이블에 데이터가 있으면 사용하되, Raw 데이터와 비교하여 누락 확인
     if (aggregatedStats && aggregatedStats.length > 0) {
-      console.log('[Marketing Summary] 집계 테이블 사용:', {
+      // Raw 데이터에서 실제 전환수 확인
+      const { data: campaigns } = await admin
+        .from('event_survey_campaigns')
+        .select('id')
+        .eq('client_id', clientId)
+      
+      let rawTotalConversions = 0
+      if (campaigns && campaigns.length > 0) {
+        const campaignIds = campaigns.map(c => c.id)
+        const { count } = await admin
+          .from('event_survey_entries')
+          .select('*', { count: 'exact', head: true })
+          .in('campaign_id', campaignIds)
+          .gte('created_at', fromDateUTC.toISOString())
+          .lte('created_at', toDateUTC.toISOString())
+        
+        rawTotalConversions = count || 0
+      }
+      
+      // 집계 테이블의 전환수
+      const aggregatedTotalConversions = aggregatedStats.reduce((sum, s) => sum + (s.conversions || 0), 0)
+      
+      console.log('[Marketing Summary] 집계 테이블 vs Raw 데이터:', {
         clientId,
         statsCount: aggregatedStats.length,
+        aggregatedTotal: aggregatedTotalConversions,
+        rawTotal: rawTotalConversions,
+        difference: rawTotalConversions - aggregatedTotalConversions,
         dateRange: { from, to }
       })
+      
+      // 집계 테이블의 전환수가 Raw 데이터보다 5% 이상 적으면 Raw 데이터 사용
+      // (집계가 불완전하거나 누락된 데이터가 있을 수 있음)
+      if (rawTotalConversions > 0 && aggregatedTotalConversions < rawTotalConversions * 0.95) {
+        console.warn('[Marketing Summary] 집계 테이블이 불완전함, Raw 데이터 사용:', {
+          aggregatedTotal: aggregatedTotalConversions,
+          rawTotal: rawTotalConversions,
+          missing: rawTotalConversions - aggregatedTotalConversions
+        })
+        return await getSummaryFromRaw(clientId, fromDateUTC, toDateUTC, from, to)
+      }
       
       return await getSummaryFromAggregated(aggregatedStats, from, to)
     }

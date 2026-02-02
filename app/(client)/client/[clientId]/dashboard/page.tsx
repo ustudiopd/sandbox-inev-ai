@@ -4,7 +4,6 @@ import { createAdminSupabase } from '@/lib/supabase/admin'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import UnifiedListItem from './components/UnifiedListItem'
-import StatisticsOverview from './components/StatisticsOverview'
 
 export default async function ClientDashboard({
   params,
@@ -251,9 +250,6 @@ export default async function ClientDashboard({
             </Link>
           </div>
         </div>
-        
-        {/* 통계 요약 (Phase 2) */}
-        <StatisticsOverview clientId={clientId} />
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 mb-6 sm:mb-8">
           <div className="bg-white p-4 md:p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow border-l-4 border-blue-500">
