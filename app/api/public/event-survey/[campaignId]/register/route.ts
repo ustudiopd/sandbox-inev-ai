@@ -1,7 +1,8 @@
-import { NextResponse } from 'next/server'
+import { NextResponse, NextRequest } from 'next/server'
 import { createAdminSupabase } from '@/lib/supabase/admin'
 import { normalizeUTM } from '@/lib/utils/utm'
 import { normalizeCID } from '@/lib/utils/cid'
+import { restoreTrackingInfo } from '@/lib/tracking/restore-tracking'
 // import { sendWebinarRegistrationEmail } from '@/lib/email' // 이메일 발송 비활성화
 
 export const runtime = 'nodejs'
@@ -15,6 +16,8 @@ export async function POST(
   req: Request,
   { params }: { params: Promise<{ campaignId: string }> }
 ) {
+  // Request를 NextRequest로 변환 (cookie 읽기용)
+  const nextReq = req as unknown as NextRequest
   try {
     const { campaignId } = await params
     console.log('[register] 등록 요청 시작:', { campaignId, timestamp: new Date().toISOString() })
@@ -95,54 +98,46 @@ export async function POST(
       )
     }
     
-    // cid로 링크 lookup (명세서 요구사항)
-    let resolvedMarketingCampaignLinkId: string | null = marketing_campaign_link_id || null
-    if (cid && !resolvedMarketingCampaignLinkId) {
-      try {
-        const normalizedCid = normalizeCID(cid)
-        if (normalizedCid) {
-          // 웨비나 ID인 경우와 캠페인 ID인 경우 모두 처리
-          let linkQuery = admin
-            .from('campaign_link_meta')
-            .select('id, target_type, target_campaign_id, target_webinar_id')
-            .eq('client_id', campaign.client_id)
-            .eq('cid', normalizedCid)
-            .eq('status', 'active')
-          
-          // 웨비나 ID인 경우: target_type이 'webinar'이고 target_webinar_id가 일치하는 링크 찾기
-          // 캠페인 ID인 경우: target_type이 'campaign'이고 target_campaign_id가 일치하는 링크 찾기
-          if (isWebinarId) {
-            linkQuery = linkQuery
-              .eq('target_type', 'webinar')
-              .eq('target_webinar_id', campaignId)
-          } else {
-            linkQuery = linkQuery
-              .or(`target_type.is.null,target_type.eq.campaign`)
-              .eq('target_campaign_id', campaignId)
-          }
-          
-          const { data: link } = await linkQuery.maybeSingle()
-          
-          if (link) {
-            resolvedMarketingCampaignLinkId = link.id
-          }
-        }
-      } catch (cidError) {
-        console.error('cid lookup 오류 (무시하고 계속):', cidError)
-        // cid lookup 실패해도 등록은 계속 진행
-      }
+    // 추적 정보 복원 (URL > Cookie > Link 순서)
+    const restoredTracking = await restoreTrackingInfo(
+      nextReq,
+      campaignId,
+      campaign.client_id,
+      isWebinarId,
+      {
+        utm_source: utm_source || null,
+        utm_medium: utm_medium || null,
+        utm_campaign: utm_campaign || null,
+        utm_term: utm_term || null,
+        utm_content: utm_content || null,
+      },
+      cid || null
+    )
+    
+    // 복원된 추적 정보 사용
+    const resolvedMarketingCampaignLinkId = restoredTracking.marketing_campaign_link_id || marketing_campaign_link_id || null
+    const finalCid = restoredTracking.cid
+    const finalUTMParams = {
+      utm_source: restoredTracking.utm_source,
+      utm_medium: restoredTracking.utm_medium,
+      utm_campaign: restoredTracking.utm_campaign,
+      utm_term: restoredTracking.utm_term,
+      utm_content: restoredTracking.utm_content,
     }
+    
+    console.log('[register] 복원된 추적 정보:', {
+      source: restoredTracking.source,
+      cid: finalCid,
+      utm_source: finalUTMParams.utm_source,
+      link_id: resolvedMarketingCampaignLinkId,
+      untracked_reason: restoredTracking.untracked_reason,
+    })
     
     // UTM 파라미터 정규화 (graceful: 실패해도 계속 진행)
     let normalizedUTM: Record<string, string | null> = {}
     try {
-      normalizedUTM = normalizeUTM({
-        utm_source,
-        utm_medium,
-        utm_campaign,
-        utm_term,
-        utm_content,
-      })
+      normalizedUTM = normalizeUTM(finalUTMParams)
+      console.log('[register] 정규화된 UTM 파라미터:', normalizedUTM)
     } catch (utmError) {
       console.error('UTM 정규화 오류 (무시하고 계속):', utmError)
       // UTM 정규화 실패해도 등록은 계속 진행
@@ -325,6 +320,11 @@ export async function POST(
           phone_norm: phone_norm || registration_data?.phone_norm || null,
         }
         
+        // CID 추가 (복원된 CID가 있을 때만)
+        if (finalCid) {
+          completeRegistrationData.cid = finalCid
+        }
+        
         // 빈 값 제거 (null, undefined, 빈 문자열만 제거, 배열과 boolean은 유지)
         const cleanedRegistrationData: Record<string, any> = {}
         for (const [key, value] of Object.entries(completeRegistrationData)) {
@@ -340,6 +340,7 @@ export async function POST(
         
         // registrations 테이블에만 등록 (모든 폼 데이터 포함)
         console.log('[register] 저장할 registration_data:', JSON.stringify(cleanedRegistrationData, null, 2))
+        console.log('[register] CID 저장:', finalCid || '없음')
         
         const { error: regError } = await admin
           .from('registrations')
@@ -625,6 +626,11 @@ export async function POST(
           phone_norm: phone_norm || baseData?.phone_norm || null,
         }
         
+        // CID 추가 (복원된 CID가 있을 때만)
+        if (finalCid) {
+          completeRegistrationData.cid = finalCid
+        }
+        
         // 빈 값 제거 (null, undefined, 빈 문자열만 제거, 배열과 boolean은 유지)
         const cleanedRegistrationData: Record<string, any> = {}
         for (const [key, value] of Object.entries(completeRegistrationData)) {
@@ -640,6 +646,7 @@ export async function POST(
         
         // registrations 테이블에만 등록 (모든 폼 데이터 포함)
         console.log('[register] 저장할 registration_data:', JSON.stringify(cleanedRegistrationData, null, 2))
+        console.log('[register] CID 저장:', finalCid || '없음')
         
         const { data: newRegistration, error: regError } = await admin
           .from('registrations')
@@ -940,8 +947,17 @@ export async function POST(
       normalizedRegistrationData = Object.keys(cleanedData).length > 0 ? cleanedData : null
     }
     
+    // CID를 registration_data에 추가 (복원된 CID가 있을 때만)
+    if (finalCid && normalizedRegistrationData) {
+      normalizedRegistrationData.cid = finalCid
+    } else if (finalCid && !normalizedRegistrationData) {
+      // registration_data가 없으면 새로 생성
+      normalizedRegistrationData = { cid: finalCid }
+    }
+    
     // 디버깅: registration_data 확인
     console.log('[register] registration_data:', JSON.stringify(normalizedRegistrationData, null, 2))
+    console.log('[register] CID 저장:', finalCid || '없음')
     
     const { data: entry, error: entryError } = await admin
       .from('event_survey_entries')
@@ -963,6 +979,10 @@ export async function POST(
         utm_first_visit_at: utm_first_visit_at || null,
         utm_referrer: utm_referrer || null,
         marketing_campaign_link_id: resolvedMarketingCampaignLinkId,
+        // untracked_reason 저장 (선택적, 추적 실패 이유)
+        ...(restoredTracking.untracked_reason ? { 
+          // untracked_reason은 추후 tracking_snapshot에 저장될 예정
+        } : {}),
       })
       .select('id, survey_no, code6')
       .single()
@@ -1026,6 +1046,9 @@ export async function POST(
       survey_no: entry?.survey_no, 
       code6: entry?.code6,
       email: normalizedRegistrationData?.email,
+      utm_source: normalizedUTM.utm_source || null,
+      utm_medium: normalizedUTM.utm_medium || null,
+      marketing_campaign_link_id: resolvedMarketingCampaignLinkId,
       timestamp: new Date().toISOString()
     })
     
