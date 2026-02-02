@@ -28,6 +28,15 @@ interface MarketingSummary {
 export default function CampaignsPageClient({ clientId, clientName, clientCreatedAt }: CampaignsPageClientProps) {
   const searchParams = useSearchParams()
   const [activeTab, setActiveTab] = useState<'summary' | 'links'>('summary')
+  
+  // 로컬/테스트 환경 확인 (클라이언트 사이드)
+  const isDevOrPreview = typeof window !== 'undefined' && (
+    process.env.NODE_ENV === 'development' ||
+    window.location.hostname === 'localhost' ||
+    window.location.hostname.includes('localhost') ||
+    window.location.hostname.includes('127.0.0.1') ||
+    window.location.hostname.includes('vercel.app') // Vercel 프리뷰 환경
+  )
   const [loading, setLoading] = useState(true)
   const [summary, setSummary] = useState<MarketingSummary | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -221,8 +230,8 @@ export default function CampaignsPageClient({ clientId, clientName, clientCreate
                 {new Date(dateFrom).toLocaleDateString('ko-KR')} ~ {new Date(dateTo).toLocaleDateString('ko-KR')}
               </p>
               
-              {/* 추적 성공률 표시 */}
-              {summary.tracking_metadata && (
+              {/* 추적 성공률 표시 (로컬/테스트 환경에서만) */}
+              {summary.tracking_metadata && isDevOrPreview && (
                 <div className="mt-4 pt-4 border-t border-gray-200">
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600">추적 성공률</span>
@@ -240,7 +249,7 @@ export default function CampaignsPageClient({ clientId, clientName, clientCreate
                     추적 성공: {summary.tracking_metadata.tracked_count.toLocaleString()}개 / 
                     추적 실패: {summary.tracking_metadata.untracked_count.toLocaleString()}개
                   </div>
-                  {process.env.NODE_ENV === 'development' && summary.tracking_metadata.untracked_count > 0 && (
+                  {summary.tracking_metadata.untracked_count > 0 && (
                     <div className="mt-2 text-xs text-amber-600 bg-amber-50 rounded p-2">
                       ⚠️ 일부 전환이 추적되지 않았습니다. 링크에 UTM 파라미터가 포함되어 있는지 확인해주세요.
                     </div>
@@ -256,26 +265,28 @@ export default function CampaignsPageClient({ clientId, clientName, clientCreate
                 {summary.conversions_by_source.length === 0 ? (
                   <p className="text-gray-500">데이터가 없습니다</p>
                 ) : (
-                  summary.conversions_by_source.map((item, idx) => (
-                    <div 
-                      key={idx} 
-                      className={`flex items-center justify-between py-2 border-b border-gray-100 ${
-                        item.is_untracked ? 'bg-amber-50' : ''
-                      }`}
-                    >
-                      <div className="flex items-center gap-2">
-                        <span className={`text-gray-700 ${item.is_untracked ? 'font-medium text-amber-800' : ''}`}>
-                          {formatSource(item.source)}
-                        </span>
-                        {item.is_untracked && (
-                          <span className="text-xs bg-amber-200 text-amber-800 px-2 py-0.5 rounded">
-                            추적 실패
+                  summary.conversions_by_source.map((item, idx) => {
+                    return (
+                      <div 
+                        key={idx} 
+                        className={`flex items-center justify-between py-2 border-b border-gray-100 ${
+                          item.is_untracked && isDevOrPreview ? 'bg-amber-50' : ''
+                        }`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className={`text-gray-700 ${item.is_untracked && isDevOrPreview ? 'font-medium text-amber-800' : ''}`}>
+                            {formatSource(item.source)}
                           </span>
-                        )}
+                          {item.is_untracked && isDevOrPreview && (
+                            <span className="text-xs bg-amber-200 text-amber-800 px-2 py-0.5 rounded">
+                              추적 실패
+                            </span>
+                          )}
+                        </div>
+                        <span className="font-semibold text-gray-900">{item.count.toLocaleString()}</span>
                       </div>
-                      <span className="font-semibold text-gray-900">{item.count.toLocaleString()}</span>
-                    </div>
-                  ))
+                    )
+                  })
                 )}
               </div>
             </div>
