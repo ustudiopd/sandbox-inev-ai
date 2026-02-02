@@ -116,19 +116,30 @@ export default function RegistrationPage({ campaign, baseUrl, utmParams = {} }: 
   const [lookupLoading, setLookupLoading] = useState(false)
   const [lookupError, setLookupError] = useState<string | null>(null)
   
+  // HPE 원래 버전 필드 (445870 경로용)
+  const isHPE = campaign?.public_path === '/445870'
+  
   // 등록 폼 필드
   const [email, setEmail] = useState('')
   const [name, setName] = useState('')
+  const [firstName, setFirstName] = useState('') // HPE 원래 버전: 이름
+  const [lastName, setLastName] = useState('') // HPE 원래 버전: 성
+  const [company, setCompany] = useState('') // HPE 원래 버전: 회사명
+  const [jobTitle, setJobTitle] = useState('') // HPE 원래 버전: 직급
   const [organization, setOrganization] = useState('') // 소속
   const [department, setDepartment] = useState('') // 부서
   const [position, setPosition] = useState('') // 직함
   const [yearsOfExperience, setYearsOfExperience] = useState('') // 연차(경력)
   const [question, setQuestion] = useState('') // 웨비나와 관련하여 궁금한 사항
+  const [customQuestion, setCustomQuestion] = useState('') // HPE 원래 버전: 커스텀 질문
   const [phoneCountryCode, setPhoneCountryCode] = useState('+82')
   const [phone1, setPhone1] = useState('010')
   const [phone2, setPhone2] = useState('')
   const [phone3, setPhone3] = useState('')
+  const [consentEmail, setConsentEmail] = useState(false) // HPE 원래 버전: 이메일 수신 동의
+  const [consentPhone, setConsentPhone] = useState(false) // HPE 원래 버전: 전화 수신 동의
   const [privacyConsent, setPrivacyConsent] = useState<'yes' | 'no' | null>(null)
+  const [privacyConsentCheckbox, setPrivacyConsentCheckbox] = useState(false) // HPE 원래 버전: 체크박스
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   
@@ -201,43 +212,78 @@ export default function RegistrationPage({ campaign, baseUrl, utmParams = {} }: 
       return
     }
     
-    if (!isValidValue(name)) {
-      setError('이름을 입력해주세요.')
-      return
-    }
-    
-    if (!isValidValue(organization)) {
-      setError('소속을 입력해주세요.')
-      return
-    }
-    
-    if (!isValidValue(department)) {
-      setError('부서를 입력해주세요.')
-      return
-    }
-    
-    if (!isValidValue(position)) {
-      setError('직함을 입력해주세요.')
-      return
-    }
-    
-    if (!isValidValue(yearsOfExperience)) {
-      setError('연차(경력)를 입력해주세요.')
-      return
-    }
-    
-    if (!phone1 || !phone2 || !phone3) {
-      setError('휴대폰 번호를 모두 입력해주세요.')
-      return
-    }
-    
-    if (privacyConsent !== 'yes') {
-      setError('개인정보 활용 동의에 동의해주세요.')
-      return
+    // HPE 원래 버전 필드 검증
+    if (isHPE) {
+      if (!isValidValue(firstName)) {
+        setError('이름을 입력해주세요.')
+        return
+      }
+      
+      if (!isValidValue(lastName)) {
+        setError('성을 입력해주세요.')
+        return
+      }
+      
+      if (!isValidValue(company)) {
+        setError('회사명을 입력해주세요.')
+        return
+      }
+      
+      if (!isValidValue(jobTitle)) {
+        setError('직급을 입력해주세요.')
+        return
+      }
+      
+      if (!phone1 || !phone2 || !phone3) {
+        setError('전화번호를 모두 입력해주세요.')
+        return
+      }
+      
+      if (!privacyConsentCheckbox) {
+        setError('개인정보취급방침에 동의해주세요.')
+        return
+      }
+    } else {
+      // 기존 버전 필드 검증
+      if (!isValidValue(name)) {
+        setError('이름을 입력해주세요.')
+        return
+      }
+      
+      if (!isValidValue(organization)) {
+        setError('소속을 입력해주세요.')
+        return
+      }
+      
+      if (!isValidValue(department)) {
+        setError('부서를 입력해주세요.')
+        return
+      }
+      
+      if (!isValidValue(position)) {
+        setError('직함을 입력해주세요.')
+        return
+      }
+      
+      if (!isValidValue(yearsOfExperience)) {
+        setError('연차(경력)를 입력해주세요.')
+        return
+      }
+      
+      if (!phone1 || !phone2 || !phone3) {
+        setError('휴대폰 번호를 모두 입력해주세요.')
+        return
+      }
+      
+      if (privacyConsent !== 'yes') {
+        setError('개인정보 활용 동의에 동의해주세요.')
+        return
+      }
     }
     
     const phone = `${phone1}-${phone2}-${phone3}`
     const phoneNorm = phone.replace(/\D/g, '')
+    const fullName = isHPE ? `${lastName}${firstName}`.trim() : name.trim()
     
     // localStorage에서 UTM 읽기
     let utmData: Record<string, any> = {}
@@ -260,7 +306,23 @@ export default function RegistrationPage({ campaign, baseUrl, utmParams = {} }: 
     setError(null)
     
     // 요청 데이터 준비
-    const requestBody = {
+    const baseRequestBody = isHPE ? {
+      name: fullName,
+      company: company.trim(),
+      phone: phone,
+      phone_norm: phoneNorm,
+      registration_data: {
+        email: email.trim(),
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        jobTitle: jobTitle.trim(),
+        phoneCountryCode: phoneCountryCode,
+        customQuestion: customQuestion.trim(),
+        consentEmail: consentEmail,
+        consentPhone: consentPhone,
+        privacyConsent: privacyConsentCheckbox,
+      },
+    } : {
       name: name.trim(),
       company: organization.trim(), // 소속을 company 필드에 저장 (기존 API 호환성)
       phone: phone,
@@ -279,6 +341,10 @@ export default function RegistrationPage({ campaign, baseUrl, utmParams = {} }: 
         consentEmail: false, // 이메일 수신 동의 (등록 페이지에서는 별도 필드 없음)
         consentPhone: false, // 전화 수신 동의 (등록 페이지에서는 별도 필드 없음)
       },
+    }
+    
+    const requestBody = {
+      ...baseRequestBody,
       // UTM 파라미터 추가
       utm_source: utmData.utm_source || utmParams.utm_source || null,
       utm_medium: utmData.utm_medium || utmParams.utm_medium || null,
@@ -1727,58 +1793,60 @@ export default function RegistrationPage({ campaign, baseUrl, utmParams = {} }: 
                 />
               </div>
               
-              {/* 개인정보 활용 동의 */}
-              <div style={{ paddingTop: '24px', borderTop: '1px solid #e5e5e5' }} className="mobile-consent-section">
-                <div style={{ marginBottom: '16px' }}>
-                  <h3 style={{ fontSize: '16px', fontWeight: 'bold', color: '#000', marginBottom: '12px' }}>
-                    개인정보 활용 동의 <span style={{ color: '#f00' }}>*</span>
-                  </h3>
-                  <div style={{ fontSize: '14px', color: '#333', lineHeight: '22px', marginBottom: '16px' }}>
-                    <p style={{ marginBottom: '12px' }}>
-                      주식회사 워트인텔리전스는 웨비나 운영과 서비스 홍보를 위해 다음과 같이 개인정보를 수집 및 이용하고자 합니다. 귀하는 동의를 거부할 권리가 있으며, 거부할 경우 웨비나 이용이 제한됩니다.
-                    </p>
-                    <div style={{ marginBottom: '12px' }}>
-                      <strong>- 항목:</strong> 이름, 이메일, 휴대폰번호, 소속, 부서, 직함, 연차(경력)
-                    </div>
-                    <div style={{ marginBottom: '12px' }}>
-                      <strong>- 수집 및 이용목적:</strong> 참가자 혜택 제공(서비스 안내 등)
-                    </div>
-                    <div style={{ marginBottom: '12px' }}>
-                      <strong>- 보유 및 이용기간:</strong> 동의 철회까지
-                    </div>
-                    <div style={{ fontSize: '13px', color: '#666', marginTop: '16px', padding: '12px', backgroundColor: '#f9f9f9', borderRadius: '8px' }}>
-                      <strong>※ 동의 거부 권리 및 불이익:</strong> 귀하는 위와 같은 개인정보 활용 동의를 거부할 권리가 있습니다. 다만, 동의 거부 시 웨비나 참가 신청 및 관련 혜택 제공이 제한될 수 있습니다.
+              {/* 개인정보 취급방침 - isWertSummit일 때는 워트인텔리전스 버전만 표시 (HPE는 기존 디자인에서 처리) */}
+              {!isHPE && (
+                <div style={{ paddingTop: '24px', borderTop: '1px solid #e5e5e5' }} className="mobile-consent-section">
+                  <div style={{ marginBottom: '16px' }}>
+                    <h3 style={{ fontSize: '16px', fontWeight: 'bold', color: '#000', marginBottom: '12px' }}>
+                      개인정보 활용 동의 <span style={{ color: '#f00' }}>*</span>
+                    </h3>
+                    <div style={{ fontSize: '14px', color: '#333', lineHeight: '22px', marginBottom: '16px' }}>
+                      <p style={{ marginBottom: '12px' }}>
+                        주식회사 워트인텔리전스는 웨비나 운영과 서비스 홍보를 위해 다음과 같이 개인정보를 수집 및 이용하고자 합니다. 귀하는 동의를 거부할 권리가 있으며, 거부할 경우 웨비나 이용이 제한됩니다.
+                      </p>
+                      <div style={{ marginBottom: '12px' }}>
+                        <strong>- 항목:</strong> 이름, 이메일, 휴대폰번호, 소속, 부서, 직함, 연차(경력)
+                      </div>
+                      <div style={{ marginBottom: '12px' }}>
+                        <strong>- 수집 및 이용목적:</strong> 참가자 혜택 제공(서비스 안내 등)
+                      </div>
+                      <div style={{ marginBottom: '12px' }}>
+                        <strong>- 보유 및 이용기간:</strong> 동의 철회까지
+                      </div>
+                      <div style={{ fontSize: '13px', color: '#666', marginTop: '16px', padding: '12px', backgroundColor: '#f9f9f9', borderRadius: '8px' }}>
+                        <strong>※ 동의 거부 권리 및 불이익:</strong> 귀하는 위와 같은 개인정보 활용 동의를 거부할 권리가 있습니다. 다만, 동의 거부 시 웨비나 참가 신청 및 관련 혜택 제공이 제한될 수 있습니다.
+                      </div>
                     </div>
                   </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+                      <input
+                        type="radio"
+                        name="privacyConsent"
+                        value="yes"
+                        checked={privacyConsent === 'yes'}
+                        onChange={(e) => setPrivacyConsent('yes')}
+                        style={{ width: '20px', height: '20px', marginRight: '12px', accentColor: '#00A08C', flexShrink: 0 }}
+                        disabled={submitting}
+                        required
+                      />
+                      <span style={{ fontSize: '16px', color: '#000' }}>네, 동의합니다.</span>
+                    </label>
+                    <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+                      <input
+                        type="radio"
+                        name="privacyConsent"
+                        value="no"
+                        checked={privacyConsent === 'no'}
+                        onChange={(e) => setPrivacyConsent('no')}
+                        style={{ width: '20px', height: '20px', marginRight: '12px', accentColor: '#00A08C', flexShrink: 0 }}
+                        disabled={submitting}
+                      />
+                      <span style={{ fontSize: '16px', color: '#000' }}>아니요, 동의하지 않습니다.</span>
+                    </label>
+                  </div>
                 </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                  <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
-                    <input
-                      type="radio"
-                      name="privacyConsent"
-                      value="yes"
-                      checked={privacyConsent === 'yes'}
-                      onChange={(e) => setPrivacyConsent('yes')}
-                      style={{ width: '20px', height: '20px', marginRight: '12px', accentColor: '#00A08C', flexShrink: 0 }}
-                      disabled={submitting}
-                      required
-                    />
-                    <span style={{ fontSize: '16px', color: '#000' }}>네, 동의합니다.</span>
-                  </label>
-                  <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
-                    <input
-                      type="radio"
-                      name="privacyConsent"
-                      value="no"
-                      checked={privacyConsent === 'no'}
-                      onChange={(e) => setPrivacyConsent('no')}
-                      style={{ width: '20px', height: '20px', marginRight: '12px', accentColor: '#00A08C', flexShrink: 0 }}
-                      disabled={submitting}
-                    />
-                    <span style={{ fontSize: '16px', color: '#000' }}>아니요, 동의하지 않습니다.</span>
-                  </label>
-                </div>
-              </div>
+              )}
               
               {/* 제출 버튼 */}
               <div style={{ marginTop: '32px' }} className="registration-button-container">
@@ -1857,222 +1925,466 @@ export default function RegistrationPage({ campaign, baseUrl, utmParams = {} }: 
               </div>
             )}
             
-            {/* 이름 */}
-            <div className="flex items-center gap-4">
-              <label className="text-sm font-medium text-gray-700 whitespace-nowrap min-w-[100px]">
-                이름 <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="flex-1 px-4 py-2.5 border-b-2 border-gray-200 focus:border-[#00B388] outline-none transition-colors bg-white text-gray-900 text-base"
-                placeholder="이름을 입력하세요"
-                disabled={submitting}
-                required
-              />
-            </div>
-            
-            {/* 이메일 */}
-            <div className="flex items-center gap-4">
-              <label className="text-sm font-medium text-gray-700 whitespace-nowrap min-w-[100px]">
-                이메일 <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="flex-1 px-4 py-2.5 border-b-2 border-gray-200 focus:border-[#00B388] outline-none transition-colors bg-white text-gray-900 text-base"
-                placeholder="이메일을 입력하세요"
-                disabled={submitting}
-                required
-              />
-            </div>
-            
-            {/* 소속 */}
-            <div className="flex items-center gap-4">
-              <label className="text-sm font-medium text-gray-700 whitespace-nowrap min-w-[100px]">
-                소속 <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                value={organization}
-                onChange={(e) => setOrganization(e.target.value)}
-                className="flex-1 px-4 py-2.5 border-b-2 border-gray-200 focus:border-[#00B388] outline-none transition-colors bg-white text-gray-900 text-base"
-                placeholder="소속을 입력하세요"
-                disabled={submitting}
-                required
-              />
-            </div>
-            
-            {/* 부서 */}
-            <div className="flex items-center gap-4">
-              <label className="text-sm font-medium text-gray-700 whitespace-nowrap min-w-[100px]">
-                부서 <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                value={department}
-                onChange={(e) => setDepartment(e.target.value)}
-                className="flex-1 px-4 py-2.5 border-b-2 border-gray-200 focus:border-[#00B388] outline-none transition-colors bg-white text-gray-900 text-base"
-                placeholder="부서를 입력하세요"
-                disabled={submitting}
-                required
-              />
-            </div>
-            
-            {/* 직함 */}
-            <div className="flex items-center gap-4">
-              <label className="text-sm font-medium text-gray-700 whitespace-nowrap min-w-[100px]">
-                직함 <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                value={position}
-                onChange={(e) => setPosition(e.target.value)}
-                className="flex-1 px-4 py-2.5 border-b-2 border-gray-200 focus:border-[#00B388] outline-none transition-colors bg-white text-gray-900 text-base"
-                placeholder="직함을 입력하세요"
-                disabled={submitting}
-                required
-              />
-            </div>
-            
-            {/* 연차(경력) */}
-            <div className="flex items-center gap-4">
-              <label className="text-sm font-medium text-gray-700 whitespace-nowrap min-w-[100px]">
-                연차(경력) <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                value={yearsOfExperience}
-                onChange={(e) => setYearsOfExperience(e.target.value)}
-                className="flex-1 px-4 py-2.5 border-b-2 border-gray-200 focus:border-[#00B388] outline-none transition-colors bg-white text-gray-900 text-base"
-                placeholder="예: 5년, 신입 등"
-                disabled={submitting}
-                required
-              />
-            </div>
-            
-            {/* 웨비나와 관련하여 궁금한 사항 */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                웨비나와 관련하여 궁금한 사항을 기재해 주세요.
-              </label>
-              <textarea
-                value={question}
-                onChange={(e) => setQuestion(e.target.value)}
-                className="w-full px-4 py-2.5 border-b-2 border-gray-200 focus:border-[#00B388] outline-none transition-colors bg-white text-gray-900 text-base"
-                placeholder="궁금한 사항을 입력하세요"
-                rows={4}
-                disabled={submitting}
-                style={{ resize: 'vertical', minHeight: '100px' }}
-              />
-            </div>
-            
-            {/* 휴대폰 번호 */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                휴대폰 번호 <span className="text-red-500">*</span>
-              </label>
-              <div className="flex gap-2 items-center">
-                <input
-                  type="text"
-                  value={phoneCountryCode}
-                  onChange={(e) => setPhoneCountryCode(e.target.value)}
-                  className="w-20 px-3 py-2.5 border-b-2 border-gray-200 focus:border-[#00B388] outline-none transition-colors bg-white text-gray-900 text-base"
-                  disabled={submitting}
-                />
-                <div className="flex-1 relative">
+            {/* HPE 원래 버전 필드 */}
+            {isHPE ? (
+              <>
+                {/* 이메일 */}
+                <div className="flex items-center gap-4">
+                  <label className="text-sm font-medium text-gray-700 whitespace-nowrap min-w-[100px]">
+                    이메일 <span className="text-red-500">*</span>
+                  </label>
                   <input
-                    type="tel"
-                    value={phone1}
-                    onChange={(e) => setPhone1(e.target.value.replace(/\D/g, '').slice(0, 3))}
-                    className="w-full px-4 py-2.5 pr-8 border-b-2 border-gray-200 focus:border-[#00B388] outline-none transition-colors bg-white text-gray-900 text-center text-base"
-                    placeholder="010"
-                    maxLength={3}
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="flex-1 px-4 py-2.5 border-b-2 border-gray-200 focus:border-[#00B388] outline-none transition-colors bg-white text-gray-900 text-base"
+                    placeholder="이메일을 입력하세요"
                     disabled={submitting}
                     required
                   />
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">-</span>
                 </div>
-                <div className="flex-1 relative">
+                
+                {/* 이름 */}
+                <div className="flex items-center gap-4">
+                  <label className="text-sm font-medium text-gray-700 whitespace-nowrap min-w-[100px]">
+                    이름 <span className="text-red-500">*</span>
+                  </label>
                   <input
-                    type="tel"
-                    value={phone2}
-                    onChange={(e) => setPhone2(e.target.value.replace(/\D/g, '').slice(0, 4))}
-                    className="w-full px-4 py-2.5 pr-8 border-b-2 border-gray-200 focus:border-[#00B388] outline-none transition-colors bg-white text-gray-900 text-center text-base"
-                    placeholder="1234"
-                    maxLength={4}
+                    type="text"
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                    className="flex-1 px-4 py-2.5 border-b-2 border-gray-200 focus:border-[#00B388] outline-none transition-colors bg-white text-gray-900 text-base"
+                    placeholder="이름을 입력하세요"
                     disabled={submitting}
                     required
                   />
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">-</span>
                 </div>
-                <div className="flex-1">
+                
+                {/* 성 */}
+                <div className="flex items-center gap-4">
+                  <label className="text-sm font-medium text-gray-700 whitespace-nowrap min-w-[100px]">
+                    성 <span className="text-red-500">*</span>
+                  </label>
                   <input
-                    type="tel"
-                    value={phone3}
-                    onChange={(e) => setPhone3(e.target.value.replace(/\D/g, '').slice(0, 4))}
-                    className="w-full px-4 py-2.5 border-b-2 border-gray-200 focus:border-[#00B388] outline-none transition-colors bg-white text-gray-900 text-center text-base"
-                    placeholder="5678"
-                    maxLength={4}
+                    type="text"
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                    className="flex-1 px-4 py-2.5 border-b-2 border-gray-200 focus:border-[#00B388] outline-none transition-colors bg-white text-gray-900 text-base"
+                    placeholder="성을 입력하세요"
                     disabled={submitting}
                     required
                   />
+                </div>
+                
+                {/* 회사명 */}
+                <div className="flex items-center gap-4">
+                  <label className="text-sm font-medium text-gray-700 whitespace-nowrap min-w-[100px]">
+                    회사명 <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={company}
+                    onChange={(e) => setCompany(e.target.value)}
+                    className="flex-1 px-4 py-2.5 border-b-2 border-gray-200 focus:border-[#00B388] outline-none transition-colors bg-white text-gray-900 text-base"
+                    placeholder="회사명을 입력하세요"
+                    disabled={submitting}
+                    required
+                  />
+                </div>
+                
+                {/* 직급 */}
+                <div className="flex items-center gap-4">
+                  <label className="text-sm font-medium text-gray-700 whitespace-nowrap min-w-[100px]">
+                    직급 <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={jobTitle}
+                    onChange={(e) => setJobTitle(e.target.value)}
+                    className="flex-1 px-4 py-2.5 border-b-2 border-gray-200 focus:border-[#00B388] outline-none transition-colors bg-white text-gray-900 text-base"
+                    placeholder="직급을 입력하세요"
+                    disabled={submitting}
+                    required
+                  />
+                </div>
+                
+                {/* 전화번호 */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    전화번호 <span className="text-red-500">*</span>
+                  </label>
+                  <div className="flex gap-2 items-center">
+                    <input
+                      type="text"
+                      value={phoneCountryCode}
+                      onChange={(e) => setPhoneCountryCode(e.target.value)}
+                      className="w-20 px-3 py-2.5 border-b-2 border-gray-200 focus:border-[#00B388] outline-none transition-colors bg-white text-gray-900 text-base"
+                      disabled={submitting}
+                    />
+                    <div className="flex-1 relative">
+                      <input
+                        type="tel"
+                        value={phone1}
+                        onChange={(e) => setPhone1(e.target.value.replace(/\D/g, '').slice(0, 3))}
+                        className="w-full px-4 py-2.5 pr-8 border-b-2 border-gray-200 focus:border-[#00B388] outline-none transition-colors bg-white text-gray-900 text-center text-base"
+                        placeholder="010"
+                        maxLength={3}
+                        disabled={submitting}
+                        required
+                      />
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">-</span>
+                    </div>
+                    <div className="flex-1 relative">
+                      <input
+                        type="tel"
+                        value={phone2}
+                        onChange={(e) => setPhone2(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                        className="w-full px-4 py-2.5 pr-8 border-b-2 border-gray-200 focus:border-[#00B388] outline-none transition-colors bg-white text-gray-900 text-center text-base"
+                        placeholder="1234"
+                        maxLength={4}
+                        disabled={submitting}
+                        required
+                      />
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">-</span>
+                    </div>
+                    <div className="flex-1">
+                      <input
+                        type="tel"
+                        value={phone3}
+                        onChange={(e) => setPhone3(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                        className="w-full px-4 py-2.5 border-b-2 border-gray-200 focus:border-[#00B388] outline-none transition-colors bg-white text-gray-900 text-center text-base"
+                        placeholder="5678"
+                        maxLength={4}
+                        disabled={submitting}
+                        required
+                      />
+                    </div>
+                  </div>
+                </div>
+                
+                {/* 커스텀 질문 */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    새로워진 HPE Networking에 대한 궁금한 점을 남겨 주세요. 행사 당일 답변드립니다.
+                  </label>
+                  <textarea
+                    value={customQuestion}
+                    onChange={(e) => {
+                      setCustomQuestion(e.target.value)
+                      // 자동 높이 조절
+                      e.target.style.height = 'auto'
+                      e.target.style.height = `${e.target.scrollHeight}px`
+                    }}
+                    className="w-full px-4 py-2.5 border-b-2 border-gray-200 focus:border-[#00B388] outline-none transition-colors bg-white text-gray-900 text-base resize-none overflow-hidden"
+                    placeholder="궁금한 점을 입력해주세요"
+                    rows={1}
+                    disabled={submitting}
+                    style={{ minHeight: '2.5rem' }}
+                  />
+                </div>
+              </>
+            ) : (
+              <>
+                {/* 이름 */}
+                <div className="flex items-center gap-4">
+                  <label className="text-sm font-medium text-gray-700 whitespace-nowrap min-w-[100px]">
+                    이름 <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="flex-1 px-4 py-2.5 border-b-2 border-gray-200 focus:border-[#00B388] outline-none transition-colors bg-white text-gray-900 text-base"
+                    placeholder="이름을 입력하세요"
+                    disabled={submitting}
+                    required
+                  />
+                </div>
+                
+                {/* 이메일 */}
+                <div className="flex items-center gap-4">
+                  <label className="text-sm font-medium text-gray-700 whitespace-nowrap min-w-[100px]">
+                    이메일 <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="flex-1 px-4 py-2.5 border-b-2 border-gray-200 focus:border-[#00B388] outline-none transition-colors bg-white text-gray-900 text-base"
+                    placeholder="이메일을 입력하세요"
+                    disabled={submitting}
+                    required
+                  />
+                </div>
+                
+                {/* 소속 */}
+                <div className="flex items-center gap-4">
+                  <label className="text-sm font-medium text-gray-700 whitespace-nowrap min-w-[100px]">
+                    소속 <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={organization}
+                    onChange={(e) => setOrganization(e.target.value)}
+                    className="flex-1 px-4 py-2.5 border-b-2 border-gray-200 focus:border-[#00B388] outline-none transition-colors bg-white text-gray-900 text-base"
+                    placeholder="소속을 입력하세요"
+                    disabled={submitting}
+                    required
+                  />
+                </div>
+                
+                {/* 부서 */}
+                <div className="flex items-center gap-4">
+                  <label className="text-sm font-medium text-gray-700 whitespace-nowrap min-w-[100px]">
+                    부서 <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={department}
+                    onChange={(e) => setDepartment(e.target.value)}
+                    className="flex-1 px-4 py-2.5 border-b-2 border-gray-200 focus:border-[#00B388] outline-none transition-colors bg-white text-gray-900 text-base"
+                    placeholder="부서를 입력하세요"
+                    disabled={submitting}
+                    required
+                  />
+                </div>
+                
+                {/* 직함 */}
+                <div className="flex items-center gap-4">
+                  <label className="text-sm font-medium text-gray-700 whitespace-nowrap min-w-[100px]">
+                    직함 <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={position}
+                    onChange={(e) => setPosition(e.target.value)}
+                    className="flex-1 px-4 py-2.5 border-b-2 border-gray-200 focus:border-[#00B388] outline-none transition-colors bg-white text-gray-900 text-base"
+                    placeholder="직함을 입력하세요"
+                    disabled={submitting}
+                    required
+                  />
+                </div>
+                
+                {/* 연차(경력) */}
+                <div className="flex items-center gap-4">
+                  <label className="text-sm font-medium text-gray-700 whitespace-nowrap min-w-[100px]">
+                    연차(경력) <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={yearsOfExperience}
+                    onChange={(e) => setYearsOfExperience(e.target.value)}
+                    className="flex-1 px-4 py-2.5 border-b-2 border-gray-200 focus:border-[#00B388] outline-none transition-colors bg-white text-gray-900 text-base"
+                    placeholder="예: 5년, 신입 등"
+                    disabled={submitting}
+                    required
+                  />
+                </div>
+                
+                {/* 웨비나와 관련하여 궁금한 사항 */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    웨비나와 관련하여 궁금한 사항을 기재해 주세요.
+                  </label>
+                  <textarea
+                    value={question}
+                    onChange={(e) => setQuestion(e.target.value)}
+                    className="w-full px-4 py-2.5 border-b-2 border-gray-200 focus:border-[#00B388] outline-none transition-colors bg-white text-gray-900 text-base"
+                    placeholder="궁금한 사항을 입력하세요"
+                    rows={4}
+                    disabled={submitting}
+                    style={{ resize: 'vertical', minHeight: '100px' }}
+                  />
+                </div>
+              </>
+            )}
+            
+            {/* 휴대폰 번호 (기존 버전용) */}
+            {!isHPE && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  휴대폰 번호 <span className="text-red-500">*</span>
+                </label>
+                <div className="flex gap-2 items-center">
+                  <input
+                    type="text"
+                    value={phoneCountryCode}
+                    onChange={(e) => setPhoneCountryCode(e.target.value)}
+                    className="w-20 px-3 py-2.5 border-b-2 border-gray-200 focus:border-[#00B388] outline-none transition-colors bg-white text-gray-900 text-base"
+                    disabled={submitting}
+                  />
+                  <div className="flex-1 relative">
+                    <input
+                      type="tel"
+                      value={phone1}
+                      onChange={(e) => setPhone1(e.target.value.replace(/\D/g, '').slice(0, 3))}
+                      className="w-full px-4 py-2.5 pr-8 border-b-2 border-gray-200 focus:border-[#00B388] outline-none transition-colors bg-white text-gray-900 text-center text-base"
+                      placeholder="010"
+                      maxLength={3}
+                      disabled={submitting}
+                      required
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">-</span>
+                  </div>
+                  <div className="flex-1 relative">
+                    <input
+                      type="tel"
+                      value={phone2}
+                      onChange={(e) => setPhone2(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                      className="w-full px-4 py-2.5 pr-8 border-b-2 border-gray-200 focus:border-[#00B388] outline-none transition-colors bg-white text-gray-900 text-center text-base"
+                      placeholder="1234"
+                      maxLength={4}
+                      disabled={submitting}
+                      required
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">-</span>
+                  </div>
+                  <div className="flex-1">
+                    <input
+                      type="tel"
+                      value={phone3}
+                      onChange={(e) => setPhone3(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                      className="w-full px-4 py-2.5 border-b-2 border-gray-200 focus:border-[#00B388] outline-none transition-colors bg-white text-gray-900 text-center text-base"
+                      placeholder="5678"
+                      maxLength={4}
+                      disabled={submitting}
+                      required
+                    />
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
             
-            {/* 개인정보 활용 동의 */}
-            <div className="pt-4 border-t border-gray-200">
-              <h3 className="text-base font-bold text-gray-900 mb-3">
-                개인정보 활용 동의 <span className="text-red-500">*</span>
-              </h3>
-              <div className="text-sm text-gray-700 mb-4 leading-relaxed">
-                <p className="mb-3">
-                  주식회사 워트인텔리전스는 웨비나 운영과 서비스 홍보를 위해 다음과 같이 개인정보를 수집 및 이용하고자 합니다. 귀하는 동의를 거부할 권리가 있으며, 거부할 경우 웨비나 이용이 제한됩니다.
+            {/* HPE 원래 버전: 커뮤니케이션 동의 */}
+            {isHPE && (
+              <div className="pt-4 border-t border-gray-200">
+                <p className="text-sm font-medium text-gray-700 mb-4">
+                  HPE에 대한 맞춤식 커뮤니케이션을 통해 HPE 파트너의 제품, 서비스, 특별 행사 및 이벤트 정보를 선택적으로 받으시겠습니까?
                 </p>
-                <div className="mb-2">
-                  <strong>- 항목:</strong> 이름, 이메일, 휴대폰번호, 소속, 부서, 직함, 연차(경력)
-                </div>
-                <div className="mb-2">
-                  <strong>- 수집 및 이용목적:</strong> 참가자 혜택 제공(서비스 안내 등)
-                </div>
-                <div className="mb-3">
-                  <strong>- 보유 및 이용기간:</strong> 동의 철회까지
-                </div>
-                <div className="text-xs text-gray-600 mt-4 p-3 bg-gray-50 rounded-lg">
-                  <strong>※ 동의 거부 권리 및 불이익:</strong> 귀하는 위와 같은 개인정보 활용 동의를 거부할 권리가 있습니다. 다만, 동의 거부 시 웨비나 참가 신청 및 관련 혜택 제공이 제한될 수 있습니다.
+                <div className="space-y-3">
+                  <label className="flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={consentEmail}
+                      onChange={(e) => setConsentEmail(e.target.checked)}
+                      className="w-4 h-4 text-[#00B388] border-gray-300 rounded focus:ring-[#00B388]"
+                      disabled={submitting}
+                    />
+                    <span className="ml-3 text-sm font-medium text-gray-700">이메일</span>
+                  </label>
+                  <label className="flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={consentPhone}
+                      onChange={(e) => setConsentPhone(e.target.checked)}
+                      className="w-4 h-4 text-[#00B388] border-gray-300 rounded focus:ring-[#00B388]"
+                      disabled={submitting}
+                    />
+                    <span className="ml-3 text-sm font-medium text-gray-700">전화번호</span>
+                  </label>
                 </div>
               </div>
-              <div className="space-y-3">
-                <label className="flex items-center cursor-pointer">
+            )}
+            
+            {/* HPE 원래 버전: 개인정보 취급방침 */}
+            {isHPE ? (
+              <div className="pt-4 border-t border-gray-200">
+                <p className="text-xs sm:text-sm text-gray-600 mb-4 leading-relaxed">
+                  HPE에서 귀하의 정보를 관리, 사용, 보호하는 방법에 대해 자세히 알아보려면{' '}
+                  <a 
+                    href="https://www.hpe.com/kr/ko/privacy/ww-privacy-statement.html" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-[#00B388] hover:underline"
+                  >
+                    HPE 개인정보 취급방침
+                  </a>을 참조하시기 바랍니다. 
+                  동의한 사항에 대해 언제든지 취소 또는 수정하여 HPE의 마케팅 커뮤니케이션 서비스를 받을 수 있습니다. 
+                  이 작업을 수행하려면 HPE 이메일 마케팅 커뮤니케이션 페이지 하단의 옵트아웃 및 환경설정 메커니즘을 사용하거나{' '}
+                  <a 
+                    href="/unsubscribe" 
+                    onClick={(e) => {
+                      e.preventDefault()
+                      const width = 600
+                      const height = 700
+                      const left = (window.screen.width - width) / 2
+                      const top = (window.screen.height - height) / 2
+                      window.open(
+                        '/unsubscribe',
+                        'unsubscribe',
+                        `width=${width},height=${height},left=${left},top=${top}`
+                      )
+                    }}
+                    className="text-[#00B388] hover:underline"
+                  >
+                    여기
+                  </a>를 클릭하세요.
+                </p>
+                <label className="flex items-start cursor-pointer">
                   <input
-                    type="radio"
-                    name="privacyConsent"
-                    value="yes"
-                    checked={privacyConsent === 'yes'}
-                    onChange={(e) => setPrivacyConsent('yes')}
-                    className="w-4 h-4 text-[#00B388] border-gray-300 focus:ring-[#00B388]"
+                    type="checkbox"
+                    checked={privacyConsentCheckbox}
+                    onChange={(e) => setPrivacyConsentCheckbox(e.target.checked)}
+                    className="w-4 h-4 text-[#00B388] border-gray-300 rounded focus:ring-[#00B388] mt-0.5"
                     disabled={submitting}
                     required
                   />
-                  <span className="ml-3 text-sm font-medium text-gray-700">네, 동의합니다.</span>
-                </label>
-                <label className="flex items-center cursor-pointer">
-                  <input
-                    type="radio"
-                    name="privacyConsent"
-                    value="no"
-                    checked={privacyConsent === 'no'}
-                    onChange={(e) => setPrivacyConsent('no')}
-                    className="w-4 h-4 text-[#00B388] border-gray-300 focus:ring-[#00B388]"
-                    disabled={submitting}
-                  />
-                  <span className="ml-3 text-sm font-medium text-gray-700">아니요, 동의하지 않습니다.</span>
+                  <span className="ml-3 text-sm font-medium text-gray-700">
+                    개인정보 취급방침에 동의합니다 <span className="text-red-500">*</span>
+                  </span>
                 </label>
               </div>
-            </div>
+            ) : (
+              <div className="pt-4 border-t border-gray-200">
+                <h3 className="text-base font-bold text-gray-900 mb-3">
+                  개인정보 활용 동의 <span className="text-red-500">*</span>
+                </h3>
+                <div className="text-sm text-gray-700 mb-4 leading-relaxed">
+                  <p className="mb-3">
+                    주식회사 워트인텔리전스는 웨비나 운영과 서비스 홍보를 위해 다음과 같이 개인정보를 수집 및 이용하고자 합니다. 귀하는 동의를 거부할 권리가 있으며, 거부할 경우 웨비나 이용이 제한됩니다.
+                  </p>
+                  <div className="mb-2">
+                    <strong>- 항목:</strong> 이름, 이메일, 휴대폰번호, 소속, 부서, 직함, 연차(경력)
+                  </div>
+                  <div className="mb-2">
+                    <strong>- 수집 및 이용목적:</strong> 참가자 혜택 제공(서비스 안내 등)
+                  </div>
+                  <div className="mb-3">
+                    <strong>- 보유 및 이용기간:</strong> 동의 철회까지
+                  </div>
+                  <div className="text-xs text-gray-600 mt-4 p-3 bg-gray-50 rounded-lg">
+                    <strong>※ 동의 거부 권리 및 불이익:</strong> 귀하는 위와 같은 개인정보 활용 동의를 거부할 권리가 있습니다. 다만, 동의 거부 시 웨비나 참가 신청 및 관련 혜택 제공이 제한될 수 있습니다.
+                  </div>
+                </div>
+                <div className="space-y-3">
+                  <label className="flex items-center cursor-pointer">
+                    <input
+                      type="radio"
+                      name="privacyConsent"
+                      value="yes"
+                      checked={privacyConsent === 'yes'}
+                      onChange={(e) => setPrivacyConsent('yes')}
+                      className="w-4 h-4 text-[#00B388] border-gray-300 focus:ring-[#00B388]"
+                      disabled={submitting}
+                      required
+                    />
+                    <span className="ml-3 text-sm font-medium text-gray-700">네, 동의합니다.</span>
+                  </label>
+                  <label className="flex items-center cursor-pointer">
+                    <input
+                      type="radio"
+                      name="privacyConsent"
+                      value="no"
+                      checked={privacyConsent === 'no'}
+                      onChange={(e) => setPrivacyConsent('no')}
+                      className="w-4 h-4 text-[#00B388] border-gray-300 focus:ring-[#00B388]"
+                      disabled={submitting}
+                    />
+                    <span className="ml-3 text-sm font-medium text-gray-700">아니요, 동의하지 않습니다.</span>
+                  </label>
+                </div>
+              </div>
+            )}
             
             {/* 제출 버튼 */}
             <div className="flex justify-start mt-8">
