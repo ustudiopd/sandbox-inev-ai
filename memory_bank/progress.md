@@ -1153,6 +1153,21 @@
   - `app/(webinar)/webinar/[id]/page.tsx`: is149402 변수 정의 추가
   - 중복 정의된 isSlug149402 변수 제거
 
+## [2026-02-02] `/webinarform/wert` 페이지 빌드 에러 해결
+- ✅ Next.js 빌드 에러 해결 (`useSearchParams()` Suspense boundary)
+  - `app/webinarform/wert/page.tsx`: 서버 컴포넌트로 변경
+    - `WebinarFormWertPageContent` 컴포넌트를 `<Suspense>`로 감싸기
+    - `export const dynamic = 'force-dynamic'` 설정 추가
+  - `app/webinarform/wert/WebinarFormWertPageContent.tsx`: 새 파일 생성
+    - 원본 `page.tsx`의 클라이언트 로직을 분리
+    - `"use client"` 지시어 추가
+    - `useSearchParams()`, `useState`, `useEffect` 등 클라이언트 훅 사용
+  - 빌드 성공 확인 (Vercel 배포 환경에서도 정상 작동)
+- ✅ 주요 개선사항
+  - Next.js 16의 서버/클라이언트 컴포넌트 분리 원칙 준수
+  - `useSearchParams()` 사용 시 Suspense boundary 필수 요구사항 충족
+  - 정적 생성 방지 및 동적 렌더링 강제로 빌드 에러 해소
+
 ## [2026-01-26] 웨비나 시작 시간 분리 및 참여자 역할 관리 개선
 - ✅ 웨비나 시작 시간 분리 기능 구현
   - `supabase/migrations/057_add_webinar_start_time.sql`: `webinar_start_time` 컬럼 추가

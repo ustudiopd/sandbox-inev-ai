@@ -87,6 +87,12 @@
 - 설문조사 및 발표자료 다운로드 기능에 대한 상세 요구사항 검토 필요
 
 ## 4. 최근 해결된 이슈
+- ✅ `/webinarform/wert` 페이지 빌드 에러 해결
+  - `useSearchParams()` Suspense boundary 에러 해결
+  - 서버 컴포넌트(`page.tsx`)와 클라이언트 컴포넌트(`WebinarFormWertPageContent.tsx`) 분리
+  - `page.tsx`에서 `WebinarFormWertPageContent`를 `<Suspense>`로 감싸기
+  - `export const dynamic = 'force-dynamic'` 설정으로 동적 렌더링 강제
+  - 빌드 성공 확인 (Next.js 16.0.10)
 - ✅ 사이드바 접기 기능 제거 및 레이아웃 개선
   - 사이드바 접기/펼치기 버튼 완전 제거 (항상 펼쳐진 상태 유지)
   - 운영콘솔 레이아웃 개선: 사이드바와 콘텐츠 사이 회색 공간 제거
