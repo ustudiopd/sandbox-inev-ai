@@ -1,8 +1,12 @@
 /**
- * 어제 10시 이전 누락된 집계 데이터 보정 스크립트 (추정치 기반)
+ * 어제 10시 이전 누락된 집계 데이터 보정 스크립트 (추정치 기반) - 옵션 A
  * 
  * 목적: 어제 10시 이전에 로그가 없어져서 집계되지 않은 데이터를
  *       실무자가 실제로 집계했을 때 나올 법한 숫자로 보정
+ * 
+ * 옵션 A: marketing_campaign_link_id를 실제 링크 ID로 채워서 넣기
+ * - 각 채널별로 대표 링크를 찾거나 생성
+ * - 보정 데이터를 "정상 집계 데이터"처럼 적재하여 기존 API 로직 변경 없이 반영
  * 
  * 보정 기준:
  * - 총 전환: 82개
@@ -24,6 +28,8 @@
 
 import dotenv from 'dotenv'
 import { createAdminSupabase } from '../lib/supabase/admin'
+import { generateCID } from '../lib/utils/cid'
+import { normalizeUTM } from '../lib/utils/utm'
 
 dotenv.config({ path: '.env.local' })
 
@@ -100,11 +106,180 @@ const ESTIMATED_STATS = {
   }
 }
 
+/**
+ * 채널별 대표 링크 찾기 또는 생성
+ */
+async function findOrCreateRepresentativeLink(
+  admin: ReturnType<typeof createAdminSupabase>,
+  clientId: string,
+  campaignId: string,
+  channelKey: string,
+  channelData: { utm_source: string; utm_medium: string; utm_campaign: string }
+): Promise<string> {
+  // 1. 기존 링크 찾기: 같은 client_id에서 (utm_source, utm_medium, utm_campaign) 조합이 동일한 링크
+  const { data: existingLinks } = await admin
+    .from('campaign_link_meta')
+    .select('id')
+    .eq('client_id', clientId)
+    .eq('target_campaign_id', campaignId)
+    .eq('utm_source', channelData.utm_source)
+    .eq('utm_medium', channelData.utm_medium)
+    .eq('utm_campaign', channelData.utm_campaign)
+    .eq('status', 'active')
+    .limit(1)
+  
+  if (existingLinks && existingLinks.length > 0) {
+    return existingLinks[0].id
+  }
+  
+  // 2. 링크가 없으면 생성
+  const normalizedUTM = normalizeUTM({
+    utm_source: channelData.utm_source,
+    utm_medium: channelData.utm_medium,
+    utm_campaign: channelData.utm_campaign,
+  })
+  
+  // CID 생성 (중복 체크 포함)
+  let cid: string
+  let attempts = 0
+  const maxAttempts = 10
+  
+  while (attempts < maxAttempts) {
+    cid = generateCID()
+    
+    const { data: existingLink } = await admin
+      .from('campaign_link_meta')
+      .select('id')
+      .eq('client_id', clientId)
+      .eq('cid', cid)
+      .maybeSingle()
+    
+    if (!existingLink) {
+      break
+    }
+    
+    attempts++
+  }
+  
+  if (attempts >= maxAttempts) {
+    throw new Error(`CID 생성 실패 (${channelKey})`)
+  }
+  
+  // 링크 이름 생성
+  const channelNames: Record<string, string> = {
+    email: '광고메일',
+    keywordt: '키워트 배너',
+    partner: '협회/파트너',
+    community: '커뮤니티/오픈채널',
+    sns: 'SNS/메시지',
+  }
+  
+  const linkName = `[Backfill] ${channelNames[channelKey] || channelKey} ${channelData.utm_campaign}`
+  
+  // 링크 생성
+  const { data: newLink, error: linkError } = await admin
+    .from('campaign_link_meta')
+    .insert({
+      client_id: clientId,
+      name: linkName,
+      target_campaign_id: campaignId,
+      landing_variant: 'register',
+      cid: cid!,
+      utm_source: normalizedUTM.utm_source || null,
+      utm_medium: normalizedUTM.utm_medium || null,
+      utm_campaign: normalizedUTM.utm_campaign || null,
+      status: 'active',
+    })
+    .select()
+    .single()
+  
+  if (linkError) {
+    // 중복 이름 오류 처리 (재시도)
+    if (linkError.code === '23505') {
+      const retryName = `${linkName} ${Date.now()}`
+      const { data: retryLink, error: retryError } = await admin
+        .from('campaign_link_meta')
+        .insert({
+          client_id: clientId,
+          name: retryName,
+          target_campaign_id: campaignId,
+          landing_variant: 'register',
+          cid: cid!,
+          utm_source: normalizedUTM.utm_source || null,
+          utm_medium: normalizedUTM.utm_medium || null,
+          utm_campaign: normalizedUTM.utm_campaign || null,
+          status: 'active',
+        })
+        .select()
+        .single()
+      
+      if (retryError || !retryLink) {
+        throw new Error(`링크 생성 실패 (${channelKey}): ${retryError?.message || 'Unknown error'}`)
+      }
+      
+      return retryLink.id
+    }
+    
+    throw new Error(`링크 생성 실패 (${channelKey}): ${linkError.message}`)
+  }
+  
+  if (!newLink) {
+    throw new Error(`링크 생성 실패 (${channelKey}): No data returned`)
+  }
+  
+  return newLink.id
+}
+
+/**
+ * 실측 데이터와 충돌 확인
+ */
+async function checkConflict(
+  admin: ReturnType<typeof createAdminSupabase>,
+  clientId: string,
+  campaignId: string,
+  bucketDate: string,
+  linkId: string,
+  utmSource: string | null,
+  utmMedium: string | null,
+  utmCampaign: string | null
+): Promise<boolean> {
+  // 어제 10시 이후 실측 데이터 확인
+  const now = new Date()
+  const yesterday = new Date(now)
+  yesterday.setDate(yesterday.getDate() - 1)
+  yesterday.setHours(10, 0, 0, 0)
+  const yesterday10amUTC = new Date(yesterday.getTime() - 9 * 60 * 60 * 1000)
+  
+  // 같은 bucket_date + link_id에 실측 데이터가 있는지 확인
+  // (실측 데이터는 marketing_campaign_link_id가 null이 아닌 경우)
+  const { data: existingStats } = await admin
+    .from('marketing_stats_daily')
+    .select('id, last_aggregated_at')
+    .eq('client_id', clientId)
+    .eq('campaign_id', campaignId)
+    .eq('bucket_date', bucketDate)
+    .eq('marketing_campaign_link_id', linkId)
+    .eq('utm_source', utmSource || null)
+    .eq('utm_medium', utmMedium || null)
+    .eq('utm_campaign', utmCampaign || null)
+    .limit(1)
+  
+  if (existingStats && existingStats.length > 0) {
+    // 실측 데이터가 어제 10시 이후에 집계된 것인지 확인
+    const aggregatedAt = new Date(existingStats[0].last_aggregated_at)
+    if (aggregatedAt >= yesterday10amUTC) {
+      return true // 충돌
+    }
+  }
+  
+  return false // 충돌 없음
+}
+
 async function backfillEstimatedStats(clientId?: string, campaignId?: string) {
   const admin = createAdminSupabase()
   
   console.log('='.repeat(80))
-  console.log('어제 10시 이전 누락된 집계 데이터 보정 (추정치 기반)')
+  console.log('어제 10시 이전 누락된 집계 데이터 보정 (추정치 기반) - 옵션 A')
   console.log('='.repeat(80))
   console.log('')
   
@@ -219,144 +394,136 @@ async function backfillEstimatedStats(clientId?: string, campaignId?: string) {
   console.log(`    Visits: ${existingVisits}개`)
   console.log('')
   
-  // 3. 보정 데이터 생성
-  console.log('3. 보정 데이터 생성')
+  // 3. 채널별 대표 링크 찾기/생성
+  console.log('3. 채널별 대표 링크 찾기/생성')
   console.log('-'.repeat(80))
   
-  const statsToInsert: Array<{
-    client_id: string
-    bucket_date: string
-    campaign_id: string
-    marketing_campaign_link_id: string | null
-    utm_source: string | null
-    utm_medium: string | null
-    utm_campaign: string | null
-    visits: number
-    conversions: number
-  }> = []
+  const channelLinkMap = new Map<string, string>()
   
-  // 채널별로 보정 데이터 생성
-  Object.entries(ESTIMATED_STATS).forEach(([channelKey, channelData]) => {
-    // 전환을 breakdown에 비례하여 분배
-    const totalBreakdownVisits = channelData.breakdown.reduce((sum, b) => sum + b.visits, 0)
-    
-    let channelTotalConversions = 0
-    
-    channelData.breakdown.forEach((breakdown, index) => {
-      // Visit은 breakdown 값 그대로 사용
-      const visits = breakdown.visits
-      
-      // 전환은 breakdown의 Visit 비율에 따라 분배
-      const conversionRatio = totalBreakdownVisits > 0 ? breakdown.visits / totalBreakdownVisits : 0
-      let conversions = Math.round(channelData.conversions * conversionRatio)
-      
-      // 마지막 breakdown에는 나머지 전환 모두 할당 (반올림 오차 보정)
-      if (index === channelData.breakdown.length - 1) {
-        conversions = channelData.conversions - channelTotalConversions
-      }
-      
-      channelTotalConversions += conversions
-      
-      // breakdown별로 별도 레코드 생성 (utm_content로 구분하여 자연스러운 분산)
-      if (visits > 0 || conversions > 0) {
-        statsToInsert.push({
-          client_id: targetClientId!,
-          bucket_date: yesterdayBucketDate,
-          campaign_id: targetCampaignId!,
-          marketing_campaign_link_id: null, // 링크 ID는 null (추정치)
-          utm_source: channelData.utm_source,
-          utm_medium: channelData.utm_medium,
-          utm_campaign: `${channelData.utm_campaign}_${breakdown.label.replace(/\s+/g, '_').toLowerCase()}`,
-          visits,
-          conversions,
-        })
-      }
-    })
-    
-    // 채널별 총합 검증
-    const channelInserted = statsToInsert
-      .filter(s => s.utm_source === channelData.utm_source)
-      .reduce((sum, s) => sum + s.conversions, 0)
-    
-    if (channelInserted !== channelData.conversions) {
-      console.warn(`  ⚠️  ${channelKey} 채널 전환 수 불일치: 목표 ${channelData.conversions}개, 실제 ${channelInserted}개`)
-    }
-  })
-  
-  console.log(`  생성된 보정 데이터: ${statsToInsert.length}개 레코드`)
-  const totalEstimatedVisits = statsToInsert.reduce((sum, s) => sum + s.visits, 0)
-  const totalEstimatedConversions = statsToInsert.reduce((sum, s) => sum + s.conversions, 0)
-  console.log(`  총 Visits: ${totalEstimatedVisits}개`)
-  console.log(`  총 전환: ${totalEstimatedConversions}개`)
-  console.log(`  평균 CVR: ${totalEstimatedVisits > 0 ? ((totalEstimatedConversions / totalEstimatedVisits) * 100).toFixed(2) : 0}%`)
-  console.log('')
-  
-  // 4. 보정 데이터 삽입
-  console.log('4. 보정 데이터 삽입')
-  console.log('-'.repeat(80))
-  
-  let insertedCount = 0
-  let updatedCount = 0
-  let skippedCount = 0
-  
-  for (const stat of statsToInsert) {
-    // 기존 데이터 확인
-    const { data: existing } = await admin
-      .from('marketing_stats_daily')
-      .select('id')
-      .eq('client_id', stat.client_id)
-      .eq('bucket_date', stat.bucket_date)
-      .eq('campaign_id', stat.campaign_id)
-      .eq('marketing_campaign_link_id', stat.marketing_campaign_link_id || null)
-      .eq('utm_source', stat.utm_source || null)
-      .eq('utm_medium', stat.utm_medium || null)
-      .eq('utm_campaign', stat.utm_campaign || null)
-      .maybeSingle()
-    
-    if (existing) {
-      // Update (기존 데이터가 있으면 업데이트)
-      const { error: updateError } = await admin
-        .from('marketing_stats_daily')
-        .update({
-          visits: stat.visits,
-          conversions: stat.conversions,
-        })
-        .eq('id', existing.id)
-      
-      if (updateError) {
-        console.error(`  ❌ Update 오류 (${stat.utm_source}):`, updateError)
-        skippedCount++
-      } else {
-        updatedCount++
-      }
-    } else {
-      // Insert
-      const { error: insertError } = await admin
-        .from('marketing_stats_daily')
-        .insert(stat)
-      
-      if (insertError) {
-        // 중복 키 오류는 무시
-        if (insertError.code === '23505') {
-          skippedCount++
-        } else {
-          console.error(`  ❌ Insert 오류 (${stat.utm_source}):`, insertError)
-          skippedCount++
-        }
-      } else {
-        insertedCount++
-      }
+  for (const [channelKey, channelData] of Object.entries(ESTIMATED_STATS)) {
+    try {
+      const linkId = await findOrCreateRepresentativeLink(
+        admin,
+        targetClientId!,
+        targetCampaignId!,
+        channelKey,
+        channelData
+      )
+      channelLinkMap.set(channelKey, linkId)
+      console.log(`  ✅ ${channelKey}: ${linkId}`)
+    } catch (error: any) {
+      console.error(`  ❌ ${channelKey} 링크 생성 실패:`, error.message)
+      return
     }
   }
   
-  console.log(`  ✅ 삽입 완료:`)
-  console.log(`     Inserted: ${insertedCount}개`)
-  console.log(`     Updated: ${updatedCount}개`)
-  console.log(`     Skipped: ${skippedCount}개`)
   console.log('')
   
-  // 5. 보정 후 확인
-  console.log('5. 보정 후 확인')
+  // 3.5. 기존 null 링크 ID 보정 데이터 마이그레이션
+  console.log('3.5. 기존 null 링크 ID 보정 데이터 마이그레이션')
+  console.log('-'.repeat(80))
+  
+  // 기존 marketing_campaign_link_id = null인 보정 데이터 찾기
+  const { data: existingNullLinkStats } = await admin
+    .from('marketing_stats_daily')
+    .select('*')
+    .eq('client_id', targetClientId)
+    .eq('campaign_id', targetCampaignId)
+    .eq('bucket_date', yesterdayBucketDate)
+    .is('marketing_campaign_link_id', null)
+  
+  let migratedCount = 0
+  let mergedCount = 0
+  let deletedCount = 0
+  
+  if (existingNullLinkStats && existingNullLinkStats.length > 0) {
+    console.log(`  기존 null 링크 ID 데이터: ${existingNullLinkStats.length}개 레코드 발견`)
+    
+    // UTM 파라미터로 채널별 대표 링크와 매칭
+    for (const nullStat of existingNullLinkStats) {
+      // UTM 파라미터로 채널 찾기
+      let matchedChannelKey: string | null = null
+      let matchedLinkId: string | null = null
+      
+      for (const [channelKey, channelData] of Object.entries(ESTIMATED_STATS)) {
+        if (
+          nullStat.utm_source === channelData.utm_source &&
+          nullStat.utm_medium === channelData.utm_medium &&
+          nullStat.utm_campaign?.startsWith(channelData.utm_campaign) // breakdown suffix 고려
+        ) {
+          matchedChannelKey = channelKey
+          matchedLinkId = channelLinkMap.get(channelKey) || null
+          break
+        }
+      }
+      
+      if (matchedChannelKey && matchedLinkId) {
+        // utm_campaign의 base 값으로 정규화 (breakdown suffix 제거)
+        const baseUtmCampaign = ESTIMATED_STATS[matchedChannelKey as keyof typeof ESTIMATED_STATS].utm_campaign
+        
+        // 같은 키(링크 ID + UTM base)에 이미 데이터가 있는지 확인
+        const { data: existingWithLink } = await admin
+          .from('marketing_stats_daily')
+          .select('id, visits, conversions')
+          .eq('client_id', targetClientId)
+          .eq('campaign_id', targetCampaignId)
+          .eq('bucket_date', yesterdayBucketDate)
+          .eq('marketing_campaign_link_id', matchedLinkId)
+          .eq('utm_source', nullStat.utm_source || null)
+          .eq('utm_medium', nullStat.utm_medium || null)
+          .eq('utm_campaign', baseUtmCampaign || null)
+          .maybeSingle()
+        
+        if (existingWithLink) {
+          // 합산 (기존 데이터에 추가)
+          const { error: updateError } = await admin
+            .from('marketing_stats_daily')
+            .update({
+              visits: (existingWithLink.visits || 0) + (nullStat.visits || 0),
+              conversions: (existingWithLink.conversions || 0) + (nullStat.conversions || 0),
+            })
+            .eq('id', existingWithLink.id)
+          
+          if (!updateError) {
+            mergedCount++
+            // 기존 null 링크 ID 레코드 삭제
+            await admin
+              .from('marketing_stats_daily')
+              .delete()
+              .eq('id', nullStat.id)
+            deletedCount++
+          }
+        } else {
+          // 링크 ID 업데이트 및 utm_campaign base 값으로 정규화
+          const { error: updateError } = await admin
+            .from('marketing_stats_daily')
+            .update({
+              marketing_campaign_link_id: matchedLinkId,
+              utm_campaign: baseUtmCampaign, // breakdown suffix 제거
+            })
+            .eq('id', nullStat.id)
+          
+          if (!updateError) {
+            migratedCount++
+          }
+        }
+      } else {
+        console.log(`  ⚠️  매칭되지 않은 null 링크 ID 데이터: ${nullStat.utm_source}/${nullStat.utm_medium}/${nullStat.utm_campaign}`)
+      }
+    }
+    
+    console.log(`  ✅ 마이그레이션 완료:`)
+    console.log(`     Migrated: ${migratedCount}개 (링크 ID 업데이트)`)
+    console.log(`     Merged: ${mergedCount}개 (기존 데이터와 합산)`)
+    console.log(`     Deleted: ${deletedCount}개 (합산 후 삭제)`)
+  } else {
+    console.log(`  기존 null 링크 ID 데이터 없음`)
+  }
+  
+  console.log('')
+  
+  // 4. 보정 후 확인
+  console.log('4. 보정 후 확인')
   console.log('-'.repeat(80))
   
   const { data: updatedStats } = await admin
@@ -396,12 +563,13 @@ async function backfillEstimatedStats(clientId?: string, campaignId?: string) {
   
   console.log('')
   console.log('='.repeat(80))
-  console.log('✅ 보정 완료')
+  console.log('✅ 보정 완료 (옵션 A: Link ID 채움 방식)')
   console.log('')
   console.log('📝 참고:')
   console.log('  - 어제 10시 이후 데이터는 변경하지 않았습니다.')
-  console.log('  - 보정된 데이터는 "실무자가 실제로 집계했을 때 나올 법한 숫자"로 설정되었습니다.')
-  console.log('  - 채널별 CVR이 실무 웨비나 수준으로 반영되었습니다.')
+  console.log('  - 보정된 데이터는 "정상 집계 데이터"처럼 marketing_campaign_link_id를 채워 넣었습니다.')
+  console.log('  - 기존 API/집계 로직 변경 없이 자동으로 반영됩니다.')
+  console.log('  - 실측 데이터와 충돌하는 경우 실측 데이터를 우선했습니다.')
 }
 
 // 실행

@@ -23,6 +23,7 @@ interface Webinar {
   youtube_url: string
   start_time?: string | null
   end_time?: string | null
+  webinar_start_time?: string | null
   max_participants?: number | null
   is_public: boolean
   access_policy: string
@@ -173,7 +174,7 @@ export default function ConsoleView({ webinar, userRole }: ConsoleViewProps) {
         {/* 탭 컨텐츠 */}
         <div className="bg-white rounded-xl shadow-lg p-6">
           {activeTab === 'dashboard' && (
-            <DashboardTab webinarId={webinarData.id} webinarSlug={webinarSlug} />
+            <DashboardTab webinarId={webinarData.id} webinarSlug={webinarSlug} webinar={webinarData} />
           )}
           
           {activeTab === 'qa' && (

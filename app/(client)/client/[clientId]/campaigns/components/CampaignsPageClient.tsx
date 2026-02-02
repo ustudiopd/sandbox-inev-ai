@@ -12,6 +12,9 @@ interface CampaignsPageClientProps {
 
 interface MarketingSummary {
   total_conversions: number
+  total_visits?: number
+  avg_cvr?: number
+  active_links?: number
   conversions_by_source: Array<{ source: string | null; count: number; is_untracked?: boolean }>
   conversions_by_medium: Array<{ medium: string | null; count: number }>
   conversions_by_campaign: Array<{ campaign: string | null; count: number }>
@@ -220,13 +223,36 @@ export default function CampaignsPageClient({ clientId, clientName, clientCreate
         {/* 요약 데이터 */}
         {!loading && !error && summary && (
           <div className="space-y-6">
-            {/* 전체 전환 수 및 추적 성공률 */}
+            {/* 전체 통계 요약 */}
             <div className="bg-white rounded-lg shadow-sm p-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-4">전체 전환 수</h2>
-              <div className="text-4xl font-bold text-blue-600">
-                {summary.total_conversions.toLocaleString()}
+              <h2 className="text-xl font-bold text-gray-900 mb-4">전체 통계 요약</h2>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+                <div className="bg-blue-50 rounded-lg p-4">
+                  <div className="text-sm text-gray-600 mb-1">총 Visits</div>
+                  <div className="text-2xl font-bold text-blue-600">
+                    {(summary.total_visits || 0).toLocaleString()}
+                  </div>
+                </div>
+                <div className="bg-green-50 rounded-lg p-4">
+                  <div className="text-sm text-gray-600 mb-1">총 전환</div>
+                  <div className="text-2xl font-bold text-green-600">
+                    {summary.total_conversions.toLocaleString()}
+                  </div>
+                </div>
+                <div className="bg-purple-50 rounded-lg p-4">
+                  <div className="text-sm text-gray-600 mb-1">평균 CVR</div>
+                  <div className="text-2xl font-bold text-purple-600">
+                    {(summary.avg_cvr || 0).toFixed(2)}%
+                  </div>
+                </div>
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <div className="text-sm text-gray-600 mb-1">활성 링크</div>
+                  <div className="text-2xl font-bold text-gray-600">
+                    {summary.active_links || 0}
+                  </div>
+                </div>
               </div>
-              <p className="text-sm text-gray-500 mt-2">
+              <p className="text-sm text-gray-500">
                 {new Date(dateFrom).toLocaleDateString('ko-KR')} ~ {new Date(dateTo).toLocaleDateString('ko-KR')}
               </p>
               

@@ -84,12 +84,13 @@ export async function GET(
       .eq('id', campaignId)
       .single()
     
-    // 모든 참여자 목록 조회 (제한 없음)
+    // 모든 참여자 목록 조회 (제한 없음, 더미 데이터 제외)
     const { data: entries, error: entriesError } = await admin
       .from('event_survey_entries')
       .select('*')
       .eq('campaign_id', campaignId)
-      .order('completed_at', { ascending: false })
+      .not('name', 'ilike', '%[보정]%') // 더미 데이터 제외
+      .order('survey_no', { ascending: false }) // survey_no 순서로 정렬
     
     if (entriesError) {
       return NextResponse.json(

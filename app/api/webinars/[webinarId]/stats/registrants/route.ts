@@ -27,17 +27,57 @@ export async function GET(
     // 실제 웨비나 UUID 사용 (slug가 아닌)
     const actualWebinarId = webinar.id
 
-    // 기본 등록자 수
-    const { count: totalRegistrants } = await admin
-      .from('registrations')
-      .select('*', { count: 'exact', head: true })
-      .eq('webinar_id', actualWebinarId)
-
-    // 등록 출처별 통계
-    const { data: registrations } = await admin
-      .from('registrations')
-      .select('registered_via')
-      .eq('webinar_id', actualWebinarId)
+    // 참여자 관리 API와 동일한 로직 사용
+    // 원프레딕트 웨비나(426307)는 항상 registrations 테이블만 사용
+    const isOnePredictWebinar = webinar.slug === '426307'
+    
+    let totalRegistrants = 0
+    let registrations: any[] = []
+    
+    if (isOnePredictWebinar) {
+      // 원프레딕트 웨비나는 registrations 테이블만 사용
+      const { count } = await admin
+        .from('registrations')
+        .select('*', { count: 'exact', head: true })
+        .eq('webinar_id', actualWebinarId)
+      
+      totalRegistrants = count || 0
+      
+      // 등록 출처별 통계
+      const { data: regs } = await admin
+        .from('registrations')
+        .select('registered_via')
+        .eq('webinar_id', actualWebinarId)
+      
+      registrations = regs || []
+    } else if (webinar.registration_campaign_id) {
+      // 등록 캠페인이 있으면 event_survey_entries 테이블 사용
+      const { count } = await admin
+        .from('event_survey_entries')
+        .select('*', { count: 'exact', head: true })
+        .eq('campaign_id', webinar.registration_campaign_id)
+      
+      totalRegistrants = count || 0
+      
+      // 등록 출처별 통계 (event_survey_entries는 registered_via가 없으므로 빈 배열)
+      registrations = []
+    } else {
+      // registration_campaign_id가 없으면 registrations 테이블 조회
+      const { count } = await admin
+        .from('registrations')
+        .select('*', { count: 'exact', head: true })
+        .eq('webinar_id', actualWebinarId)
+      
+      totalRegistrants = count || 0
+      
+      // 등록 출처별 통계
+      const { data: regs } = await admin
+        .from('registrations')
+        .select('registered_via')
+        .eq('webinar_id', actualWebinarId)
+      
+      registrations = regs || []
+    }
 
     const sourceCounts = new Map<string, number>()
     registrations?.forEach((reg) => {

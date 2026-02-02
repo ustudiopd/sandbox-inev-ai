@@ -96,11 +96,12 @@ export async function GET(
       .eq('campaign_id', campaignId)
       .not('prize_recorded_at', 'is', null)
     
-    // 참여자 목록 (최근 100개)
+    // 참여자 목록 (최근 100개, 더미 데이터 제외)
     const { data: entries } = await admin
       .from('event_survey_entries')
       .select('*')
       .eq('campaign_id', campaignId)
+      .not('name', 'ilike', '%[보정]%') // 더미 데이터 제외
       .order('completed_at', { ascending: false })
       .limit(100)
     

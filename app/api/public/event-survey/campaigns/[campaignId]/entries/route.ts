@@ -28,11 +28,12 @@ export async function GET(
       )
     }
 
-    // 참여자 목록 조회 (전화번호 뒷자리 4자리만 포함, 완료일시 순서로 정렬)
+    // 참여자 목록 조회 (전화번호 뒷자리 4자리만 포함, 완료일시 순서로 정렬, 더미 데이터 제외)
     const { data: entries, error: entriesError } = await admin
       .from('event_survey_entries')
       .select('id, survey_no, code6, name, company, phone_norm, completed_at, prize_label, registration_data')
       .eq('campaign_id', campaignId)
+      .not('name', 'ilike', '%[보정]%') // 더미 데이터 제외
       .order('completed_at', { ascending: false })
 
     if (entriesError) {

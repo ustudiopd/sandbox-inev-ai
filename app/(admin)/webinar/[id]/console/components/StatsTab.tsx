@@ -23,6 +23,7 @@ interface Webinar {
   slug?: string | null
   start_time?: string | null
   end_time?: string | null
+  webinar_start_time?: string | null
 }
 
 interface StatsTabProps {
@@ -120,12 +121,14 @@ export default function StatsTab({ webinar }: StatsTabProps) {
     setError(null)
     try {
       // 웨비나 시작 시간 기준으로 해당 날짜 집계
-      // 웨비나의 start_time부터 해당 날짜 자정까지(또는 end_time까지)의 통계 조회
+      // 웨비나의 webinar_start_time(또는 start_time)부터 해당 날짜 자정까지(또는 end_time까지)의 통계 조회
       const params = new URLSearchParams()
       params.set('interval', '5m')
       
-      if (webinar.start_time) {
-        const startTime = new Date(webinar.start_time)
+      // webinar_start_time을 우선 사용, 없으면 start_time 사용
+      const webinarStartTime = webinar.webinar_start_time || webinar.start_time
+      if (webinarStartTime) {
+        const startTime = new Date(webinarStartTime)
         // 시작 시간을 기준으로 해당 날짜의 자정 계산
         const startDate = new Date(startTime.getFullYear(), startTime.getMonth(), startTime.getDate())
         const endOfDay = new Date(startDate)
@@ -158,7 +161,7 @@ export default function StatsTab({ webinar }: StatsTabProps) {
         webinarId,
         webinar,
         params: Object.fromEntries(params),
-        startTime: webinar.start_time,
+        startTime: webinarStartTime,
         endTime: webinar.end_time
       })
 
@@ -455,9 +458,11 @@ export default function StatsTab({ webinar }: StatsTabProps) {
         <h3 className="text-lg font-semibold mb-4">접속 통계</h3>
         
         {/* 웨비나 시작 시간 표시 및 안내 */}
-        {webinar.start_time ? (
+        {(webinar.webinar_start_time || webinar.start_time) ? (
           (() => {
-            const startTime = new Date(webinar.start_time)
+            // webinar_start_time을 우선 사용, 없으면 start_time 사용
+            const startTimeValue = webinar.webinar_start_time || webinar.start_time
+            const startTime = new Date(startTimeValue!)
             // KST 기준으로 현재 시간 계산
             const nowKST = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Seoul' }))
             // 시작일의 자정 (KST)
@@ -537,7 +542,9 @@ export default function StatsTab({ webinar }: StatsTabProps) {
         <div className="mt-6">
           <h4 className="text-md font-semibold mb-4">시간대별 접속자 수 추이</h4>
           {(() => {
-            if (!webinar.start_time) {
+            // webinar_start_time을 우선 사용, 없으면 start_time 사용
+            const webinarStartTime = webinar.webinar_start_time || webinar.start_time
+            if (!webinarStartTime) {
               return (
                 <div className="h-[300px] flex items-center justify-center bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
                   <div className="text-center">
@@ -552,7 +559,7 @@ export default function StatsTab({ webinar }: StatsTabProps) {
               )
             }
 
-            const startTime = new Date(webinar.start_time)
+            const startTime = new Date(webinarStartTime)
             // KST 기준으로 현재 시간 계산
             const nowKST = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Seoul' }))
             // 시작일의 자정 (KST)

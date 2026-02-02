@@ -92,11 +92,12 @@ export default async function SurveyCampaignDetailPage({
     .eq('campaign_id', campaignId)
     .not('prize_recorded_at', 'is', null)
   
-  // 참여자 목록 (전체, 답변 포함)
+  // 참여자 목록 (전체, 답변 포함, 더미 데이터 제외)
   const { data: entries } = await admin
     .from('event_survey_entries')
     .select('*')
     .eq('campaign_id', campaignId)
+    .not('name', 'ilike', '%[보정]%') // 더미 데이터 제외
     .order('completed_at', { ascending: false })
   
   // 각 참여자의 설문 답변도 함께 가져오기

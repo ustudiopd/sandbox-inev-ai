@@ -108,6 +108,15 @@ export async function GET(
       // 집계 테이블의 전환수
       const aggregatedTotalConversions = aggregatedStats.reduce((sum, s) => sum + (s.conversions || 0), 0)
       
+      // 어제 10시 이전 데이터의 집계 테이블 전환수 계산
+      let aggregatedPre10amConversions = 0
+      if (hasPre10amData) {
+        const pre10amBucketDate = new Date(yesterday10amUTC).toISOString().split('T')[0]
+        aggregatedPre10amConversions = aggregatedStats
+          .filter(s => s.bucket_date < pre10amBucketDate)
+          .reduce((sum, s) => sum + (s.conversions || 0), 0)
+      }
+      
       console.log('[Marketing Summary] 집계 테이블 vs Raw 데이터:', {
         clientId,
         statsCount: aggregatedStats.length,
@@ -117,30 +126,34 @@ export async function GET(
         hasPre10amData,
         rawPre10amConversions,
         rawPost10amConversions,
+        aggregatedPre10amConversions,
         dateRange: { from, to }
       })
       
-      // 어제 10시 이전 데이터가 포함되고, 집계 테이블이 불완전하면 Raw 데이터 사용
-      // 어제 10시 이후 데이터는 집계 테이블 사용 (제대로 집계된 데이터)
+      // 어제 10시 이전 데이터가 포함된 경우, 집계 테이블의 보정 여부 확인
+      // 보정 후: 집계 테이블에 어제 10시 이전 데이터가 충분히 있으면 집계 테이블 사용
+      // 보정 전: 집계 테이블이 불완전하면 Raw 데이터 사용
       if (hasPre10amData && rawPre10amConversions > 0) {
-        // 어제 10시 이전 데이터는 Raw 데이터 사용 (로그가 없어져서 집계가 안됨)
-        // 어제 10시 이후 데이터는 집계 테이블 사용
-        const { data: post10amStats } = await admin
-          .from('marketing_stats_daily')
-          .select('*')
-          .eq('client_id', clientId)
-          .gte('bucket_date', new Date(yesterday10amUTC).toISOString().split('T')[0])
-          .lte('bucket_date', to)
+        // 집계 테이블의 어제 10시 이전 전환수가 Raw 데이터의 95% 이상이면 보정 완료로 간주
+        const isBackfilled = aggregatedPre10amConversions >= rawPre10amConversions * 0.95
         
-        // 어제 10시 이전 데이터가 누락되었으면 Raw 데이터 사용
-        // (보정 스크립트로 집계 테이블에 데이터를 넣기 전까지는 Raw 데이터 사용)
-        console.warn('[Marketing Summary] 어제 10시 이전 데이터 보정 필요, Raw 데이터 사용:', {
-          aggregatedTotal: aggregatedTotalConversions,
-          rawTotal: rawTotalConversions,
-          rawPre10am: rawPre10amConversions,
-          missing: rawPre10amConversions - (aggregatedTotalConversions - (rawPost10amConversions || 0))
-        })
-        return await getSummaryFromRaw(clientId, fromDateUTC, toDateUTC, from, to)
+        if (!isBackfilled) {
+          // 보정이 안 된 경우: Raw 데이터 사용
+          console.warn('[Marketing Summary] 어제 10시 이전 데이터 보정 필요, Raw 데이터 사용:', {
+            aggregatedTotal: aggregatedTotalConversions,
+            aggregatedPre10am: aggregatedPre10amConversions,
+            rawTotal: rawTotalConversions,
+            rawPre10am: rawPre10amConversions,
+            missing: rawPre10amConversions - aggregatedPre10amConversions
+          })
+          return await getSummaryFromRaw(clientId, fromDateUTC, toDateUTC, from, to)
+        } else {
+          // 보정 완료: 집계 테이블 사용 (전체 검증은 아래에서 수행)
+          console.log('[Marketing Summary] 어제 10시 이전 데이터 보정 완료, 집계 테이블 사용:', {
+            aggregatedPre10am: aggregatedPre10amConversions,
+            rawPre10am: rawPre10amConversions
+          })
+        }
       }
       
       // 집계 테이블의 전환수가 Raw 데이터보다 5% 이상 적으면 Raw 데이터 사용
@@ -177,8 +190,20 @@ async function getSummaryFromAggregated(
   from: string,
   to: string
 ) {
-  // 전체 전환 수
+  // 전체 전환 수 및 Visits
   const totalConversions = stats.reduce((sum, s) => sum + (s.conversions || 0), 0)
+  const totalVisits = stats.reduce((sum, s) => sum + (s.visits || 0), 0)
+  const avgCVR = totalVisits > 0 ? ((totalConversions / totalVisits) * 100).toFixed(2) : '0.00'
+  
+  // 활성 링크 수 조회
+  const admin = createAdminSupabase()
+  const { data: activeLinks } = await admin
+    .from('campaign_link_meta')
+    .select('id')
+    .eq('client_id', stats[0]?.client_id)
+    .eq('status', 'active')
+  
+  const activeLinksCount = activeLinks?.length || 0
   
   // Source별 집계
   const sourceMap = new Map<string | null, number>()
@@ -246,7 +271,6 @@ async function getSummaryFromAggregated(
   
   // 링크 메타데이터 조회
   const linkIds = Array.from(linkMap.keys())
-  const admin = createAdminSupabase()
   const { data: linkMetas } = linkIds.length > 0 ? await admin
     .from('campaign_link_meta')
     .select('id, name')
@@ -276,6 +300,9 @@ async function getSummaryFromAggregated(
   
   return NextResponse.json({
     total_conversions: totalConversions,
+    total_visits: totalVisits,
+    avg_cvr: parseFloat(avgCVR),
+    active_links: activeLinksCount,
     conversions_by_source,
     conversions_by_medium,
     conversions_by_campaign,
@@ -436,8 +463,36 @@ async function getSummaryFromRaw(
     ? ((trackedCount / totalConversions) * 100).toFixed(1) + '%'
     : '0.0%'
   
+  // 활성 링크 수 조회
+  const { data: activeLinks } = await admin
+    .from('campaign_link_meta')
+    .select('id')
+    .eq('client_id', clientId)
+    .eq('status', 'active')
+  
+  const activeLinksCount = activeLinks?.length || 0
+  
+  // Visits는 Raw 데이터에서 집계 (event_access_logs)
+  let totalVisits = 0
+  if (campaigns && campaigns.length > 0) {
+    const campaignIds = campaigns.map(c => c.id)
+    const { count: visitsCount } = await admin
+      .from('event_access_logs')
+      .select('*', { count: 'exact', head: true })
+      .in('campaign_id', campaignIds)
+      .gte('accessed_at', fromDate.toISOString())
+      .lte('accessed_at', toDate.toISOString())
+    
+    totalVisits = visitsCount || 0
+  }
+  
+  const avgCVR = totalVisits > 0 ? ((totalConversions / totalVisits) * 100).toFixed(2) : '0.00'
+  
   return NextResponse.json({
     total_conversions: totalConversions,
+    total_visits: totalVisits,
+    avg_cvr: parseFloat(avgCVR),
+    active_links: activeLinksCount,
     conversions_by_source,
     conversions_by_medium,
     conversions_by_campaign,

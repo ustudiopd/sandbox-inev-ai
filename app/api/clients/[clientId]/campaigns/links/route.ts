@@ -41,31 +41,86 @@ export async function GET(
     }
     
     // Phase 1: 집계 테이블에서 링크 통계 조회 (날짜 범위 필터링)
-    let aggregatedStatsQuery = admin
+    // 1) 링크 ID로 직접 매칭되는 데이터
+    const linkIds = (links || []).map(l => l.id).filter(Boolean)
+    
+    // 링크 ID로 매칭되는 데이터 조회
+    let linkStatsQuery = admin
       .from('marketing_stats_daily')
       .select('*')
       .eq('client_id', clientId)
-      .in('marketing_campaign_link_id', (links || []).map(l => l.id).filter(Boolean))
+    
+    if (linkIds.length > 0) {
+      linkStatsQuery = linkStatsQuery.in('marketing_campaign_link_id', linkIds)
+    } else {
+      // 링크가 없으면 빈 결과
+      linkStatsQuery = linkStatsQuery.eq('marketing_campaign_link_id', '00000000-0000-0000-0000-000000000000') // 존재하지 않는 ID로 필터링
+    }
     
     // 날짜 범위가 있으면 필터링
     if (fromDate) {
-      aggregatedStatsQuery = aggregatedStatsQuery.gte('bucket_date', fromDate)
+      linkStatsQuery = linkStatsQuery.gte('bucket_date', fromDate)
     }
     if (toDate) {
-      aggregatedStatsQuery = aggregatedStatsQuery.lte('bucket_date', toDate)
+      linkStatsQuery = linkStatsQuery.lte('bucket_date', toDate)
     }
     
-    const { data: allAggregatedStats, error: statsError } = await aggregatedStatsQuery
+    const { data: linkStats, error: linkStatsError } = await linkStatsQuery
+    
+    // 2) 보정 데이터 (marketing_campaign_link_id가 null인 데이터) 조회
+    let backfillStatsQuery = admin
+      .from('marketing_stats_daily')
+      .select('*')
+      .eq('client_id', clientId)
+      .is('marketing_campaign_link_id', null)
+    
+    if (fromDate) {
+      backfillStatsQuery = backfillStatsQuery.gte('bucket_date', fromDate)
+    }
+    if (toDate) {
+      backfillStatsQuery = backfillStatsQuery.lte('bucket_date', toDate)
+    }
+    
+    const { data: backfillStats, error: backfillStatsError } = await backfillStatsQuery
+    
+    // 두 결과 합치기
+    const allAggregatedStats = [
+      ...(linkStats || []),
+      ...(backfillStats || [])
+    ]
+    const statsError = linkStatsError || backfillStatsError
     
     // 링크별로 집계 테이블 데이터 그룹화
     const linkStatsMap = new Map<string, { visits: number; conversions: number }>()
-    if (allAggregatedStats && !statsError) {
-      allAggregatedStats.forEach(stat => {
+    
+    if (linkStats && !linkStatsError) {
+      linkStats.forEach(stat => {
         if (stat.marketing_campaign_link_id) {
+          // 링크 ID로 직접 매칭
           const existing = linkStatsMap.get(stat.marketing_campaign_link_id) || { visits: 0, conversions: 0 }
           linkStatsMap.set(stat.marketing_campaign_link_id, {
             visits: existing.visits + (stat.visits || 0),
             conversions: existing.conversions + (stat.conversions || 0)
+          })
+        }
+      })
+    }
+    
+    // 보정 데이터를 UTM 파라미터로 링크와 매칭
+    if (backfillStats && !backfillStatsError) {
+      backfillStats.forEach(backfill => {
+        // UTM 파라미터로 매칭되는 링크 찾기
+        const matchingLink = (links || []).find(link => 
+          link.utm_source === backfill.utm_source &&
+          link.utm_medium === backfill.utm_medium &&
+          link.utm_campaign === backfill.utm_campaign
+        )
+        
+        if (matchingLink) {
+          const existing = linkStatsMap.get(matchingLink.id) || { visits: 0, conversions: 0 }
+          linkStatsMap.set(matchingLink.id, {
+            visits: existing.visits + (backfill.visits || 0),
+            conversions: existing.conversions + (backfill.conversions || 0)
           })
         }
       })

@@ -55,6 +55,10 @@ export default function CampaignLinksTab({ clientId, clientName = '', dateFrom, 
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   
+  // 차트 표시 옵션
+  const [showAllLinks, setShowAllLinks] = useState(false)
+  const [showOther, setShowOther] = useState(true)
+  
   // 템플릿 관련 상태
   const [selectedTemplate, setSelectedTemplate] = useState<ChannelTemplate | null>(null)
   const [showAdvanced, setShowAdvanced] = useState(false)
@@ -467,26 +471,134 @@ export default function CampaignLinksTab({ clientId, clientName = '', dateFrom, 
           )}
 
           {/* 링크별 성과 비교 차트 */}
-          {links.length > 0 && (
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-4">링크별 성과 비교</h2>
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={links.filter(link => link.status !== 'archived').map(link => ({
-                  name: link.name.length > 20 ? link.name.substring(0, 20) + '...' : link.name,
-                  visits: link.visits_count || 0,
-                  conversions: link.conversion_count || 0,
-                }))}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" angle={-45} textAnchor="end" height={100} />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Bar dataKey="visits" fill="#3b82f6" name="Visits" />
-                  <Bar dataKey="conversions" fill="#10b981" name="전환" />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          )}
+          {links.length > 0 && (() => {
+            // 활성 링크만 필터링
+            const activeLinks = links.filter(link => link.status !== 'archived')
+            
+            // 전환 기준 정렬 (1순위: 전환 수, 2순위: Visits)
+            const sortedLinks = [...activeLinks].sort((a, b) => {
+              const aConversions = a.conversion_count || 0
+              const bConversions = b.conversion_count || 0
+              if (aConversions !== bConversions) {
+                return bConversions - aConversions
+              }
+              return (b.visits_count || 0) - (a.visits_count || 0)
+            })
+            
+            // Top 5와 나머지 분리
+            const top5Links = sortedLinks.slice(0, 5)
+            const otherLinks = sortedLinks.slice(5)
+            
+            // 기타 링크 합산
+            const otherTotal = otherLinks.reduce((sum, link) => ({
+              visits: sum.visits + (link.visits_count || 0),
+              conversions: sum.conversions + (link.conversion_count || 0),
+            }), { visits: 0, conversions: 0 })
+            
+            // 차트 데이터 준비 (원본 이름과 표시용 이름 분리)
+            let chartData: Array<{ name: string; fullName: string; visits: number; conversions: number }>
+            
+            if (showAllLinks) {
+              // 전체 링크 표시
+              chartData = sortedLinks.map(link => ({
+                name: link.name.length > 15 ? link.name.substring(0, 15) + '...' : link.name,
+                fullName: link.name,
+                visits: link.visits_count || 0,
+                conversions: link.conversion_count || 0,
+              }))
+            } else {
+              // Top 5 + 기타
+              chartData = top5Links.map(link => ({
+                name: link.name.length > 15 ? link.name.substring(0, 15) + '...' : link.name,
+                fullName: link.name,
+                visits: link.visits_count || 0,
+                conversions: link.conversion_count || 0,
+              }))
+              
+              if (showOther && otherLinks.length > 0 && (otherTotal.visits > 0 || otherTotal.conversions > 0)) {
+                chartData.push({
+                  name: `기타 (${otherLinks.length}개)`,
+                  fullName: `기타 (${otherLinks.length}개)`,
+                  visits: otherTotal.visits,
+                  conversions: otherTotal.conversions,
+                })
+              }
+            }
+            
+            return (
+              <div className="bg-white rounded-lg shadow-sm p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h2 className="text-xl font-bold text-gray-900">링크별 성과 비교</h2>
+                    {!showAllLinks && (
+                      <p className="text-sm text-gray-500 mt-1">
+                        전체 링크 중 상위 5개 링크가 전체 전환의 대부분을 차지하여, 주요 성과 링크 중심으로 성과를 비교했습니다.
+                      </p>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={showOther && !showAllLinks}
+                        onChange={(e) => setShowOther(e.target.checked)}
+                        disabled={showAllLinks}
+                        className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                      />
+                      <span>기타 합산 표시</span>
+                    </label>
+                    <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={showAllLinks}
+                        onChange={(e) => setShowAllLinks(e.target.checked)}
+                        className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                      />
+                      <span>전체 링크 보기</span>
+                    </label>
+                  </div>
+                </div>
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={chartData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis 
+                      dataKey="name" 
+                      angle={showAllLinks ? -45 : 0} 
+                      textAnchor={showAllLinks ? "end" : "middle"} 
+                      height={showAllLinks ? 100 : 60}
+                      interval={0}
+                      tickFormatter={(value) => {
+                        // 15자 이상이면 줄임표 처리
+                        return value.length > 15 ? value.substring(0, 15) + '...' : value
+                      }}
+                    />
+                    <YAxis />
+                    <Tooltip 
+                      formatter={(value: number, name: string) => {
+                        if (name === '전환') {
+                          return [`${value}건`, name]
+                        }
+                        return [`${value}회`, name]
+                      }}
+                      labelFormatter={(label) => {
+                        // 전체 이름을 툴팁에 표시
+                        const dataItem = chartData.find(d => d.name === label)
+                        return dataItem?.fullName || label
+                      }}
+                      contentStyle={{
+                        borderRadius: '8px',
+                        border: '1px solid #e5e7eb',
+                        boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+                      }}
+                    />
+                    <Legend />
+                    <Bar dataKey="visits" fill="#3b82f6" name="Visits" />
+                    <Bar dataKey="conversions" fill="#10b981" name="전환" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            )
+          })()}
 
           {/* 링크 목록 */}
           <div className="bg-white rounded-lg shadow-sm p-6">

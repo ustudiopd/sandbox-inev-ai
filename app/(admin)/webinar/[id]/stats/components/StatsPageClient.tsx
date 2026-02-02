@@ -25,6 +25,7 @@ interface Webinar {
   slug: string | null
   start_time?: string | null
   end_time?: string | null
+  webinar_start_time?: string | null
   client_id: string
   clients?: {
     id: string
@@ -111,7 +112,7 @@ export default function StatsPageClient({ webinar }: StatsPageClientProps) {
 
   useEffect(() => {
     fetchStats()
-  }, [webinarId, webinar.start_time, webinar.end_time])
+  }, [webinarId, webinar.webinar_start_time || webinar.start_time, webinar.end_time])
 
   const fetchStats = async () => {
     setLoading(true)
@@ -120,8 +121,10 @@ export default function StatsPageClient({ webinar }: StatsPageClientProps) {
       const params = new URLSearchParams()
       
       // 웨비나 시작일 기준으로 날짜 범위 설정
-      if (webinar.start_time) {
-        const startTime = new Date(webinar.start_time)
+      // webinar_start_time을 우선 사용, 없으면 start_time 사용
+      const webinarStartTime = webinar.webinar_start_time || webinar.start_time
+      if (webinarStartTime) {
+        const startTime = new Date(webinarStartTime)
         // 시작 시간을 기준으로 해당 날짜의 자정 계산
         const startDate = new Date(startTime.getFullYear(), startTime.getMonth(), startTime.getDate())
         const endOfDay = new Date(startDate)
@@ -235,9 +238,9 @@ export default function StatsPageClient({ webinar }: StatsPageClientProps) {
                   통계
                 </h1>
               </div>
-              {webinar.start_time && (
+              {(webinar.webinar_start_time || webinar.start_time) && (
                 <div className="text-sm text-gray-600">
-                  웨비나 시작일: {new Date(webinar.start_time).toLocaleDateString('ko-KR', {
+                  웨비나 시작일: {new Date((webinar.webinar_start_time || webinar.start_time)!).toLocaleDateString('ko-KR', {
                     year: 'numeric',
                     month: 'long',
                     day: 'numeric',
@@ -426,7 +429,9 @@ export default function StatsPageClient({ webinar }: StatsPageClientProps) {
           
           {(() => {
             // 웨비나 시작일 확인 (KST 기준)
-            if (!webinar.start_time) {
+            // webinar_start_time을 우선 사용, 없으면 start_time 사용
+            const webinarStartTime = webinar.webinar_start_time || webinar.start_time
+            if (!webinarStartTime) {
               return (
                 <>
                   <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
@@ -458,7 +463,7 @@ export default function StatsPageClient({ webinar }: StatsPageClientProps) {
               )
             }
 
-            const startTime = new Date(webinar.start_time)
+            const startTime = new Date(webinarStartTime)
             // KST 기준으로 현재 시간 계산
             const nowKST = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Seoul' }))
             // 시작일의 자정 (KST)
