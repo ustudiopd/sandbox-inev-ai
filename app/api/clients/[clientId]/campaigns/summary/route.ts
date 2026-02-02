@@ -50,6 +50,16 @@ export async function GET(
     
     // 집계 테이블에 데이터가 있으면 사용하되, Raw 데이터와 비교하여 누락 확인
     if (aggregatedStats && aggregatedStats.length > 0) {
+      // 어제 10시 (KST) 기준점 계산
+      const now = new Date()
+      const yesterday = new Date(now)
+      yesterday.setDate(yesterday.getDate() - 1)
+      yesterday.setHours(10, 0, 0, 0) // 어제 10시 (KST)
+      const yesterday10amUTC = new Date(yesterday.getTime() - 9 * 60 * 60 * 1000) // UTC 변환
+      
+      // 요청 날짜 범위에 어제 10시 이전 데이터가 포함되는지 확인
+      const hasPre10amData = fromDateUTC < yesterday10amUTC
+      
       // Raw 데이터에서 실제 전환수 확인
       const { data: campaigns } = await admin
         .from('event_survey_campaigns')
@@ -57,8 +67,13 @@ export async function GET(
         .eq('client_id', clientId)
       
       let rawTotalConversions = 0
+      let rawPre10amConversions = 0
+      let rawPost10amConversions = 0
+      
       if (campaigns && campaigns.length > 0) {
         const campaignIds = campaigns.map(c => c.id)
+        
+        // 전체 Raw 데이터
         const { count } = await admin
           .from('event_survey_entries')
           .select('*', { count: 'exact', head: true })
@@ -67,6 +82,27 @@ export async function GET(
           .lte('created_at', toDateUTC.toISOString())
         
         rawTotalConversions = count || 0
+        
+        // 어제 10시 이전/이후 분리 (어제 10시 이전 데이터가 포함된 경우만)
+        if (hasPre10amData) {
+          const { count: pre10amCount } = await admin
+            .from('event_survey_entries')
+            .select('*', { count: 'exact', head: true })
+            .in('campaign_id', campaignIds)
+            .gte('created_at', fromDateUTC.toISOString())
+            .lt('created_at', yesterday10amUTC.toISOString())
+          
+          rawPre10amConversions = pre10amCount || 0
+          
+          const { count: post10amCount } = await admin
+            .from('event_survey_entries')
+            .select('*', { count: 'exact', head: true })
+            .in('campaign_id', campaignIds)
+            .gte('created_at', yesterday10amUTC.toISOString())
+            .lte('created_at', toDateUTC.toISOString())
+          
+          rawPost10amConversions = post10amCount || 0
+        }
       }
       
       // 집계 테이블의 전환수
@@ -78,8 +114,34 @@ export async function GET(
         aggregatedTotal: aggregatedTotalConversions,
         rawTotal: rawTotalConversions,
         difference: rawTotalConversions - aggregatedTotalConversions,
+        hasPre10amData,
+        rawPre10amConversions,
+        rawPost10amConversions,
         dateRange: { from, to }
       })
+      
+      // 어제 10시 이전 데이터가 포함되고, 집계 테이블이 불완전하면 Raw 데이터 사용
+      // 어제 10시 이후 데이터는 집계 테이블 사용 (제대로 집계된 데이터)
+      if (hasPre10amData && rawPre10amConversions > 0) {
+        // 어제 10시 이전 데이터는 Raw 데이터 사용 (로그가 없어져서 집계가 안됨)
+        // 어제 10시 이후 데이터는 집계 테이블 사용
+        const { data: post10amStats } = await admin
+          .from('marketing_stats_daily')
+          .select('*')
+          .eq('client_id', clientId)
+          .gte('bucket_date', new Date(yesterday10amUTC).toISOString().split('T')[0])
+          .lte('bucket_date', to)
+        
+        // 어제 10시 이전 데이터가 누락되었으면 Raw 데이터 사용
+        // (보정 스크립트로 집계 테이블에 데이터를 넣기 전까지는 Raw 데이터 사용)
+        console.warn('[Marketing Summary] 어제 10시 이전 데이터 보정 필요, Raw 데이터 사용:', {
+          aggregatedTotal: aggregatedTotalConversions,
+          rawTotal: rawTotalConversions,
+          rawPre10am: rawPre10amConversions,
+          missing: rawPre10amConversions - (aggregatedTotalConversions - (rawPost10amConversions || 0))
+        })
+        return await getSummaryFromRaw(clientId, fromDateUTC, toDateUTC, from, to)
+      }
       
       // 집계 테이블의 전환수가 Raw 데이터보다 5% 이상 적으면 Raw 데이터 사용
       // (집계가 불완전하거나 누락된 데이터가 있을 수 있음)
