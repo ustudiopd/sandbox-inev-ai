@@ -20,6 +20,12 @@ interface Registrant {
   phone_norm?: string | null
   survey_no?: number | null
   code6?: string | null
+  utm_source?: string | null
+  utm_medium?: string | null
+  utm_campaign?: string | null
+  utm_term?: string | null
+  utm_content?: string | null
+  marketing_campaign_link_id?: string | null
 }
 
 export default function ParticipantsTab({ webinarId }: ParticipantsTabProps) {
@@ -113,6 +119,12 @@ export default function ParticipantsTab({ webinarId }: ParticipantsTabProps) {
       '관심제품',
       '메시지',
       '완료일시',
+      'UTM Source',
+      'UTM Medium',
+      'UTM Campaign',
+      'UTM Term',
+      'UTM Content',
+      '마케팅 캠페인 링크 ID',
     ]
     
     // registration_data의 모든 필드를 헤더에 추가 (기본 필드 제외)
@@ -177,6 +189,12 @@ export default function ParticipantsTab({ webinarId }: ParticipantsTabProps) {
           escapeCSV(regData.interestedProducts || '-'),
           escapeCSV(regData.message || '-'),
           escapeCSV(completedAt),
+          escapeCSV(registrant.utm_source || '-'),
+          escapeCSV(registrant.utm_medium || '-'),
+          escapeCSV(registrant.utm_campaign || '-'),
+          escapeCSV(registrant.utm_term || '-'),
+          escapeCSV(registrant.utm_content || '-'),
+          escapeCSV(registrant.marketing_campaign_link_id || '-'),
         ]
         
         // 추가 필드 값
@@ -410,42 +428,111 @@ export default function ParticipantsTab({ webinarId }: ParticipantsTabProps) {
             </div>
             
             <div className="p-6">
-              <div className="space-y-4">
+              <div className="space-y-6">
+                {/* 기본 정보 */}
                 <div>
-                  <span className="text-sm text-gray-600">이름:</span>
-                  <span className="ml-2 text-sm font-medium text-gray-900">{selectedRegistrant.name}</span>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">기본 정보</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <span className="text-sm text-gray-600">완료번호:</span>
+                      <span className="ml-2 text-sm font-medium text-gray-900">{selectedRegistrant.survey_no || '-'}</span>
+                    </div>
+                    <div>
+                      <span className="text-sm text-gray-600">확인코드:</span>
+                      <span className="ml-2 text-sm font-medium text-gray-900">{selectedRegistrant.code6 || '-'}</span>
+                    </div>
+                    <div>
+                      <span className="text-sm text-gray-600">이름:</span>
+                      <span className="ml-2 text-sm font-medium text-gray-900">{selectedRegistrant.name || '-'}</span>
+                    </div>
+                    <div>
+                      <span className="text-sm text-gray-600">이메일:</span>
+                      <span className="ml-2 text-sm font-medium text-gray-900">{selectedRegistrant.email || selectedRegistrant.registration_data?.email || '-'}</span>
+                    </div>
+                    <div>
+                      <span className="text-sm text-gray-600">회사명:</span>
+                      <span className="ml-2 text-sm font-medium text-gray-900">{selectedRegistrant.company || selectedRegistrant.registration_data?.company || '-'}</span>
+                    </div>
+                    <div>
+                      <span className="text-sm text-gray-600">직책:</span>
+                      <span className="ml-2 text-sm font-medium text-gray-900">{selectedRegistrant.registration_data?.position || selectedRegistrant.registration_data?.jobTitle || '-'}</span>
+                    </div>
+                    <div>
+                      <span className="text-sm text-gray-600">전화번호:</span>
+                      <span className="ml-2 text-sm font-medium text-gray-900">{selectedRegistrant.phone_norm || selectedRegistrant.registration_data?.phone || selectedRegistrant.registration_data?.phone_norm || '-'}</span>
+                    </div>
+                    <div>
+                      <span className="text-sm text-gray-600">역할:</span>
+                      <span className="ml-2 text-sm font-medium text-gray-900">
+                        {roleNames[selectedRegistrant.role] || selectedRegistrant.role || '-'}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-sm text-gray-600">등록일시:</span>
+                      <span className="ml-2 text-sm font-medium text-gray-900">
+                        {selectedRegistrant.registered_at ? new Date(selectedRegistrant.registered_at).toLocaleString('ko-KR') : '-'}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-sm text-gray-600">등록 출처:</span>
+                      <span className="ml-2 text-sm font-medium text-gray-900">
+                        {selectedRegistrant.registered_via === 'registration_page' ? '등록 페이지' : 
+                         selectedRegistrant.registered_via === 'webinar' ? '웨비나 직접' : 
+                         selectedRegistrant.registered_via || '-'}
+                      </span>
+                    </div>
+                    {selectedRegistrant.last_login_at && (
+                      <div>
+                        <span className="text-sm text-gray-600">마지막 로그인:</span>
+                        <span className="ml-2 text-sm font-medium text-gray-900">
+                          {new Date(selectedRegistrant.last_login_at).toLocaleString('ko-KR')}
+                        </span>
+                      </div>
+                    )}
+                  </div>
                 </div>
-                <div>
-                  <span className="text-sm text-gray-600">이메일:</span>
-                  <span className="ml-2 text-sm font-medium text-gray-900">{selectedRegistrant.email || '-'}</span>
-                </div>
-                <div>
-                  <span className="text-sm text-gray-600">역할:</span>
-                  <span className="ml-2 text-sm font-medium text-gray-900">
-                    {roleNames[selectedRegistrant.role] || selectedRegistrant.role}
-                  </span>
-                </div>
-                <div>
-                  <span className="text-sm text-gray-600">등록일시:</span>
-                  <span className="ml-2 text-sm font-medium text-gray-900">
-                    {selectedRegistrant.registered_at ? new Date(selectedRegistrant.registered_at).toLocaleString('ko-KR') : '-'}
-                  </span>
-                </div>
-                <div>
-                  <span className="text-sm text-gray-600">등록 출처:</span>
-                  <span className="ml-2 text-sm font-medium text-gray-900">
-                    {selectedRegistrant.registered_via === 'registration_page' ? '등록 페이지' : 
-                     selectedRegistrant.registered_via === 'webinar' ? '웨비나 직접' : 
-                     selectedRegistrant.registered_via || '-'}
-                  </span>
-                </div>
-                {selectedRegistrant.registration_data?.message && (
+
+                {/* UTM 정보 */}
+                {(selectedRegistrant.utm_source || selectedRegistrant.utm_medium || selectedRegistrant.utm_campaign) && (
                   <div>
-                    <span className="text-sm text-gray-600">메시지:</span>
-                    <div className="mt-2 p-3 bg-gray-50 rounded-lg border border-gray-200">
-                      <p className="text-sm text-gray-900 whitespace-pre-wrap break-words">
-                        {selectedRegistrant.registration_data.message}
-                      </p>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">UTM 추적 정보</h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <span className="text-sm text-gray-600">UTM Source:</span>
+                        <span className="ml-2 text-sm font-medium text-gray-900">{selectedRegistrant.utm_source || '-'}</span>
+                      </div>
+                      <div>
+                        <span className="text-sm text-gray-600">UTM Medium:</span>
+                        <span className="ml-2 text-sm font-medium text-gray-900">{selectedRegistrant.utm_medium || '-'}</span>
+                      </div>
+                      <div>
+                        <span className="text-sm text-gray-600">UTM Campaign:</span>
+                        <span className="ml-2 text-sm font-medium text-gray-900">{selectedRegistrant.utm_campaign || '-'}</span>
+                      </div>
+                      <div>
+                        <span className="text-sm text-gray-600">UTM Term:</span>
+                        <span className="ml-2 text-sm font-medium text-gray-900">{selectedRegistrant.utm_term || '-'}</span>
+                      </div>
+                      <div>
+                        <span className="text-sm text-gray-600">UTM Content:</span>
+                        <span className="ml-2 text-sm font-medium text-gray-900">{selectedRegistrant.utm_content || '-'}</span>
+                      </div>
+                      <div>
+                        <span className="text-sm text-gray-600">마케팅 캠페인 링크 ID:</span>
+                        <span className="ml-2 text-sm font-medium text-gray-900 break-all">{selectedRegistrant.marketing_campaign_link_id || '-'}</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* 추가 등록 정보 */}
+                {selectedRegistrant.registration_data && Object.keys(selectedRegistrant.registration_data).length > 0 && (
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">추가 등록 정보</h3>
+                    <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                      <pre className="text-xs text-gray-700 whitespace-pre-wrap break-words overflow-auto max-h-96">
+                        {JSON.stringify(selectedRegistrant.registration_data, null, 2)}
+                      </pre>
                     </div>
                   </div>
                 )}

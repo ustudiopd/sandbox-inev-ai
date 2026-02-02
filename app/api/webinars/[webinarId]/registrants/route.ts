@@ -98,7 +98,7 @@ export async function GET(
       console.log('[registrants API] 등록 캠페인 데이터 사용:', webinar.registration_campaign_id)
       const { data: entries, error: entriesError } = await admin
         .from('event_survey_entries')
-        .select('id, name, company, phone_norm, registration_data, completed_at, created_at, survey_no, code6')
+        .select('id, name, company, phone_norm, registration_data, completed_at, created_at, survey_no, code6, utm_source, utm_medium, utm_campaign, utm_term, utm_content, marketing_campaign_link_id')
         .eq('campaign_id', webinar.registration_campaign_id)
         .order('completed_at', { ascending: false })
       
@@ -443,6 +443,12 @@ export async function GET(
           phone_norm: entry.phone_norm || null,
           survey_no: entry.survey_no || null,
           code6: entry.code6 || null,
+          utm_source: entry.utm_source || null,
+          utm_medium: entry.utm_medium || null,
+          utm_campaign: entry.utm_campaign || null,
+          utm_term: entry.utm_term || null,
+          utm_content: entry.utm_content || null,
+          marketing_campaign_link_id: entry.marketing_campaign_link_id || null,
         }
       })
       
