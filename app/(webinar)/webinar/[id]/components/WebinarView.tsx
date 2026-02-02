@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef, useMemo } from 'react'
 import { createPortal } from 'react-dom'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { createClientSupabase } from '@/lib/supabase/client'
@@ -14,6 +14,8 @@ import FormWidget from '@/components/webinar/FormWidget'
 import FileDownload from '@/components/webinar/FileDownload'
 import GiveawayWidget from '@/components/webinar/GiveawayWidget'
 import { usePresencePing } from '@/components/webinar/hooks/usePresencePing'
+import { getOrCreateSessionId } from '@/lib/utils/session'
+import { extractUTMParams } from '@/lib/utils/utm'
 
 interface Webinar {
   id: string
@@ -120,6 +122,7 @@ export default function WebinarView({ webinar, isAdminMode = false }: WebinarVie
   const fullscreenRef = useRef<HTMLDivElement>(null)
   const supabase = createClientSupabase()
   const router = useRouter()
+  const searchParams = useSearchParams()
   
   // Chat 컴포넌트를 한 번만 렌더링하여 중복 구독 방지 (해결책.md 권장사항)
   const chatComponent = useMemo(() => (
@@ -156,6 +159,48 @@ export default function WebinarView({ webinar, isAdminMode = false }: WebinarVie
 
   // Presence ping (접속 통계 수집)
   usePresencePing(webinar.id)
+  
+  // Visit 수집 (웨비나 시청 페이지 진입 시 — 통계 시스템 연동)
+  // Phase 0: Visit 커버리지 확보
+  useEffect(() => {
+    if (!webinar.id) return
+    
+    try {
+      const sessionId = getOrCreateSessionId('ef_session_id', 30)
+      
+      // UTM 파라미터 추출
+      const utmParams = extractUTMParams(searchParams)
+      
+      // 웨비나 ID 또는 registration_campaign_id로 Visit API 호출
+      const campaignId = webinar.registration_campaign_id || webinar.id
+      
+      // cid 추출
+      const cid = searchParams.get('cid')
+      
+      fetch(`/api/public/campaigns/${campaignId}/visit`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          session_id: sessionId,
+          utm_source: utmParams.utm_source ?? null,
+          utm_medium: utmParams.utm_medium ?? null,
+          utm_campaign: utmParams.utm_campaign ?? null,
+          utm_term: utmParams.utm_term ?? null,
+          utm_content: utmParams.utm_content ?? null,
+          cid: cid ?? null,
+          referrer: typeof document !== 'undefined' ? document.referrer || null : null,
+          user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
+        }),
+      }).catch((error) => {
+        // Visit 수집 실패는 무시 (graceful failure)
+        console.warn('[WebinarView] Visit 수집 실패 (무시):', error)
+      })
+    } catch (error) {
+      // Visit 수집 초기화 실패도 무시
+      console.warn('[WebinarView] Visit 수집 초기화 실패 (무시):', error)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- 랜딩 1회 방문만 기록
+  }, [webinar.id, webinar.registration_campaign_id])
   
   // 오픈된 폼, 추첨, 파일 로드
   useEffect(() => {
@@ -497,7 +542,7 @@ export default function WebinarView({ webinar, isAdminMode = false }: WebinarVie
         maxWidth: '100vw',
         maxHeight: '100vh',
         backgroundColor: '#000',
-        zIndex: 2147483647,
+        zIndex: 9999,
       }}
     >
       <div className="relative w-full h-full flex items-center justify-center">

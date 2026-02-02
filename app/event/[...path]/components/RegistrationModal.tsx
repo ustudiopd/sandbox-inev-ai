@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useSearchParams } from 'next/navigation'
 
 interface RegistrationModalProps {
   campaign: any
@@ -10,6 +11,37 @@ interface RegistrationModalProps {
 }
 
 export default function RegistrationModal({ campaign, baseUrl, onClose, onSuccess }: RegistrationModalProps) {
+  const searchParams = useSearchParams()
+  
+  // URL에서 직접 UTM 파라미터 추출
+  const urlUTMParams: Record<string, string> = {}
+  const utmKeys = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content']
+  utmKeys.forEach(key => {
+    const value = searchParams.get(key)
+    if (value) {
+      urlUTMParams[key] = value
+    }
+  })
+  
+  // URL에서 cid 파라미터 읽기
+  const cid = searchParams.get('cid')
+  
+  // localStorage에서 UTM 읽기
+  let storedUTMData: Record<string, any> = {}
+  try {
+    const storedUTM = localStorage.getItem(`utm:${campaign.id}`)
+    if (storedUTM) {
+      storedUTMData = JSON.parse(storedUTM)
+    }
+  } catch (parseError) {
+    console.warn('[RegistrationModal] UTM 파싱 실패:', parseError)
+  }
+  
+  // URL UTM과 localStorage UTM 병합 (URL 우선)
+  const utmData = {
+    ...storedUTMData,
+    ...urlUTMParams,
+  }
   const [name, setName] = useState('')
   const [company, setCompany] = useState('')
   const [phone1, setPhone1] = useState('010')
@@ -48,6 +80,15 @@ export default function RegistrationModal({ campaign, baseUrl, onClose, onSucces
           company: company.trim() || null,
           phone: phone,
           phone_norm: phoneNorm,
+          // UTM 파라미터 추가 (localStorage > URL 우선순위)
+          utm_source: utmData.utm_source || null,
+          utm_medium: utmData.utm_medium || null,
+          utm_campaign: utmData.utm_campaign || null,
+          utm_term: utmData.utm_term || null,
+          utm_content: utmData.utm_content || null,
+          utm_first_visit_at: utmData.first_visit_at || null,
+          utm_referrer: utmData.referrer_domain || null,
+          cid: cid || null,
         }),
       })
       

@@ -1,4 +1,8 @@
+import dotenv from 'dotenv'
 import { createAdminSupabase } from '@/lib/supabase/admin'
+
+// .env.local 파일 로드
+dotenv.config({ path: '.env.local' })
 
 /**
  * /426307 경로의 원프레딕트 등록 캠페인 생성 및 웨비나 연동

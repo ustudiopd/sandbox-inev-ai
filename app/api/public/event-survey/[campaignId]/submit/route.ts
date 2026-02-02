@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
 import { createAdminSupabase } from '@/lib/supabase/admin'
 import { normalizeUTM } from '@/lib/utils/utm'
-import { normalizeCID } from '@/lib/utils/cid'
+import { restoreTrackingInfo } from '@/lib/tracking/restore-tracking'
 
 export const runtime = 'nodejs'
 
@@ -14,8 +15,12 @@ export async function POST(
   req: Request,
   { params }: { params: Promise<{ campaignId: string }> }
 ) {
+  // Request를 NextRequest로 변환 (cookie 읽기용)
+  const nextReq = req as unknown as NextRequest
   try {
     const { campaignId } = await params
+    console.log('[submit] 설문 제출 요청 시작:', { campaignId, timestamp: new Date().toISOString() })
+    
     const { 
       name, 
       company, 
@@ -51,40 +56,46 @@ export async function POST(
       )
     }
     
-    // cid로 링크 lookup (명세서 요구사항)
-    let resolvedMarketingCampaignLinkId: string | null = marketing_campaign_link_id || null
-    if (cid && !resolvedMarketingCampaignLinkId) {
-      try {
-        const normalizedCid = normalizeCID(cid)
-        if (normalizedCid) {
-          const { data: link } = await admin
-            .from('campaign_link_meta')
-            .select('id')
-            .eq('client_id', campaign.client_id)
-            .eq('cid', normalizedCid)
-            .eq('status', 'active')
-            .maybeSingle()
-          
-          if (link) {
-            resolvedMarketingCampaignLinkId = link.id
-          }
-        }
-      } catch (cidError) {
-        console.error('cid lookup 오류 (무시하고 계속):', cidError)
-        // cid lookup 실패해도 제출은 계속 진행
-      }
+    // 추적 정보 복원 (URL > Cookie > Link 순서)
+    const restoredTracking = await restoreTrackingInfo(
+      nextReq,
+      campaignId,
+      campaign.client_id,
+      false, // 설문조사는 웨비나 ID가 아님
+      {
+        utm_source: utm_source || null,
+        utm_medium: utm_medium || null,
+        utm_campaign: utm_campaign || null,
+        utm_term: utm_term || null,
+        utm_content: utm_content || null,
+      },
+      cid || null
+    )
+    
+    // 복원된 추적 정보 사용
+    const resolvedMarketingCampaignLinkId = restoredTracking.marketing_campaign_link_id || marketing_campaign_link_id || null
+    const finalCid = restoredTracking.cid
+    const finalUTMParams = {
+      utm_source: restoredTracking.utm_source,
+      utm_medium: restoredTracking.utm_medium,
+      utm_campaign: restoredTracking.utm_campaign,
+      utm_term: restoredTracking.utm_term,
+      utm_content: restoredTracking.utm_content,
     }
+    
+    console.log('[submit] 복원된 추적 정보:', {
+      source: restoredTracking.source,
+      cid: finalCid,
+      utm_source: finalUTMParams.utm_source,
+      link_id: resolvedMarketingCampaignLinkId,
+      untracked_reason: restoredTracking.untracked_reason,
+    })
     
     // UTM 파라미터 정규화 (graceful: 실패해도 계속 진행)
     let normalizedUTM: Record<string, string | null> = {}
     try {
-      normalizedUTM = normalizeUTM({
-        utm_source,
-        utm_medium,
-        utm_campaign,
-        utm_term,
-        utm_content,
-      })
+      normalizedUTM = normalizeUTM(finalUTMParams)
+      console.log('[submit] 정규화된 UTM 파라미터:', normalizedUTM)
     } catch (utmError) {
       console.error('UTM 정규화 오류 (무시하고 계속):', utmError)
       // UTM 정규화 실패해도 제출은 계속 진행
@@ -276,6 +287,18 @@ export async function POST(
       .single()
     
     if (entryError) {
+      // 구조화 로그: 등록 저장 실패
+      console.error('[EntryTrackFail]', JSON.stringify({
+        campaignId,
+        sessionId: session_id || null,
+        reason: 'DB_INSERT_FAILED',
+        status: 500,
+        error: entryError.message,
+        code: entryError.code,
+        details: entryError.details,
+        hint: entryError.hint,
+        timestamp: new Date().toISOString()
+      }))
       return NextResponse.json(
         { error: entryError.message },
         { status: 500 }
@@ -285,7 +308,7 @@ export async function POST(
     // 전환 시 Visit과 연결 (Phase 3) - 실패해도 제출은 성공
     if (session_id && entry?.id) {
       try {
-        await admin
+        const { data: visitUpdate, error: visitUpdateError } = await admin
           .from('event_access_logs')
           .update({
             converted_at: new Date().toISOString(),
@@ -294,10 +317,39 @@ export async function POST(
           .eq('campaign_id', campaignId)
           .eq('session_id', session_id)
           .is('converted_at', null) // 아직 전환되지 않은 것만
-      } catch (visitError) {
+          .select('id')
+        
+        // Visit이 없거나 연결 실패한 경우 경고 로그
+        if (visitUpdateError || !visitUpdate || visitUpdate.length === 0) {
+          console.warn('[VisitMissingOnConvert]', JSON.stringify({
+            campaignId,
+            sessionId: session_id,
+            entryId: entry.id,
+            reason: visitUpdateError ? 'VISIT_UPDATE_FAILED' : 'VISIT_NOT_FOUND',
+            error: visitUpdateError?.message || null,
+            timestamp: new Date().toISOString()
+          }))
+        }
+      } catch (visitError: any) {
         // Visit 연결 실패는 경고만 하고 제출은 성공으로 처리
-        console.warn('[submit] Visit 연결 실패 (제출은 성공):', visitError)
+        console.warn('[VisitMissingOnConvert]', JSON.stringify({
+          campaignId,
+          sessionId: session_id,
+          entryId: entry?.id,
+          reason: 'VISIT_CONNECTION_EXCEPTION',
+          error: visitError.message,
+          timestamp: new Date().toISOString()
+        }))
       }
+    } else if (!session_id && entry?.id) {
+      // session_id가 없어서 Visit 연결이 불가능한 경우 (정상 케이스일 수 있음)
+      console.warn('[VisitMissingOnConvert]', JSON.stringify({
+        campaignId,
+        sessionId: null,
+        entryId: entry.id,
+        reason: 'NO_SESSION_ID',
+        timestamp: new Date().toISOString()
+      }))
     }
     
     return NextResponse.json({
@@ -307,7 +359,16 @@ export async function POST(
       entry_id: entry.id,
     })
   } catch (error: any) {
-    console.error('설문 제출 오류:', error)
+    // 구조화 로그: 등록 API 전체 오류
+    console.error('[EntryTrackFail]', JSON.stringify({
+      campaignId: 'N/A',
+      sessionId: 'N/A',
+      reason: 'API_ERROR',
+      status: 500,
+      error: error.message,
+      stack: error.stack?.substring(0, 200),
+      timestamp: new Date().toISOString()
+    }))
     return NextResponse.json(
       { error: error.message || 'Internal server error' },
       { status: 500 }

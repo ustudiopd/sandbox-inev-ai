@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { getOrCreateSessionId } from '@/lib/utils/session'
 
 interface FormQuestion {
@@ -86,6 +87,7 @@ export default function SurveyForm({
   onQuestionClick,
   onQuestionTextChange,
 }: SurveyFormProps) {
+  const searchParams = useSearchParams()
   const [form, setForm] = useState<Form | null>(null)
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
@@ -412,17 +414,39 @@ export default function SurveyForm({
         else if (consent.id === 'consent3') consentData.consent3 = consent3
       })
       
-      // localStorage에서 UTM 읽기
-      let utmData: Record<string, any> = {}
+      // URL에서 직접 UTM 파라미터 추출 (우선순위 1)
+      const urlUTMParams: Record<string, string> = {}
+      const utmKeys = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content']
+      utmKeys.forEach(key => {
+        const value = searchParams.get(key)
+        if (value) {
+          urlUTMParams[key] = value
+        }
+      })
+      
+      // localStorage에서 UTM 읽기 (우선순위 2)
+      let storedUTMData: Record<string, any> = {}
       try {
         const storedUTM = localStorage.getItem(`utm:${campaignId}`)
         if (storedUTM) {
-          utmData = JSON.parse(storedUTM)
+          storedUTMData = JSON.parse(storedUTM)
         }
       } catch (parseError) {
         // localStorage 파싱 실패는 무시
         console.warn('[SurveyForm] UTM 파싱 실패:', parseError)
       }
+      
+      // URL UTM과 localStorage UTM 병합 (URL 우선)
+      const utmData = {
+        ...storedUTMData,
+        ...urlUTMParams,
+      }
+      
+      console.log('[SurveyForm] UTM 데이터:', {
+        urlUTM: urlUTMParams,
+        storedUTM: storedUTMData,
+        mergedUTM: utmData,
+      })
       
       // session_id 가져오기 (Visit 연결용) - 에러 발생해도 제출은 계속 진행
       let sessionId: string | null = null
@@ -434,8 +458,14 @@ export default function SurveyForm({
       }
       
       // URL에서 cid 파라미터 읽기 (명세서 요구사항)
-      const urlParams = new URLSearchParams(window.location.search)
-      const cid = urlParams.get('cid')
+      const cid = searchParams.get('cid')
+      
+      console.log('[SurveyForm] 제출 데이터:', {
+        campaignId,
+        cid: cid || '(없음)',
+        hasUTM: Object.keys(utmData).length > 0,
+        utmData,
+      })
       
       const response = await fetch(`/api/public/event-survey/${campaignId}/submit`, {
         method: 'POST',

@@ -16,6 +16,9 @@ export async function GET(
 ) {
   try {
     const { clientId } = await params
+    const { searchParams } = new URL(req.url)
+    const fromDate = searchParams.get('from')
+    const toDate = searchParams.get('to')
     
     // 권한 확인
     await requireClientMember(clientId, ['owner', 'admin', 'operator', 'analyst', 'viewer', 'member'])
@@ -37,13 +40,87 @@ export async function GET(
       )
     }
     
-    // 각 링크의 전환 수 집계 및 URL 생성
+    // Phase 1: 집계 테이블에서 링크 통계 조회 (날짜 범위 필터링)
+    let aggregatedStatsQuery = admin
+      .from('marketing_stats_daily')
+      .select('*')
+      .eq('client_id', clientId)
+      .in('marketing_campaign_link_id', (links || []).map(l => l.id).filter(Boolean))
+    
+    // 날짜 범위가 있으면 필터링
+    if (fromDate) {
+      aggregatedStatsQuery = aggregatedStatsQuery.gte('bucket_date', fromDate)
+    }
+    if (toDate) {
+      aggregatedStatsQuery = aggregatedStatsQuery.lte('bucket_date', toDate)
+    }
+    
+    const { data: allAggregatedStats, error: statsError } = await aggregatedStatsQuery
+    
+    // 링크별로 집계 테이블 데이터 그룹화
+    const linkStatsMap = new Map<string, { visits: number; conversions: number }>()
+    if (allAggregatedStats && !statsError) {
+      allAggregatedStats.forEach(stat => {
+        if (stat.marketing_campaign_link_id) {
+          const existing = linkStatsMap.get(stat.marketing_campaign_link_id) || { visits: 0, conversions: 0 }
+          linkStatsMap.set(stat.marketing_campaign_link_id, {
+            visits: existing.visits + (stat.visits || 0),
+            conversions: existing.conversions + (stat.conversions || 0)
+          })
+        }
+      })
+    }
+    
+    // 각 링크의 전환 수 및 Visits 집계 및 URL 생성
     const linksWithStats = await Promise.all(
       (links || []).map(async (link) => {
-        const { count } = await admin
-          .from('event_survey_entries')
-          .select('*', { count: 'exact', head: true })
-          .eq('marketing_campaign_link_id', link.id)
+        // Phase 1: 집계 테이블에서 통계 가져오기
+        const aggregatedStat = linkStatsMap.get(link.id)
+        let conversionCount: number | null = null
+        let visitsCount: number | null = null
+        
+        if (aggregatedStat) {
+          // 집계 테이블에 데이터가 있으면 사용
+          conversionCount = aggregatedStat.conversions
+          visitsCount = aggregatedStat.visits
+        } else {
+          // Fallback: Raw 데이터에서 집계 (날짜 범위 필터링)
+          let conversionsQuery = admin
+            .from('event_survey_entries')
+            .select('*', { count: 'exact', head: true })
+            .eq('marketing_campaign_link_id', link.id)
+          
+          let visitsQuery = admin
+            .from('event_access_logs')
+            .select('*', { count: 'exact', head: true })
+            .eq('campaign_id', link.target_campaign_id)
+            .eq('marketing_campaign_link_id', link.id)
+          
+          // 날짜 범위가 있으면 필터링
+          if (fromDate) {
+            const fromDateTime = new Date(fromDate)
+            fromDateTime.setHours(0, 0, 0, 0)
+            conversionsQuery = conversionsQuery.gte('created_at', fromDateTime.toISOString())
+            visitsQuery = visitsQuery.gte('accessed_at', fromDateTime.toISOString())
+          }
+          if (toDate) {
+            const toDateTime = new Date(toDate)
+            toDateTime.setHours(23, 59, 59, 999)
+            conversionsQuery = conversionsQuery.lte('created_at', toDateTime.toISOString())
+            visitsQuery = visitsQuery.lte('accessed_at', toDateTime.toISOString())
+          }
+          
+          const { count: conversionCountRaw } = await conversionsQuery
+          const { count: visitsCountRaw } = await visitsQuery
+          
+          conversionCount = conversionCountRaw || 0
+          visitsCount = visitsCountRaw || 0
+        }
+        
+        // CVR 계산
+        const cvr = visitsCount && visitsCount > 0
+          ? ((conversionCount || 0) / visitsCount * 100).toFixed(2)
+          : '0.00'
         
         // 타겟 캠페인 정보 조회
         const { data: targetCampaign } = await admin
@@ -83,7 +160,9 @@ export async function GET(
         
         return {
           ...link,
-          conversion_count: count || 0,
+          conversion_count: conversionCount || 0,
+          visits_count: visitsCount || 0,
+          cvr: parseFloat(cvr),
           url: campaignUrl, // 기본 URL (광고용)
           share_url: shareUrl, // 공유용 URL (cid만)
           campaign_url: campaignUrl, // 광고용 URL (cid + UTM)

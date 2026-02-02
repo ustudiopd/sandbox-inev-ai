@@ -76,30 +76,6 @@ export default function SurveyCampaignDetailView({ campaign, clientId }: SurveyC
               <span className="hidden lg:inline text-sm font-medium whitespace-nowrap">개요</span>
             </button>
             <button
-              onClick={() => setActiveTab('form')}
-              title="폼 관리"
-              className={`px-3 sm:px-6 py-3 sm:py-4 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center gap-2 ${
-                activeTab === 'form'
-                  ? 'bg-blue-50 text-blue-600 border-b-2 border-blue-600'
-                  : 'text-gray-600 hover:bg-gray-50'
-              }`}
-            >
-              <span className="text-xl sm:text-2xl">📋</span>
-              <span className="hidden lg:inline text-sm font-medium whitespace-nowrap">폼 관리</span>
-            </button>
-            <button
-              onClick={() => setActiveTab('publicSettings')}
-              title="공개페이지 설정"
-              className={`px-3 sm:px-6 py-3 sm:py-4 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center gap-2 ${
-                activeTab === 'publicSettings'
-                  ? 'bg-blue-50 text-blue-600 border-b-2 border-blue-600'
-                  : 'text-gray-600 hover:bg-gray-50'
-              }`}
-            >
-              <span className="text-xl sm:text-2xl">🌐</span>
-              <span className="hidden lg:inline text-sm font-medium whitespace-nowrap">공개페이지 설정</span>
-            </button>
-            <button
               onClick={() => setActiveTab('participants')}
               title="참여자 관리"
               className={`px-3 sm:px-6 py-3 sm:py-4 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center gap-2 ${
@@ -122,30 +98,6 @@ export default function SurveyCampaignDetailView({ campaign, clientId }: SurveyC
             >
               <span className="text-xl sm:text-2xl">📈</span>
               <span className="hidden lg:inline text-sm font-medium whitespace-nowrap">통계</span>
-            </button>
-            <button
-              onClick={() => setActiveTab('analysis')}
-              title="AI 분석"
-              className={`px-3 sm:px-6 py-3 sm:py-4 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center gap-2 ${
-                activeTab === 'analysis'
-                  ? 'bg-blue-50 text-blue-600 border-b-2 border-blue-600'
-                  : 'text-gray-600 hover:bg-gray-50'
-              }`}
-            >
-              <span className="text-xl sm:text-2xl">🤖</span>
-              <span className="hidden lg:inline text-sm font-medium whitespace-nowrap">AI 분석</span>
-            </button>
-            <button
-              onClick={() => setActiveTab('guidelines')}
-              title="분석 지침"
-              className={`px-3 sm:px-6 py-3 sm:py-4 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center gap-2 ${
-                activeTab === 'guidelines'
-                  ? 'bg-blue-50 text-blue-600 border-b-2 border-blue-600'
-                  : 'text-gray-600 hover:bg-gray-50'
-              }`}
-            >
-              <span className="text-xl sm:text-2xl">📐</span>
-              <span className="hidden lg:inline text-sm font-medium whitespace-nowrap">분석 지침</span>
             </button>
             <button
               onClick={() => setActiveTab('settings')}
@@ -202,10 +154,7 @@ export default function SurveyCampaignDetailView({ campaign, clientId }: SurveyC
           )}
           
           {activeTab === 'stats' && (
-            <div>
-              <h2 className="text-xl font-semibold mb-4">통계</h2>
-              <StatsTab campaignId={campaignData.id} />
-            </div>
+            <StatsTab campaignId={campaignData.id} campaignType={campaignData.type || 'survey'} />
           )}
           
           {activeTab === 'analysis' && (

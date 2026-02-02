@@ -19,6 +19,16 @@ import {
 
 interface StatsTabProps {
   campaignId: string
+  campaignType?: 'survey' | 'registration'
+}
+
+interface RegistrationDataStats {
+  total_registrations: number
+  with_email: number
+  email_consent: number
+  phone_consent: number
+  company_distribution: Record<string, number>
+  job_title_distribution: Record<string, number>
 }
 
 interface CampaignStats {
@@ -40,13 +50,17 @@ interface QuestionStat {
 
 const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899', '#06B6D4', '#F97316']
 
-export default function StatsTab({ campaignId }: StatsTabProps) {
+export default function StatsTab({ campaignId, campaignType = 'survey' }: StatsTabProps) {
+  const isRegistration = campaignType === 'registration'
+  const labelText = isRegistration ? '등록' : '설문'
+  const labelTextPlural = isRegistration ? '등록' : '설문'
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [stats, setStats] = useState<CampaignStats | null>(null)
   const [questionStats, setQuestionStats] = useState<QuestionStat[]>([])
   const [timelineData, setTimelineData] = useState<Array<{ time: string; count: number }>>([])
   const [dateRange, setDateRange] = useState<'all' | 'today' | 'week' | 'month'>('all')
+  const [registrationDataStats, setRegistrationDataStats] = useState<RegistrationDataStats | null>(null)
 
   useEffect(() => {
     fetchStats()
@@ -74,11 +88,57 @@ export default function StatsTab({ campaignId }: StatsTabProps) {
 
       // 시간대별 완료 추이 조회
       await fetchTimelineData()
+      
+      // 등록 타입일 때 registration_data 분석
+      if (isRegistration) {
+        await fetchRegistrationDataStats()
+      }
     } catch (err: any) {
       console.error('통계 조회 오류:', err)
       setError(err.message || '통계 조회 중 오류가 발생했습니다.')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const fetchRegistrationDataStats = async () => {
+    try {
+      const entriesResponse = await fetch(`/api/event-survey/campaigns/${campaignId}/entries`)
+      const entriesResult = await entriesResponse.json()
+      
+      if (entriesResult.success && entriesResult.entries) {
+        const entries = entriesResult.entries as Array<{ registration_data: any }>
+        
+        const companyMap = new Map<string, number>()
+        const jobTitleMap = new Map<string, number>()
+        
+        entries.forEach((entry) => {
+          const regData = entry.registration_data
+          
+          if (regData) {
+            if (regData.company) {
+              const company = regData.company.trim()
+              companyMap.set(company, (companyMap.get(company) || 0) + 1)
+            }
+            
+            if (regData.jobTitle) {
+              const jobTitle = regData.jobTitle.trim()
+              jobTitleMap.set(jobTitle, (jobTitleMap.get(jobTitle) || 0) + 1)
+            }
+          }
+        })
+        
+        setRegistrationDataStats({
+          total_registrations: entries.length,
+          with_email: 0,
+          email_consent: 0,
+          phone_consent: 0,
+          company_distribution: Object.fromEntries(companyMap),
+          job_title_distribution: Object.fromEntries(jobTitleMap),
+        })
+      }
+    } catch (err: any) {
+      console.error('등록 데이터 통계 조회 오류:', err)
     }
   }
 
@@ -105,18 +165,18 @@ export default function StatsTab({ campaignId }: StatsTabProps) {
           filteredEntries = entries.filter((e) => new Date(e.completed_at) >= monthStart)
         }
 
-        // 시간대별 집계 (1시간 단위)
-        const hourlyMap = new Map<string, number>()
+        // 일자별 집계
+        const dailyMap = new Map<string, number>()
         
         filteredEntries.forEach((entry) => {
           const date = new Date(entry.completed_at)
-          const hourKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:00`
+          const dateKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
           
-          hourlyMap.set(hourKey, (hourlyMap.get(hourKey) || 0) + 1)
+          dailyMap.set(dateKey, (dailyMap.get(dateKey) || 0) + 1)
         })
 
-        // 시간순 정렬
-        const timeline = Array.from(hourlyMap.entries())
+        // 날짜순 정렬
+        const timeline = Array.from(dailyMap.entries())
           .map(([time, count]) => ({ time, count }))
           .sort((a, b) => new Date(a.time).getTime() - new Date(b.time).getTime())
         
@@ -148,7 +208,6 @@ export default function StatsTab({ campaignId }: StatsTabProps) {
     <div className="space-y-6">
       {/* 날짜 범위 선택 */}
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold">통계</h2>
         <select
           value={dateRange}
           onChange={(e) => setDateRange(e.target.value as any)}
@@ -164,7 +223,7 @@ export default function StatsTab({ campaignId }: StatsTabProps) {
       {/* 개요 카드 */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-white p-6 rounded-xl shadow-lg">
-          <div className="text-sm text-gray-600 mb-2">완료 수</div>
+          <div className="text-sm text-gray-600 mb-2">{isRegistration ? '등록수' : '완료 수'}</div>
           <div className="text-3xl font-bold text-blue-600">{stats?.total_completed || 0}</div>
         </div>
         <div className="bg-white p-6 rounded-xl shadow-lg">
@@ -177,10 +236,10 @@ export default function StatsTab({ campaignId }: StatsTabProps) {
         </div>
       </div>
 
-      {/* 시간대별 완료 추이 */}
+      {/* 일자별 등록추이 */}
       {timelineData.length > 0 && (
         <div className="bg-white rounded-xl shadow-lg p-6">
-          <h3 className="text-lg font-semibold mb-4">시간대별 완료 추이</h3>
+          <h3 className="text-lg font-semibold mb-4">일자별 {labelText}추이</h3>
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={timelineData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
@@ -189,7 +248,7 @@ export default function StatsTab({ campaignId }: StatsTabProps) {
                 stroke="#6b7280"
                 tickFormatter={(value) => {
                   const date = new Date(value)
-                  return `${date.getMonth() + 1}/${date.getDate()} ${date.getHours()}시`
+                  return `${date.getMonth() + 1}/${date.getDate()}`
                 }}
               />
               <YAxis stroke="#6b7280" />
@@ -201,7 +260,7 @@ export default function StatsTab({ campaignId }: StatsTabProps) {
                 }}
                 labelFormatter={(value) => {
                   const date = new Date(value)
-                  return date.toLocaleString('ko-KR')
+                  return date.toLocaleDateString('ko-KR')
                 }}
               />
               <Legend />
@@ -210,11 +269,72 @@ export default function StatsTab({ campaignId }: StatsTabProps) {
                 dataKey="count" 
                 stroke="#3B82F6" 
                 strokeWidth={2} 
-                name="완료 수"
+                name={isRegistration ? '등록수' : '완료 수'}
                 dot={{ r: 4 }}
               />
             </LineChart>
           </ResponsiveContainer>
+        </div>
+      )}
+
+      {/* 등록 데이터 분석 (등록 타입일 때) */}
+      {isRegistration && registrationDataStats && registrationDataStats.total_registrations > 0 && (
+        <div className="bg-white rounded-xl shadow-lg p-6">
+          <h3 className="text-lg font-semibold mb-4">등록 데이터 분석</h3>
+          
+          {/* 회사별 분포 */}
+          {Object.keys(registrationDataStats.company_distribution).length > 0 && (
+            <div className="mb-6">
+              <h4 className="text-md font-semibold mb-3">회사별 분포</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {Object.entries(registrationDataStats.company_distribution)
+                  .sort((a, b) => b[1] - a[1])
+                  .slice(0, 10)
+                  .map(([company, count]) => (
+                    <div key={company} className="flex items-center justify-between bg-gray-50 rounded-lg p-3">
+                      <span className="text-sm font-medium text-gray-700 truncate flex-1">{company}</span>
+                      <span className="text-sm font-bold text-blue-600 ml-2">{count}명</span>
+                    </div>
+                  ))}
+              </div>
+              {Object.keys(registrationDataStats.company_distribution).length > 10 && (
+                <div className="text-xs text-gray-500 mt-2">
+                  외 {Object.keys(registrationDataStats.company_distribution).length - 10}개 회사...
+                </div>
+              )}
+            </div>
+          )}
+          
+          {/* 직책별 분포 */}
+          {Object.keys(registrationDataStats.job_title_distribution).length > 0 && (
+            <div>
+              <h4 className="text-md font-semibold mb-3">직책별 분포</h4>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={Object.entries(registrationDataStats.job_title_distribution)
+                  .sort((a, b) => b[1] - a[1])
+                  .slice(0, 10)
+                  .map(([jobTitle, count]) => ({ name: jobTitle, count }))}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <XAxis 
+                    dataKey="name" 
+                    stroke="#6b7280"
+                    angle={-45}
+                    textAnchor="end"
+                    height={100}
+                  />
+                  <YAxis stroke="#6b7280" />
+                  <Tooltip
+                    contentStyle={{
+                      borderRadius: '8px',
+                      border: 'none',
+                      boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+                    }}
+                  />
+                  <Bar dataKey="count" fill="#3B82F6" name="등록수" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          )}
         </div>
       )}
 
@@ -290,10 +410,10 @@ export default function StatsTab({ campaignId }: StatsTabProps) {
         </div>
       )}
 
-      {questionStats.length === 0 && stats && (
+      {questionStats.length === 0 && stats && (!isRegistration || !registrationDataStats || registrationDataStats.total_registrations === 0) && (
         <div className="bg-white rounded-xl shadow-lg p-6">
           <div className="text-center py-8 text-gray-500">
-            <p>아직 설문 응답이 없습니다.</p>
+            <p>아직 {isRegistration ? '등록' : '설문 응답'}이 없습니다.</p>
           </div>
         </div>
       )}

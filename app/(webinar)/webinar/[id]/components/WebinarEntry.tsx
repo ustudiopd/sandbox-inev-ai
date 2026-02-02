@@ -1,10 +1,11 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { createClientSupabase } from '@/lib/supabase/client'
 import { extractUTMParams, appendUTMToURL } from '@/lib/utils/utm'
+import { getOrCreateSessionId } from '@/lib/utils/session'
 
 interface Webinar {
   id: string
@@ -116,6 +117,44 @@ export default function WebinarEntry({ webinar, isWertPage: serverIsWertPage }: 
     return () => clearInterval(interval)
   }, [webinar.webinar_start_time])
   
+  const searchParams = useSearchParams()
+
+  // Visit 수집 (웨비나 입장 페이지 진입 시 — 통계 시스템 연동)
+  useEffect(() => {
+    if (!webinar.id) return
+
+    try {
+      const sessionId = getOrCreateSessionId('ef_session_id', 30)
+      
+      // UTM 파라미터 추출
+      const utmParams = extractUTMParams(searchParams)
+      
+      // 웨비나 ID 또는 registration_campaign_id로 Visit API 호출
+      const campaignId = webinar.registration_campaign_id || webinar.id
+      
+      fetch(`/api/public/campaigns/${campaignId}/visit`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          session_id: sessionId,
+          utm_source: utmParams.utm_source ?? null,
+          utm_medium: utmParams.utm_medium ?? null,
+          utm_campaign: utmParams.utm_campaign ?? null,
+          utm_term: utmParams.utm_term ?? null,
+          utm_content: utmParams.utm_content ?? null,
+          cid: searchParams.get('cid') ?? null,
+          referrer: typeof document !== 'undefined' ? document.referrer || null : null,
+          user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
+        }),
+      }).catch(() => {
+        // Visit 실패해도 페이지 동작에는 영향 없음
+      })
+    } catch {
+      // 초기화 실패 무시
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- 랜딩 1회 방문만 기록
+  }, [webinar.id, webinar.registration_campaign_id])
+
   // 웨비나 접속 페이지 접속 기록
   useEffect(() => {
     let intervalId: NodeJS.Timeout | null = null

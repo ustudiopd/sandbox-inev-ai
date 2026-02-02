@@ -15,6 +15,20 @@ export default function OnePredictRegistrationPage({ campaign: initialCampaign, 
   const router = useRouter()
   const searchParams = useSearchParams()
   const cid = searchParams.get('cid')
+  
+  // URL에서 직접 UTM 파라미터 추출 (서버에서 전달된 prop이 없어도 처리)
+  const urlUTMParams: Record<string, string> = {}
+  const utmKeys = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content']
+  utmKeys.forEach(key => {
+    const value = searchParams.get(key)
+    if (value) {
+      urlUTMParams[key] = value
+    }
+  })
+  
+  // 서버에서 전달된 utmParams와 URL의 UTM 파라미터 병합 (URL 우선)
+  const mergedUTMParams = { ...utmParams, ...urlUTMParams }
+  
   const [showMessage, setShowMessage] = useState(false)
   const [messageText, setMessageText] = useState('')
   const [campaign, setCampaign] = useState(initialCampaign)
@@ -56,15 +70,15 @@ export default function OnePredictRegistrationPage({ campaign: initialCampaign, 
     }
   }, []) // 빈 의존성 배열: 마운트 시 한 번만 실행
   
-  // UTM 파라미터 localStorage 저장 (서버에서 추출한 값 사용)
+  // UTM 파라미터 localStorage 저장 (서버에서 추출한 값 + URL에서 읽은 값 병합)
   useEffect(() => {
-    if (Object.keys(utmParams).length > 0 && campaign?.id) {
+    if (Object.keys(mergedUTMParams).length > 0 && campaign?.id) {
       try {
         const existingUTM = localStorage.getItem(`utm:${campaign.id}`)
         const existingData = existingUTM ? JSON.parse(existingUTM) : null
         
         const utmData = {
-          ...utmParams,
+          ...mergedUTMParams,
           captured_at: new Date().toISOString(),
           first_visit_at: existingData?.first_visit_at || new Date().toISOString(),
           referrer_domain: extractDomain(document.referrer),
@@ -72,12 +86,13 @@ export default function OnePredictRegistrationPage({ campaign: initialCampaign, 
         
         // last-touch 정책: 기존 값이 있으면 overwrite
         localStorage.setItem(`utm:${campaign.id}`, JSON.stringify(utmData))
+        console.log('[OnePredictRegistrationPage] UTM 파라미터 저장:', utmData)
       } catch (error) {
         // localStorage 저장 실패는 무시 (graceful)
         console.warn('[OnePredictRegistrationPage] UTM 저장 실패:', error)
       }
     }
-  }, [campaign?.id, utmParams])
+  }, [campaign?.id, mergedUTMParams])
   
   // Visit 수집 (Phase 3) - 에러 발생해도 등록은 계속 진행
   // 웨비나 ID도 Visit API를 지원하므로 호출
@@ -266,12 +281,12 @@ export default function OnePredictRegistrationPage({ campaign: initialCampaign, 
             consentEmail: false,
             consentPhone: false,
           },
-          // UTM 파라미터 추가
-          utm_source: utmData.utm_source || utmParams.utm_source || null,
-          utm_medium: utmData.utm_medium || utmParams.utm_medium || null,
-          utm_campaign: utmData.utm_campaign || utmParams.utm_campaign || null,
-          utm_term: utmData.utm_term || utmParams.utm_term || null,
-          utm_content: utmData.utm_content || utmParams.utm_content || null,
+          // UTM 파라미터 추가 (localStorage > URL > 서버 prop 우선순위)
+          utm_source: utmData.utm_source || mergedUTMParams.utm_source || null,
+          utm_medium: utmData.utm_medium || mergedUTMParams.utm_medium || null,
+          utm_campaign: utmData.utm_campaign || mergedUTMParams.utm_campaign || null,
+          utm_term: utmData.utm_term || mergedUTMParams.utm_term || null,
+          utm_content: utmData.utm_content || mergedUTMParams.utm_content || null,
           utm_first_visit_at: utmData.first_visit_at || null,
           utm_referrer: utmData.referrer_domain || null,
           cid: cid || null,

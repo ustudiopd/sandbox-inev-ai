@@ -117,13 +117,54 @@ LIMIT 10;
 
 ---
 
-## 🚀 빠른 테스트 링크
+## 🚀 빠른 테스트 링크 (프로덕션)
 
-### 프로덕션
-- **CID만**: https://eventflow.kr/event/test-registration-modu/register?cid=TEST001
-- **CID + UTM**: https://eventflow.kr/event/test-registration-modu/register?cid=TEST001&utm_source=email&utm_medium=newsletter&utm_campaign=test
+### 기본 CID 테스트
+```
+https://eventflow.kr/event/test-registration-modu/register?cid=TEST001
+```
 
-### 로컬 개발
+### UTM 파라미터만 테스트
+```
+https://eventflow.kr/event/test-registration-modu/register?utm_source=email&utm_medium=newsletter&utm_campaign=test_campaign&utm_term=test_term&utm_content=test_content
+```
+
+### CID + UTM 파라미터
+```
+https://eventflow.kr/event/test-registration-modu/register?cid=TEST001&utm_source=email&utm_medium=newsletter&utm_campaign=test_campaign
+```
+
+### 다양한 UTM 시나리오 테스트
+
+#### 이메일 마케팅
+```
+https://eventflow.kr/event/test-registration-modu/register?utm_source=email&utm_medium=newsletter&utm_campaign=modu_feb_2026
+```
+
+#### 소셜 미디어
+```
+https://eventflow.kr/event/test-registration-modu/register?utm_source=facebook&utm_medium=social&utm_campaign=modu_promo
+```
+
+#### 검색 광고
+```
+https://eventflow.kr/event/test-registration-modu/register?utm_source=google&utm_medium=cpc&utm_campaign=modu_search&utm_term=이벤트등록
+```
+
+#### 전체 UTM 파라미터 포함
+```
+https://eventflow.kr/event/test-registration-modu/register?utm_source=email&utm_medium=newsletter&utm_campaign=modu_test_2026&utm_term=test_term&utm_content=test_content
+```
+
+### 다양한 CID 값 테스트
+```
+https://eventflow.kr/event/test-registration-modu/register?cid=TEST001
+https://eventflow.kr/event/test-registration-modu/register?cid=TEST123
+https://eventflow.kr/event/test-registration-modu/register?cid=TestAbC
+https://eventflow.kr/event/test-registration-modu/register?cid=TESTCID123456
+```
+
+### 로컬 개발 (참고용)
 - **CID만**: http://localhost:3000/event/test-registration-modu/register?cid=TEST001
 - **CID + UTM**: http://localhost:3000/event/test-registration-modu/register?cid=TEST001&utm_source=email&utm_medium=newsletter&utm_campaign=test
 

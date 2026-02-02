@@ -12,11 +12,16 @@ interface CampaignsPageClientProps {
 
 interface MarketingSummary {
   total_conversions: number
-  conversions_by_source: Array<{ source: string | null; count: number }>
+  conversions_by_source: Array<{ source: string | null; count: number; is_untracked?: boolean }>
   conversions_by_medium: Array<{ medium: string | null; count: number }>
   conversions_by_campaign: Array<{ campaign: string | null; count: number }>
   conversions_by_combo: Array<{ source: string | null; medium: string | null; campaign: string | null; count: number }>
   conversions_by_link?: Array<{ link_id: string; link_name: string; count: number }> // Phase 2
+  tracking_metadata?: {
+    tracked_count: number
+    untracked_count: number
+    tracking_success_rate: string
+  }
   date_range: { from: string; to: string }
 }
 
@@ -41,18 +46,28 @@ export default function CampaignsPageClient({ clientId, clientName, clientCreate
     // 클라이언트 생성일이 있으면 그 날짜부터, 없으면 30일 전부터
     if (clientCreatedAt) {
       const createdDate = new Date(clientCreatedAt)
-      // 타임존 문제 방지를 위해 로컬 날짜로 변환
-      const year = createdDate.getFullYear()
-      const month = String(createdDate.getMonth() + 1).padStart(2, '0')
-      const day = String(createdDate.getDate()).padStart(2, '0')
+      // KST 기준으로 날짜 추출
+      const kstDate = new Date(createdDate.toLocaleString('en-US', { timeZone: 'Asia/Seoul' }))
+      const year = kstDate.getFullYear()
+      const month = String(kstDate.getMonth() + 1).padStart(2, '0')
+      const day = String(kstDate.getDate()).padStart(2, '0')
       return `${year}-${month}-${day}`
     }
-    const date = new Date()
-    date.setDate(date.getDate() - 30) // 기본 30일
-    return date.toISOString().split('T')[0]
+    // KST 기준으로 30일 전 날짜 계산
+    const nowKST = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Seoul' }))
+    nowKST.setDate(nowKST.getDate() - 30)
+    const year = nowKST.getFullYear()
+    const month = String(nowKST.getMonth() + 1).padStart(2, '0')
+    const day = String(nowKST.getDate()).padStart(2, '0')
+    return `${year}-${month}-${day}`
   })
   const [dateTo, setDateTo] = useState(() => {
-    return new Date().toISOString().split('T')[0]
+    // KST 기준으로 오늘 날짜 추출
+    const nowKST = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Seoul' }))
+    const year = nowKST.getFullYear()
+    const month = String(nowKST.getMonth() + 1).padStart(2, '0')
+    const day = String(nowKST.getDate()).padStart(2, '0')
+    return `${year}-${month}-${day}`
   })
   
   useEffect(() => {
@@ -83,6 +98,7 @@ export default function CampaignsPageClient({ clientId, clientName, clientCreate
   
   const formatSource = (source: string | null) => {
     if (!source) return 'Direct (UTM 없음)'
+    if (source === 'Direct (no tracking)') return 'Direct (no tracking)'
     return source
   }
   
@@ -131,13 +147,7 @@ export default function CampaignsPageClient({ clientId, clientName, clientCreate
           </div>
         </div>
         
-        {/* 탭 컨텐츠 */}
-        {activeTab === 'links' ? (
-          <CampaignLinksTab clientId={clientId} clientName={clientName} />
-        ) : (
-          <>
-        
-        {/* 날짜 필터 */}
+        {/* 날짜 필터 (두 탭 공통) */}
         <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="flex-1">
@@ -164,7 +174,11 @@ export default function CampaignsPageClient({ clientId, clientName, clientCreate
             </div>
             <div className="flex items-end">
               <button
-                onClick={loadSummary}
+                onClick={() => {
+                  if (activeTab === 'summary') {
+                    loadSummary()
+                  }
+                }}
                 className="w-full sm:w-auto px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
               >
                 조회
@@ -172,6 +186,12 @@ export default function CampaignsPageClient({ clientId, clientName, clientCreate
             </div>
           </div>
         </div>
+
+        {/* 탭 컨텐츠 */}
+        {activeTab === 'links' ? (
+          <CampaignLinksTab clientId={clientId} clientName={clientName} dateFrom={dateFrom} dateTo={dateTo} />
+        ) : (
+          <>
         
         {/* 로딩 */}
         {loading && (
@@ -191,7 +211,7 @@ export default function CampaignsPageClient({ clientId, clientName, clientCreate
         {/* 요약 데이터 */}
         {!loading && !error && summary && (
           <div className="space-y-6">
-            {/* 전체 전환 수 */}
+            {/* 전체 전환 수 및 추적 성공률 */}
             <div className="bg-white rounded-lg shadow-sm p-6">
               <h2 className="text-xl font-bold text-gray-900 mb-4">전체 전환 수</h2>
               <div className="text-4xl font-bold text-blue-600">
@@ -200,6 +220,33 @@ export default function CampaignsPageClient({ clientId, clientName, clientCreate
               <p className="text-sm text-gray-500 mt-2">
                 {new Date(dateFrom).toLocaleDateString('ko-KR')} ~ {new Date(dateTo).toLocaleDateString('ko-KR')}
               </p>
+              
+              {/* 추적 성공률 표시 */}
+              {summary.tracking_metadata && (
+                <div className="mt-4 pt-4 border-t border-gray-200">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600">추적 성공률</span>
+                    <span className={`text-lg font-semibold ${
+                      parseFloat(summary.tracking_metadata.tracking_success_rate) >= 80
+                        ? 'text-green-600'
+                        : parseFloat(summary.tracking_metadata.tracking_success_rate) >= 50
+                        ? 'text-yellow-600'
+                        : 'text-red-600'
+                    }`}>
+                      {summary.tracking_metadata.tracking_success_rate}
+                    </span>
+                  </div>
+                  <div className="mt-2 text-xs text-gray-500">
+                    추적 성공: {summary.tracking_metadata.tracked_count.toLocaleString()}개 / 
+                    추적 실패: {summary.tracking_metadata.untracked_count.toLocaleString()}개
+                  </div>
+                  {process.env.NODE_ENV === 'development' && summary.tracking_metadata.untracked_count > 0 && (
+                    <div className="mt-2 text-xs text-amber-600 bg-amber-50 rounded p-2">
+                      ⚠️ 일부 전환이 추적되지 않았습니다. 링크에 UTM 파라미터가 포함되어 있는지 확인해주세요.
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
             
             {/* Source별 전환 */}
@@ -210,8 +257,22 @@ export default function CampaignsPageClient({ clientId, clientName, clientCreate
                   <p className="text-gray-500">데이터가 없습니다</p>
                 ) : (
                   summary.conversions_by_source.map((item, idx) => (
-                    <div key={idx} className="flex items-center justify-between py-2 border-b border-gray-100">
-                      <span className="text-gray-700">{formatSource(item.source)}</span>
+                    <div 
+                      key={idx} 
+                      className={`flex items-center justify-between py-2 border-b border-gray-100 ${
+                        item.is_untracked ? 'bg-amber-50' : ''
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className={`text-gray-700 ${item.is_untracked ? 'font-medium text-amber-800' : ''}`}>
+                          {formatSource(item.source)}
+                        </span>
+                        {item.is_untracked && (
+                          <span className="text-xs bg-amber-200 text-amber-800 px-2 py-0.5 rounded">
+                            추적 실패
+                          </span>
+                        )}
+                      </div>
                       <span className="font-semibold text-gray-900">{item.count.toLocaleString()}</span>
                     </div>
                   ))

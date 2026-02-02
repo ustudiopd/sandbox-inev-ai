@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
 import { createAdminSupabase } from '@/lib/supabase/admin'
 import { normalizeUTM } from '@/lib/utils/utm'
 import { normalizeCID } from '@/lib/utils/cid'
@@ -24,6 +25,8 @@ export async function POST(
 ) {
   const { campaignId } = await params
   try {
+    // Request를 NextRequest로 변환 (cookie 읽기용)
+    const nextReq = req as unknown as NextRequest
     
     // 강제 실패 모드 (회귀 테스트용)
     // 쿼리스트링 또는 헤더로 활성화: ?__debug_visit_fail=1 또는 x-debug-visit-fail: 1
@@ -50,7 +53,7 @@ export async function POST(
     }
     
     const {
-      session_id,
+      session_id: clientSessionId,
       utm_source,
       utm_medium,
       utm_campaign,
@@ -61,12 +64,28 @@ export async function POST(
       user_agent,
     } = await req.json()
     
-    // 필수 파라미터 검증
-    if (!session_id || typeof session_id !== 'string') {
-      return NextResponse.json(
-        { error: 'session_id is required' },
-        { status: 400 }
-      )
+    // Phase 0: 서버 중심 session_id 보완
+    // 헌법 원칙: 클라이언트가 보내는 session_id를 신뢰하되, 없으면 서버 쿠키에서 보완
+    let session_id = clientSessionId
+    if (!session_id || typeof session_id !== 'string' || session_id.trim() === '') {
+      // 쿠키에서 session_id 읽기
+      const cookieSessionId = nextReq.cookies.get('ef_session_id')?.value
+      if (cookieSessionId && cookieSessionId.trim() !== '') {
+        session_id = cookieSessionId
+      } else {
+        // 쿠키도 없으면 에러 (하지만 graceful failure)
+        console.warn('[VisitTrackFail]', JSON.stringify({
+          campaignId,
+          sessionId: 'N/A',
+          reason: 'NO_SESSION_ID',
+          status: 400,
+          timestamp: new Date().toISOString()
+        }))
+        return NextResponse.json(
+          { success: false, error: 'session_id is required' },
+          { status: 400 }
+        )
+      }
     }
     
     const admin = createAdminSupabase()
@@ -134,8 +153,10 @@ export async function POST(
       return NextResponse.json({ success: false, error: 'Client ID not found' }, { status: 404 })
     }
     
-    // cid로 링크 lookup
+    // cid로 링크 lookup (Phase 0: dimension 부재 방어)
+    // 헌법 원칙: 메타가 없어도 Fact 저장은 성공해야 함
     let marketingCampaignLinkId: string | null = null
+    let cidLookupFailed = false
     if (cid && clientId) {
       try {
         const normalizedCid = normalizeCID(cid)
@@ -150,10 +171,14 @@ export async function POST(
           
           if (link) {
             marketingCampaignLinkId = link.id
+          } else {
+            // cid는 있지만 링크를 찾지 못함 (unknown/unresolved)
+            cidLookupFailed = true
           }
         }
       } catch (cidError) {
-        // cid lookup 실패는 무시
+        // cid lookup 실패는 무시 (Fact 저장은 계속 진행)
+        cidLookupFailed = true
         console.warn('[visit] cid lookup 실패:', cidError)
       }
     }
@@ -218,6 +243,12 @@ export async function POST(
           details: insertError.details,
           hint: insertError.hint,
           insertData: insertData, // 디버깅용
+          dimensionIssues: {
+            cidLookupFailed: cidLookupFailed,
+            hasCid: !!cid,
+            hasMarketingLinkId: !!marketingCampaignLinkId,
+            utmNormalized: Object.keys(normalizedUTM).length > 0
+          },
           timestamp: new Date().toISOString()
         }
         console.error('[VisitTrackFail]', JSON.stringify(errorDetails, null, 2))
@@ -237,6 +268,19 @@ export async function POST(
           if (insertError.code) responseData.code = String(insertError.code)
         }
         return NextResponse.json(responseData)
+      }
+      
+      // 성공 시에도 dimension 부재 정보 로깅 (품질 모니터링용)
+      if (cidLookupFailed || !marketingCampaignLinkId) {
+        console.log('[VisitTrackDimension]', JSON.stringify({
+          campaignId: actualCampaignId,
+          sessionId: session_id,
+          hasCid: !!cid,
+          cidLookupFailed: cidLookupFailed,
+          hasMarketingLinkId: !!marketingCampaignLinkId,
+          dimensionStatus: cidLookupFailed ? 'unresolved' : 'ok',
+          timestamp: new Date().toISOString()
+        }))
       }
       
       return NextResponse.json({ success: true })

@@ -143,26 +143,60 @@ export async function GET(
       })
     }
 
-    // 쿼리 파라미터 파싱
-    const { from, to } = parseStatsParams(
-      searchParams,
-      webinarInfo?.start_time,
-      webinarInfo?.end_time
-    )
+    // 웨비나 시작일 기준으로 날짜 범위 설정
+    let from: Date
+    let to: Date
+    
+    if (webinarInfo?.start_time) {
+      const startTime = new Date(webinarInfo.start_time)
+      // 시작 시간을 기준으로 해당 날짜의 자정 계산
+      const startDate = new Date(startTime.getFullYear(), startTime.getMonth(), startTime.getDate())
+      const endOfDay = new Date(startDate)
+      endOfDay.setDate(endOfDay.getDate() + 1) // 다음날 자정
+      endOfDay.setHours(0, 0, 0, 0)
+      
+      // 웨비나 종료 시간이 있고 해당 날짜 안에 있으면 종료 시간까지, 아니면 자정까지
+      const webinarEndTime = webinarInfo.end_time ? new Date(webinarInfo.end_time) : null
+      const now = new Date()
+      
+      if (webinarEndTime && webinarEndTime <= endOfDay) {
+        // 종료 시간이 해당 날짜 안에 있으면 종료 시간까지
+        to = webinarEndTime
+      } else if (now < endOfDay) {
+        // 현재 시간이 해당 날짜 안에 있으면 현재 시간까지
+        to = now
+      } else {
+        // 해당 날짜가 지났으면 자정까지
+        to = endOfDay
+      }
+      
+      from = startTime
+    } else {
+      // 웨비나 시작 시간이 없으면 쿼리 파라미터 사용
+      const parsed = parseStatsParams(
+        searchParams,
+        webinarInfo?.start_time,
+        webinarInfo?.end_time
+      )
+      from = parsed.from
+      to = parsed.to
+    }
 
-    // 전체 기간 접속 로그 조회 (최대/평균 동시 접속자 계산용)
-    const { data: allAccessLogs } = await admin
+    // 웨비나 시작일 기준 접속 로그 조회
+    const { data: accessLogs } = await admin
       .from('webinar_access_logs')
       .select('*')
       .eq('webinar_id', actualWebinarId)
+      .gte('time_bucket', from.toISOString())
+      .lt('time_bucket', to.toISOString())
       .order('time_bucket', { ascending: true })
 
-    // 전체 최대/평균 동시접속 계산 (전체 기간 기준)
+    // 웨비나 시작일 기준 최대/평균 동시접속 계산
     let maxConcurrentParticipants = 0
     let totalSum = 0
     let totalSamples = 0
 
-    allAccessLogs?.forEach((log) => {
+    accessLogs?.forEach((log) => {
       if (log.max_participants > maxConcurrentParticipants) {
         maxConcurrentParticipants = log.max_participants
       }
@@ -172,15 +206,6 @@ export async function GET(
 
     const avgConcurrentParticipants =
       totalSamples > 0 ? totalSum / totalSamples : 0
-
-    // 타임라인용 접속 로그 조회 (날짜 필터 적용)
-    const { data: accessLogs } = await admin
-      .from('webinar_access_logs')
-      .select('*')
-      .eq('webinar_id', actualWebinarId)
-      .gte('time_bucket', from.toISOString())
-      .lt('time_bucket', to.toISOString())
-      .order('time_bucket', { ascending: true })
 
     // 타임라인
     const timeline =

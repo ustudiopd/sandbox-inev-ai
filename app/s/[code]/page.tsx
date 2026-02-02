@@ -132,8 +132,21 @@ export default async function ShortLinkRedirectPage({
       note: '임시로 UUID 사용'
     })
 
-    // URL 파라미터 유지 (이메일 등)
+    // URL 파라미터 유지 (UTM, cid, 이메일 등)
     const queryParams = new URLSearchParams()
+    
+    // UTM 파라미터 및 cid 우선 보존 (추적 정보)
+    const trackingParams = ['cid', 'utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content']
+    trackingParams.forEach(key => {
+      if (searchParamsData?.[key]) {
+        const value = Array.isArray(searchParamsData[key])
+          ? searchParamsData[key][0]
+          : searchParamsData[key]
+        if (value && typeof value === 'string') {
+          queryParams.set(key, value)
+        }
+      }
+    })
     
     // 이메일 파라미터 처리: email 우선, 없으면 e 파라미터 디코딩
     let emailToPass: string | null = null
@@ -167,16 +180,23 @@ export default async function ShortLinkRedirectPage({
       queryParams.set('email', emailToPass)
     }
     
-    // 다른 파라미터도 유지 (e 파라미터는 제외)
+    // 다른 파라미터도 유지 (e 파라미터는 제외, tracking 파라미터는 이미 추가됨)
     Object.keys(searchParamsData).forEach(key => {
-      if (key !== 'email' && key !== 'e' && searchParamsData[key]) {
+      if (key !== 'email' && key !== 'e' && !trackingParams.includes(key) && searchParamsData[key]) {
         const value = Array.isArray(searchParamsData[key])
           ? searchParamsData[key][0]
           : searchParamsData[key]
-        if (value) {
+        if (value && typeof value === 'string') {
           queryParams.set(key, value)
         }
       }
+    })
+    
+    console.log('[ShortLink] 파라미터 보존:', {
+      code,
+      preservedParams: Array.from(queryParams.keys()),
+      cid: queryParams.get('cid'),
+      utm_source: queryParams.get('utm_source'),
     })
 
     const queryString = queryParams.toString()

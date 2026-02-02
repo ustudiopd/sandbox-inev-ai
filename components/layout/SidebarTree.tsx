@@ -507,6 +507,14 @@ export default function SidebarTree({ organizations }: SidebarTreeProps) {
                 href: `/client/${client.id}/campaigns`,
                 icon: '📈',
                 active: pathname === `/client/${client.id}/campaigns`
+              },
+              {
+                id: `client-${client.id}-notes`,
+                label: '노트',
+                type: 'page',
+                href: `/client/${client.id}/notes`,
+                icon: '📝',
+                active: pathname.includes(`/client/${client.id}/notes`)
               }
             ]
           }

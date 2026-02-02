@@ -108,35 +108,46 @@ export default function StatsPageClient({ webinar }: StatsPageClientProps) {
   const [stats, setStats] = useState<StatsData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [dateRange, setDateRange] = useState<'all' | 'today' | 'week' | 'month'>('all')
 
   useEffect(() => {
     fetchStats()
-  }, [webinarId, dateRange])
+  }, [webinarId, webinar.start_time, webinar.end_time])
 
   const fetchStats = async () => {
     setLoading(true)
     setError(null)
     try {
-      // 날짜 범위 계산
-      const now = new Date()
-      let from: string | undefined
-      let to: string | undefined
-
-      if (dateRange === 'today') {
-        from = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString()
-        to = now.toISOString()
-      } else if (dateRange === 'week') {
-        from = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString()
-        to = now.toISOString()
-      } else if (dateRange === 'month') {
-        from = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString()
-        to = now.toISOString()
-      }
-
       const params = new URLSearchParams()
-      if (from) params.set('from', from)
-      if (to) params.set('to', to)
+      
+      // 웨비나 시작일 기준으로 날짜 범위 설정
+      if (webinar.start_time) {
+        const startTime = new Date(webinar.start_time)
+        // 시작 시간을 기준으로 해당 날짜의 자정 계산
+        const startDate = new Date(startTime.getFullYear(), startTime.getMonth(), startTime.getDate())
+        const endOfDay = new Date(startDate)
+        endOfDay.setDate(endOfDay.getDate() + 1) // 다음날 자정
+        endOfDay.setHours(0, 0, 0, 0)
+        
+        // 웨비나 종료 시간이 있고 해당 날짜 안에 있으면 종료 시간까지, 아니면 자정까지
+        const webinarEndTime = webinar.end_time ? new Date(webinar.end_time) : null
+        const now = new Date()
+        
+        let toTime: Date
+        if (webinarEndTime && webinarEndTime <= endOfDay) {
+          // 종료 시간이 해당 날짜 안에 있으면 종료 시간까지
+          toTime = webinarEndTime
+        } else if (now < endOfDay) {
+          // 현재 시간이 해당 날짜 안에 있으면 현재 시간까지
+          toTime = now
+        } else {
+          // 해당 날짜가 지났으면 자정까지
+          toTime = endOfDay
+        }
+        
+        params.set('from', startTime.toISOString())
+        params.set('to', toTime.toISOString())
+      }
+      
       params.set('interval', '5m')
 
       const response = await fetch(`/api/webinars/${webinarId}/stats?${params.toString()}`)
@@ -224,19 +235,17 @@ export default function StatsPageClient({ webinar }: StatsPageClientProps) {
                   통계
                 </h1>
               </div>
-              <div className="flex items-center gap-4">
-                {/* 날짜 범위 선택 */}
-                <select
-                  value={dateRange}
-                  onChange={(e) => setDateRange(e.target.value as any)}
-                  className="px-4 py-2 border border-gray-300 rounded-lg bg-white"
-                >
-                  <option value="all">전체</option>
-                  <option value="today">오늘</option>
-                  <option value="week">최근 7일</option>
-                  <option value="month">최근 30일</option>
-                </select>
-              </div>
+              {webinar.start_time && (
+                <div className="text-sm text-gray-600">
+                  웨비나 시작일: {new Date(webinar.start_time).toLocaleDateString('ko-KR', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  })}
+                </div>
+              )}
             </div>
           </div>
 
@@ -412,55 +421,157 @@ export default function StatsPageClient({ webinar }: StatsPageClientProps) {
         )}
 
         {/* 접속 통계 */}
-        {stats.access && accessTimelineData.length > 0 && (
-          <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
-            <h2 className="text-xl font-semibold mb-4">접속 통계</h2>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
-              <div>
-                <div className="text-sm text-gray-600 mb-1">최대 동시 접속자</div>
-                <div className="text-2xl font-bold text-green-600">{stats.access.maxConcurrentParticipants}</div>
-              </div>
-              <div>
-                <div className="text-sm text-gray-600 mb-1">평균 동시 접속자</div>
-                <div className="text-2xl font-bold text-blue-600">
-                  {Math.round(stats.access.avgConcurrentParticipants)}
+        <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
+          <h2 className="text-xl font-semibold mb-4">접속 통계</h2>
+          
+          {(() => {
+            // 웨비나 시작일 확인 (KST 기준)
+            if (!webinar.start_time) {
+              return (
+                <>
+                  <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                    <p className="text-yellow-800 text-sm">
+                      웨비나 시작 시간이 설정되지 않았습니다.
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
+                    <div>
+                      <div className="text-sm text-gray-600 mb-1">최대 동시 접속자</div>
+                      <div className="text-2xl font-bold text-gray-400">-</div>
+                    </div>
+                    <div>
+                      <div className="text-sm text-gray-600 mb-1">평균 동시 접속자</div>
+                      <div className="text-2xl font-bold text-gray-400">-</div>
+                    </div>
+                    <div>
+                      <div className="text-sm text-gray-600 mb-1">피크 시간</div>
+                      <div className="text-lg font-bold text-gray-400">-</div>
+                    </div>
+                  </div>
+                  <div className="mt-6">
+                    <h3 className="text-lg font-semibold mb-4">시간대별 접속자 수 추이</h3>
+                    <div className="h-[300px] flex items-center justify-center bg-gray-50 rounded-lg">
+                      <p className="text-gray-400">웨비나 시작 시간을 설정해주세요.</p>
+                    </div>
+                  </div>
+                </>
+              )
+            }
+
+            const startTime = new Date(webinar.start_time)
+            // KST 기준으로 현재 시간 계산
+            const nowKST = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Seoul' }))
+            // 시작일의 자정 (KST)
+            const startDateKST = new Date(startTime.toLocaleString('en-US', { timeZone: 'Asia/Seoul' }))
+            startDateKST.setHours(0, 0, 0, 0)
+            
+            // 시작일 이전인지 확인
+            const isBeforeStartDate = nowKST < startDateKST
+            
+            // 웨비나 시작 시간 포맷팅 (KST)
+            const startTimeFormatted = startTime.toLocaleString('ko-KR', {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit',
+              timeZone: 'Asia/Seoul',
+            })
+            
+            return (
+              <>
+                {/* 웨비나 시작 시간 표시 및 안내 */}
+                <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                  <div className="flex items-start gap-2">
+                    <svg className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <div className="flex-1">
+                      <p className="text-blue-900 font-semibold text-sm mb-1">
+                        웨비나 시작 시간: <span className="font-bold">{startTimeFormatted}</span>
+                      </p>
+                      {isBeforeStartDate ? (
+                        <p className="text-blue-700 text-sm">
+                          웨비나 시작일 당일부터 접속 통계가 제공됩니다.
+                        </p>
+                      ) : (
+                        <p className="text-blue-700 text-sm">
+                          웨비나 시작일 당일부터 접속 통계가 제공됩니다.
+                        </p>
+                      )}
+                    </div>
+                  </div>
                 </div>
-              </div>
-              <div>
-                <div className="text-sm text-gray-600 mb-1">피크 시간</div>
-                <div className="text-lg font-bold text-purple-600">
-                  {stats.access.peakTime
-                    ? new Date(stats.access.peakTime.time).toLocaleTimeString('ko-KR', {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })
-                    : '-'}
+
+                {/* 통계 카드 */}
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
+                  <div>
+                    <div className="text-sm text-gray-600 mb-1">최대 동시 접속자</div>
+                    <div className="text-2xl font-bold text-green-600">
+                      {stats.access?.maxConcurrentParticipants ?? 0}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-sm text-gray-600 mb-1">평균 동시 접속자</div>
+                    <div className="text-2xl font-bold text-blue-600">
+                      {stats.access?.avgConcurrentParticipants
+                        ? Math.round(stats.access.avgConcurrentParticipants)
+                        : 0}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-sm text-gray-600 mb-1">피크 시간</div>
+                    <div className="text-lg font-bold text-purple-600">
+                      {stats.access?.peakTime
+                        ? new Date(stats.access.peakTime.time).toLocaleTimeString('ko-KR', {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            timeZone: 'Asia/Seoul',
+                          })
+                        : '-'}
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-            <div className="mt-6">
-              <h3 className="text-lg font-semibold mb-4">시간대별 접속자 수 추이</h3>
-              <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={accessTimelineData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                  <XAxis dataKey="time" stroke="#6b7280" />
-                  <YAxis stroke="#6b7280" />
-                  <Tooltip
-                    contentStyle={{
-                      borderRadius: '8px',
-                      border: 'none',
-                      boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-                    }}
-                  />
-                  <Legend />
-                  <Line type="monotone" dataKey="avg" stroke="#3B82F6" strokeWidth={2} name="평균 접속자" />
-                  <Line type="monotone" dataKey="max" stroke="#10B981" strokeWidth={2} name="최대 접속자" />
-                  <Line type="monotone" dataKey="min" stroke="#EF4444" strokeWidth={2} name="최소 접속자" />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-        )}
+
+                {/* 그래프 섹션 - 항상 표시 */}
+                <div className="mt-6">
+                  <h3 className="text-lg font-semibold mb-4">시간대별 접속자 수 추이</h3>
+                  {isBeforeStartDate || !stats.access || accessTimelineData.length === 0 ? (
+                    <div className="h-[300px] flex items-center justify-center bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+                      <div className="text-center">
+                        <p className="text-gray-500 font-medium mb-1">
+                          {isBeforeStartDate ? '웨비나 시작일 당일부터 통계가 표시됩니다.' : '접속 통계 데이터가 아직 없습니다.'}
+                        </p>
+                        <p className="text-gray-400 text-sm">
+                          웨비나 시작 후 접속자 통계가 그래프로 표시됩니다.
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    <ResponsiveContainer width="100%" height={300}>
+                      <LineChart data={accessTimelineData}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                        <XAxis dataKey="time" stroke="#6b7280" />
+                        <YAxis stroke="#6b7280" />
+                        <Tooltip
+                          contentStyle={{
+                            borderRadius: '8px',
+                            border: 'none',
+                            boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+                          }}
+                        />
+                        <Legend />
+                        <Line type="monotone" dataKey="avg" stroke="#3B82F6" strokeWidth={2} name="평균 접속자" />
+                        <Line type="monotone" dataKey="max" stroke="#10B981" strokeWidth={2} name="최대 접속자" />
+                        <Line type="monotone" dataKey="min" stroke="#EF4444" strokeWidth={2} name="최소 접속자" />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  )}
+                </div>
+              </>
+            )
+          })()}
+        </div>
 
         {/* 폼/퀴즈 통계 */}
         {stats.forms && (

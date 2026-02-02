@@ -781,7 +781,7 @@ function MarkdownContent({ content, isCardMode, isRecommendations = false }: { c
 }
 
 export default function PublicDashboardClient({ campaign }: PublicDashboardClientProps) {
-  const [activeTab, setActiveTab] = useState<'stats' | 'reports' | 'participants'>('stats' as 'stats' | 'reports' | 'participants')
+  const [activeTab, setActiveTab] = useState<'stats' | 'reports' | 'participants'>('participants' as 'stats' | 'reports' | 'participants')
   const [loadingStats, setLoadingStats] = useState(false)
   const [questionStats, setQuestionStats] = useState<any[]>([])
   const [publicReports, setPublicReports] = useState<PublicReport[]>([])
@@ -1197,16 +1197,6 @@ export default function PublicDashboardClient({ campaign }: PublicDashboardClien
         <div className="bg-white rounded-xl shadow-lg mb-4 sm:mb-6 md:mb-8">
           <div className="border-b border-gray-200">
             <nav className="flex -mb-px">
-              <button
-                onClick={() => setActiveTab('stats')}
-                className={`px-4 sm:px-6 py-3 sm:py-4 text-sm sm:text-base font-medium border-b-2 transition-colors ${
-                  activeTab === 'stats'
-                    ? 'border-[#00B388] text-[#00B388]'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-              >
-                통계
-              </button>
               {publicReports.length > 0 && (
                 <button
                   onClick={() => setActiveTab('reports')}

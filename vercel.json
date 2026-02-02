@@ -4,6 +4,10 @@
     {
       "path": "/api/cron/webinar-access-snapshot",
       "schedule": "*/1 * * * *"
+    },
+    {
+      "path": "/api/cron/aggregate-marketing-stats",
+      "schedule": "*/5 * * * *"
     }
   ]
 }

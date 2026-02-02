@@ -4,6 +4,7 @@ import { createAdminSupabase } from '@/lib/supabase/admin'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import UnifiedListItem from './components/UnifiedListItem'
+import StatisticsOverview from './components/StatisticsOverview'
 
 export default async function ClientDashboard({
   params,
@@ -237,19 +238,22 @@ export default async function ClientDashboard({
               + 등록페이지 생성
             </Link>
             <Link 
-              href={`/client/${clientId}/settings/branding`}
-              className="w-full md:w-auto px-4 py-2.5 md:px-6 md:py-3 bg-gradient-to-r from-gray-600 to-gray-700 text-white rounded-xl hover:from-gray-700 hover:to-gray-800 shadow-lg hover:shadow-xl transition-all duration-200 font-medium min-h-[44px] flex items-center justify-center"
-            >
-              🎨 브랜딩 설정
-            </Link>
-            <Link 
               href={`/client/${clientId}/campaigns`}
               className="w-full md:w-auto px-4 py-2.5 md:px-6 md:py-3 bg-gradient-to-r from-orange-600 to-red-600 text-white rounded-xl hover:from-orange-700 hover:to-red-700 shadow-lg hover:shadow-xl transition-all duration-200 font-medium min-h-[44px] flex items-center justify-center"
             >
               📈 광고/캠페인
             </Link>
+            <Link 
+              href={`/client/${clientId}/notes`}
+              className="w-full md:w-auto px-4 py-2.5 md:px-6 md:py-3 bg-gradient-to-r from-indigo-600 to-blue-600 text-white rounded-xl hover:from-indigo-700 hover:to-blue-700 shadow-lg hover:shadow-xl transition-all duration-200 font-medium min-h-[44px] flex items-center justify-center"
+            >
+              📝 노트
+            </Link>
           </div>
         </div>
+        
+        {/* 통계 요약 (Phase 2) */}
+        <StatisticsOverview clientId={clientId} />
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 mb-6 sm:mb-8">
           <div className="bg-white p-4 md:p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow border-l-4 border-blue-500">
