@@ -50,14 +50,21 @@ export async function aggregateMarketingStats(
   })
   
   try {
+    // 날짜 범위 계산: toBucketDate의 다음 날 00:00:00까지 포함
+    const toDateEnd = new Date(toBucketDate)
+    toDateEnd.setUTCDate(toDateEnd.getUTCDate() + 1)
+    const toDateEndStr = toDateEnd.toISOString().split('T')[0] + 'T00:00:00Z'
+    
     // 1. Visits 집계 (event_access_logs)
     // 일별, 캠페인별, 링크별, UTM별로 집계
     let visitsQuery = admin
       .from('event_access_logs')
       .select('campaign_id, marketing_campaign_link_id, utm_source, utm_medium, utm_campaign, session_id, accessed_at')
       .gte('accessed_at', `${fromBucketDate}T00:00:00Z`)
-      .lt('accessed_at', `${toBucketDate}T23:59:59Z`)
-      .not('campaign_id', 'is', null) // campaign_id가 있는 것만
+      .lt('accessed_at', toDateEndStr) // 다음 날 00:00:00 전까지 (toBucketDate 포함)
+    
+    // campaign_id가 null이 아닌 것만 조회 (webinar_id만 있는 것은 제외)
+    visitsQuery = visitsQuery.not('campaign_id', 'is', null)
     
     const { data: visits, error: visitsError } = await visitsQuery
     
@@ -65,6 +72,11 @@ export async function aggregateMarketingStats(
       console.error('[AggregateMarketingStats] Visits 조회 오류:', visitsError)
       throw visitsError
     }
+    
+    console.log('[AggregateMarketingStats] Visits 조회 완료:', {
+      count: visits?.length || 0,
+      dateRange: `${fromBucketDate}T00:00:00Z ~ ${toDateEndStr}`
+    })
     
     // 캠페인별 client_id 조회 (필요한 경우)
     const campaignIds = [...new Set(visits?.map(v => v.campaign_id).filter(Boolean) || [])]
@@ -82,6 +94,7 @@ export async function aggregateMarketingStats(
         campaigns?.forEach(c => {
           campaignClientMap.set(c.id, c.client_id)
         })
+        console.log('[AggregateMarketingStats] 캠페인-클라이언트 매핑:', campaignClientMap.size, '개')
       }
     }
     
@@ -92,6 +105,7 @@ export async function aggregateMarketingStats(
         const cid = campaignClientMap.get(v.campaign_id || '')
         return cid === clientId
       })
+      console.log('[AggregateMarketingStats] 클라이언트 필터링 후 Visits:', filteredVisits?.length || 0)
     }
     
     // 2. Conversions 집계 (event_survey_entries)
@@ -99,7 +113,7 @@ export async function aggregateMarketingStats(
       .from('event_survey_entries')
       .select('campaign_id, marketing_campaign_link_id, utm_source, utm_medium, utm_campaign, id, created_at')
       .gte('created_at', `${fromBucketDate}T00:00:00Z`)
-      .lt('created_at', `${toBucketDate}T23:59:59Z`)
+      .lt('created_at', toDateEndStr) // 다음 날 00:00:00 전까지 (toBucketDate 포함)
     
     const { data: conversions, error: conversionsError } = await conversionsQuery
     
@@ -107,6 +121,8 @@ export async function aggregateMarketingStats(
       console.error('[AggregateMarketingStats] Conversions 조회 오류:', conversionsError)
       throw conversionsError
     }
+    
+    console.log('[AggregateMarketingStats] Conversions 조회 완료:', conversions?.length || 0)
     
     // 3. 일별 버킷으로 그룹핑 및 집계
     const statsMap = new Map<string, {
@@ -122,11 +138,24 @@ export async function aggregateMarketingStats(
     }>()
     
     // Visits 집계
+    let skippedVisits = 0
+    let visitsWithoutSessionId = 0
+    
     filteredVisits?.forEach(visit => {
       const bucketDate = normalizeDate(new Date(visit.accessed_at))
       const visitClientId = campaignClientMap.get(visit.campaign_id || '')
       
-      if (!visitClientId || !visit.campaign_id) return
+      // client_id를 찾지 못하거나 campaign_id가 없으면 스킵 (로그만 남김)
+      if (!visitClientId || !visit.campaign_id) {
+        skippedVisits++
+        if (skippedVisits <= 5) {
+          console.warn('[AggregateMarketingStats] Visit 스킵 (client_id 또는 campaign_id 없음):', {
+            campaign_id: visit.campaign_id,
+            accessed_at: visit.accessed_at
+          })
+        }
+        return
+      }
       
       const key = [
         visitClientId,
@@ -153,10 +182,25 @@ export async function aggregateMarketingStats(
       }
       
       const stat = statsMap.get(key)!
+      // session_id가 있으면 Set에 추가 (DISTINCT 카운트)
       if (visit.session_id) {
         stat.visits.add(visit.session_id)
+      } else {
+        visitsWithoutSessionId++
+        // session_id가 없으면 각 레코드를 고유하게 카운트하기 위해 id 기반 임시 ID 사용
+        // 실제로는 session_id가 없는 Visit도 집계해야 하므로, accessed_at + 랜덤으로 고유성 보장
+        // 향후 개선: session_id가 없는 Visit을 별도 지표로 집계하거나, id를 사용
+        const tempId = `no_session_${visit.accessed_at}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+        stat.visits.add(tempId)
       }
     })
+    
+    if (skippedVisits > 0) {
+      console.warn('[AggregateMarketingStats] 스킵된 Visits:', skippedVisits, '개')
+    }
+    if (visitsWithoutSessionId > 0) {
+      console.warn('[AggregateMarketingStats] session_id 없는 Visits:', visitsWithoutSessionId, '개')
+    }
     
     // Conversions 집계를 위한 캠페인별 client_id 조회
     const conversionCampaignIds = [...new Set(conversions?.map(c => c.campaign_id).filter(Boolean) || [])]
@@ -187,11 +231,23 @@ export async function aggregateMarketingStats(
     }
     
     // Conversions 집계
+    let skippedConversions = 0
+    
     filteredConversions?.forEach(conversion => {
       const bucketDate = normalizeDate(new Date(conversion.created_at))
       const conversionClientId = conversionCampaignClientMap.get(conversion.campaign_id || '')
       
-      if (!conversionClientId || !conversion.campaign_id) return
+      // client_id를 찾지 못하거나 campaign_id가 없으면 스킵 (로그만 남김)
+      if (!conversionClientId || !conversion.campaign_id) {
+        skippedConversions++
+        if (skippedConversions <= 5) {
+          console.warn('[AggregateMarketingStats] Conversion 스킵 (client_id 또는 campaign_id 없음):', {
+            campaign_id: conversion.campaign_id,
+            created_at: conversion.created_at
+          })
+        }
+        return
+      }
       
       const key = [
         conversionClientId,
@@ -220,6 +276,10 @@ export async function aggregateMarketingStats(
       const stat = statsMap.get(key)!
       stat.conversions += 1
     })
+    
+    if (skippedConversions > 0) {
+      console.warn('[AggregateMarketingStats] 스킵된 Conversions:', skippedConversions, '개')
+    }
     
     // 4. Upsert to marketing_stats_daily
     const statsToUpsert = Array.from(statsMap.values()).map(stat => ({
@@ -290,14 +350,27 @@ export async function aggregateMarketingStats(
       }
     }
     
+    const totalVisits = statsToUpsert.reduce((sum, s) => sum + s.visits, 0)
+    const totalConversions = statsToUpsert.reduce((sum, s) => sum + s.conversions, 0)
+    
     console.log('[AggregateMarketingStats] 집계 완료:', {
       upserted: statsToUpsert.length,
+      totalVisits,
+      totalConversions,
+      skippedVisits,
+      skippedConversions,
+      visitsWithoutSessionId,
       sample: statsToUpsert.slice(0, 3)
     })
     
     return {
       success: true,
       upserted: statsToUpsert.length,
+      totalVisits,
+      totalConversions,
+      skippedVisits,
+      skippedConversions,
+      visitsWithoutSessionId,
       fromDate: fromBucketDate,
       toDate: toBucketDate
     }
