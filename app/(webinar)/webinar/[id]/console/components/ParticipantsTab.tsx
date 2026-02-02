@@ -360,10 +360,16 @@ export default function ParticipantsTab({ webinarId }: ParticipantsTabProps) {
                           : regData.interestedProducts || '-'}
                       </td>
                       <td 
-                        className="px-6 py-4 text-sm text-gray-500 cursor-pointer"
+                        className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 cursor-pointer text-center"
                         onClick={() => handleRegistrantClick(registrant)}
                       >
-                        {regData.message || '-'}
+                        {regData.message ? (
+                          <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-blue-100 text-blue-600 font-semibold hover:bg-blue-200 transition-colors">
+                            O
+                          </span>
+                        ) : (
+                          <span className="text-gray-400">-</span>
+                        )}
                       </td>
                       <td 
                         className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 cursor-pointer"
@@ -439,6 +445,16 @@ export default function ParticipantsTab({ webinarId }: ParticipantsTabProps) {
                     {selectedRegistrant.last_login_at ? new Date(selectedRegistrant.last_login_at).toLocaleString('ko-KR') : '-'}
                   </span>
                 </div>
+                {selectedRegistrant.registration_data?.message && (
+                  <div>
+                    <span className="text-sm text-gray-600">메시지:</span>
+                    <div className="mt-2 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                      <p className="text-sm text-gray-900 whitespace-pre-wrap break-words">
+                        {selectedRegistrant.registration_data.message}
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
