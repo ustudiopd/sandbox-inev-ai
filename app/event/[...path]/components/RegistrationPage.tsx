@@ -19,6 +19,19 @@ export default function RegistrationPage({ campaign, baseUrl, utmParams = {} }: 
   // cid 추출 (querystring에서)
   const cid = searchParams.get('cid')
   
+  // URL에서 직접 UTM 파라미터 추출 (서버에서 전달된 prop이 없어도 처리)
+  const urlUTMParams: Record<string, string> = {}
+  const utmKeys = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content']
+  utmKeys.forEach(key => {
+    const value = searchParams.get(key)
+    if (value) {
+      urlUTMParams[key] = value
+    }
+  })
+  
+  // 서버에서 전달된 utmParams와 URL의 UTM 파라미터 병합 (URL 우선)
+  const mergedUTMParams = { ...utmParams, ...urlUTMParams }
+  
   // 세션 ID 상태 관리 (Visit과 등록에서 동일한 세션 ID 사용 보장)
   const [sessionId, setSessionId] = useState<string | null>(null)
   
@@ -36,15 +49,15 @@ export default function RegistrationPage({ campaign, baseUrl, utmParams = {} }: 
     }
   }, []) // 빈 의존성 배열: 마운트 시 한 번만 실행
   
-  // UTM 파라미터 localStorage 저장 (서버에서 추출한 값 사용)
+  // UTM 파라미터 localStorage 저장 (서버에서 추출한 값 + URL에서 읽은 값 병합)
   useEffect(() => {
-    if (Object.keys(utmParams).length > 0 && campaign?.id) {
+    if (Object.keys(mergedUTMParams).length > 0 && campaign?.id) {
       try {
         const existingUTM = localStorage.getItem(`utm:${campaign.id}`)
         const existingData = existingUTM ? JSON.parse(existingUTM) : null
         
         const utmData = {
-          ...utmParams,
+          ...mergedUTMParams,
           captured_at: new Date().toISOString(),
           first_visit_at: existingData?.first_visit_at || new Date().toISOString(),
           referrer_domain: extractDomain(document.referrer),
@@ -52,12 +65,13 @@ export default function RegistrationPage({ campaign, baseUrl, utmParams = {} }: 
         
         // last-touch 정책: 기존 값이 있으면 overwrite
         localStorage.setItem(`utm:${campaign.id}`, JSON.stringify(utmData))
+        console.log('[RegistrationPage] UTM 파라미터 저장:', utmData)
       } catch (error) {
         // localStorage 저장 실패는 무시 (graceful)
         console.warn('[RegistrationPage] UTM 저장 실패:', error)
       }
     }
-  }, [campaign?.id, utmParams])
+  }, [campaign?.id, mergedUTMParams])
   
   // Visit 수집 (Phase 3) - 에러 발생해도 등록은 계속 진행
   useEffect(() => {
@@ -87,11 +101,11 @@ export default function RegistrationPage({ campaign, baseUrl, utmParams = {} }: 
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           session_id: currentSessionId, // 상태에서 관리하는 세션 ID 사용 (없으면 여기서 생성)
-          utm_source: utmData.utm_source || utmParams.utm_source || null,
-          utm_medium: utmData.utm_medium || utmParams.utm_medium || null,
-          utm_campaign: utmData.utm_campaign || utmParams.utm_campaign || null,
-          utm_term: utmData.utm_term || utmParams.utm_term || null,
-          utm_content: utmData.utm_content || utmParams.utm_content || null,
+          utm_source: utmData.utm_source || mergedUTMParams.utm_source || null,
+          utm_medium: utmData.utm_medium || mergedUTMParams.utm_medium || null,
+          utm_campaign: utmData.utm_campaign || mergedUTMParams.utm_campaign || null,
+          utm_term: utmData.utm_term || mergedUTMParams.utm_term || null,
+          utm_content: utmData.utm_content || mergedUTMParams.utm_content || null,
           cid: cid || null,
           referrer: typeof document !== 'undefined' ? document.referrer || null : null,
           user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
@@ -198,8 +212,82 @@ export default function RegistrationPage({ campaign, baseUrl, utmParams = {} }: 
     }
   }
   
+  // 테스트용 간단한 폼 여부 확인
+  const isSimpleForm = campaign.public_path === '/test-registration-modu'
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    // 테스트용 간단한 폼: 이름과 전화번호만 검증
+    if (isSimpleForm) {
+      if (!name.trim()) {
+        setError('이름을 입력해주세요.')
+        return
+      }
+      
+      if (!phone1 || !phone2 || !phone3) {
+        setError('전화번호를 모두 입력해주세요.')
+        return
+      }
+      
+      const phone = `${phone1}-${phone2}-${phone3}`
+      const phoneNorm = phone.replace(/\D/g, '')
+      
+      // localStorage에서 UTM 읽기
+      let utmData: Record<string, any> = {}
+      try {
+        const storedUTM = localStorage.getItem(`utm:${campaign.id}`)
+        if (storedUTM) {
+          utmData = JSON.parse(storedUTM)
+        }
+      } catch (parseError) {
+        console.warn('[RegistrationPage] UTM 파싱 실패:', parseError)
+      }
+      
+      const currentSessionId = sessionId || getOrCreateSessionId('ef_session_id', 30)
+      
+      setSubmitting(true)
+      setError(null)
+      
+      try {
+        const response = await fetch(`/api/public/event-survey/${campaign.id}/register`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: name.trim(),
+            company: null,
+            phone: phone,
+            phone_norm: phoneNorm,
+            utm_source: utmData.utm_source || mergedUTMParams.utm_source || null,
+            utm_medium: utmData.utm_medium || mergedUTMParams.utm_medium || null,
+            utm_campaign: utmData.utm_campaign || mergedUTMParams.utm_campaign || null,
+            utm_term: utmData.utm_term || mergedUTMParams.utm_term || null,
+            utm_content: utmData.utm_content || mergedUTMParams.utm_content || null,
+            utm_first_visit_at: utmData.first_visit_at || null,
+            utm_referrer: utmData.referrer_domain || null,
+            cid: cid || null,
+            session_id: currentSessionId || null,
+          }),
+        })
+        
+        const result = await response.json()
+        
+        if (!response.ok) {
+          throw new Error(result.error || '등록에 실패했습니다.')
+        }
+        
+        handleSubmitted({
+          survey_no: result.survey_no,
+          code6: result.code6,
+        })
+      } catch (err: any) {
+        console.error('[RegistrationPage] 등록 제출 오류:', err)
+        setError(err.message || '등록 중 오류가 발생했습니다. 다시 시도해주세요.')
+        setSubmitting(false)
+      }
+      
+      return
+    }
     
     // 필수 필드 검증 (빈 문자열 및 플레이스홀더 값 체크)
     const isValidValue = (value: string) => {
@@ -345,12 +433,12 @@ export default function RegistrationPage({ campaign, baseUrl, utmParams = {} }: 
     
     const requestBody = {
       ...baseRequestBody,
-      // UTM 파라미터 추가
-      utm_source: utmData.utm_source || utmParams.utm_source || null,
-      utm_medium: utmData.utm_medium || utmParams.utm_medium || null,
-      utm_campaign: utmData.utm_campaign || utmParams.utm_campaign || null,
-      utm_term: utmData.utm_term || utmParams.utm_term || null,
-      utm_content: utmData.utm_content || utmParams.utm_content || null,
+      // UTM 파라미터 추가 (localStorage > URL > 서버 prop 우선순위)
+      utm_source: utmData.utm_source || mergedUTMParams.utm_source || null,
+      utm_medium: utmData.utm_medium || mergedUTMParams.utm_medium || null,
+      utm_campaign: utmData.utm_campaign || mergedUTMParams.utm_campaign || null,
+      utm_term: utmData.utm_term || mergedUTMParams.utm_term || null,
+      utm_content: utmData.utm_content || mergedUTMParams.utm_content || null,
       utm_first_visit_at: utmData.first_visit_at || null,
       utm_referrer: utmData.referrer_domain || null,
       cid: cid || null, // cid 파라미터 전달
@@ -456,9 +544,15 @@ export default function RegistrationPage({ campaign, baseUrl, utmParams = {} }: 
   }
   
   if (submitted && result) {
-    // 완료 페이지로 리다이렉트
-    window.location.href = `${baseUrl}/event${campaign.public_path}/done?survey_no=${result.survey_no}&code6=${result.code6}`
-    return null
+    // 간단한 테스트 폼의 경우 리다이렉트하지 않고 완료 메시지 표시
+    if (isSimpleForm) {
+      // 완료 메시지는 폼 내에서 표시됨 (아래 JSX에서 처리)
+      // 리다이렉트하지 않음
+    } else {
+      // 기존 폼의 경우 완료 페이지로 리다이렉트
+      window.location.href = `${baseUrl}/event${campaign.public_path}/done?survey_no=${result.survey_no}&code6=${result.code6}`
+      return null
+    }
   }
   
   // 참여 확인 모드
@@ -1869,6 +1963,126 @@ export default function RegistrationPage({ campaign, baseUrl, utmParams = {} }: 
           </div>
         </section>
       </>
+    )
+  }
+  
+  // 테스트용 간단한 폼 렌더링
+  if (isSimpleForm) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center p-4">
+        <div className="max-w-md w-full">
+          <div className="mb-8 text-center">
+            <h1 className="text-3xl font-bold mb-2 text-gray-900">
+              {campaign.title || '이벤트 등록'}
+            </h1>
+            <p className="text-gray-600 text-sm">간단한 정보만 입력해주세요</p>
+          </div>
+          
+          {submitted && result ? (
+            // 완료 메시지 표시
+            <div className="space-y-6 bg-white rounded-2xl shadow-lg p-8">
+              <div className="p-6 bg-green-50 border-2 border-green-200 rounded-xl text-center">
+                <div className="text-5xl mb-4">✅</div>
+                <h2 className="text-xl font-bold text-green-800 mb-2">등록이 완료되었습니다!</h2>
+                <p className="text-gray-600 mb-2">
+                  등록 번호: <span className="font-semibold">{result.survey_no}</span>
+                </p>
+                <p className="text-sm text-gray-500">
+                  확인 코드: <span className="font-mono font-semibold">{result.code6}</span>
+                </p>
+              </div>
+              <button
+                onClick={() => {
+                  setSubmitted(false)
+                  setResult(null)
+                  setName('')
+                  setPhone1('010')
+                  setPhone2('')
+                  setPhone3('')
+                  setError(null)
+                }}
+                className="w-full bg-gray-900 text-white py-3 rounded-lg font-medium hover:bg-gray-800 transition-colors"
+              >
+                다시 등록하기
+              </button>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-lg p-8 space-y-6">
+              {error && (
+                <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-sm text-red-600">{error}</p>
+                </div>
+              )}
+            
+            {/* 이름 */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-900 mb-2">
+                이름 <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-gray-900 bg-white text-gray-900 transition-all"
+                placeholder="이름을 입력하세요"
+                disabled={submitting}
+                required
+              />
+            </div>
+            
+            {/* 전화번호 */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-900 mb-2">
+                전화번호 <span className="text-red-500">*</span>
+              </label>
+              <div className="flex gap-2 items-center">
+                <input
+                  type="tel"
+                  value={phone1}
+                  onChange={(e) => setPhone1(e.target.value.replace(/\D/g, '').slice(0, 3))}
+                  className="flex-1 px-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-gray-900 text-center bg-white text-gray-900 transition-all"
+                  placeholder="010"
+                  maxLength={3}
+                  disabled={submitting}
+                  required
+                />
+                <span className="text-gray-400 font-semibold">-</span>
+                <input
+                  type="tel"
+                  value={phone2}
+                  onChange={(e) => setPhone2(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                  className="flex-1 px-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-gray-900 text-center bg-white text-gray-900 transition-all"
+                  placeholder="1234"
+                  maxLength={4}
+                  disabled={submitting}
+                  required
+                />
+                <span className="text-gray-400 font-semibold">-</span>
+                <input
+                  type="tel"
+                  value={phone3}
+                  onChange={(e) => setPhone3(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                  className="flex-1 px-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-gray-900 text-center bg-white text-gray-900 transition-all"
+                  placeholder="5678"
+                  maxLength={4}
+                  disabled={submitting}
+                  required
+                />
+              </div>
+            </div>
+            
+              {/* 제출 버튼 */}
+              <button
+                type="submit"
+                disabled={submitting}
+                className="w-full bg-gray-900 text-white py-4 rounded-lg font-semibold text-lg hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
+              >
+                {submitting ? '등록 중...' : '등록하기'}
+              </button>
+            </form>
+          )}
+        </div>
+      </div>
     )
   }
   
