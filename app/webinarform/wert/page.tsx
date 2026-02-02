@@ -2,7 +2,13 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
+import { extractUTMParams } from "@/lib/utils/utm";
+import { getOrCreateSessionId } from "@/lib/utils/session";
+
+/** 워트 149403 등록 캠페인 ID (Visit/통계용) */
+const WERT_CAMPAIGN_ID = "3a88682e-6fab-463c-8328-6b403c8c5c7a";
 
 const highlightPoints = [
   {
@@ -239,6 +245,60 @@ function OrganizationCarousel() {
 }
 
 export default function WebinarFormWertPage() {
+  const searchParams = useSearchParams()
+  
+  // URL에서 UTM 파라미터 추출
+  const utmParams = extractUTMParams(searchParams)
+  
+  // Visit 수집 (랜딩 페이지 진입 시 — 통계 시스템 연동)
+  useEffect(() => {
+    try {
+      const sessionId = getOrCreateSessionId("ef_session_id", 30)
+      fetch(`/api/public/campaigns/${WERT_CAMPAIGN_ID}/visit`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          session_id: sessionId,
+          utm_source: utmParams.utm_source ?? null,
+          utm_medium: utmParams.utm_medium ?? null,
+          utm_campaign: utmParams.utm_campaign ?? null,
+          utm_term: utmParams.utm_term ?? null,
+          utm_content: utmParams.utm_content ?? null,
+          cid: searchParams.get("cid") ?? null,
+          referrer: typeof document !== "undefined" ? document.referrer || null : null,
+          user_agent: typeof navigator !== "undefined" ? navigator.userAgent : null,
+        }),
+      }).catch(() => {
+        // Visit 실패해도 페이지 동작에는 영향 없음
+      })
+    } catch {
+      // 초기화 실패 무시
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- 랜딩 1회 방문만 기록
+  }, [])
+
+  // 등록 페이지 링크에 UTM 파라미터 포함
+  const getRegisterLink = () => {
+    const baseUrl = "/event/149403/register"
+    if (Object.keys(utmParams).length === 0) {
+      return baseUrl
+    }
+    
+    const params = new URLSearchParams()
+    // cid가 있으면 포함
+    const cid = searchParams.get('cid')
+    if (cid) {
+      params.set('cid', cid)
+    }
+    
+    // UTM 파라미터 추가
+    Object.entries(utmParams).forEach(([key, value]) => {
+      params.set(key, value)
+    })
+    
+    return `${baseUrl}?${params.toString()}`
+  }
+  
   return (
     <div className="bg-white min-h-screen overflow-x-hidden">
       <div
@@ -331,7 +391,7 @@ export default function WebinarFormWertPage() {
           </div>
           <div className="w-full max-w-[384px] flex flex-col justify-start items-center sm:items-start gap-2.5 sm:gap-4 lg:gap-8">
             <Link
-              href="/event/149403/register"
+              href={getRegisterLink()}
               className="w-auto sm:self-stretch px-4 sm:px-8 lg:pl-16 lg:pr-10 py-2.5 sm:py-3 lg:py-6 bg-[#00A08C] rounded-full lg:rounded-[200px] inline-flex justify-center items-center gap-2 sm:gap-3 lg:gap-6 overflow-hidden min-h-[44px] sm:min-h-[48px]"
             >
               <div className="text-center justify-start text-white font-bold text-sm sm:text-lg lg:text-[36px] leading-tight" style={{ fontFamily: 'Pretendard, sans-serif' }}>
