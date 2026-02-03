@@ -120,59 +120,76 @@ export default function OnDemandLandingPage({ webinar }: OnDemandLandingPageProp
     <div className="min-h-screen bg-white flex flex-col overflow-x-hidden">
       {/* Hero Section */}
       <div className="relative w-full bg-[#171D28] h-[272px] sm:h-[480px] md:h-[520px] lg:h-[520px]">
-        {/* 배경 이미지: 가로로 꽉 차게, 전체 배경에 */}
-        <div className="absolute inset-0 w-full h-full">
+        {/* 배경 이미지 - 1600px까지만 적용 */}
+        <div className="absolute inset-0 w-full h-full flex items-center justify-center">
+          <div className="relative w-full max-w-[1600px] h-full">
+            <Image
+              src="/img/hpe/bg_b_3984x520_1.png"
+              alt="HPE Webinar Series Background"
+              fill
+              className="object-cover object-left"
+              priority
+              sizes="1600px"
+              style={{ 
+                objectFit: 'cover',
+                objectPosition: 'left center',
+                width: '100%',
+                height: '100%'
+              }}
+            />
+          </div>
+        </div>
+        
+        {/* 모바일 전용 배경 이미지 - 연하게 */}
+        <div className="absolute inset-0 w-full h-full md:hidden opacity-30">
           <Image
-            src="/img/hpe/bg_b_3984x520_1.png"
-            alt="HPE Webinar Series Background"
+            src="/img/hpe/bg_b_928.png"
+            alt="HPE Background Pattern"
             fill
             className="object-cover"
             priority
             sizes="100vw"
             style={{ 
               objectFit: 'cover',
-              objectPosition: 'left center',
+              objectPosition: 'center',
               width: '100%',
               height: '100%'
             }}
           />
         </div>
         
-        {/* 도형 레이어: 모바일에서도 비율에 맞게 표시 */}
-        <div className="absolute inset-0 z-[1] overflow-hidden">
-          <div 
-            className="absolute inset-0 min-[1601px]:left-0 max-[1600px]:left-1/2 max-[1600px]:-translate-x-1/2"
-            style={{ 
-              width: '1600px', 
-              minWidth: '1600px',
-              height: '100%',
-              maxWidth: '100vw'
-            }}
-          >
+        <div className="relative w-full max-w-[1600px] mx-auto h-full overflow-hidden flex items-center justify-center z-10">
+          {/* 도형 레이어: 1600px 컨테이너 기준 정렬, 모바일에서 숨김 */}
+          <div className="absolute inset-0 z-[1] overflow-hidden hidden md:block">
+            <div 
+              className="absolute inset-0"
+              style={{ 
+                width: '100%',
+                height: '100%'
+              }}
+            >
+              <Image
+                src="/img/hpe/rec_1.png"
+                alt="HPE Shape"
+                fill
+                className="object-cover object-left"
+                priority
+                sizes="1600px"
+              />
+            </div>
+          </div>
+          
+          {/* HPE Logo - 1600px 컨테이너 기준 정렬 */}
+          <div className="absolute top-4 sm:top-8 md:top-12 left-4 sm:left-6 lg:left-8 z-20">
             <Image
-              src="/img/hpe/rec_1.png"
-              alt="HPE Shape"
-              fill
-              className="object-cover object-left max-[1600px]:object-contain max-[1600px]:object-left"
+              src="/img/hpe/hpe_logo.png"
+              alt="HPE"
+              width={80}
+              height={27}
+              className="sm:w-[100px] sm:h-[33px] md:w-[120px] md:h-[40px] object-contain"
               priority
-              sizes="(max-width: 640px) 100vw, (max-width: 1600px) 1600px, 1600px"
             />
           </div>
-        </div>
-        
-        {/* HPE Logo - 항상 왼쪽 끝에 고정 */}
-        <div className="absolute top-4 sm:top-8 md:top-12 left-4 sm:left-6 lg:left-8 z-20">
-          <Image
-            src="/img/hpe/hpe_logo.png"
-            alt="HPE"
-            width={80}
-            height={27}
-            className="sm:w-[100px] sm:h-[33px] md:w-[120px] md:h-[40px] object-contain"
-            priority
-          />
-        </div>
-        
-        <div className="relative w-full max-w-[1600px] mx-auto h-full overflow-hidden flex items-center justify-center z-10">
         {/* 텍스트 콘텐츠: 도형 위에 위치하도록 z-index 관리 */}
         <div className="relative z-10 w-full h-full flex flex-col justify-center py-4 sm:py-6 md:py-8 lg:py-12">
           
@@ -181,7 +198,7 @@ export default function OnDemandLandingPage({ webinar }: OnDemandLandingPageProp
             <div className="w-full px-4 sm:px-6 lg:px-8">
               <div className="text-center">
                 {/* 제목 */}
-                <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-white mb-2 sm:mb-3 md:mb-4 lg:mb-6">
+                <h2 className="text-3xl sm:text-4xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-white mb-2 sm:mb-3 md:mb-4 lg:mb-6">
                   {webinar.title}
                 </h2>
                 
@@ -274,9 +291,9 @@ export default function OnDemandLandingPage({ webinar }: OnDemandLandingPageProp
       </div>
 
       {/* Footer */}
-      <footer className="w-full bg-gray-900 text-white py-2 sm:py-4">
-        <div className="max-w-[1600px] mx-auto px-2 sm:px-4 flex items-center justify-center">
-          <p className="text-center text-[9px] sm:text-xs whitespace-nowrap overflow-hidden text-ellipsis">© Copyright 2026 Hewlett Packard Enterprise Development LP.</p>
+      <footer className="w-full bg-gray-900 text-white" style={{ height: '113px' }}>
+        <div className="max-w-[1600px] mx-auto h-full flex items-center justify-center">
+          <p className="text-center text-sm">© Copyright 2026 Hewlett Packard Enterprise Development LP.</p>
         </div>
       </footer>
 
