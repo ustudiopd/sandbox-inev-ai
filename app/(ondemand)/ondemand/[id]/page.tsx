@@ -35,10 +35,12 @@ export async function generateMetadata({
     if (ondemand) {
       const metaTitle = ondemand.meta_title || ondemand.title || '온디맨드 웨비나'
       const metaDescription = ondemand.meta_description || ondemand.description || metaTitle
-      const thumbnailUrl = ondemand.meta_thumbnail_url || ondemand.email_thumbnail_url || null
       const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://eventflow.kr'
       const ondemandPath = ondemand.slug || ondemand.id
       const canonicalUrl = `${appUrl}/ondemand/${ondemandPath}`
+      
+      // 썸네일 우선순위: meta_thumbnail_url > email_thumbnail_url > 기본 이미지 (thumb_mo.png)
+      const thumbnailUrl = ondemand.meta_thumbnail_url || ondemand.email_thumbnail_url || `${appUrl}/img/hpe/thumb_mo.png`
       
       return {
         title: `${metaTitle} | 온디맨드`,
@@ -49,7 +51,20 @@ export async function generateMetadata({
           description: metaDescription,
           type: 'website',
           url: canonicalUrl,
-          images: thumbnailUrl ? [{ url: thumbnailUrl }] : undefined,
+          images: [
+            {
+              url: thumbnailUrl,
+              width: 1200,
+              height: 630,
+              alt: metaTitle,
+            },
+          ],
+        },
+        twitter: {
+          card: 'summary_large_image',
+          title: metaTitle,
+          description: metaDescription,
+          images: [thumbnailUrl],
         },
         alternates: {
           canonical: canonicalUrl,
