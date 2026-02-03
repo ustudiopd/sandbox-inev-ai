@@ -5,7 +5,7 @@ import Link from 'next/link'
 
 interface UnifiedListItemProps {
   item: {
-    type: 'webinar' | 'survey' | 'registration'
+    type: 'webinar' | 'ondemand' | 'survey' | 'registration'
     id: string
     slug?: string | null
     title: string
@@ -20,11 +20,12 @@ interface UnifiedListItemProps {
 export default function UnifiedListItem({ item, clientId }: UnifiedListItemProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const isWebinar = item.type === 'webinar'
+  const isOnDemand = item.type === 'ondemand'
   const isRegistration = item.type === 'registration'
   
-  // 웨비나의 경우: slug 사용
+  // 웨비나/온디맨드의 경우: slug 사용
   let webinarSlug = null
-  if (isWebinar) {
+  if (isWebinar || isOnDemand) {
     webinarSlug = item.slug || item.id
   }
   
@@ -33,6 +34,10 @@ export default function UnifiedListItem({ item, clientId }: UnifiedListItemProps
     { label: '콘솔', href: `/client/${clientId}/webinars/${item.id}`, color: 'purple' },
     { label: '통계', href: `/client/${clientId}/webinars/${item.id}?tab=stats`, color: 'blue' },
     { label: '관리자 접속', href: `/webinar/${webinarSlug}/live?admin=true`, color: 'green' },
+  ] : isOnDemand ? [
+    { label: '공개페이지', href: `/ondemand/${webinarSlug}`, target: '_blank', color: 'teal' },
+    { label: '세션 목록', href: `/ondemand/${webinarSlug}/watch`, target: '_blank', color: 'teal' },
+    { label: '콘솔', href: `/client/${clientId}/webinars/${item.id}`, color: 'purple' },
   ] : [
     { label: '공개페이지', href: `/event${item.public_path}`, target: '_blank', color: 'blue' },
     { label: '콘솔', href: `/client/${clientId}/surveys/${item.id}`, color: 'purple' },
@@ -45,6 +50,7 @@ export default function UnifiedListItem({ item, clientId }: UnifiedListItemProps
       blue: 'bg-blue-600 hover:bg-blue-700 text-white',
       purple: 'bg-purple-600 hover:bg-purple-700 text-white',
       green: 'bg-green-600 hover:bg-green-700 text-white',
+      teal: 'bg-teal-600 hover:bg-teal-700 text-white',
     }
     return colors[color] || colors.blue
   }
@@ -56,11 +62,13 @@ export default function UnifiedListItem({ item, clientId }: UnifiedListItemProps
           <span className={`px-2 py-1 text-xs font-semibold rounded flex-shrink-0 ${
             isWebinar 
               ? 'bg-blue-100 text-blue-800' 
+              : isOnDemand
+              ? 'bg-teal-100 text-teal-800'
               : isRegistration
               ? 'bg-cyan-100 text-cyan-800'
               : 'bg-purple-100 text-purple-800'
           }`}>
-            {isWebinar ? '웨비나' : isRegistration ? '등록' : '설문'}
+            {isWebinar ? '웨비나' : isOnDemand ? '온디맨드' : isRegistration ? '등록' : '설문'}
           </span>
           <div className="flex-1 min-w-0">
             <div className="font-medium text-gray-800 truncate">
@@ -73,7 +81,7 @@ export default function UnifiedListItem({ item, clientId }: UnifiedListItemProps
                 : (isWebinar && item.project_name ? item.project_name : item.title)}
             </div>
             <div className="text-xs sm:text-sm text-gray-500 mt-1 truncate">
-              {isWebinar 
+              {isWebinar || isOnDemand
                 ? (webinarSlug ? `경로: /${webinarSlug}` : (item.start_time ? new Date(item.start_time).toLocaleString('ko-KR') : '일정 미정'))
                 : (item.public_path ? `경로: ${item.public_path}` : new Date(item.created_at).toLocaleString('ko-KR'))
               }

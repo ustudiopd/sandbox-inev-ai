@@ -1,5 +1,14 @@
 # 완료된 작업 내역 (Progress)
 
+## [2026-02-03] pd@ustudio.co.kr 계정을 UStudio 에이전시 계정으로 변경
+- ✅ MCP Supabase를 사용하여 계정 권한 변경 완료
+  - `pd@ustudio.co.kr` 계정의 슈퍼어드민 권한 제거 (`profiles.is_super_admin = false`)
+  - `auth.users.raw_app_meta_data.is_super_admin = false` 업데이트 완료
+  - UStudio 에이전시 (`b48534de-ec75-4473-8d68-9e2e3aae0ab1`)의 `owner` 역할로 설정 확인
+- ✅ 빌드 에러 수정
+  - `scripts/set-pd-as-agency.ts` 타입 에러 수정 (agencies 타입 단언 추가)
+  - 빌드 성공 확인
+
 ## [2025-01-27] IP Insight ON 이미지 추가 및 히어로 섹션 간격 조정
 - ✅ IP Insight ON 이미지 추가
   - 메인 페이지(`/event/149403`), 등록 페이지(`/event/149403/register`), 입장 페이지(`/webinar/149402`) 히어로 섹션에 IP Insight ON 이미지 추가

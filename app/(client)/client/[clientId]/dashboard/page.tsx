@@ -103,15 +103,24 @@ export default async function ClientDashboard({
     
     const admin = createAdminSupabase()
     
-    // 웨비나 목록 조회
+    // 웨비나 목록 조회 (라이브만, 온디맨드 제외)
     const { data: webinars, error: webinarsError } = await admin
       .from('webinars')
       .select('*')
       .eq('client_id', clientId)
+      .or('type.is.null,type.eq.live,type.neq.ondemand') // type이 null이거나 'live'이거나 'ondemand'가 아닌 것
       .order('created_at', { ascending: false })
     
-    // 실제 에러가 있는 경우에만 로그 출력
-    if (webinarsError) {
+    // 온디맨드 목록 조회
+    const { data: ondemands, error: ondemandsError } = await admin
+      .from('webinars')
+      .select('*')
+      .eq('client_id', clientId)
+      .eq('type', 'ondemand')
+      .order('created_at', { ascending: false })
+    
+    // 실제 에러가 있는 경우에만 로그 출력 (type 컬럼 없음 에러는 무시)
+    if (webinarsError && webinarsError.code !== '42703') {
       const hasErrorInfo = 
         (webinarsError.code !== undefined && webinarsError.code !== null) ||
         (webinarsError.message !== undefined && webinarsError.message !== null) ||
@@ -167,7 +176,7 @@ export default async function ClientDashboard({
       }
     }
   
-  // 웨비나, 설문조사, 등록 페이지를 통합 리스트로 변환
+  // 웨비나, 온디맨드, 설문조사, 등록 페이지를 통합 리스트로 변환
   const unifiedItems = [
     ...(webinars || []).map((webinar: any) => ({
       type: 'webinar' as const,
@@ -177,6 +186,15 @@ export default async function ClientDashboard({
       project_name: webinar.project_name,
       start_time: webinar.start_time,
       created_at: webinar.created_at,
+    })),
+    ...(ondemands || []).map((ondemand: any) => ({
+      type: 'ondemand' as const,
+      id: ondemand.id,
+      slug: ondemand.slug,
+      title: ondemand.title,
+      project_name: ondemand.project_name,
+      start_time: null, // 온디맨드는 시작 시간 없음
+      created_at: ondemand.created_at,
     })),
     ...(campaigns || []).map((campaign: any) => ({
       type: (campaign.type || 'survey') as 'survey' | 'registration',
@@ -225,6 +243,12 @@ export default async function ClientDashboard({
               + 웨비나 생성
             </Link>
             <Link 
+              href={`/client/${clientId}/ondemand/new`}
+              className="w-full md:w-auto px-4 py-2.5 md:px-6 md:py-3 bg-gradient-to-r from-teal-600 to-emerald-600 text-white rounded-xl hover:from-teal-700 hover:to-emerald-700 shadow-lg hover:shadow-xl transition-all duration-200 font-medium min-h-[44px] flex items-center justify-center"
+            >
+              + 온디맨드 생성
+            </Link>
+            <Link 
               href={`/client/${clientId}/surveys/new`}
               className="w-full md:w-auto px-4 py-2.5 md:px-6 md:py-3 bg-gradient-to-r from-pink-600 to-purple-600 text-white rounded-xl hover:from-pink-700 hover:to-purple-700 shadow-lg hover:shadow-xl transition-all duration-200 font-medium min-h-[44px] flex items-center justify-center"
             >
@@ -251,7 +275,7 @@ export default async function ClientDashboard({
           </div>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 mb-6 sm:mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6 sm:mb-8">
           <div className="bg-white p-4 md:p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow border-l-4 border-blue-500">
             <div className="flex items-center justify-between min-w-0">
               <div className="flex-1 min-w-0">
@@ -259,6 +283,15 @@ export default async function ClientDashboard({
                 <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900">{webinars?.length || 0}</p>
               </div>
               <div className="text-3xl sm:text-4xl opacity-20 flex-shrink-0 ml-2">🎥</div>
+            </div>
+          </div>
+          <div className="bg-white p-4 md:p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow border-l-4 border-teal-500">
+            <div className="flex items-center justify-between min-w-0">
+              <div className="flex-1 min-w-0">
+                <h2 className="text-xs sm:text-sm font-medium text-gray-600 mb-1 truncate">온디맨드 수</h2>
+                <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900">{ondemands?.length || 0}</p>
+              </div>
+              <div className="text-3xl sm:text-4xl opacity-20 flex-shrink-0 ml-2">📺</div>
             </div>
           </div>
           <div className="bg-white p-4 md:p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow border-l-4 border-purple-500">
@@ -287,7 +320,7 @@ export default async function ClientDashboard({
         
         <div className="bg-white rounded-xl shadow-lg overflow-hidden">
           <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-4 sm:p-6">
-            <h2 className="text-lg sm:text-xl font-semibold text-white">웨비나 & 설문조사 & 등록페이지 목록</h2>
+            <h2 className="text-lg sm:text-xl font-semibold text-white">웨비나 & 온디맨드 & 설문조사 & 등록페이지 목록</h2>
           </div>
           <div className="p-4 sm:p-6">
             {unifiedItems.length > 0 ? (

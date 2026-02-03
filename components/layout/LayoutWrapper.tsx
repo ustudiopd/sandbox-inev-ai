@@ -22,6 +22,9 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
   // 테스트 페이지는 네비게이션 없음
   const isTestPage = pathname.startsWith('/test')
   
+  // 온디맨드 페이지는 네비게이션 없음
+  const isOnDemandPage = pathname.startsWith('/ondemand/')
+  
   // 관리 웨비나 페이지 (콘솔, 등록자, 통계) 판별
   const decodedPathname = decodeURIComponent(pathname)
   const isConsolePage = pathname.endsWith('/console') || decodedPathname.endsWith('/console')
@@ -42,7 +45,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
                                 (!isConsolePage && !isRegistrantsPage && !isStatsPage))
   
   // 공개 페이지는 네비게이션 없음
-  if (isPublicPage || isPublicWebinarPage || isAdminPage || isTestPage) {
+  if (isPublicPage || isPublicWebinarPage || isAdminPage || isTestPage || isOnDemandPage) {
     return <>{children}</>
   }
   
