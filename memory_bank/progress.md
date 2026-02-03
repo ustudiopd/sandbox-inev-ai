@@ -1,5 +1,23 @@
 # 완료된 작업 내역 (Progress)
 
+## [2026-02-03] 온디맨드 웨비나 등록 시스템 개선 및 사용자 등록
+- ✅ 온디맨드 웨비나 등록 확인 API 개선
+  - `app/api/ondemand/[id]/check-registration/route.ts`: `event_survey_entries`에 없으면 `registrations` 테이블도 확인하도록 수정
+  - 온디맨드 웨비나 등록 인식 개선
+- ✅ 등록 API 이메일 기반 중복 체크 추가
+  - `app/api/public/event-survey/[campaignId]/register/route.ts`: 이메일 기반 중복 체크 추가 (이메일 중복 금지)
+  - 이름은 중복 허용 (같은 이름으로 여러 명 등록 가능)
+  - 이름이 "양승철2"인 경우 자동으로 "양승철"로 수정
+- ✅ 온디맨드 웨비나 사용자 등록 스크립트 생성
+  - `scripts/register-ondemand-user.ts`: 온디맨드 웨비나 사용자 등록 스크립트 생성
+  - `scripts/fix-ondemand-name.ts`: 등록된 이름 수정 스크립트 생성
+- ✅ 사용자 등록 완료
+  - 최은진 (eun-jin.choi@hpe.com): HPE Webinar Series 온디맨드 웨비나 등록 완료
+  - 양승철 (jubileo@naver.com): HPE Webinar Series 온디맨드 웨비나 등록 완료
+- ✅ 빌드 에러 수정
+  - `app/api/ondemand/[id]/check-registration/route.ts`: 중복 변수 정의 제거 (`emailLower`, `nameTrimmed`)
+  - 빌드 성공 확인
+
 ## [2026-02-03] pd@ustudio.co.kr 계정을 UStudio 에이전시 계정으로 변경
 - ✅ MCP Supabase를 사용하여 계정 권한 변경 완료
   - `pd@ustudio.co.kr` 계정의 슈퍼어드민 권한 제거 (`profiles.is_super_admin = false`)

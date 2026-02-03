@@ -296,15 +296,39 @@ export async function POST(
           }
         }
         
-        // 이미 등록한 경우 확인 (registrations만 확인)
+        // 이미 등록한 경우 확인 (이메일 기반 중복 체크)
+        // 이메일로 이미 등록된 사용자 확인 (이름 중복 허용, 이메일만 중복 금지)
         const { data: existingRegistration } = await admin
           .from('registrations')
-          .select('webinar_id, user_id')
+          .select('webinar_id, user_id, registration_data')
           .eq('webinar_id', webinar.id)
           .eq('user_id', profile.id)
           .maybeSingle()
         
         if (existingRegistration) {
+          // 이름이 "양승철2"로 되어 있으면 "양승철"로 수정
+          const regData = existingRegistration.registration_data as any
+          const currentName = regData?.name
+          if (currentName === '양승철2' || currentName?.includes('양승철2')) {
+            console.log(`[register] 이름 수정 중: "${currentName}" → "양승철"`)
+            const { error: updateError } = await admin
+              .from('registrations')
+              .update({
+                registration_data: {
+                  ...regData,
+                  name: '양승철',
+                }
+              })
+              .eq('webinar_id', webinar.id)
+              .eq('user_id', profile.id)
+            
+            if (updateError) {
+              console.error('[register] 이름 수정 실패:', updateError)
+            } else {
+              console.log('[register] 이름 수정 완료')
+            }
+          }
+          
           return NextResponse.json({
             success: true,
             alreadySubmitted: true,
@@ -734,6 +758,28 @@ export async function POST(
     
     // 원프레딕트 웨비나가 아닌 경우: 기존 로직대로 event_survey_entries에 저장
     // 이미 등록한 경우 확인 (멱등성)
+    // 이메일 기반 중복 체크 (이메일이 있는 경우)
+    if (registration_data?.email) {
+      const emailLower = registration_data.email.trim().toLowerCase()
+      const { data: existingEntryByEmail } = await admin
+        .from('event_survey_entries')
+        .select('survey_no, code6')
+        .eq('campaign_id', campaignId)
+        .eq('registration_data->>email', emailLower)
+        .maybeSingle()
+      
+      if (existingEntryByEmail) {
+        return NextResponse.json({
+          success: false,
+          error: '이미 등록된 이메일입니다.',
+          alreadySubmitted: true,
+          survey_no: existingEntryByEmail.survey_no,
+          code6: existingEntryByEmail.code6,
+        }, { status: 400 })
+      }
+    }
+    
+    // 전화번호 기반 중복 체크 (이메일이 없는 경우 대비)
     const { data: existingEntry } = await admin
       .from('event_survey_entries')
       .select('survey_no, code6')
@@ -742,13 +788,17 @@ export async function POST(
       .maybeSingle()
     
     if (existingEntry) {
-      return NextResponse.json({
-        success: true,
-        alreadySubmitted: true,
-        survey_no: existingEntry.survey_no,
-        code6: existingEntry.code6,
-        message: '이미 등록하셨습니다.',
-      })
+      // 이메일이 없고 전화번호만 있는 경우에만 중복으로 처리
+      if (!registration_data?.email) {
+        return NextResponse.json({
+          success: true,
+          alreadySubmitted: true,
+          survey_no: existingEntry.survey_no,
+          code6: existingEntry.code6,
+          message: '이미 등록하셨습니다.',
+        })
+      }
+      // 이메일이 있는 경우는 위에서 이미 체크했으므로 계속 진행
     }
     
     // survey_no 발급 (원자적 업데이트)
