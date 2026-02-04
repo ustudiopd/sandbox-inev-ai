@@ -1,6 +1,12 @@
 import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
+  serverExternalPackages: [
+    'isomorphic-dompurify',
+    'jsdom',
+    '@exodus/bytes',
+    'html-encoding-sniffer',
+  ],
   images: {
     remotePatterns: [
       {
