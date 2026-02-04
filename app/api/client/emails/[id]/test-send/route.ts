@@ -7,18 +7,6 @@ import { processTemplate } from '@/lib/email/template-processor'
 import { getCampaignEmailPolicy } from '@/lib/email/send-campaign'
 
 export const runtime = 'nodejs'
-export const dynamic = 'force-dynamic'
-
-/**
- * GET /api/client/emails/[id]/test-send
- * 지원하지 않는 메서드
- */
-export async function GET() {
-  return NextResponse.json(
-    { error: 'Method Not Allowed' },
-    { status: 405 }
-  )
-}
 
 /**
  * POST /api/client/emails/[id]/test-send
