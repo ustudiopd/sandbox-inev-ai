@@ -30,6 +30,22 @@ export async function GET() {
     // 슈퍼 관리자 확인 (JWT app_metadata 사용 - RLS 재귀 방지)
     let isSuperAdmin = !!user?.app_metadata?.is_super_admin
     
+    // 프로필 존재 여부 확인 (가입 여부 체크)
+    const { data: profile, error: profileError } = await admin
+      .from('profiles')
+      .select('id, is_super_admin')
+      .eq('id', user.id)
+      .maybeSingle()
+    
+    // 프로필이 없으면 가입되지 않은 계정
+    if (!profile && !profileError) {
+      console.warn('[Dashboard API] 가입되지 않은 계정:', { userId: user.id, email: user.email })
+      return NextResponse.json(
+        { dashboard: null, error: 'NOT_REGISTERED', message: '가입되지 않은 계정입니다. 회원가입을 진행해주세요.' },
+        { status: 403 }
+      )
+    }
+    
     // JWT에 app_metadata가 없을 경우 fallback: Admin Supabase로 확인
     if (!isSuperAdmin) {
       try {
@@ -38,12 +54,6 @@ export async function GET() {
           console.error('[Dashboard API] SUPABASE_SERVICE_ROLE_KEY가 설정되지 않았습니다')
           throw new Error('환경 변수 설정 오류')
         }
-        
-        const { data: profile, error: profileError } = await admin
-          .from('profiles')
-          .select('is_super_admin')
-          .eq('id', user.id)
-          .maybeSingle()
         
         if (profileError) {
           console.error('[Dashboard API] 프로필 조회 오류:', profileError)

@@ -38,10 +38,22 @@ export default function LoginPage() {
       try {
         // API를 통해 대시보드 경로 가져오기 (서버 사이드에서 RLS 정책 적용)
         const response = await fetch('/api/auth/dashboard')
-        const { dashboard } = await response.json()
+        const result = await response.json()
         
-        if (dashboard) {
-          router.push(dashboard)
+        // 가입되지 않은 계정인 경우
+        if (result.error === 'NOT_REGISTERED') {
+          alert('가입되지 않은 계정입니다. 회원가입을 진행해주세요.')
+          // 로그아웃 처리
+          await supabase.auth.signOut()
+          // 메인 페이지로 리다이렉트
+          router.push('/')
+          router.refresh()
+          setLoading(false)
+          return
+        }
+        
+        if (result.dashboard) {
+          router.push(result.dashboard)
           router.refresh()
           return
         }
