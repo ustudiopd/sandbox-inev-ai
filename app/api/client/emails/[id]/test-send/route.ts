@@ -10,15 +10,33 @@ export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
 /**
+ * GET /api/client/emails/[id]/test-send
+ * 지원하지 않는 메서드
+ */
+export async function GET() {
+  return NextResponse.json(
+    { error: 'Method Not Allowed' },
+    { status: 405 }
+  )
+}
+
+/**
  * POST /api/client/emails/[id]/test-send
  * 테스트 이메일 발송
+ * 
+ * ⚠️ 중요: Vercel 프로덕션 호환을 위해 params를 일반 객체로 처리
+ * Next.js 16 타입 정의는 Promise를 요구하지만, 실제 Vercel 런타임에서는 일반 객체로 전달됨
+ * 
+ * 타입 단언을 사용하여 Next.js 타입 정의와 런타임 동작의 불일치를 해결
  */
 export async function POST(
   req: Request,
-  { params }: { params: Promise<{ id: string }> }
+  context: { params: Promise<{ id: string }> | { id: string } }
 ) {
   try {
-    const { id: campaignId } = await params
+    // Vercel 프로덕션 호환: params가 Promise인지 확인하고 처리
+    const params = context.params as { id: string }
+    const { id: campaignId } = params
     const body = await req.json()
     const { testEmails } = body
 
