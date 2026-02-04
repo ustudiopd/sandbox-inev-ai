@@ -20,7 +20,7 @@ export async function GET(
     // 캠페인 조회 (IDOR 방지)
     const { data: campaign, error: campaignError } = await admin
       .from('email_campaigns')
-      .select('id, subject, preheader, body_md, status, campaign_type, client_id, created_at, updated_at, sent_at, variables_json, header_image_url, footer_text')
+      .select('id, subject, preheader, body_md, status, campaign_type, client_id, created_at, updated_at, sent_at, variables_json, header_image_url, footer_text, reply_to')
       .eq('id', campaignId)
       .single()
 
@@ -58,7 +58,7 @@ export async function PUT(
   try {
     const { id: campaignId } = await params
     const body = await req.json()
-    const { subject, preheader, body_md, header_image_url, footer_text, scheduled_send_at } = body
+    const { subject, preheader, body_md, header_image_url, footer_text, scheduled_send_at, selected_emails, reply_to } = body
 
     const admin = createAdminSupabase()
 
@@ -103,6 +103,23 @@ export async function PUT(
     if (header_image_url !== undefined) updateData.header_image_url = header_image_url || null
     if (footer_text !== undefined) updateData.footer_text = footer_text || null
     if (scheduled_send_at !== undefined) updateData.scheduled_send_at = scheduled_send_at || null
+    if (reply_to !== undefined) updateData.reply_to = reply_to || null
+    
+    // 예약 발송 시 선택된 이메일 목록 저장 (audience_query_json에 메타데이터로 추가)
+    if (selected_emails !== undefined && Array.isArray(selected_emails)) {
+      // 기존 audience_query_json 조회
+      const { data: currentCampaign } = await admin
+        .from('email_campaigns')
+        .select('audience_query_json')
+        .eq('id', campaignId)
+        .single()
+      
+      if (currentCampaign) {
+        const audienceQuery = (currentCampaign.audience_query_json || {}) as any
+        audienceQuery.selected_emails = selected_emails
+        updateData.audience_query_json = audienceQuery
+      }
+    }
 
     const { data: updatedCampaign, error: updateError } = await admin
       .from('email_campaigns')

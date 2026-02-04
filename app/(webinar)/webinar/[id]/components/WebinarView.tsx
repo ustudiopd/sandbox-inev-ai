@@ -49,31 +49,30 @@ interface WebinarViewProps {
 const wertSessions = [
   {
     label: "SESSION 1",
-    duration: "약 40분",
+    duration: "약 15분",
+    title: "키워트 인사이트 소개",
+    bullets: [
+      "AI 특허리서치 '키워트 인사이트' 특징",
+      "특허 특화 AI '플루토LM'의 차별점",
+    ],
+    speaker: {
+      name: "조경식 이사",
+      role: "워트인텔리전스\n그로스실",
+      avatar: "https://yqsayphssjznthrxpgfb.supabase.co/storage/v1/object/public/webinar-thumbnails/wert/jo2.png",
+    },
+  },
+  {
+    label: "SESSION 2",
+    duration: "약 30분",
     title: "고객사례로 알아보는 AI 특허리서치 활용법",
     bullets: [
       "IP·R&D·특허사무소별 키워트 인사이트 활용사례",
       "조직 간 커뮤니케이션 및 의사결정 개선 사례",
     ],
     speaker: {
-      name: "조은비 시니어 매니저",
-      role: "워트인텔리전스\n글로벌마켓매니지먼트팀",
+      name: "조은비 책임",
+      role: "워트인텔리전스\n그로스실",
       avatar: "https://yqsayphssjznthrxpgfb.supabase.co/storage/v1/object/public/webinar-thumbnails/wert/jo.png",
-    },
-  },
-  {
-    label: "SESSION 2",
-    duration: "약 20분",
-    title: "키워트 인사이트가 가장 많이 받는 질문들",
-    bullets: [
-      "고객 데이터가 AI 학습에 사용되지 않나요?",
-      "키워트 인사이트의 보안 구조는 어떻게 되어 있나요?",
-      "키워트 인사이트는 ChatGPT·Gemini 같은 범용 AI와\n무엇이 다른가요?",
-    ],
-    speaker: {
-      name: "조경식 팀장",
-      role: "워트인텔리전스\n글로벌마켓매니지먼트팀",
-      avatar: "https://yqsayphssjznthrxpgfb.supabase.co/storage/v1/object/public/webinar-thumbnails/wert/jo2.png",
     },
   },
   {
@@ -939,6 +938,23 @@ export default function WebinarView({ webinar, isAdminMode = false }: WebinarVie
                               </ul>
                               {session.note && (
                                 <p className="text-sm text-gray-500 mt-4">{session.note}</p>
+                              )}
+                              {/* SESSION 4일 때 스타벅스 기프티콘 정보 표시 */}
+                              {session.label === "SESSION 4" && (
+                                <div className="mt-4">
+                                  <div className="bg-black rounded-lg p-2 flex flex-row justify-start items-center gap-2 h-5">
+                                    <div className="text-white font-bold text-xs leading-tight text-left flex-1" style={{ fontFamily: 'Pretendard, sans-serif' }}>
+                                      스타벅스 아메리카노 Tall 기프티콘 증정
+                                    </div>
+                                    <Image
+                                      src="https://yqsayphssjznthrxpgfb.supabase.co/storage/v1/object/public/webinar-thumbnails/wert/image_2.png"
+                                      alt="스타벅스 커피"
+                                      width={20}
+                                      height={20}
+                                      className="w-5 h-5 object-contain flex-shrink-0"
+                                    />
+                                  </div>
+                                </div>
                               )}
                               {session.speaker && (
                                 <div className="mt-6 pt-6 border-t border-gray-200 flex items-center gap-4">

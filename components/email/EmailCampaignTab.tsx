@@ -41,6 +41,7 @@ interface CampaignDetail {
   variables_json?: Record<string, string>
   header_image_url?: string | null
   footer_text?: string | null
+  reply_to?: string | null
 }
 
 export default function EmailCampaignTab({ clientId, scopeType, scopeId }: EmailCampaignTabProps) {
@@ -63,7 +64,9 @@ export default function EmailCampaignTab({ clientId, scopeType, scopeId }: Email
         body_md: '',
         header_image_url: '',
         footer_text: DEFAULT_FOOTER_TEXT,
+        reply_to: '',
   })
+  const [clientEmailPolicy, setClientEmailPolicy] = useState<{ reply_to_default?: string } | null>(null)
   const [loadingDetail, setLoadingDetail] = useState(false)
   const [saving, setSaving] = useState(false)
   const [showPreview, setShowPreview] = useState(false)
@@ -82,6 +85,10 @@ export default function EmailCampaignTab({ clientId, scopeType, scopeId }: Email
   const [recipientCount, setRecipientCount] = useState<number | null>(null)
   const [loadingRecipientCount, setLoadingRecipientCount] = useState(false)
   const [recipientSamples, setRecipientSamples] = useState<Array<{ email: string; displayName?: string }>>([])
+  const [allRecipients, setAllRecipients] = useState<Array<{ email: string; displayName?: string }>>([])
+  const [selectedRecipients, setSelectedRecipients] = useState<Set<string>>(new Set())
+  const [loadingAllRecipients, setLoadingAllRecipients] = useState(false)
+  const [recipientSearchTerm, setRecipientSearchTerm] = useState('')
   const [uploadingImage, setUploadingImage] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [showVariableHelp, setShowVariableHelp] = useState(false)
@@ -91,7 +98,20 @@ export default function EmailCampaignTab({ clientId, scopeType, scopeId }: Email
   
   useEffect(() => {
     fetchCampaigns()
+    fetchClientEmailPolicy()
   }, [clientId, scopeType, scopeId])
+  
+  const fetchClientEmailPolicy = async () => {
+    try {
+      const response = await fetch(`/api/client/emails/policy?clientId=${clientId}`)
+      const result = await response.json()
+      if (result.success) {
+        setClientEmailPolicy(result.data)
+      }
+    } catch (error) {
+      console.error('클라이언트 이메일 정책 조회 오류:', error)
+    }
+  }
   
   const fetchImages = async () => {
     try {
@@ -185,18 +205,35 @@ export default function EmailCampaignTab({ clientId, scopeType, scopeId }: Email
       setLoadingDetail(true)
       setSelectedCampaign(campaign)
       
+      // 클라이언트 정책이 없으면 먼저 로드
+      if (!clientEmailPolicy) {
+        await fetchClientEmailPolicy()
+      }
+      
       const response = await fetch(`/api/client/emails/${campaign.id}`)
       const result = await response.json()
       
       if (result.success) {
         const detail = result.data.campaign
         setCampaignDetail(detail)
+        // 클라이언트 정책을 다시 확인 (비동기 로드 완료 후)
+        const currentPolicy = clientEmailPolicy || await (async () => {
+          try {
+            const policyResponse = await fetch(`/api/client/emails/policy?clientId=${clientId}`)
+            const policyResult = await policyResponse.json()
+            return policyResult.success ? policyResult.data : null
+          } catch {
+            return null
+          }
+        })()
+        
         setEditForm({
           subject: detail.subject || '',
           preheader: detail.preheader || '',
           body_md: detail.body_md || '',
           header_image_url: detail.header_image_url || '',
           footer_text: detail.footer_text || DEFAULT_FOOTER_TEXT,
+          reply_to: detail.reply_to || currentPolicy?.reply_to_default || '',
         })
         setShowEditModal(true)
       } else {
@@ -232,6 +269,7 @@ export default function EmailCampaignTab({ clientId, scopeType, scopeId }: Email
           body_md: editForm.body_md,
           header_image_url: editForm.header_image_url || null,
           footer_text: footerTextToSave,
+          reply_to: editForm.reply_to || null,
         }),
       })
       
@@ -378,7 +416,17 @@ export default function EmailCampaignTab({ clientId, scopeType, scopeId }: Email
       const result = await response.json()
       
       if (result.success) {
-        alert(`테스트 이메일이 발송되었습니다. (성공: ${result.data.run.meta_json.success}개, 실패: ${result.data.run.meta_json.failed}개)`)
+        const { success, failed } = result.data.run.meta_json
+        const failedDetails = result.data.run.failed_details || []
+        
+        if (failed > 0) {
+          const errorMessages = failedDetails.map((d: { email: string; error: string }) => 
+            `${d.email}: ${d.error}`
+          ).join('\n')
+          alert(`테스트 이메일 발송 완료\n\n성공: ${success}개\n실패: ${failed}개\n\n실패 상세:\n${errorMessages}`)
+        } else {
+          alert(`테스트 이메일이 발송되었습니다. (성공: ${success}개)`)
+        }
         setShowTestSendModal(false)
         setTestEmails('')
       } else {
@@ -395,29 +443,45 @@ export default function EmailCampaignTab({ clientId, scopeType, scopeId }: Email
   const handleSendClick = async () => {
     if (!selectedCampaign) return
     
-    // 수신자 수 미리 조회
+    // 수신자 수 미리 조회 및 전체 목록 가져오기
     try {
       setLoadingRecipientCount(true)
-      const previewResponse = await fetch(`/api/client/emails/${selectedCampaign.id}/audience-preview`)
-      const previewResult = await previewResponse.json()
+      setLoadingAllRecipients(true)
       
-      if (previewResult.success) {
+      const [previewResponse, listResponse] = await Promise.all([
+        fetch(`/api/client/emails/${selectedCampaign.id}/audience-preview`),
+        fetch(`/api/client/emails/${selectedCampaign.id}/audience-list`)
+      ])
+      
+      const previewResult = await previewResponse.json()
+      const listResult = await listResponse.json()
+      
+      if (previewResult.success && listResult.success) {
         setRecipientCount(previewResult.data.totalCount)
         setRecipientSamples(previewResult.data.samples || [])
+        setAllRecipients(listResult.data.recipients || [])
+        // 기본값: 전체 선택
+        setSelectedRecipients(new Set(listResult.data.recipients.map((r: { email: string }) => r.email)))
         setShowSendConfirmModal(true)
       } else {
-        alert(`수신자 조회 실패: ${previewResult.error || '알 수 없는 오류'}`)
+        alert(`수신자 조회 실패: ${previewResult.error || listResult.error || '알 수 없는 오류'}`)
       }
     } catch (error: any) {
       console.error('수신자 조회 오류:', error)
       alert(`네트워크 오류: ${error.message || '알 수 없는 오류'}`)
     } finally {
       setLoadingRecipientCount(false)
+      setLoadingAllRecipients(false)
     }
   }
   
   const handleSend = async () => {
     if (!selectedCampaign) return
+    
+    if (selectedRecipients.size === 0) {
+      alert('발송할 수신자를 최소 1명 이상 선택해주세요.')
+      return
+    }
     
     setShowSendConfirmModal(false)
     
@@ -425,6 +489,10 @@ export default function EmailCampaignTab({ clientId, scopeType, scopeId }: Email
       setSending(true)
       const response = await fetch(`/api/client/emails/${selectedCampaign.id}/send`, {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          selectedEmails: Array.from(selectedRecipients),
+        }),
       })
       
       const result = await response.json()
@@ -437,6 +505,9 @@ export default function EmailCampaignTab({ clientId, scopeType, scopeId }: Email
         setCampaignDetail(null)
         setRecipientCount(null)
         setRecipientSamples([])
+        setAllRecipients([])
+        setSelectedRecipients(new Set())
+        setRecipientSearchTerm('')
       } else {
         alert(`발송 실패: ${result.error || '알 수 없는 오류'}`)
       }
@@ -448,22 +519,95 @@ export default function EmailCampaignTab({ clientId, scopeType, scopeId }: Email
     }
   }
   
+  // 전체 선택/해제
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      const filtered = getFilteredRecipients()
+      setSelectedRecipients(new Set(filtered.map(r => r.email)))
+    } else {
+      setSelectedRecipients(new Set())
+    }
+  }
+  
+  // 개별 선택/해제
+  const handleToggleRecipient = (email: string) => {
+    const newSelected = new Set(selectedRecipients)
+    if (newSelected.has(email)) {
+      newSelected.delete(email)
+    } else {
+      newSelected.add(email)
+    }
+    setSelectedRecipients(newSelected)
+  }
+  
+  // 검색 필터링된 수신자 목록
+  const getFilteredRecipients = () => {
+    if (!recipientSearchTerm.trim()) {
+      return allRecipients
+    }
+    const term = recipientSearchTerm.toLowerCase()
+    return allRecipients.filter(r => 
+      r.email.toLowerCase().includes(term) || 
+      (r.displayName && r.displayName.toLowerCase().includes(term))
+    )
+  }
+  
+  const handleScheduleClick = async () => {
+    if (!selectedCampaign) return
+    
+    // 수신자 목록 가져오기
+    try {
+      setLoadingRecipientCount(true)
+      setLoadingAllRecipients(true)
+      
+      const [previewResponse, listResponse] = await Promise.all([
+        fetch(`/api/client/emails/${selectedCampaign.id}/audience-preview`),
+        fetch(`/api/client/emails/${selectedCampaign.id}/audience-list`)
+      ])
+      
+      const previewResult = await previewResponse.json()
+      const listResult = await listResponse.json()
+      
+      if (previewResult.success && listResult.success) {
+        setRecipientCount(previewResult.data.totalCount)
+        setRecipientSamples(previewResult.data.samples || [])
+        setAllRecipients(listResult.data.recipients || [])
+        // 기본값: 전체 선택
+        setSelectedRecipients(new Set(listResult.data.recipients.map((r: { email: string }) => r.email)))
+        setShowScheduleModal(true)
+      } else {
+        alert(`수신자 조회 실패: ${previewResult.error || listResult.error || '알 수 없는 오류'}`)
+      }
+    } catch (error: any) {
+      console.error('수신자 조회 오류:', error)
+      alert(`네트워크 오류: ${error.message || '알 수 없는 오류'}`)
+    } finally {
+      setLoadingRecipientCount(false)
+      setLoadingAllRecipients(false)
+    }
+  }
+  
   const handleSchedule = async () => {
     if (!selectedCampaign || !scheduledSendAt) return
     
-    if (!confirm(`정말로 ${new Date(scheduledSendAt).toLocaleString('ko-KR')}에 이메일을 예약 발송하시겠습니까?`)) {
+    if (selectedRecipients.size === 0) {
+      alert('발송할 수신자를 최소 1명 이상 선택해주세요.')
+      return
+    }
+    
+    if (!confirm(`정말로 ${new Date(scheduledSendAt).toLocaleString('ko-KR')}에 선택된 ${selectedRecipients.size}명에게 이메일을 예약 발송하시겠습니까?`)) {
       return
     }
     
     try {
       setScheduling(true)
-      // 예약 발송은 scheduled_send_at을 업데이트하는 API가 필요합니다
-      // 일단 간단하게 PUT으로 업데이트
+      // 예약 발송은 scheduled_send_at과 선택된 이메일 목록을 함께 저장
       const response = await fetch(`/api/client/emails/${selectedCampaign.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           scheduled_send_at: scheduledSendAt,
+          selected_emails: Array.from(selectedRecipients),
         }),
       })
       
@@ -473,6 +617,9 @@ export default function EmailCampaignTab({ clientId, scopeType, scopeId }: Email
         alert('예약 발송이 설정되었습니다.')
         setShowScheduleModal(false)
         setScheduledSendAt('')
+        setAllRecipients([])
+        setSelectedRecipients(new Set())
+        setRecipientSearchTerm('')
         await fetchCampaigns()
       } else {
         alert(`예약 설정 실패: ${result.error || '알 수 없는 오류'}`)
@@ -854,6 +1001,23 @@ export default function EmailCampaignTab({ clientId, scopeType, scopeId }: Email
               </div>
               
               <div>
+                <label className="block text-sm font-medium mb-2">Reply-To 이메일 (선택)</label>
+                <input
+                  type="email"
+                  value={editForm.reply_to}
+                  onChange={(e) => setEditForm({ ...editForm, reply_to: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                  placeholder={clientEmailPolicy?.reply_to_default || "예: contact@example.com"}
+                />
+                <p className="mt-1 text-xs text-gray-500">
+                  수신자가 답장할 이메일 주소입니다. 비워두면 기본값({clientEmailPolicy?.reply_to_default || '설정되지 않음'})이 사용됩니다.
+                </p>
+                <p className="mt-1 text-xs text-gray-600 font-medium">
+                  From: no-reply@eventflow.kr (표시명: 고객사명 via EventFlow)
+                </p>
+              </div>
+              
+              <div>
                 <label className="block text-sm font-medium mb-2">하단 푸터 텍스트 (선택)</label>
                 <textarea
                   value={editForm.footer_text}
@@ -916,10 +1080,11 @@ export default function EmailCampaignTab({ clientId, scopeType, scopeId }: Email
                       테스트 발송
                     </button>
                     <button
-                      onClick={() => setShowScheduleModal(true)}
-                      className="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors"
+                      onClick={handleScheduleClick}
+                      disabled={loadingRecipientCount}
+                      className="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors disabled:opacity-50"
                     >
-                      예약 발송
+                      {loadingRecipientCount ? '수신자 조회 중...' : '예약 발송'}
                     </button>
                     <button
                       onClick={handleSendClick}
@@ -1002,26 +1167,126 @@ export default function EmailCampaignTab({ clientId, scopeType, scopeId }: Email
       )}
       
       {/* 예약 발송 모달 */}
-      {showScheduleModal && (
+      {showScheduleModal && selectedCampaign && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+          <div className="bg-white rounded-lg p-6 max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
             <h3 className="text-lg font-semibold mb-4">예약 발송 설정</h3>
             <div className="mb-4">
-              <label className="block text-sm font-medium mb-2">발송 일시</label>
-              <input
-                type="datetime-local"
-                value={scheduledSendAt}
-                onChange={(e) => setScheduledSendAt(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                min={new Date().toISOString().slice(0, 16)}
-              />
-              <p className="mt-1 text-xs text-gray-500">예약된 시간에 자동으로 발송됩니다</p>
+              <div className="bg-gray-50 p-3 rounded-lg mb-4">
+                <p className="font-medium text-gray-900 mb-1">{selectedCampaign.subject}</p>
+                <p className="text-sm text-gray-600">
+                  상태: {getStatusBadge(selectedCampaign.status)}
+                </p>
+              </div>
+              
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-2">발송 일시</label>
+                <input
+                  type="datetime-local"
+                  value={scheduledSendAt}
+                  onChange={(e) => setScheduledSendAt(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                  min={new Date().toISOString().slice(0, 16)}
+                />
+                <p className="mt-1 text-xs text-gray-500">예약된 시간에 자동으로 발송됩니다</p>
+              </div>
+              
+              <div className="mb-4">
+                <p className="text-sm font-medium text-gray-700 mb-2">
+                  📊 발송 대상자 선택
+                </p>
+                <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <span className="text-lg font-bold text-blue-600">
+                        전체 {recipientCount !== null ? recipientCount.toLocaleString() : '-'}명
+                      </span>
+                      <span className="text-sm text-gray-600">
+                        중 <span className="font-semibold text-blue-700">{selectedRecipients.size.toLocaleString()}</span>명 선택됨
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        id="select-all-recipients-schedule"
+                        checked={selectedRecipients.size === allRecipients.length && allRecipients.length > 0}
+                        onChange={(e) => handleSelectAll(e.target.checked)}
+                        className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                      />
+                      <label htmlFor="select-all-recipients-schedule" className="text-sm text-gray-700 cursor-pointer">
+                        전체 선택
+                      </label>
+                    </div>
+                  </div>
+                  
+                  {/* 검색 입력 */}
+                  <div className="mb-3">
+                    <input
+                      type="text"
+                      value={recipientSearchTerm}
+                      onChange={(e) => setRecipientSearchTerm(e.target.value)}
+                      placeholder="이메일 또는 이름으로 검색..."
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                    />
+                  </div>
+                  
+                  {/* 수신자 목록 */}
+                  {loadingAllRecipients ? (
+                    <div className="text-center py-8 text-gray-500">수신자 목록을 불러오는 중...</div>
+                  ) : (
+                    <div className="border border-gray-200 rounded-lg bg-white max-h-96 overflow-y-auto">
+                      {getFilteredRecipients().length === 0 ? (
+                        <div className="text-center py-8 text-gray-500">
+                          {recipientSearchTerm ? '검색 결과가 없습니다.' : '수신자가 없습니다.'}
+                        </div>
+                      ) : (
+                        <div className="divide-y divide-gray-200">
+                          {getFilteredRecipients().map((recipient, idx) => (
+                            <div
+                              key={idx}
+                              className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 cursor-pointer"
+                              onClick={() => handleToggleRecipient(recipient.email)}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={selectedRecipients.has(recipient.email)}
+                                onChange={() => handleToggleRecipient(recipient.email)}
+                                onClick={(e) => e.stopPropagation()}
+                                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                              />
+                              <div className="flex-1 min-w-0">
+                                <div className="text-sm font-mono text-gray-900 truncate">
+                                  {recipient.email}
+                                </div>
+                                {recipient.displayName && (
+                                  <div className="text-xs text-gray-500 truncate">
+                                    {recipient.displayName}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  
+                  <p className="text-xs text-gray-600 mt-3">
+                    {scopeType === 'webinar' 
+                      ? '웨비나 등록자 목록에서 조회된 수신자입니다.'
+                      : '등록 캠페인 등록자 목록에서 조회된 수신자입니다.'}
+                  </p>
+                </div>
+              </div>
             </div>
             <div className="flex gap-2 justify-end">
               <button
                 onClick={() => {
                   setShowScheduleModal(false)
                   setScheduledSendAt('')
+                  setAllRecipients([])
+                  setSelectedRecipients(new Set())
+                  setRecipientSearchTerm('')
                 }}
                 className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
                 disabled={scheduling}
@@ -1030,10 +1295,10 @@ export default function EmailCampaignTab({ clientId, scopeType, scopeId }: Email
               </button>
               <button
                 onClick={handleSchedule}
-                disabled={scheduling || !scheduledSendAt}
+                disabled={scheduling || !scheduledSendAt || selectedRecipients.size === 0}
                 className="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors disabled:opacity-50"
               >
-                {scheduling ? '설정 중...' : '예약 설정'}
+                {scheduling ? '설정 중...' : selectedRecipients.size === 0 ? '수신자 선택 필요' : `예약 설정 (${selectedRecipients.size}명)`}
               </button>
             </div>
           </div>
@@ -1085,7 +1350,7 @@ export default function EmailCampaignTab({ clientId, scopeType, scopeId }: Email
       {/* 발송 확인 모달 */}
       {showSendConfirmModal && selectedCampaign && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-lg p-6 max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
             <h3 className="text-lg font-semibold mb-4">이메일 발송 확인</h3>
             <div className="mb-4">
               <div className="bg-gray-50 p-3 rounded-lg mb-4">
@@ -1097,36 +1362,89 @@ export default function EmailCampaignTab({ clientId, scopeType, scopeId }: Email
               
               <div className="mb-4">
                 <p className="text-sm font-medium text-gray-700 mb-2">
-                  📊 발송 대상자 정보
+                  📊 발송 대상자 선택
                 </p>
                 <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-2xl font-bold text-blue-600">
-                      {recipientCount !== null ? recipientCount.toLocaleString() : '-'}
-                    </span>
-                    <span className="text-sm text-gray-600">명</span>
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <span className="text-lg font-bold text-blue-600">
+                        전체 {recipientCount !== null ? recipientCount.toLocaleString() : '-'}명
+                      </span>
+                      <span className="text-sm text-gray-600">
+                        중 <span className="font-semibold text-blue-700">{selectedRecipients.size.toLocaleString()}</span>명 선택됨
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        id="select-all-recipients"
+                        checked={selectedRecipients.size === allRecipients.length && allRecipients.length > 0}
+                        onChange={(e) => handleSelectAll(e.target.checked)}
+                        className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                      />
+                      <label htmlFor="select-all-recipients" className="text-sm text-gray-700 cursor-pointer">
+                        전체 선택
+                      </label>
+                    </div>
                   </div>
-                  <p className="text-xs text-gray-600 mb-3">
-                    {scopeType === 'webinar' 
-                      ? '웨비나 등록자 목록에서 조회된 수신자 수입니다.'
-                      : '등록 캠페인 등록자 목록에서 조회된 수신자 수입니다.'}
-                  </p>
                   
-                  {recipientSamples.length > 0 && (
-                    <div className="mt-3 pt-3 border-t border-blue-200">
-                      <p className="text-xs font-medium text-gray-700 mb-2">수신자 샘플 (최대 10명):</p>
-                      <div className="space-y-1 max-h-32 overflow-y-auto">
-                        {recipientSamples.map((sample, idx) => (
-                          <div key={idx} className="text-xs text-gray-600 flex items-center gap-2">
-                            <span className="font-mono">{sample.email}</span>
-                            {sample.displayName && (
-                              <span className="text-gray-500">({sample.displayName})</span>
-                            )}
-                          </div>
-                        ))}
-                      </div>
+                  {/* 검색 입력 */}
+                  <div className="mb-3">
+                    <input
+                      type="text"
+                      value={recipientSearchTerm}
+                      onChange={(e) => setRecipientSearchTerm(e.target.value)}
+                      placeholder="이메일 또는 이름으로 검색..."
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                    />
+                  </div>
+                  
+                  {/* 수신자 목록 */}
+                  {loadingAllRecipients ? (
+                    <div className="text-center py-8 text-gray-500">수신자 목록을 불러오는 중...</div>
+                  ) : (
+                    <div className="border border-gray-200 rounded-lg bg-white max-h-96 overflow-y-auto">
+                      {getFilteredRecipients().length === 0 ? (
+                        <div className="text-center py-8 text-gray-500">
+                          {recipientSearchTerm ? '검색 결과가 없습니다.' : '수신자가 없습니다.'}
+                        </div>
+                      ) : (
+                        <div className="divide-y divide-gray-200">
+                          {getFilteredRecipients().map((recipient, idx) => (
+                            <div
+                              key={idx}
+                              className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 cursor-pointer"
+                              onClick={() => handleToggleRecipient(recipient.email)}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={selectedRecipients.has(recipient.email)}
+                                onChange={() => handleToggleRecipient(recipient.email)}
+                                onClick={(e) => e.stopPropagation()}
+                                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                              />
+                              <div className="flex-1 min-w-0">
+                                <div className="text-sm font-mono text-gray-900 truncate">
+                                  {recipient.email}
+                                </div>
+                                {recipient.displayName && (
+                                  <div className="text-xs text-gray-500 truncate">
+                                    {recipient.displayName}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   )}
+                  
+                  <p className="text-xs text-gray-600 mt-3">
+                    {scopeType === 'webinar' 
+                      ? '웨비나 등록자 목록에서 조회된 수신자입니다.'
+                      : '등록 캠페인 등록자 목록에서 조회된 수신자입니다.'}
+                  </p>
                 </div>
               </div>
               
@@ -1142,6 +1460,9 @@ export default function EmailCampaignTab({ clientId, scopeType, scopeId }: Email
                   setShowSendConfirmModal(false)
                   setRecipientCount(null)
                   setRecipientSamples([])
+                  setAllRecipients([])
+                  setSelectedRecipients(new Set())
+                  setRecipientSearchTerm('')
                 }}
                 className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
                 disabled={sending}
@@ -1150,10 +1471,10 @@ export default function EmailCampaignTab({ clientId, scopeType, scopeId }: Email
               </button>
               <button
                 onClick={handleSend}
-                disabled={sending || recipientCount === null || recipientCount === 0}
+                disabled={sending || selectedRecipients.size === 0}
                 className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
               >
-                {sending ? '발송 중...' : recipientCount === 0 ? '수신자 없음' : '발송하기'}
+                {sending ? '발송 중...' : selectedRecipients.size === 0 ? '수신자 선택 필요' : `발송하기 (${selectedRecipients.size}명)`}
               </button>
             </div>
           </div>

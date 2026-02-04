@@ -18,20 +18,44 @@ const DEFAULT_FOOTER_TEXT = `본 이메일은 워트 웨비나 등록 확인을 
 function convertLinksToButtons(html: string): string {
   // <a> 태그를 버튼 스타일로 변환
   // 단, 이미 버튼 스타일이 적용된 링크는 제외
+  // 더 정확한 정규식: href 속성과 텍스트 내용을 모두 캡처
   return html.replace(
-    /<a\s+([^>]*href=["']([^"']+)["'][^>]*)>([^<]+)<\/a>/gi,
-    (match, attrs, href, text) => {
+    /<a\s+([^>]*?)href\s*=\s*["']([^"']+)["']([^>]*?)>([^<]*(?:<[^<]+>[^<]*)*)<\/a>/gi,
+    (match, attrsBefore, href, attrsAfter, text) => {
+      const allAttrs = (attrsBefore + attrsAfter).toLowerCase()
+      
       // 이미 style 속성이 있으면 그대로 유지 (중복 변환 방지)
-      if (attrs.includes('style=')) {
+      if (allAttrs.includes('style=')) {
         return match
       }
       
       // href 이스케이프 처리
       const escapedHref = href.replace(/"/g, '&quot;').replace(/'/g, '&#39;')
-      const escapedText = text.replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      // 텍스트 내용에서 HTML 태그 제거 (텍스트만 추출)
+      const textOnly = text.replace(/<[^>]+>/g, '').trim()
+      const escapedText = textOnly.replace(/</g, '&lt;').replace(/>/g, '&gt;')
       
-      // 버튼 스타일 적용 (인라인 스타일로 이메일 클라이언트 호환성 보장)
-      return `<div style="text-align: center; margin: 20px 0;"><a href="${escapedHref}" style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #ffffff !important; font-weight: 600; font-size: 16px; padding: 14px 32px; text-decoration: none; border-radius: 6px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); min-width: 200px;">${escapedText}</a></div>`
+      if (!escapedText) {
+        return match // 빈 텍스트면 변환하지 않음
+      }
+      
+      // 버튼 스타일 적용 (테이블 기반, 네이버 메일 호환)
+      // 워트 브랜드 컬러: #00A08C 사용
+      return `
+      <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 20px 0;">
+        <tr>
+          <td align="center" style="padding: 0;">
+            <table cellpadding="0" cellspacing="0" border="0">
+              <tr>
+                <td align="center" style="background-color: #00A08C; padding: 14px 32px; border-radius: 6px;">
+                  <a href="${escapedHref}" style="display: inline-block; color: #ffffff !important; font-weight: 600; font-size: 16px; text-decoration: none; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">${escapedText}</a>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+      `
     }
   )
 }
@@ -67,8 +91,20 @@ export function markdownToHtml(
     ALLOW_DATA_ATTR: false,
   })
 
-  // 링크를 버튼 스타일로 변환
+  // 먼저 링크를 버튼 스타일로 변환 (style 속성이 없는 링크만 변환)
   const htmlWithButtons = convertLinksToButtons(sanitizedHtml)
+
+  // 네이버 메일 호환: 모든 <p> 태그에 인라인 스타일 추가
+  const htmlWithStyles = htmlWithButtons
+    .replace(/<p>/gi, '<p style="margin: 0 0 10px 0; font-family: -apple-system, BlinkMacSystemFont, \'Segoe UI\', Roboto, \'Helvetica Neue\', Arial, sans-serif; font-size: 16px; line-height: 1.6; color: #333333;">')
+    .replace(/<h1>/gi, '<h1 style="margin: 0 0 15px 0; font-family: -apple-system, BlinkMacSystemFont, \'Segoe UI\', Roboto, \'Helvetica Neue\', Arial, sans-serif; font-size: 24px; font-weight: 700; color: #1f2937; line-height: 1.4;">')
+    .replace(/<h2>/gi, '<h2 style="margin: 0 0 15px 0; font-family: -apple-system, BlinkMacSystemFont, \'Segoe UI\', Roboto, \'Helvetica Neue\', Arial, sans-serif; font-size: 20px; font-weight: 700; color: #1f2937; line-height: 1.4;">')
+    .replace(/<h3>/gi, '<h3 style="margin: 0 0 12px 0; font-family: -apple-system, BlinkMacSystemFont, \'Segoe UI\', Roboto, \'Helvetica Neue\', Arial, sans-serif; font-size: 18px; font-weight: 600; color: #374151; line-height: 1.4;">')
+    .replace(/<ul>/gi, '<ul style="margin: 0 0 10px 0; padding-left: 20px; font-family: -apple-system, BlinkMacSystemFont, \'Segoe UI\', Roboto, \'Helvetica Neue\', Arial, sans-serif; font-size: 16px; line-height: 1.6; color: #333333;">')
+    .replace(/<ol>/gi, '<ol style="margin: 0 0 10px 0; padding-left: 20px; font-family: -apple-system, BlinkMacSystemFont, \'Segoe UI\', Roboto, \'Helvetica Neue\', Arial, sans-serif; font-size: 16px; line-height: 1.6; color: #333333;">')
+    .replace(/<li>/gi, '<li style="margin: 0 0 5px 0; font-family: -apple-system, BlinkMacSystemFont, \'Segoe UI\', Roboto, \'Helvetica Neue\', Arial, sans-serif; font-size: 16px; line-height: 1.6; color: #333333;">')
+    // 버튼이 아닌 일반 링크에만 기본 스타일 추가
+    .replace(/<a(?![^>]*style=)(?![^>]*background-color)/gi, '<a style="color: #00A08C; text-decoration: none;"')
 
   if (includeTemplate) {
     return wrapEmailTemplate(htmlWithButtons, headerImageUrl, footerText)
@@ -79,16 +115,36 @@ export function markdownToHtml(
 
 /**
  * 이메일 HTML 템플릿으로 감싸기
+ * 네이버 메일 호환성을 위해 테이블 기반 레이아웃과 인라인 스타일 사용
  */
 function wrapEmailTemplate(
   body: string, 
   headerImageUrl?: string | null,
   footerText?: string | null
 ): string {
-  // 헤더 이미지 HTML
+  // 헤더 이미지 HTML (테이블 기반, 중앙 정렬)
   const headerImageHtml = headerImageUrl 
-    ? `<div style="text-align: center; margin-bottom: 20px;"><img src="${headerImageUrl}" alt="Header" style="max-width: 100%; height: auto;" /></div>`
+    ? `
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 20px;">
+      <tr>
+        <td align="center" style="padding: 0;">
+          <img src="${headerImageUrl}" alt="Header" style="max-width: 100%; height: auto; display: block;" />
+        </td>
+      </tr>
+    </table>
+    `
     : ''
+  
+  // 본문 텍스트를 테이블로 감싸서 중앙 정렬
+  const bodyHtml = `
+    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+      <tr>
+        <td align="left" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 16px; line-height: 1.6; color: #333333; padding: 0 0 20px 0;">
+          ${body}
+        </td>
+      </tr>
+    </table>
+  `
   
   // 푸터 HTML
   let footerHtml = ''
@@ -105,7 +161,22 @@ function wrapEmailTemplate(
     ALLOWED_ATTR: ['href', 'style'],
     ALLOW_DATA_ATTR: false,
   })
-  footerHtml = sanitizedFooter
+  
+  // 푸터의 <p> 태그에 인라인 스타일 추가
+  const footerWithStyles = sanitizedFooter
+    .replace(/<p>/gi, '<p style="margin: 0 0 8px 0; font-family: -apple-system, BlinkMacSystemFont, \'Segoe UI\', Roboto, \'Helvetica Neue\', Arial, sans-serif; font-size: 12px; line-height: 1.6; color: #6b7280;">')
+    .replace(/<a(?![^>]*style=)/gi, '<a style="color: #00A08C; text-decoration: none;"')
+  
+  // 푸터를 테이블로 감싸서 중앙 정렬
+  footerHtml = `
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
+      <tr>
+        <td align="center" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 12px; line-height: 1.6; color: #6b7280; padding: 10px 0;">
+          ${footerWithStyles}
+        </td>
+      </tr>
+    </table>
+  `
   
   return `
     <!DOCTYPE html>
@@ -113,75 +184,28 @@ function wrapEmailTemplate(
     <head>
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <style>
-        body {
-          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-          line-height: 1.6;
-          color: #333;
-          margin: 0;
-          padding: 0;
-          background-color: #f5f5f5;
-        }
-        .container {
-          max-width: 600px;
-          margin: 0 auto;
-          padding: 20px;
-          background-color: #ffffff;
-        }
-        .header {
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-          color: white;
-          padding: 30px;
-          text-align: center;
-          border-radius: 10px 10px 0 0;
-        }
-        .content {
-          background: #f9fafb;
-          padding: 30px;
-          border-radius: 0 0 10px 10px;
-        }
-        .button {
-          display: inline-block;
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-          color: #ffffff !important;
-          font-weight: 600;
-          padding: 12px 30px;
-          text-decoration: none;
-          border-radius: 5px;
-          margin: 20px 0;
-          text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-        }
-        .footer {
-          margin-top: 30px;
-          padding-top: 20px;
-          border-top: 1px solid #e5e7eb;
-          font-size: 12px;
-          color: #6b7280;
-          text-align: center;
-        }
-        img {
-          max-width: 100%;
-          height: auto;
-        }
-        a {
-          color: #667eea;
-          text-decoration: none;
-        }
-        a:hover {
-          text-decoration: underline;
-        }
+      <!--[if mso]>
+      <style type="text/css">
+        body, table, td, a { font-family: Arial, sans-serif !important; }
       </style>
+      <![endif]-->
     </head>
-    <body>
-      <div class="container">
-        <div class="content">
-          ${headerImageHtml}
-          ${body}
-        </div>
-        <div class="footer">
-          ${footerHtml}
-        </div>
-      </div>
+    <body style="margin: 0; padding: 0; background-color: #f5f5f5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f5f5f5;">
+        <tr>
+          <td align="center" style="padding: 20px 0;">
+            <table width="600" cellpadding="0" cellspacing="0" border="0" style="max-width: 600px; background-color: #ffffff; margin: 0 auto;">
+              <tr>
+                <td style="padding: 30px;">
+                  ${headerImageHtml}
+                  ${bodyHtml}
+                  ${footerHtml}
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
     </body>
     </html>
   `.trim()

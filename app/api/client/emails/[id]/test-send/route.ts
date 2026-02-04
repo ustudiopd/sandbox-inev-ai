@@ -40,7 +40,7 @@ export async function POST(
     // 캠페인 조회 (IDOR 방지)
     const { data: campaign, error: campaignError } = await admin
       .from('email_campaigns')
-      .select('id, client_id, status, subject, body_md, variables_json, from_domain, from_localpart, from_name, reply_to, header_image_url, footer_text')
+      .select('id, client_id, status, subject, body_md, variables_json, audience_query_json, from_domain, from_localpart, from_name, reply_to, header_image_url, footer_text')
       .eq('id', campaignId)
       .single()
 
@@ -77,12 +77,58 @@ export async function POST(
     const results = await Promise.allSettled(
       testEmails.map(async (email: string) => {
         // 개인화 변수 추가 (테스트용)
-        const personalizedVariables = {
+        // 실제 등록 정보에서 이름 찾기
+        let recipientName = email.split('@')[0] // 기본값: 이메일 앞부분
+        
+        // 캠페인의 audience_query_json에서 등록 정보 조회
+        const audienceQuery = (campaign.audience_query_json || {}) as any
+        const emailLower = email.toLowerCase().trim()
+        
+        // registration_campaign_registrants 타입인 경우
+        if (audienceQuery.type === 'registration_campaign_registrants' && audienceQuery.campaign_id) {
+          const { data: entry } = await admin
+            .from('event_survey_entries')
+            .select('name, registration_data')
+            .eq('campaign_id', audienceQuery.campaign_id)
+            .eq('registration_data->>email', emailLower)
+            .maybeSingle()
+          
+          if (entry) {
+            // name 필드 우선, 없으면 registration_data에서 찾기
+            recipientName = entry.name || (entry.registration_data as any)?.firstName || (entry.registration_data as any)?.name || recipientName
+          }
+        }
+        // webinar_registrants 타입인 경우
+        else if (audienceQuery.type === 'webinar_registrants' && audienceQuery.webinar_id) {
+          const { data: registration } = await admin
+            .from('registrations')
+            .select('display_name')
+            .eq('webinar_id', audienceQuery.webinar_id)
+            .eq('email', emailLower)
+            .maybeSingle()
+          
+          if (registration && registration.display_name) {
+            recipientName = registration.display_name
+          }
+        }
+        
+        const personalizedVariables: Record<string, string> = {
           ...variables,
           email: email,
           recipient_email: email,
-          name: email.split('@')[0], // 이메일 앞부분을 이름으로 사용
-          recipient_name: email.split('@')[0],
+          name: recipientName,
+          recipient_name: recipientName,
+        }
+        
+        // 입장 링크 생성 (이메일+이름 파라미터 포함) - 실제 발송과 동일한 로직
+        const baseEntryUrl = variables.url || variables.entryUrl || ''
+        const entryUrl = baseEntryUrl 
+          ? `${baseEntryUrl}?name=${encodeURIComponent(recipientName)}&email=${encodeURIComponent(email)}`
+          : ''
+        
+        // entry_url 변수 추가
+        if (entryUrl) {
+          personalizedVariables.entry_url = entryUrl
         }
         
         const processedSubject = processTemplate(campaign.subject, personalizedVariables)
@@ -108,8 +154,28 @@ export async function POST(
       })
     )
 
-    const successCount = results.filter(r => r.status === 'fulfilled' && r.value).length
-    const failedCount = results.length - successCount
+    // 결과 분석
+    const successfulResults: Array<{ email: string; messageId: string }> = []
+    const failedResults: Array<{ email: string; error: string }> = []
+    
+    results.forEach((result, index) => {
+      const email = testEmails[index]
+      if (result.status === 'fulfilled') {
+        const value = result.value as any
+        if (value && value.id) {
+          successfulResults.push({ email, messageId: value.id })
+        } else if (value && value.error) {
+          failedResults.push({ email, error: value.error })
+        } else {
+          failedResults.push({ email, error: '알 수 없는 오류' })
+        }
+      } else {
+        failedResults.push({ email, error: result.reason?.message || '알 수 없는 오류' })
+      }
+    })
+
+    const successCount = successfulResults.length
+    const failedCount = failedResults.length
 
     // email_runs에 로그 기록 (서버 전용)
     await admin.from('email_runs').insert({
@@ -121,7 +187,9 @@ export async function POST(
         total: testEmails.length,
         success: successCount,
         failed: failedCount,
+        failed_details: failedResults,
       },
+      error: failedCount > 0 ? `${failedCount}개 실패: ${failedResults.map(r => r.error).join(', ')}` : null,
       created_by: user.id,
     })
 
@@ -135,6 +203,7 @@ export async function POST(
         test_emails: testEmails,
         success_count: successCount,
         failed_count: failedCount,
+        failed_details: failedResults,
       },
     })
 
@@ -148,6 +217,7 @@ export async function POST(
             success: successCount,
             failed: failedCount,
           },
+          failed_details: failedResults,
         },
       },
     })

@@ -55,7 +55,55 @@ async function sendSingleEmail(
     }
 
     // 개인화 변수 추가 (수신자별)
-    const recipientName = recipient.displayName || recipient.email.split('@')[0]
+    // displayName이 없으면 등록 정보에서 실제 이름 조회
+    let recipientName = recipient.displayName
+    if (!recipientName) {
+      // 캠페인 정보 조회하여 등록 정보에서 이름 찾기
+      const { data: campaign } = await admin
+        .from('email_campaigns')
+        .select('scope_type, scope_id, audience_query_json')
+        .eq('id', campaignId)
+        .single()
+      
+      if (campaign) {
+        const audienceQuery = (campaign.audience_query_json || {}) as any
+        const emailLower = recipient.email.toLowerCase().trim()
+        
+        // registration_campaign_registrants 타입인 경우
+        if (audienceQuery.type === 'registration_campaign_registrants' && audienceQuery.campaign_id) {
+          const { data: entry } = await admin
+            .from('event_survey_entries')
+            .select('name, registration_data')
+            .eq('campaign_id', audienceQuery.campaign_id)
+            .eq('registration_data->>email', emailLower)
+            .maybeSingle()
+          
+          if (entry) {
+            // name 필드 우선, 없으면 registration_data에서 찾기
+            recipientName = entry.name || (entry.registration_data as any)?.firstName || (entry.registration_data as any)?.name
+          }
+        }
+        // webinar_registrants 타입인 경우
+        else if (audienceQuery.type === 'webinar_registrants' && audienceQuery.webinar_id) {
+          const { data: registration } = await admin
+            .from('registrations')
+            .select('display_name')
+            .eq('webinar_id', audienceQuery.webinar_id)
+            .eq('email', emailLower)
+            .maybeSingle()
+          
+          if (registration) {
+            recipientName = registration.display_name || undefined
+          }
+        }
+      }
+    }
+    
+    // 여전히 이름이 없으면 이메일 아이디 사용 (fallback)
+    if (!recipientName) {
+      recipientName = recipient.email.split('@')[0]
+    }
+    
     const personalizedVariables: Record<string, string> = {
       ...emailData.variables,
       email: recipient.email,
@@ -93,28 +141,30 @@ async function sendSingleEmail(
       replyTo: emailData.replyTo,
     })
 
-    if (!result) {
+    if (!result || 'error' in result) {
       // 발송 실패 - 로그 기록
+      const errorMessage = 'error' in result ? result.error : 'Resend 발송 실패'
       await admin.from('email_send_logs').insert({
         email_campaign_id: campaignId,
         recipient_email: recipient.email,
         status: 'failed',
-        error_message: 'Resend 발송 실패',
+        error_message: errorMessage,
         dedupe_key: dedupeKey,
       })
-      return { success: false, error: 'Resend 발송 실패' }
+      return { success: false, error: errorMessage }
     }
 
     // 발송 성공 - 로그 기록
+    const messageId = 'id' in result ? result.id : ''
     await admin.from('email_send_logs').insert({
       email_campaign_id: campaignId,
       recipient_email: recipient.email,
       status: 'sent',
-      provider_message_id: result.id,
+      provider_message_id: messageId,
       dedupe_key: dedupeKey,
     })
 
-    return { success: true, messageId: result.id }
+    return { success: true, messageId }
   } catch (error: any) {
     // 예외 발생 - 로그 기록
     try {
@@ -209,8 +259,9 @@ export async function getCampaignEmailPolicy(
   const fromName = campaignOverride?.from_name || policy.from_name_default
   const replyTo = campaignOverride?.reply_to || policy.reply_to_default
 
-  // From 주소 생성
-  const from = `"${fromName}" <${fromLocalpart}@${fromDomain}>`
+  // From 주소 생성: "고객사명" <no-reply@eventflow.kr>
+  // 항상 no-reply@eventflow.kr 사용, 표시명은 고객사명만
+  const from = `"${fromName}" <no-reply@eventflow.kr>`
 
   return {
     from,

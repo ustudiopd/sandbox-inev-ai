@@ -21,17 +21,23 @@ export interface SendEmailResult {
   id: string
 }
 
+export interface SendEmailError {
+  error: string
+  details?: any
+}
+
 /**
  * Resend를 통한 이메일 발송
  * @param params 이메일 발송 파라미터
- * @returns Resend message ID 또는 null (실패 시)
+ * @returns Resend message ID 또는 오류 정보 (실패 시)
  */
 export async function sendEmailViaResend(
   params: SendEmailParams
-): Promise<SendEmailResult | null> {
+): Promise<SendEmailResult | SendEmailError> {
   if (!resend) {
-    console.error('Resend 클라이언트가 초기화되지 않았습니다. RESEND_API_KEY를 확인하세요.')
-    return null
+    const errorMsg = 'Resend 클라이언트가 초기화되지 않았습니다. RESEND_API_KEY를 확인하세요.'
+    console.error(errorMsg)
+    return { error: errorMsg }
   }
 
   try {
@@ -45,18 +51,21 @@ export async function sendEmailViaResend(
     })
 
     if (error) {
+      const errorMsg = error.message || JSON.stringify(error)
       console.error('Resend 발송 실패:', error)
-      return null
+      return { error: errorMsg, details: error }
     }
 
     if (!data?.id) {
-      console.error('Resend 응답에 message ID가 없습니다:', data)
-      return null
+      const errorMsg = 'Resend 응답에 message ID가 없습니다'
+      console.error(errorMsg, data)
+      return { error: errorMsg, details: data }
     }
 
     return { id: data.id }
-  } catch (error) {
+  } catch (error: any) {
+    const errorMsg = error.message || '알 수 없는 오류'
     console.error('Resend 발송 예외:', error)
-    return null
+    return { error: errorMsg, details: error }
   }
 }

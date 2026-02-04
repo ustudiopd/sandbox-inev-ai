@@ -16,6 +16,8 @@ export async function POST(
 ) {
   try {
     const { id: campaignId } = await params
+    const body = await req.json().catch(() => ({}))
+    const { selectedEmails } = body as { selectedEmails?: string[] }
 
     const admin = createAdminSupabase()
 
@@ -66,7 +68,14 @@ export async function POST(
     try {
       // 대상자 조회
       const audienceQuery = (campaign.audience_query_json || {}) as any
-      const recipients = await getAudience(audienceQuery, admin)
+      let recipients = await getAudience(audienceQuery, admin)
+
+      // 선택된 이메일이 있으면 필터링 (요청 body 또는 audience_query_json에서)
+      const emailsToFilter = selectedEmails || audienceQuery.selected_emails
+      if (emailsToFilter && Array.isArray(emailsToFilter) && emailsToFilter.length > 0) {
+        const selectedSet = new Set(emailsToFilter.map((email: string) => email.toLowerCase().trim()))
+        recipients = recipients.filter(r => selectedSet.has(r.email.toLowerCase().trim()))
+      }
 
       if (recipients.length === 0) {
         // 대상자가 없으면 failed로 전이
