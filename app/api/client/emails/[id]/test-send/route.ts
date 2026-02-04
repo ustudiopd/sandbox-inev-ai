@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { requireClientMember } from '@/lib/auth/guards'
 import { createAdminSupabase } from '@/lib/supabase/admin'
 import { sendEmailViaResend } from '@/lib/email/resend'
@@ -6,19 +6,17 @@ import { markdownToHtml, markdownToText } from '@/lib/email/markdown-to-html'
 import { processTemplate } from '@/lib/email/template-processor'
 import { getCampaignEmailPolicy } from '@/lib/email/send-campaign'
 
-export const runtime = 'nodejs'
-
 /**
  * POST /api/client/emails/[id]/test-send
  * 테스트 이메일 발송
  */
 export async function POST(
-  req: Request,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id: campaignId } = await params
-    const body = await req.json()
+    const body = await request.json()
     const { testEmails } = body
 
     if (!testEmails || !Array.isArray(testEmails) || testEmails.length === 0) {
@@ -222,9 +220,12 @@ export async function POST(
       },
     })
   } catch (error: any) {
-    console.error('테스트 이메일 발송 오류:', error)
+    console.error('[Test Send] Error:', error)
+    
+    const errorMessage = error?.message || 'Internal server error'
+    
     return NextResponse.json(
-      { success: false, error: error.message || 'Internal server error' },
+      { success: false, error: errorMessage },
       { status: 500 }
     )
   }
