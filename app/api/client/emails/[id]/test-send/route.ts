@@ -23,20 +23,13 @@ export async function GET() {
 /**
  * POST /api/client/emails/[id]/test-send
  * 테스트 이메일 발송
- * 
- * ⚠️ 중요: Vercel 프로덕션 호환을 위해 params를 일반 객체로 처리
- * Next.js 16 타입 정의는 Promise를 요구하지만, 실제 Vercel 런타임에서는 일반 객체로 전달됨
  */
 export async function POST(
   req: Request,
-  context: any
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // Vercel 프로덕션 호환: params가 Promise인지 확인하고 처리
-    const params = context.params
-    const { id: campaignId } = params && typeof params.then === 'function' 
-      ? await params 
-      : params
+    const { id: campaignId } = await params
     const body = await req.json()
     const { testEmails } = body
 
