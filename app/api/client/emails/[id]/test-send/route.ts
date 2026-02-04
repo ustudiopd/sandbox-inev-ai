@@ -7,6 +7,7 @@ import { processTemplate } from '@/lib/email/template-processor'
 import { getCampaignEmailPolicy } from '@/lib/email/send-campaign'
 
 export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
 
 /**
  * POST /api/client/emails/[id]/test-send
