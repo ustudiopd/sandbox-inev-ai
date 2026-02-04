@@ -218,8 +218,10 @@ ${formattedDateTime}에 시작합니다
               <p style="margin-top: 40px; font-size: 16px; color: #374151; text-align: center;">감사합니다</p>
             </div>
             <div class="footer">
-              <p>본 이메일은 모두의특강 웨비나 등록 확인을 위해 발송되었습니다.</p>
-              <p>(주)유스튜디오 | 모두의특강</p>
+              <p>본 이메일은 워트 웨비나 등록 확인을 위해 발송되었습니다.</p>
+              <p>워트(WERT)</p>
+              <p style="margin-top: 10px;">웨비나와 관련된 문의사항이 있으시면 아래 연락처를 통해 문의주시기 바랍니다.</p>
+              <p>메일문의: <a href="mailto:crm@wert.co.kr" style="color: #667eea;">crm@wert.co.kr</a></p>
             </div>
           </div>
         </body>

@@ -13,6 +13,7 @@ import SettingsTab from './SettingsTab'
 import DashboardTab from './DashboardTab'
 import ParticipantsTab from './ParticipantsTab'
 import StatsTab from './StatsTab'
+import EmailCampaignTab from '@/components/email/EmailCampaignTab'
 
 interface Webinar {
   id: string
@@ -49,10 +50,10 @@ export default function ConsoleView({ webinar, userRole }: ConsoleViewProps) {
   const tabParam = searchParams.get('tab')
   
   // URL 쿼리 파라미터에서 탭 확인
-  const validTabs = ['dashboard', 'qa', 'chat', 'forms', 'files', 'giveaways', 'settings', 'participants', 'stats'] as const
+  const validTabs = ['dashboard', 'qa', 'chat', 'forms', 'files', 'giveaways', 'settings', 'participants', 'stats', 'emails'] as const
   const initialTab = (tabParam && validTabs.includes(tabParam as any)) ? (tabParam as typeof validTabs[number]) : 'dashboard'
   
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'qa' | 'chat' | 'forms' | 'files' | 'giveaways' | 'settings' | 'participants' | 'stats'>(initialTab)
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'qa' | 'chat' | 'forms' | 'files' | 'giveaways' | 'settings' | 'participants' | 'stats' | 'emails'>(initialTab)
   const [webinarData, setWebinarData] = useState(webinar)
   // slug가 있으면 slug를 사용하고, 없으면 id를 사용 (URL용)
   const webinarSlug = webinarData.slug || webinarData.id
@@ -159,6 +160,16 @@ export default function ConsoleView({ webinar, userRole }: ConsoleViewProps) {
               📊 통계
             </button>
             <button
+              onClick={() => setActiveTab('emails')}
+              className={`px-6 py-4 text-sm font-medium transition-colors ${
+                activeTab === 'emails'
+                  ? 'bg-blue-50 text-blue-600 border-b-2 border-blue-600'
+                  : 'text-gray-600 hover:bg-gray-50'
+              }`}
+            >
+              📧 이메일 발송
+            </button>
+            <button
               onClick={() => setActiveTab('settings')}
               className={`px-6 py-4 text-sm font-medium transition-colors ${
                 activeTab === 'settings'
@@ -223,6 +234,17 @@ export default function ConsoleView({ webinar, userRole }: ConsoleViewProps) {
             <div>
               <h2 className="text-xl font-semibold mb-4">통계</h2>
               <StatsTab webinar={webinarData} />
+            </div>
+          )}
+          
+          {activeTab === 'emails' && (
+            <div>
+              <h2 className="text-xl font-semibold mb-4">이메일 발송</h2>
+              <EmailCampaignTab 
+                clientId={webinarData.client_id}
+                scopeType="webinar"
+                scopeId={webinarData.id}
+              />
             </div>
           )}
           

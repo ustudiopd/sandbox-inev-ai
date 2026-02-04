@@ -28,7 +28,9 @@
     "@tiptap/react": "^3.16.0",
     "@tiptap/starter-kit": "^3.16.0",
     "dotenv": "^17.2.3",
+    "isomorphic-dompurify": "^2.35.0",
     "lucide-react": "^0.562.0",
+    "marked": "^17.0.1",
     "next": "^16.0.0",
     "nodemailer": "^7.0.11",
     "novel": "^1.0.2",
@@ -37,11 +39,13 @@
     "react-dom": "^19.0.0",
     "react-markdown": "^10.1.0",
     "recharts": "^3.4.1",
+    "resend": "^6.9.1",
     "zod": "^4.2.1",
     "zod-to-json-schema": "^3.25.0"
   },
   "devDependencies": {
     "@tailwindcss/typography": "^0.5.19",
+    "@types/marked": "^5.0.2",
     "@types/node": "^20",
     "@types/nodemailer": "^7.0.4",
     "@types/react": "^19",

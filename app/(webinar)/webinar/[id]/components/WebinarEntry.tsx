@@ -118,6 +118,129 @@ export default function WebinarEntry({ webinar, isWertPage: serverIsWertPage }: 
   }, [webinar.webinar_start_time])
   
   const searchParams = useSearchParams()
+  const [autoEntering, setAutoEntering] = useState(false)
+
+  // 자동입장 처리 (URL 쿼리 파라미터에 name과 email이 있는 경우)
+  useEffect(() => {
+    const urlName = searchParams.get('name')
+    const urlEmail = searchParams.get('email')
+    
+    // name과 email이 모두 있으면 자동입장 시도
+    if (urlName && urlEmail && !autoEntering && !loading) {
+      setAutoEntering(true)
+      setLoading(true)
+      
+      // 입력 필드에 값 설정 (폼 fallback용)
+      setDisplayName(urlName)
+      setEmail(urlEmail)
+      
+      // 자동입장: handleNameEmailAuth와 동일한 플로우 사용
+      const performAutoEnter = async () => {
+        try {
+          const emailTrimmed = urlEmail.trim()
+          const nameTrimmed = urlName.trim()
+          
+          // 관리자 계정 체크
+          const emailLower = emailTrimmed.toLowerCase()
+          const adminEmails = ['pd@ustudio.co.kr']
+          if (adminEmails.includes(emailLower)) {
+            setAutoEntering(false)
+            setLoading(false)
+            setError('관리자 계정은 이메일 인증으로 접속할 수 없습니다. 일반 로그인을 사용해주세요.')
+            setMode('login')
+            return
+          }
+          
+          // 등록 확인
+          if (webinar.registration_campaign_id || isSlug149402) {
+            const checkResponse = await fetch(`/api/webinars/${webinar.id}/check-registration`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                email: emailTrimmed,
+                name: nameTrimmed,
+              }),
+            })
+            
+            const checkResult = await checkResponse.json()
+            
+            if (!checkResult.registered) {
+              setAutoEntering(false)
+              setLoading(false)
+              setError(checkResult.message || '등록 정보를 찾을 수 없습니다. 정보를 확인해주세요.')
+              return
+            }
+          }
+          
+          // 이메일 인증 계정 생성/로그인
+          const response = await fetch('/api/auth/email-signup', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              email: emailTrimmed,
+              displayName: nameTrimmed || null,
+              nickname: null,
+              webinarId: webinar.id,
+            }),
+          })
+          
+          const result = await response.json()
+          
+          if (!response.ok) {
+            throw new Error(result.error || '입장 요청에 실패했습니다')
+          }
+          
+          // 비밀번호로 바로 로그인
+          if (result.email && result.password) {
+            const { error: signInError, data: signInData } = await supabase.auth.signInWithPassword({
+              email: result.email,
+              password: result.password,
+            })
+            
+            if (signInError) {
+              throw new Error('로그인에 실패했습니다')
+            }
+            
+            // 세션이 설정될 때까지 대기
+            await new Promise(resolve => setTimeout(resolve, 100))
+            
+            // 웨비나 등록 (비동기)
+            if (signInData.user) {
+              supabase
+                .from('registrations')
+                .select('webinar_id, user_id')
+                .eq('webinar_id', webinar.id)
+                .eq('user_id', signInData.user.id)
+                .maybeSingle()
+                .then(({ data: registration }) => {
+                  if (!registration) {
+                    fetch(`/api/webinars/${webinar.id}/register`, {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        nickname: null,
+                      }),
+                    }).catch(() => {})
+                  }
+                })
+            }
+            
+            // 웨비나 라이브 페이지로 이동
+            window.location.href = `/webinar/${webinarPath}/live`
+          } else {
+            throw new Error('로그인 정보를 받지 못했습니다')
+          }
+        } catch (err: any) {
+          console.error('자동입장 오류:', err)
+          setAutoEntering(false)
+          setLoading(false)
+          setError(err.message || '자동입장 중 오류가 발생했습니다. 수동으로 입력해주세요.')
+        }
+      }
+      
+      performAutoEnter()
+    }
+  }, [searchParams, webinar.id, webinar.registration_campaign_id, webinarPath, isSlug149402, autoEntering, loading, supabase])
 
   // Visit 수집 (웨비나 입장 페이지 진입 시 — 통계 시스템 연동)
   useEffect(() => {
@@ -1029,6 +1152,11 @@ export default function WebinarEntry({ webinar, isWertPage: serverIsWertPage }: 
       background-color: #fff !important;
       background: #fff !important;
     }
+    /* 로딩 스피너 애니메이션 */
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
   `
   
   // WERT 스타일 (조건부) - finalShouldShowWertStyle이 true일 때만 적용
@@ -1898,6 +2026,28 @@ export default function WebinarEntry({ webinar, isWertPage: serverIsWertPage }: 
                     </p>
                   </div>
                   
+                  {autoEntering ? (
+                    <div style={{ 
+                      display: 'flex', 
+                      flexDirection: 'column', 
+                      alignItems: 'center', 
+                      justifyContent: 'center',
+                      padding: '60px 20px',
+                      gap: '20px'
+                    }}>
+                      <div style={{
+                        width: '48px',
+                        height: '48px',
+                        border: '4px solid #f3f3f3',
+                        borderTop: '4px solid #667eea',
+                        borderRadius: '50%',
+                        animation: 'spin 1s linear infinite'
+                      }} />
+                      <p style={{ fontSize: '18px', color: '#666', textAlign: 'center' }}>
+                        입장 중...
+                      </p>
+                    </div>
+                  ) : (
                   <form onSubmit={handleNameEmailAuth} style={{ display: 'flex', flexDirection: 'column', gap: '32px' }} className="mobile-form-gap registration-entry-form">
                     {error && (
                       <div style={{ padding: '16px', backgroundColor: '#fee', border: '1px solid #fcc', borderRadius: '16px' }}>
@@ -1955,6 +2105,7 @@ export default function WebinarEntry({ webinar, isWertPage: serverIsWertPage }: 
                       </button>
                     </div>
                   </form>
+                  )}
                 </div>
               </section>
             </>

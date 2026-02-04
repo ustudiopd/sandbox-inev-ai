@@ -9,6 +9,7 @@ import FileManagement from './FileManagement'
 import GiveawayManagement from './GiveawayManagement'
 import SettingsTab from './SettingsTab'
 import ParticipantsTab from './ParticipantsTab'
+import EmailCampaignTab from '@/components/email/EmailCampaignTab'
 
 interface Webinar {
   id: string
@@ -39,7 +40,7 @@ interface ConsoleViewProps {
  * Q&A 모더레이션, 퀴즈, 추첨 등을 관리하는 운영자 전용 페이지
  */
 export default function ConsoleView({ webinar, userRole }: ConsoleViewProps) {
-  const [activeTab, setActiveTab] = useState<'qa' | 'chat' | 'forms' | 'files' | 'giveaways' | 'participants' | 'settings'>('qa')
+  const [activeTab, setActiveTab] = useState<'qa' | 'chat' | 'forms' | 'files' | 'giveaways' | 'participants' | 'settings' | 'emails'>('qa')
   const [webinarData, setWebinarData] = useState(webinar)
   // slug가 있으면 slug를 사용하고, 없으면 id를 사용 (URL용)
   const webinarSlug = webinarData.slug || webinarData.id
@@ -156,6 +157,16 @@ export default function ConsoleView({ webinar, userRole }: ConsoleViewProps) {
               👥 참여자 관리
             </button>
             <button
+              onClick={() => setActiveTab('emails')}
+              className={`px-6 py-4 text-sm font-medium transition-colors ${
+                activeTab === 'emails'
+                  ? 'bg-blue-50 text-blue-600 border-b-2 border-blue-600'
+                  : 'text-gray-600 hover:bg-gray-50'
+              }`}
+            >
+              📧 이메일 발송
+            </button>
+            <button
               onClick={() => setActiveTab('settings')}
               className={`px-6 py-4 text-sm font-medium transition-colors ${
                 activeTab === 'settings'
@@ -209,6 +220,17 @@ export default function ConsoleView({ webinar, userRole }: ConsoleViewProps) {
             <div>
               <h2 className="text-xl font-semibold mb-4">참여자 관리</h2>
               <ParticipantsTab webinarId={webinarData.id} />
+            </div>
+          )}
+          
+          {activeTab === 'emails' && (
+            <div>
+              <h2 className="text-xl font-semibold mb-4">이메일 발송</h2>
+              <EmailCampaignTab 
+                clientId={webinarData.client_id}
+                scopeType="webinar"
+                scopeId={webinarData.id}
+              />
             </div>
           )}
           

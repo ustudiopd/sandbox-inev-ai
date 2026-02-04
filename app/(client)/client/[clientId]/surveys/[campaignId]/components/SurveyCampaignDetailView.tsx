@@ -10,6 +10,7 @@ import SettingsTab from './tabs/SettingsTab'
 import AnalysisGuidelineTab from './tabs/AnalysisGuidelineTab'
 import AnalysisReportSection from './tabs/AnalysisReportSection'
 import StatsTab from './tabs/StatsTab'
+import EmailCampaignTab from '@/components/email/EmailCampaignTab'
 
 interface SurveyCampaignDetailViewProps {
   campaign: any
@@ -17,7 +18,7 @@ interface SurveyCampaignDetailViewProps {
 }
 
 export default function SurveyCampaignDetailView({ campaign, clientId }: SurveyCampaignDetailViewProps) {
-  const [activeTab, setActiveTab] = useState<'overview' | 'form' | 'publicSettings' | 'participants' | 'settings' | 'guidelines' | 'analysis' | 'stats'>('overview')
+  const [activeTab, setActiveTab] = useState<'overview' | 'form' | 'publicSettings' | 'participants' | 'settings' | 'guidelines' | 'analysis' | 'stats' | 'emails'>('overview')
   const [campaignData, setCampaignData] = useState(campaign)
   
   const handleCampaignUpdate = (updatedCampaign: any) => {
@@ -111,6 +112,20 @@ export default function SurveyCampaignDetailView({ campaign, clientId }: SurveyC
               <span className="text-xl sm:text-2xl">⚙️</span>
               <span className="hidden lg:inline text-sm font-medium whitespace-nowrap">설정</span>
             </button>
+            {campaignData.type === 'registration' && (
+              <button
+                onClick={() => setActiveTab('emails')}
+                title="이메일 발송"
+                className={`px-3 sm:px-6 py-3 sm:py-4 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center gap-2 ${
+                  activeTab === 'emails'
+                    ? 'bg-blue-50 text-blue-600 border-b-2 border-blue-600'
+                    : 'text-gray-600 hover:bg-gray-50'
+                }`}
+              >
+                <span className="text-xl sm:text-2xl">📧</span>
+                <span className="hidden lg:inline text-sm font-medium whitespace-nowrap">이메일 발송</span>
+              </button>
+            )}
           </div>
         </div>
         
@@ -175,6 +190,17 @@ export default function SurveyCampaignDetailView({ campaign, clientId }: SurveyC
             <div>
               <h2 className="text-xl font-semibold mb-4">캠페인 설정</h2>
               <SettingsTab campaign={campaignData} onCampaignUpdate={handleCampaignUpdate} />
+            </div>
+          )}
+          
+          {activeTab === 'emails' && campaignData.type === 'registration' && (
+            <div>
+              <h2 className="text-xl font-semibold mb-4">이메일 발송</h2>
+              <EmailCampaignTab 
+                clientId={clientId}
+                scopeType="registration_campaign"
+                scopeId={campaignData.id}
+              />
             </div>
           )}
         </div>

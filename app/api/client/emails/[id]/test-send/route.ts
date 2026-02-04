@@ -1,0 +1,161 @@
+import { NextResponse } from 'next/server'
+import { requireClientMember } from '@/lib/auth/guards'
+import { createAdminSupabase } from '@/lib/supabase/admin'
+import { sendEmailViaResend } from '@/lib/email/resend'
+import { markdownToHtml, markdownToText } from '@/lib/email/markdown-to-html'
+import { processTemplate } from '@/lib/email/template-processor'
+import { getCampaignEmailPolicy } from '@/lib/email/send-campaign'
+
+export const runtime = 'nodejs'
+
+/**
+ * POST /api/client/emails/[id]/test-send
+ * 테스트 이메일 발송
+ */
+export async function POST(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id: campaignId } = await params
+    const body = await req.json()
+    const { testEmails } = body
+
+    if (!testEmails || !Array.isArray(testEmails) || testEmails.length === 0) {
+      return NextResponse.json(
+        { success: false, error: 'testEmails 배열이 필요합니다' },
+        { status: 400 }
+      )
+    }
+
+    if (testEmails.length > 10) {
+      return NextResponse.json(
+        { success: false, error: '테스트 이메일은 최대 10개까지 가능합니다' },
+        { status: 400 }
+      )
+    }
+
+    const admin = createAdminSupabase()
+
+    // 캠페인 조회 (IDOR 방지)
+    const { data: campaign, error: campaignError } = await admin
+      .from('email_campaigns')
+      .select('id, client_id, status, subject, body_md, variables_json, from_domain, from_localpart, from_name, reply_to, header_image_url, footer_text')
+      .eq('id', campaignId)
+      .single()
+
+    if (campaignError || !campaign) {
+      return NextResponse.json(
+        { success: false, error: '캠페인을 찾을 수 없습니다' },
+        { status: 404 }
+      )
+    }
+
+    // 권한 확인
+    const { user } = await requireClientMember(campaign.client_id, ['owner', 'admin', 'operator'])
+
+    // ready 상태에서만 테스트 발송 가능
+    if (campaign.status !== 'ready') {
+      return NextResponse.json(
+        { success: false, error: `${campaign.status} 상태에서는 테스트 발송할 수 없습니다` },
+        { status: 400 }
+      )
+    }
+
+    // 발송 정책 조회
+    const emailPolicy = await getCampaignEmailPolicy(campaign.client_id, {
+      from_domain: campaign.from_domain,
+      from_localpart: campaign.from_localpart,
+      from_name: campaign.from_name,
+      reply_to: campaign.reply_to,
+    })
+
+    // 템플릿 변수 치환
+    const variables = (campaign.variables_json || {}) as Record<string, string>
+    
+    // 테스트 발송 (각 이메일별로 개인화 변수 추가)
+    const results = await Promise.allSettled(
+      testEmails.map(async (email: string) => {
+        // 개인화 변수 추가 (테스트용)
+        const personalizedVariables = {
+          ...variables,
+          email: email,
+          recipient_email: email,
+          name: email.split('@')[0], // 이메일 앞부분을 이름으로 사용
+          recipient_name: email.split('@')[0],
+        }
+        
+        const processedSubject = processTemplate(campaign.subject, personalizedVariables)
+        const processedBody = processTemplate(campaign.body_md, personalizedVariables)
+        
+        // 푸터 텍스트 처리 (변수 치환)
+        const processedFooter = campaign.footer_text && campaign.footer_text.trim()
+          ? processTemplate(campaign.footer_text, personalizedVariables)
+          : null
+
+        // 마크다운 → HTML 변환 (헤더 이미지와 푸터 포함)
+        const html = markdownToHtml(processedBody, true, campaign.header_image_url, processedFooter)
+        const text = markdownToText(processedBody)
+        
+        return sendEmailViaResend({
+          from: emailPolicy.from,
+          to: email,
+          subject: processedSubject,
+          html,
+          text,
+          replyTo: emailPolicy.replyTo,
+        })
+      })
+    )
+
+    const successCount = results.filter(r => r.status === 'fulfilled' && r.value).length
+    const failedCount = results.length - successCount
+
+    // email_runs에 로그 기록 (서버 전용)
+    await admin.from('email_runs').insert({
+      email_campaign_id: campaignId,
+      run_type: 'test_send',
+      status: failedCount === 0 ? 'success' : 'failed',
+      provider: 'resend',
+      meta_json: {
+        total: testEmails.length,
+        success: successCount,
+        failed: failedCount,
+      },
+      created_by: user.id,
+    })
+
+    // audit_logs 기록
+    await admin.from('audit_logs').insert({
+      actor_user_id: user.id,
+      client_id: campaign.client_id,
+      action: 'EMAIL_CAMPAIGN_TEST_SEND',
+      payload: {
+        campaign_id: campaignId,
+        test_emails: testEmails,
+        success_count: successCount,
+        failed_count: failedCount,
+      },
+    })
+
+    return NextResponse.json({
+      success: true,
+      data: {
+        run: {
+          status: failedCount === 0 ? 'success' : 'failed',
+          meta_json: {
+            total: testEmails.length,
+            success: successCount,
+            failed: failedCount,
+          },
+        },
+      },
+    })
+  } catch (error: any) {
+    console.error('테스트 이메일 발송 오류:', error)
+    return NextResponse.json(
+      { success: false, error: error.message || 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}
