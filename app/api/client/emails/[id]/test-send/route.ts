@@ -140,7 +140,7 @@ export async function POST(
           : null
 
         // 마크다운 → HTML 변환 (헤더 이미지와 푸터 포함)
-        const html = markdownToHtml(processedBody, true, campaign.header_image_url, processedFooter)
+        const html = await markdownToHtml(processedBody, true, campaign.header_image_url, processedFooter)
         const text = markdownToText(processedBody)
         
         return sendEmailViaResend({

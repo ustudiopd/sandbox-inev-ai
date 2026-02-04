@@ -1,5 +1,4 @@
 import { marked } from 'marked'
-import DOMPurify from 'isomorphic-dompurify'
 
 // 기본 푸터 텍스트 (마크다운 형식)
 const DEFAULT_FOOTER_TEXT = `본 이메일은 워트 웨비나 등록 확인을 위해 발송되었습니다.
@@ -68,12 +67,15 @@ function convertLinksToButtons(html: string): string {
  * @param footerText 푸터 텍스트 (선택, 마크다운 지원)
  * @returns HTML 문자열
  */
-export function markdownToHtml(
+export async function markdownToHtml(
   markdown: string, 
   includeTemplate: boolean = true,
   headerImageUrl?: string | null,
   footerText?: string | null
-): string {
+): Promise<string> {
+  // 동적 import로 DOMPurify 로드 (ESM 호환성)
+  const DOMPurify = (await import('isomorphic-dompurify')).default
+
   // 마크다운 → HTML 변환
   const htmlBody = marked(markdown, {
     breaks: true, // 줄바꿈을 <br>로 변환
@@ -94,20 +96,8 @@ export function markdownToHtml(
   // 먼저 링크를 버튼 스타일로 변환 (style 속성이 없는 링크만 변환)
   const htmlWithButtons = convertLinksToButtons(sanitizedHtml)
 
-  // 네이버 메일 호환: 모든 <p> 태그에 인라인 스타일 추가
-  const htmlWithStyles = htmlWithButtons
-    .replace(/<p>/gi, '<p style="margin: 0 0 10px 0; font-family: -apple-system, BlinkMacSystemFont, \'Segoe UI\', Roboto, \'Helvetica Neue\', Arial, sans-serif; font-size: 16px; line-height: 1.6; color: #333333;">')
-    .replace(/<h1>/gi, '<h1 style="margin: 0 0 15px 0; font-family: -apple-system, BlinkMacSystemFont, \'Segoe UI\', Roboto, \'Helvetica Neue\', Arial, sans-serif; font-size: 24px; font-weight: 700; color: #1f2937; line-height: 1.4;">')
-    .replace(/<h2>/gi, '<h2 style="margin: 0 0 15px 0; font-family: -apple-system, BlinkMacSystemFont, \'Segoe UI\', Roboto, \'Helvetica Neue\', Arial, sans-serif; font-size: 20px; font-weight: 700; color: #1f2937; line-height: 1.4;">')
-    .replace(/<h3>/gi, '<h3 style="margin: 0 0 12px 0; font-family: -apple-system, BlinkMacSystemFont, \'Segoe UI\', Roboto, \'Helvetica Neue\', Arial, sans-serif; font-size: 18px; font-weight: 600; color: #374151; line-height: 1.4;">')
-    .replace(/<ul>/gi, '<ul style="margin: 0 0 10px 0; padding-left: 20px; font-family: -apple-system, BlinkMacSystemFont, \'Segoe UI\', Roboto, \'Helvetica Neue\', Arial, sans-serif; font-size: 16px; line-height: 1.6; color: #333333;">')
-    .replace(/<ol>/gi, '<ol style="margin: 0 0 10px 0; padding-left: 20px; font-family: -apple-system, BlinkMacSystemFont, \'Segoe UI\', Roboto, \'Helvetica Neue\', Arial, sans-serif; font-size: 16px; line-height: 1.6; color: #333333;">')
-    .replace(/<li>/gi, '<li style="margin: 0 0 5px 0; font-family: -apple-system, BlinkMacSystemFont, \'Segoe UI\', Roboto, \'Helvetica Neue\', Arial, sans-serif; font-size: 16px; line-height: 1.6; color: #333333;">')
-    // 버튼이 아닌 일반 링크에만 기본 스타일 추가
-    .replace(/<a(?![^>]*style=)(?![^>]*background-color)/gi, '<a style="color: #00A08C; text-decoration: none;"')
-
   if (includeTemplate) {
-    return wrapEmailTemplate(htmlWithButtons, headerImageUrl, footerText)
+    return await wrapEmailTemplate(htmlWithButtons, headerImageUrl, footerText)
   }
   
   return htmlWithButtons
@@ -117,11 +107,13 @@ export function markdownToHtml(
  * 이메일 HTML 템플릿으로 감싸기
  * 네이버 메일 호환성을 위해 테이블 기반 레이아웃과 인라인 스타일 사용
  */
-function wrapEmailTemplate(
+async function wrapEmailTemplate(
   body: string, 
   headerImageUrl?: string | null,
   footerText?: string | null
-): string {
+): Promise<string> {
+  // 동적 import로 DOMPurify 로드 (ESM 호환성)
+  const DOMPurify = (await import('isomorphic-dompurify')).default
   // 헤더 이미지 HTML (테이블 기반, 중앙 정렬)
   const headerImageHtml = headerImageUrl 
     ? `

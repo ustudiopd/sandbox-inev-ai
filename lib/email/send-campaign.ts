@@ -128,7 +128,7 @@ async function sendSingleEmail(
     const processedBody = processTemplate(emailData.bodyMd, personalizedVariables)
 
     // 마크다운 → HTML 변환 (헤더 이미지와 푸터 텍스트 포함)
-    const html = markdownToHtml(processedBody, true, emailData.headerImageUrl, emailData.footerText)
+    const html = await markdownToHtml(processedBody, true, emailData.headerImageUrl, emailData.footerText)
     const text = markdownToText(processedBody)
 
     // 이메일 발송
