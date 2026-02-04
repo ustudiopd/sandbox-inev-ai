@@ -10,16 +10,6 @@ export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
 /**
- * 지원하지 않는 메서드 처리
- */
-export async function GET() {
-  return NextResponse.json(
-    { success: false, error: 'Method not allowed. Use POST.' },
-    { status: 405 }
-  )
-}
-
-/**
  * POST /api/client/emails/[id]/test-send
  * 테스트 이메일 발송
  */
