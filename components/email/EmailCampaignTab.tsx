@@ -316,7 +316,7 @@ export default function EmailCampaignTab({ clientId, scopeType, scopeId }: Email
     }
   }
   
-  const handlePreview = async () => {
+  const handlePreview = () => {
     const variables = campaignDetail?.variables_json || {}
     // 미리보기용 샘플 개인화 변수 추가
     const previewVariables = {
@@ -337,7 +337,7 @@ export default function EmailCampaignTab({ clientId, scopeType, scopeId }: Email
     const processedFooter = processTemplate(footerTextToUse, previewVariables)
     
     // 마크다운을 HTML로 변환 (헤더 이미지와 푸터 포함)
-    const fullHtml = await markdownToHtml(
+    const fullHtml = markdownToHtml(
       processedBody,
       true,
       editForm.header_image_url || null,

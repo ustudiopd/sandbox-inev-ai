@@ -1,4 +1,5 @@
 import { marked } from 'marked'
+import sanitizeHtml from 'sanitize-html'
 
 // 기본 푸터 텍스트 (마크다운 형식)
 const DEFAULT_FOOTER_TEXT = `본 이메일은 워트 웨비나 등록 확인을 위해 발송되었습니다.
@@ -67,37 +68,36 @@ function convertLinksToButtons(html: string): string {
  * @param footerText 푸터 텍스트 (선택, 마크다운 지원)
  * @returns HTML 문자열
  */
-export async function markdownToHtml(
+export function markdownToHtml(
   markdown: string, 
   includeTemplate: boolean = true,
   headerImageUrl?: string | null,
   footerText?: string | null
-): Promise<string> {
-  // 동적 import로 DOMPurify 로드 (ESM 호환성)
-  const DOMPurify = (await import('isomorphic-dompurify')).default
-
+): string {
   // 마크다운 → HTML 변환
   const htmlBody = marked(markdown, {
     breaks: true, // 줄바꿈을 <br>로 변환
     gfm: true, // GitHub Flavored Markdown 지원
   }) as string
 
-  // XSS 방지: HTML sanitization
-  const sanitizedHtml = DOMPurify.sanitize(htmlBody, {
-    ALLOWED_TAGS: [
+  // XSS 방지: HTML sanitization (sanitize-html 사용, jsdom 의존성 없음)
+  const sanitizedHtml = sanitizeHtml(htmlBody, {
+    allowedTags: [
       'p', 'br', 'strong', 'em', 'u', 'a', 'ul', 'ol', 'li',
       'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
       'img', 'blockquote', 'code', 'pre'
     ],
-    ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'class', 'style'],
-    ALLOW_DATA_ATTR: false,
+    allowedAttributes: {
+      '*': ['href', 'src', 'alt', 'title', 'class', 'style'],
+    },
+    allowedSchemes: ['http', 'https', 'mailto'],
   })
 
   // 먼저 링크를 버튼 스타일로 변환 (style 속성이 없는 링크만 변환)
   const htmlWithButtons = convertLinksToButtons(sanitizedHtml)
 
   if (includeTemplate) {
-    return await wrapEmailTemplate(htmlWithButtons, headerImageUrl, footerText)
+    return wrapEmailTemplate(htmlWithButtons, headerImageUrl, footerText)
   }
   
   return htmlWithButtons
@@ -107,13 +107,11 @@ export async function markdownToHtml(
  * 이메일 HTML 템플릿으로 감싸기
  * 네이버 메일 호환성을 위해 테이블 기반 레이아웃과 인라인 스타일 사용
  */
-async function wrapEmailTemplate(
+function wrapEmailTemplate(
   body: string, 
   headerImageUrl?: string | null,
   footerText?: string | null
-): Promise<string> {
-  // 동적 import로 DOMPurify 로드 (ESM 호환성)
-  const DOMPurify = (await import('isomorphic-dompurify')).default
+): string {
   // 헤더 이미지 HTML (테이블 기반, 중앙 정렬)
   const headerImageHtml = headerImageUrl 
     ? `
@@ -148,10 +146,12 @@ async function wrapEmailTemplate(
     breaks: true,
     gfm: true,
   }) as string
-  const sanitizedFooter = DOMPurify.sanitize(footerMarkdown, {
-    ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 'a', 'ul', 'ol', 'li'],
-    ALLOWED_ATTR: ['href', 'style'],
-    ALLOW_DATA_ATTR: false,
+  const sanitizedFooter = sanitizeHtml(footerMarkdown, {
+    allowedTags: ['p', 'br', 'strong', 'em', 'u', 'a', 'ul', 'ol', 'li'],
+    allowedAttributes: {
+      '*': ['href', 'style'],
+    },
+    allowedSchemes: ['http', 'https', 'mailto'],
   })
   
   // 푸터의 <p> 태그에 인라인 스타일 추가
