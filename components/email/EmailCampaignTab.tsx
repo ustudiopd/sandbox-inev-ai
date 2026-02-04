@@ -4,6 +4,31 @@ import { useState, useEffect, useRef } from 'react'
 import { markdownToHtml } from '@/lib/email/markdown-to-html'
 import { processTemplate } from '@/lib/email/template-processor'
 
+// 안전한 JSON 파싱 유틸리티 함수
+async function safeJsonParse<T = any>(response: Response): Promise<T> {
+  if (!response.ok) {
+    const text = await response.text().catch(() => '')
+    throw new Error(text || `HTTP ${response.status}: ${response.statusText}`)
+  }
+  
+  const contentType = response.headers.get('content-type')
+  if (!contentType || !contentType.includes('application/json')) {
+    const text = await response.text().catch(() => '')
+    throw new Error(`예상치 못한 응답 형식: ${contentType || '알 수 없음'}`)
+  }
+  
+  const text = await response.text()
+  if (!text || text.trim() === '') {
+    throw new Error('응답이 비어있습니다')
+  }
+  
+  try {
+    return JSON.parse(text) as T
+  } catch (error) {
+    throw new Error(`JSON 파싱 실패: ${error instanceof Error ? error.message : '알 수 없는 오류'}`)
+  }
+}
+
 // 기본 푸터 텍스트 (마크다운 형식)
 const DEFAULT_FOOTER_TEXT = `본 이메일은 워트 웨비나 등록 확인을 위해 발송되었습니다.
 
@@ -104,7 +129,7 @@ export default function EmailCampaignTab({ clientId, scopeType, scopeId }: Email
   const fetchClientEmailPolicy = async () => {
     try {
       const response = await fetch(`/api/client/emails/policy?clientId=${clientId}`)
-      const result = await response.json()
+      const result = await safeJsonParse(response)
       if (result.success) {
         setClientEmailPolicy(result.data)
       }
@@ -117,7 +142,7 @@ export default function EmailCampaignTab({ clientId, scopeType, scopeId }: Email
     try {
       setLoadingImages(true)
       const response = await fetch(`/api/client/images?clientId=${clientId}`)
-      const result = await response.json()
+      const result = await safeJsonParse(response)
       
       if (result.success) {
         setImages(result.data.images || [])
@@ -413,7 +438,35 @@ export default function EmailCampaignTab({ clientId, scopeType, scopeId }: Email
         body: JSON.stringify({ testEmails: emails }),
       })
       
-      const result = await response.json()
+      // 응답 상태 확인
+      if (!response.ok) {
+        const errorText = await response.text().catch(() => '')
+        let errorMessage = `서버 오류 (${response.status})`
+        try {
+          const errorJson = errorText ? JSON.parse(errorText) : {}
+          errorMessage = errorJson.error || errorMessage
+        } catch {
+          if (errorText) errorMessage = errorText
+        }
+        alert(`테스트 발송 실패: ${errorMessage}`)
+        return
+      }
+      
+      // 응답 본문 확인
+      const text = await response.text()
+      if (!text) {
+        alert('테스트 발송 실패: 서버에서 응답이 없습니다.')
+        return
+      }
+      
+      let result
+      try {
+        result = JSON.parse(text)
+      } catch (parseError) {
+        console.error('JSON 파싱 오류:', parseError, '응답:', text)
+        alert(`테스트 발송 실패: 서버 응답 형식 오류 (${text.substring(0, 100)})`)
+        return
+      }
       
       if (result.success) {
         const { success, failed } = result.data.run.meta_json
@@ -574,6 +627,22 @@ export default function EmailCampaignTab({ clientId, scopeType, scopeId }: Email
         setAllRecipients(listResult.data.recipients || [])
         // 기본값: 전체 선택
         setSelectedRecipients(new Set(listResult.data.recipients.map((r: { email: string }) => r.email)))
+        
+        // 예약 발송 시간 기본값: 현재 시간(KST 기준) + 1시간
+        // KST 기준 현재 시간 계산
+        const nowUTC = new Date()
+        const nowKST = new Date(nowUTC.toLocaleString('en-US', { timeZone: 'Asia/Seoul' }))
+        const scheduledTimeKST = new Date(nowKST.getTime() + 60 * 60 * 1000) // 1시간 = 60분
+        
+        // datetime-local 형식으로 변환 (YYYY-MM-DDTHH:mm)
+        const year = scheduledTimeKST.getFullYear()
+        const month = String(scheduledTimeKST.getMonth() + 1).padStart(2, '0')
+        const day = String(scheduledTimeKST.getDate()).padStart(2, '0')
+        const hours = String(scheduledTimeKST.getHours()).padStart(2, '0')
+        const minutes = String(scheduledTimeKST.getMinutes()).padStart(2, '0')
+        const scheduledTimeString = `${year}-${month}-${day}T${hours}:${minutes}`
+        setScheduledSendAt(scheduledTimeString)
+        
         setShowScheduleModal(true)
       } else {
         alert(`수신자 조회 실패: ${previewResult.error || listResult.error || '알 수 없는 오류'}`)
