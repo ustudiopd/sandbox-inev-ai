@@ -153,7 +153,20 @@ export default async function SurveyCampaignDetailPage({
         
         const detailedAnswers = questions.map((q: any) => {
           const answer = answersMap.get(q.id)
-          const parsedOptions = q.options ? (typeof q.options === 'string' ? JSON.parse(q.options) : q.options) : []
+          let parsedOptions: any[] = []
+          
+          // options 파싱 (에러 처리 포함)
+          try {
+            if (q.options) {
+              parsedOptions = typeof q.options === 'string' ? JSON.parse(q.options) : q.options
+              if (!Array.isArray(parsedOptions)) {
+                parsedOptions = []
+              }
+            }
+          } catch (parseError) {
+            console.error('옵션 파싱 오류:', parseError, 'options:', q.options)
+            parsedOptions = []
+          }
           
           let displayAnswer = '답변 없음'
           if (answer) {
