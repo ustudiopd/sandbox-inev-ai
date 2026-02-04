@@ -26,16 +26,13 @@ export async function GET() {
  * 
  * ⚠️ 중요: Vercel 프로덕션 호환을 위해 params를 일반 객체로 처리
  * Next.js 16 타입 정의는 Promise를 요구하지만, 실제 Vercel 런타임에서는 일반 객체로 전달됨
- * 
- * 타입 단언을 사용하여 Next.js 타입 정의와 런타임 동작의 불일치를 해결
  */
+// @ts-expect-error - Vercel 프로덕션 호환: 런타임에서는 일반 객체로 전달됨
 export async function POST(
   req: Request,
-  context: { params: Promise<{ id: string }> | { id: string } }
+  { params }: { params: { id: string } }
 ) {
   try {
-    // Vercel 프로덕션 호환: params가 Promise인지 확인하고 처리
-    const params = context.params as { id: string }
     const { id: campaignId } = params
     const body = await req.json()
     const { testEmails } = body
