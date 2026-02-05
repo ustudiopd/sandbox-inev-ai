@@ -371,7 +371,7 @@ label.tight-letter-spacing {
   letter-spacing: -0.15em !important;
 }
 
-/* 다크 모드에서 입력창이 보이도록 스타일 추가 */
+/* 다크 모드에서 입력창 텍스트만 잘 보이도록 스타일 추가 (디자인은 라이트 테마 유지) */
 @media (prefers-color-scheme: dark) {
   input[type="text"],
   input[type="email"],
@@ -385,9 +385,8 @@ label.tight-letter-spacing {
   input[type="datetime-local"],
   textarea,
   select {
-    background-color: #1f2937 !important;
-    color: #ffffff !important;
-    border-color: #374151 !important;
+    color: #111827 !important;
+    -webkit-text-fill-color: #111827 !important;
   }
   
   input[type="text"]::placeholder,
@@ -399,7 +398,8 @@ label.tight-letter-spacing {
   input[type="url"]::placeholder,
   textarea::placeholder,
   select::placeholder {
-    color: #9ca3af !important;
+    color: #6b7280 !important;
+    opacity: 1 !important;
   }
   
   input[type="text"]:focus,
@@ -414,8 +414,7 @@ label.tight-letter-spacing {
   input[type="datetime-local"]:focus,
   textarea:focus,
   select:focus {
-    background-color: #1f2937 !important;
-    color: #ffffff !important;
-    border-color: #3b82f6 !important;
+    color: #111827 !important;
+    -webkit-text-fill-color: #111827 !important;
   }
 }
