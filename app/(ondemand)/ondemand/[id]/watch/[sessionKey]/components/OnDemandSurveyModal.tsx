@@ -199,6 +199,7 @@ export default function OnDemandSurveyModal({
                   onChange={(e) => setName(e.target.value)}
                   className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder-gray-400"
                   placeholder="이름"
+                  style={{ backgroundColor: '#ffffff', color: '#111827' }}
                 />
               </div>
               <div>
@@ -209,6 +210,7 @@ export default function OnDemandSurveyModal({
                   onChange={(e) => setCompany(e.target.value)}
                   className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder-gray-400"
                   placeholder="회사명"
+                  style={{ backgroundColor: '#ffffff', color: '#111827' }}
                 />
               </div>
               <div>
@@ -219,6 +221,7 @@ export default function OnDemandSurveyModal({
                     value={phone1}
                     onChange={(e) => handlePhoneChange('phone1', e.target.value)}
                     className="w-14 rounded-lg border border-gray-300 bg-white px-2 py-2 text-gray-900 text-center"
+                    style={{ backgroundColor: '#ffffff', color: '#111827' }}
                   />
                   <span className="self-center text-gray-400">-</span>
                   <input
@@ -227,6 +230,7 @@ export default function OnDemandSurveyModal({
                     onChange={(e) => handlePhoneChange('phone2', e.target.value)}
                     className="flex-1 max-w-20 rounded-lg border border-gray-300 bg-white px-2 py-2 text-gray-900 text-center"
                     maxLength={4}
+                    style={{ backgroundColor: '#ffffff', color: '#111827' }}
                   />
                   <span className="self-center text-gray-400">-</span>
                   <input
@@ -235,6 +239,7 @@ export default function OnDemandSurveyModal({
                     onChange={(e) => handlePhoneChange('phone3', e.target.value)}
                     className="flex-1 max-w-20 rounded-lg border border-gray-300 bg-white px-2 py-2 text-gray-900 text-center"
                     maxLength={4}
+                    style={{ backgroundColor: '#ffffff', color: '#111827' }}
                   />
                 </div>
               </div>
