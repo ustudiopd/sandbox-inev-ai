@@ -235,6 +235,7 @@ export default function WebinarView({ webinar, isAdminMode = false }: WebinarVie
           // 삭제된 폼을 previousItemsRef와 shownPopups에서 제거
           // 삭제된 폼이 다시 생성될 수 있으므로 shownPopups에서도 제거하여 팝업이 다시 뜨도록 함
           if (deletedFormIds.length > 0) {
+            console.log('[WebinarView] 삭제된 폼 감지:', deletedFormIds)
             deletedFormIds.forEach((formId) => {
               previousItemsRef.current.forms.delete(formId)
             })
@@ -250,6 +251,7 @@ export default function WebinarView({ webinar, isAdminMode = false }: WebinarVie
           // openForms 상태를 업데이트하여 UI가 즉시 반영되도록 함
           // 삭제된 폼은 loadedForms에 없으므로 자동으로 제거됨
           setOpenForms(loadedForms)
+          console.log('[WebinarView] openForms 업데이트:', loadedForms.length, '개')
           
           // 새로 오픈된 폼 찾기 (이전에 없었거나 상태가 'open'으로 변경된 것)
           if (!isInitialLoadRef.current) {
@@ -263,6 +265,7 @@ export default function WebinarView({ webinar, isAdminMode = false }: WebinarVie
             })
             
             if (newlyOpenedForms.length > 0) {
+              console.log('[WebinarView] 새로 오픈된 폼 감지:', newlyOpenedForms.map((f: any) => ({ id: f.id, title: f.title || f.name })))
               // 모든 새로 오픈된 폼에 대해 팝업 표시 (마지막 것이 우선)
               // 여러 폼이 동시에 오픈되면 마지막 폼만 팝업으로 표시
               const newForm = newlyOpenedForms[newlyOpenedForms.length - 1]
@@ -273,13 +276,23 @@ export default function WebinarView({ webinar, isAdminMode = false }: WebinarVie
               const isNewForm = !previousStatus
               const wasReopened = previousStatus && previousStatus !== 'open'
               
+              console.log('[WebinarView] 팝업 표시 조건:', { 
+                popupKey, 
+                isNewForm, 
+                wasReopened, 
+                previousStatus,
+                formId: newForm.id 
+              })
+              
               // 함수형 업데이트를 사용하여 최신 shownPopups 상태 확인하고 업데이트
               setShownPopups((prev) => {
                 const isInShownPopups = prev.has(popupKey)
+                console.log('[WebinarView] shownPopups 체크:', { popupKey, isInShownPopups, prevSize: prev.size })
                 // 새 폼이거나, 다시 오픈된 폼이거나, shownPopups에 없으면 팝업 표시
                 if (isNewForm || wasReopened || !isInShownPopups) {
                   const next = new Set(prev)
                   next.add(popupKey)
+                  console.log('[WebinarView] shownPopups에 추가:', popupKey)
                   return next
                 }
                 return prev
@@ -288,6 +301,7 @@ export default function WebinarView({ webinar, isAdminMode = false }: WebinarVie
               // 팝업 표시는 별도로 처리 (상태 업데이트와 분리)
               // 새 폼이거나 다시 오픈된 폼이면 무조건 팝업 표시
               if (isNewForm || wasReopened) {
+                console.log('[WebinarView] 팝업 표시 실행:', { id: newForm.id, title: newForm.title || newForm.name })
                 // 약간의 지연을 두어 상태 업데이트가 완료된 후 팝업 표시
                 requestAnimationFrame(() => {
                   setPopupContent({
