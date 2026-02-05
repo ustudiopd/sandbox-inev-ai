@@ -94,11 +94,11 @@ export default function Chat({
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
         try {
-          // 웨비나 등록 정보 확인 (참여자 여부)
+          // 웨비나 등록 정보 확인 (참여자 여부 및 닉네임)
           const [registrationResponse, profileResponse, adminCheckResponse] = await Promise.all([
             supabase
               .from('registrations')
-              .select('role')
+              .select('role, nickname')
               .eq('webinar_id', webinarId)
               .eq('user_id', user.id)
               .maybeSingle(),
@@ -110,7 +110,7 @@ export default function Chat({
             })
           ])
           
-          const registration = registrationResponse.data as { role?: string } | null
+          const registration = registrationResponse.data as { role?: string; nickname?: string } | null
           const isParticipant = (registration as any)?.role === 'attendee'
           
           // 관리자 여부 확인
@@ -128,14 +128,9 @@ export default function Chat({
           
           // displayName 결정: registrations.nickname > profiles.nickname > display_name > email > '익명'
           let displayName = '익명'
-          // API 응답에서 registration 정보 확인 (nickname 포함)
-          const registrationData = await fetch(`/api/webinars/${webinarId}/check-registration?userId=${user.id}`)
-            .then(res => res.ok ? res.json() : null)
-            .catch(() => null)
-          
-          if (registrationData?.nickname) {
+          if (registration?.nickname) {
             // 웨비나별 닉네임이 최우선
-            displayName = registrationData.nickname
+            displayName = registration.nickname
           } else if ((profile as any)?.nickname) {
             // 프로필 기본 닉네임
             displayName = (profile as any).nickname

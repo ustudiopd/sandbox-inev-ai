@@ -163,7 +163,8 @@ export async function PUT(
     if (projectName !== undefined) updateData.project_name = projectName || null
     if (title !== undefined) updateData.title = title
     if (description !== undefined) updateData.description = description
-    if (youtubeUrl !== undefined) updateData.youtube_url = youtubeUrl
+    // youtubeUrl은 빈 문자열도 허용하므로 undefined가 아닌 경우 모두 업데이트
+    if (youtubeUrl !== undefined) updateData.youtube_url = youtubeUrl || null
     if (startTime !== undefined) updateData.start_time = startTime || null
     if (endTime !== undefined) updateData.end_time = endTime || null
     if (webinarStartTime !== undefined) updateData.webinar_start_time = webinarStartTime || null

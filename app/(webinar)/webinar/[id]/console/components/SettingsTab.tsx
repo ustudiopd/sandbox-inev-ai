@@ -126,7 +126,7 @@ export default function SettingsTab({ webinar, onWebinarUpdate }: SettingsTabPro
         projectName: formData.projectName || null,
         title: formData.title,
         description: formData.description || null,
-        youtubeUrl: formData.youtubeUrl,
+        youtubeUrl: formData.youtubeUrl.trim() || null, // 빈 문자열도 null로 변환하여 명시적으로 업데이트
         startTime: convertToUTC(formData.startTime),
         endTime: convertToUTC(formData.endTime),
         maxParticipants: formData.maxParticipants ? parseInt(formData.maxParticipants) : null,
@@ -137,6 +137,8 @@ export default function SettingsTab({ webinar, onWebinarUpdate }: SettingsTabPro
         emailThumbnailUrl: formData.emailThumbnailUrl || null,
       }
 
+      console.log('웨비나 설정 저장 요청:', requestBody) // 디버깅용
+
       const response = await fetch(`/api/webinars/${webinar.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -144,6 +146,8 @@ export default function SettingsTab({ webinar, onWebinarUpdate }: SettingsTabPro
       })
 
       const result = await response.json()
+
+      console.log('웨비나 설정 저장 응답:', result) // 디버깅용
 
       if (!response.ok) {
         throw new Error(result.error || `서버 오류 (${response.status})`)
@@ -155,6 +159,11 @@ export default function SettingsTab({ webinar, onWebinarUpdate }: SettingsTabPro
 
       if (onWebinarUpdate && result.webinar) {
         onWebinarUpdate(result.webinar)
+        // 폼 데이터도 업데이트하여 UI 동기화
+        setFormData({
+          ...formData,
+          youtubeUrl: result.webinar.youtube_url || '',
+        })
       }
       
       alert('웨비나 설정이 성공적으로 저장되었습니다')
@@ -562,7 +571,7 @@ ${webinar.title}
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            YouTube URL *
+            YouTube URL
           </label>
           <input
             type="url"
@@ -570,7 +579,6 @@ ${webinar.title}
             onChange={(e) => setFormData({ ...formData, youtubeUrl: e.target.value })}
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             placeholder="https://www.youtube.com/watch?v=..."
-            required
           />
         </div>
 
