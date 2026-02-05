@@ -87,14 +87,14 @@ export default function OnDemandPlayerPage({ webinar, session }: OnDemandPlayerP
   
   return (
     <div className="min-h-screen bg-[#171F32]">
-      {/* Hero Section with Video - 1600x928 */}
+      {/* Hero Section with Video - 1600x928 / 태블릿: 높이 조정 / PC: 자연스러운 전환 / 996px 구간 수정 / 1600px 줄어들 때 정보섹션과 동일 타이밍 / 742px 구간 수정 */}
       <div
-        className="relative bg-[#171F32] min-h-[500px] sm:min-h-[600px] md:min-h-[700px] w-full lg:w-[1600px] lg:h-[928px] lg:mx-auto max-sm:min-h-[400px]"
+        className="relative bg-[#171F32] min-h-[500px] sm:min-h-[750px] md:min-h-[800px] lg:h-[900px] xl:h-[928px] w-full lg:w-full lg:max-w-[1600px] xl:max-w-[1600px] xl:w-[1600px] lg:mx-auto max-sm:min-h-[400px]"
       >
         {/* Full width background wrapper */}
         <div className="absolute inset-0 w-full bg-[#171F32]"></div>
-        {/* Content container 1600x928 */}
-        <div className="relative w-full h-full lg:w-[1600px] lg:h-[928px] max-w-[1600px] mx-auto">
+        {/* Content container 1600x928 / PC: 자연스러운 전환 / 1600px 줄어들 때 정보섹션과 동일 타이밍 */}
+        <div className="relative w-full h-full lg:w-full lg:max-w-[1600px] xl:max-w-[1600px] xl:w-[1600px] lg:h-[900px] xl:h-[928px] mx-auto">
           {/* Background Image */}
           <div className="absolute inset-0 w-full z-0">
             <img
@@ -108,31 +108,28 @@ export default function OnDemandPlayerPage({ webinar, session }: OnDemandPlayerP
             />
           </div>
           
-          {/* Shape Layer */}
-          <div className="absolute inset-0 z-[1] max-sm:hidden">
-            <div 
-              className="absolute inset-0 min-[1601px]:left-0 max-[1600px]:left-1/2 max-[1600px]:-translate-x-1/2"
-              style={{ width: '1600px', minWidth: '1600px' }}
-            >
+          {/* Shape Layer - 태블릿: 아래 왼쪽 기준으로 줄어듦 */}
+          <div className="absolute inset-0 z-[1] overflow-hidden hidden md:block">
+            <div className="relative w-full h-full">
               <Image
                 src={hpeVideoBgImageUrl}
                 alt="HPE Shape"
                 fill
-                className="object-cover object-left"
+                className="object-contain object-left-bottom"
                 priority
                 sizes="1600px"
               />
             </div>
           </div>
           
-          {/* Close Button - 오른쪽 위 */}
+          {/* Close Button - 오른쪽 위 / 태블릿: 크기 조정 */}
           <button
             onClick={() => window.close()}
-            className="absolute top-4 sm:top-8 md:top-12 right-4 sm:right-6 lg:right-8 z-30 w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 bg-black/50 hover:bg-black/70 rounded-full flex items-center justify-center transition-colors max-sm:w-8 max-sm:h-8 max-sm:top-3 max-sm:right-3"
+            className="absolute top-4 sm:top-8 md:top-10 lg:top-12 right-4 sm:right-6 md:right-6 lg:right-8 z-30 w-10 h-10 sm:w-12 sm:h-12 md:w-12 md:h-12 lg:w-14 lg:h-14 bg-black/50 hover:bg-black/70 rounded-full flex items-center justify-center transition-colors max-sm:w-8 max-sm:h-8 max-sm:top-3 max-sm:right-3"
             aria-label="닫기"
           >
             <svg
-              className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-white max-sm:w-4 max-sm:h-4"
+              className="w-6 h-6 sm:w-7 sm:h-7 md:w-7 md:h-7 lg:w-8 lg:h-8 text-white max-sm:w-4 max-sm:h-4"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -146,48 +143,48 @@ export default function OnDemandPlayerPage({ webinar, session }: OnDemandPlayerP
             </svg>
           </button>
           
-          {/* HPE Logo - 왼쪽 50px */}
-          <div className="absolute left-[50px] top-[90px] z-20 max-sm:left-4 max-sm:top-3">
+          {/* HPE Logo - 왼쪽 50px / 태블릿: 크기 조정 / 1600px에서 줄어들 때 위로 이동하면서 최적화 / 1257px 부드러운 전환 / 태블릿: 홈 버튼과 간격 / PC: 위치 조정 */}
+          <div className="absolute top-3 sm:top-3 md:top-3 lg:top-5 xl:top-6 2xl:top-16 left-4 sm:left-4 md:left-4 lg:left-5 xl:left-6 2xl:left-8 z-30 max-sm:top-3 max-sm:left-4">
             <Image
               src="/img/hpe/hpe_logo.png"
               alt="HPE"
               width={120}
               height={40}
-              className="object-contain w-20 h-7 sm:w-24 sm:h-8 md:w-[120px] md:h-10 max-sm:w-16 max-sm:h-5"
+              className="object-contain w-20 h-7 sm:w-24 sm:h-8 md:w-[100px] md:h-[33px] lg:w-[105px] lg:h-[35px] xl:w-[110px] xl:h-[36px] 2xl:w-[120px] 2xl:h-10 max-sm:w-16 max-sm:h-5"
               priority
             />
           </div>
           
-          {/* Home Icon and Category - 플레이어 카드 왼쪽 선에 맞춤 */}
-          <div className="absolute top-4 sm:top-8 md:top-12 z-20 flex items-center gap-3 sm:gap-4 md:gap-6 w-full max-w-[1200px] left-1/2 -translate-x-1/2 px-4 sm:px-6 lg:px-8 max-sm:top-16 max-sm:px-4">
-            <div className="w-full max-w-[1070px] mx-auto flex items-center gap-3 sm:gap-4 md:gap-6 max-sm:gap-2">
+          {/* Home Icon and Category - 플레이어 카드 왼쪽 선에 맞춤 / 태블릿: 플레이어 왼쪽 라인에 맞춤 / 1600px에서 줄어들 때 최적화 / 1257px 부드러운 전환 / 태블릿: HPE와 간격 */}
+          <div className="absolute top-12 sm:top-12 md:top-16 lg:top-[56px] xl:top-16 2xl:top-12 z-20 flex items-center gap-3 sm:gap-4 md:gap-5 lg:gap-5.5 xl:gap-6 w-full max-w-[1200px] left-1/2 -translate-x-1/2 px-4 sm:px-6 md:px-6 lg:px-6 xl:px-8 max-sm:top-16 max-sm:px-4">
+            <div className="w-full max-w-[1070px] md:w-full md:max-w-[calc(100vw-4rem)] md:mx-auto lg:w-full lg:max-w-[900px] lg:mx-auto xl:w-full xl:max-w-[1070px] xl:mx-auto 2xl:max-w-[1070px] 2xl:mx-auto flex items-center gap-3 sm:gap-4 md:gap-5 lg:gap-5.5 xl:gap-6 max-sm:gap-2">
               <Link href={`/ondemand/${webinarPath}/watch`}>
                 <Image
                   src="/img/hpe/ic_5.png"
                   alt="홈으로"
                   width={48}
                   height={48}
-                  className="w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16 object-contain cursor-pointer hover:opacity-80 transition-opacity max-sm:w-8 max-sm:h-8"
+                  className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 lg:w-[60px] lg:h-[60px] xl:w-16 xl:h-16 object-contain cursor-pointer hover:opacity-80 transition-opacity max-sm:w-8 max-sm:h-8"
                   priority
                 />
               </Link>
               {session.category_label && (
-                <span className="text-white text-lg sm:text-xl md:text-2xl lg:text-3xl font-medium max-sm:text-base">
+                <span className="text-white text-lg sm:text-xl md:text-xl lg:text-2xl xl:text-3xl font-medium max-sm:text-base">
                   {session.category_label}
                 </span>
               )}
             </div>
           </div>
           
-          {/* Video Player */}
-          <div className="absolute top-[127px] z-20 w-full max-sm:relative max-sm:top-0">
-            <div className="w-full max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 max-sm:px-4 max-sm:pt-28">
-              <div className="flex flex-col gap-4 sm:gap-6 lg:gap-6 w-full max-w-[1070px] mx-auto pb-0 lg:pb-0 max-sm:gap-4">
+          {/* Video Player / 태블릿: 양옆 마진 / PC: 자연스러운 전환 / 1600px에서 줄어들 때 크기 유지 / 1257px 부드러운 전환 */}
+          <div className="absolute top-[127px] md:top-[120px] lg:top-[121px] xl:top-[123px] 2xl:top-[127px] z-20 w-full max-sm:relative max-sm:top-0">
+            <div className="w-full max-w-[1200px] md:w-full md:px-4 lg:w-full lg:px-2 xl:w-full xl:px-6 2xl:max-w-[1200px] 2xl:px-8 mx-auto px-4 sm:px-6 max-sm:px-4 max-sm:pt-28">
+              <div className="flex flex-col gap-4 sm:gap-6 md:gap-4 lg:gap-5 xl:gap-5.5 2xl:gap-6 w-full max-w-[1070px] md:w-full md:max-w-[calc(100vw-4rem)] lg:w-full lg:max-w-[900px] xl:w-full xl:max-w-[1070px] 2xl:max-w-[1070px] mx-auto pb-0 lg:pb-0 max-sm:gap-4">
                 
-                {/* Video Player - 1070x602 */}
+                {/* Video Player - 1070x602 / 태블릿: 양옆 마진 / PC: 부드럽게 줄어듦 / 1600px에서 줄어들 때 크기 유지 / 1257px 부드러운 전환 */}
                 <div
-                  className="bg-black rounded-lg shadow-2xl overflow-hidden w-full mx-auto"
-                  style={{ maxWidth: 1070, aspectRatio: '1070/602' }}
+                  className="bg-black rounded-lg shadow-2xl overflow-hidden w-full mx-auto md:rounded-lg lg:w-[900px] lg:mx-auto xl:w-[1070px] xl:mx-auto 2xl:w-full"
+                  style={{ aspectRatio: '1070/602' }}
                 >
                   <div className="relative w-full h-full">
                     {session.provider === 'vimeo' ? (
@@ -213,11 +210,11 @@ export default function OnDemandPlayerPage({ webinar, session }: OnDemandPlayerP
                   </div>
                 </div>
                 
-                {/* Description and Presenter Info - 플레이어와 간격 20px */}
-                <div className="flex flex-col lg:flex-row lg:justify-between gap-4 lg:gap-12 mt-2 sm:mt-4 lg:mt-2 mb-0 lg:mb-0 max-sm:mt-4">
-                  {/* Description */}
-                  <div className="w-full lg:w-[680px]">
-                    <p className="text-white text-sm sm:text-base leading-relaxed text-left max-sm:text-xs max-sm:leading-relaxed">
+                {/* Description and Presenter Info - 플레이어와 간격 20px / 태블릿: 레이아웃 조정 / PC: 자연스러운 전환 / 태블릿: 정렬 */}
+                <div className="flex flex-col lg:flex-row lg:justify-between gap-4 md:gap-4 lg:gap-10 xl:gap-12 mt-2 sm:mt-4 md:mt-3 lg:mt-2 xl:mt-2 mb-0 lg:mb-0 max-sm:mt-4 md:px-0 lg:px-0">
+                  {/* Description / 태블릿: 크기 조정 / PC: 자연스러운 전환 / 태블릿: 정렬 */}
+                  <div className="w-full lg:w-full lg:max-w-[600px] xl:w-[680px]">
+                    <p className="text-white text-sm sm:text-base md:text-sm lg:text-[15px] xl:text-base leading-relaxed text-left max-sm:text-xs max-sm:leading-relaxed">
                       {session.description || (session.session_key === 'platform_ai_native_networking' || session.session_key === 'datacenter_ai_high_performance'
                         ? 'AI 워크로드는 성능, 네트워크 설계, 운영 측면에서 기존의 방식으로는 감당하기 어려운 복잡성을 만들어 내며, 네트워크는 이러한 AI 데이터센터의 핵심 기반이 됩니다. HPE Juniper Networking의 데이터센터 솔루션은 개방형 유연성과 통합 AIOps를 통해 운영을 단순화하고 비용과 복잡성을 줄이며, 검증된 솔루션 성능으로 보안과 안정성을 갖춘 AI 데이터센터 구축을 가속화할 수 있습니다.'
                         : session.session_key === 'campus_aruba_smart_experience'
@@ -226,21 +223,21 @@ export default function OnDemandPlayerPage({ webinar, session }: OnDemandPlayerP
                     </p>
                   </div>
                   
-                  {/* Presenter Introduction - 히어로(1600px) 오른쪽 끝에서 347px, 블록 전체 15px 오른쪽 / 간격: 박스-이름 20px, 이름-HPE 14px */}
-                  <div className="flex-shrink-0 flex flex-row lg:flex-col items-center lg:items-start w-full lg:w-auto lg:mr-[42px] lg:ml-[15px] gap-3 lg:gap-0 max-sm:gap-2">
-                    <div className="bg-[#00AB84] text-black rounded-full text-sm font-medium whitespace-nowrap flex items-center justify-center w-[112px] h-[32px] lg:mb-2 max-sm:text-xs max-sm:w-24 max-sm:h-7">
+                  {/* Presenter Introduction - 히어로(1600px) 오른쪽 끝에서 347px, 블록 전체 15px 오른쪽 / 간격: 박스-이름 20px, 이름-HPE 14px / 태블릿: 크기 조정 / PC: 자연스러운 전환 / 태블릿: 정렬 */}
+                  <div className="flex-shrink-0 flex flex-row lg:flex-col items-center lg:items-start w-full lg:w-auto lg:mr-[35px] xl:mr-[42px] lg:ml-[12px] xl:ml-[15px] gap-3 md:gap-2.5 lg:gap-0 max-sm:gap-2 md:justify-start">
+                    <div className="bg-[#00AB84] text-black rounded-full text-sm md:text-xs lg:text-xs xl:text-sm font-medium whitespace-nowrap flex items-center justify-center w-[112px] h-[32px] md:w-[100px] md:h-[28px] lg:w-[105px] lg:h-[30px] xl:w-[112px] xl:h-[32px] lg:mb-2 max-sm:text-xs max-sm:w-24 max-sm:h-7">
                       발표자 소개
                     </div>
-                    <div className="flex flex-row lg:flex-col items-center lg:items-start text-left lg:pl-6 lg:min-w-0 gap-2 lg:gap-0 max-sm:gap-1.5">
+                    <div className="flex flex-row lg:flex-col items-center lg:items-start text-left lg:pl-5 xl:pl-6 lg:min-w-0 gap-2 md:gap-1.5 lg:gap-0 max-sm:gap-1.5">
                       {session.speaker && (
                         <>
-                          <p className="text-white text-sm sm:text-base font-medium max-sm:text-xs">
+                          <p className="text-white text-sm sm:text-base md:text-sm lg:text-[15px] xl:text-base font-medium max-sm:text-xs">
                             {session.speaker}
                           </p>
-                          <span className="text-white text-sm sm:text-base lg:hidden max-sm:text-xs">|</span>
+                          <span className="text-white text-sm sm:text-base md:text-sm lg:hidden max-sm:text-xs">|</span>
                         </>
                       )}
-                      <p className="text-white text-xs sm:text-sm max-sm:text-[10px]">
+                      <p className="text-white text-xs sm:text-sm md:text-xs lg:text-xs xl:text-sm max-sm:text-[10px]">
                         HPE Networking
                       </p>
                     </div>
@@ -252,69 +249,69 @@ export default function OnDemandPlayerPage({ webinar, session }: OnDemandPlayerP
         </div>
       </div>
 
-      {/* Info Box Section */}
-      <div className="pt-8 pb-0 sm:pt-10 sm:pb-8 max-sm:pt-6 max-sm:pb-6">
-        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 max-sm:px-4">
+      {/* Info Box Section / 태블릿: 패딩 조정 / PC: 자연스러운 전환 / 태블릿: 정렬 - 히어로 섹션과 구분 / 1600px 줄어들 때 히어로섹션과 동일 타이밍 / 742px 구간 수정 */}
+      <div className="relative bg-[#171F32] pt-8 pb-0 sm:pt-12 md:pt-9 lg:pt-9.5 xl:pt-10 sm:pb-8 max-sm:pt-6 max-sm:pb-6">
+        <div className="w-full lg:w-full lg:max-w-[1600px] xl:max-w-[1600px] xl:w-[1600px] mx-auto px-4 sm:px-6 md:px-4 lg:px-8 max-sm:px-4">
           <div className="w-full flex justify-center">
-            {/* Desktop Info Box */}
-            <div className="hidden lg:block w-full max-w-[1070px] h-40 relative bg-[#171F32] mx-auto">
-              {/* Ticket Image */}
-              <img className="w-32 h-20 left-[354.80px] top-[48.37px] absolute" src="/img/hpe/ticket.png" alt="Movie Ticket" />
-              
-              {/* Left Text */}
-              <div className="w-72 left-[29.51px] top-[30.46px] absolute justify-start">
-                <span className="text-white text-base font-medium leading-6">해당 온라인 행사에 참여 및 설문조사에 참여하신분들을 대상으로 '</span>
-                <span className="text-emerald-500 text-base font-medium leading-6">메가박스 2인 관람권' 기프트콘</span>
-                <span className="text-white text-base font-medium leading-6">을 발송해 드립니다.<br/><br/></span>
-                <span className="text-white text-sm font-normal leading-[8.38px]">(100분 무작위 추첨, 행사 종료 후 일괄 지급)</span>
+            {/* Desktop & Tablet Info Box - PC와 태블릿 표시 / PC: 자연스러운 전환 / 태블릿: 플레이어와 정렬 / 996px 구간 수정 */}
+            <div className="hidden md:block w-full md:w-full md:max-w-[calc(100vw-4rem)] md:mx-auto lg:w-full lg:max-w-[750px] lg:mx-auto xl:max-w-[1070px] h-40 relative bg-[#171F32] mx-auto overflow-hidden">
+              {/* Left Text / 태블릿: 크기 조정 / PC: 자연스러운 전환 / 태블릿: 정렬 */}
+              <div className="w-72 md:w-64 lg:w-64 xl:w-72 md:left-[29.51px] lg:left-[29.51px] top-[30.46px] absolute justify-start z-10">
+                <span className="text-white md:text-sm lg:text-sm xl:text-base font-medium md:leading-5 lg:leading-5 xl:leading-6">해당 온라인 행사에 참여 및 설문조사에 참여하신분들을 대상으로 '</span>
+                <span className="text-emerald-500 md:text-sm lg:text-sm xl:text-base font-medium md:leading-5 lg:leading-5 xl:leading-6">메가박스 2인 관람권' 기프트콘</span>
+                <span className="text-white md:text-sm lg:text-sm xl:text-base font-medium md:leading-5 lg:leading-5 xl:leading-6">을 발송해 드립니다.<br/><br/></span>
+                <span className="text-white md:text-xs lg:text-xs xl:text-sm font-normal md:leading-[7px] lg:leading-[7px] xl:leading-[8.38px]">(100분 무작위 추첨, 행사 종료 후 일괄 지급)</span>
               </div>
               
-              {/* Divider 1 - 구분선 간격 183px */}
-              <div className="w-[0.76px] h-28 left-[704px] top-[30.08px] absolute opacity-25 bg-gray-400"></div>
+              {/* Ticket Image / 태블릿: 위치 조정 / PC: 자연스러운 전환 / 태블릿: 정렬 / 996px 구간 수정 */}
+              <img className="w-32 h-20 md:left-[285px] lg:left-[314px] xl:left-[354.80px] top-[48.37px] absolute z-10" src="/img/hpe/ticket.png" alt="Movie Ticket" />
               
-              {/* Divider 2 */}
-              <div className="w-[0.76px] h-28 left-[887px] top-[30.08px] absolute opacity-25 bg-gray-400"></div>
+              {/* Divider 1 - 구분선 간격 183px / 태블릿: 위치 조정 / PC: 자연스러운 전환 / 태블릿: 정렬 / 996px 구간 수정 */}
+              <div className="w-[0.76px] h-28 md:left-[calc(100%-312px-0.76px)] lg:left-[443px] xl:left-[704px] top-[30.08px] absolute opacity-25 bg-gray-400 z-10"></div>
+              
+              {/* Divider 2 / 태블릿: 위치 조정 / PC: 자연스러운 전환 / 태블릿: 정렬 / 996px 구간 수정 */}
+              <div className="w-[0.76px] h-28 md:left-[calc(100%-156px-0.76px)] lg:left-[599px] xl:left-[887px] top-[30.08px] absolute opacity-25 bg-gray-400 z-10"></div>
               
               {/* Divider 3 - 컨테이너 오른쪽 끝 테두리 */}
-              <div className="w-[0.76px] h-28 right-0 top-[30.08px] absolute opacity-25 bg-gray-400"></div>
+              <div className="w-[0.76px] h-28 right-0 top-[30.08px] absolute opacity-25 bg-gray-400 z-10"></div>
               
-              {/* Meeting - 구분선 704~887 (183px) 가운데, 클릭 시 새창 */}
+              {/* Meeting - 구분선 704~887 (183px) 가운데, 클릭 시 새창 / 태블릿: 위치 조정 / PC: 자연스러운 전환 / 태블릿: 정렬 / 996px 구간 수정 */}
               <a
                 href="https://www.seminar-registration-page.com/juniper-meeting-maker"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="absolute left-[704px] w-[183px] top-[30.08px] flex flex-col items-center gap-5 hover:opacity-90 transition-opacity cursor-pointer"
+                className="absolute md:left-[calc(100%-312px-0.76px)] lg:left-[443px] xl:left-[704px] md:w-[156px] lg:w-[156px] xl:w-[183px] top-[30.08px] flex flex-col items-center gap-5 hover:opacity-90 transition-opacity cursor-pointer z-20"
               >
                 <img className="w-16 h-16" src="/img/hpe/ic_3.png" alt="온/오프라인 미팅 신청" />
                 <div className="text-center text-emerald-500 text-xs font-normal">온/오프라인 미팅 신청</div>
               </a>
               
-              {/* Survey - 구분선 887~1070 (183px) 가운데, 클릭 시 인페이지 팝업 */}
+              {/* Survey - 구분선 887~1070 (183px) 가운데, 클릭 시 인페이지 팝업 / 태블릿: 위치 조정 / PC: 자연스러운 전환 / 태블릿: 정렬 / 996px 구간 수정 */}
               <button
                 type="button"
                 onClick={() => setShowSurveyModal(true)}
-                className="absolute left-[887px] right-0 top-[30.08px] flex flex-col items-center gap-5 hover:opacity-90 transition-opacity cursor-pointer bg-transparent border-0 p-0 text-left"
+                className="absolute md:left-[calc(100%-156px-0.76px)] lg:left-[599px] xl:left-[887px] md:w-[156px] lg:w-[156px] xl:w-[183px] top-[30.08px] flex flex-col items-center gap-5 hover:opacity-90 transition-opacity cursor-pointer bg-transparent border-0 p-0 text-left z-20"
               >
                 <img className="w-16 h-16" src="/img/hpe/ic_2.png" alt="설문조사" />
                 <div className="text-center text-emerald-500 text-xs font-normal -ml-2.5">설문조사</div>
               </button>
             </div>
             
-            {/* Mobile Info Box */}
-            <div className="lg:hidden w-full bg-[#171F32] rounded-lg p-3 sm:p-6 max-sm:p-4">
+            {/* Mobile Info Box - 모바일만 표시 */}
+            <div className="md:hidden w-full bg-[#171F32] rounded-lg p-3 sm:p-6 max-sm:p-4">
               {/* 모바일: 세로 레이아웃 */}
-              <div className="flex flex-col gap-4 md:gap-0">
+              <div className="flex flex-col gap-4">
                 {/* Left Text Section with Ticket - 모바일: 같은 줄 */}
-                <div className="flex-1 max-sm:flex max-sm:items-center max-sm:gap-3">
+                <div className="flex-1 flex items-center gap-3">
                   <div className="flex-1">
-                    <span className="text-white text-xs sm:text-sm md:text-base font-medium leading-tight md:leading-6 max-sm:text-xs">해당 온라인 행사에 참여 및 설문조사에 참여하신분들을 대상으로 '</span>
-                    <span className="text-emerald-500 text-xs sm:text-sm md:text-base font-medium leading-tight md:leading-6 max-sm:text-xs">메가박스 2인 관람권' 기프트콘</span>
-                    <span className="text-white text-xs sm:text-sm md:text-base font-medium leading-tight md:leading-6 max-sm:text-xs">을 발송해 드립니다.<br className="md:hidden"/><br className="hidden md:block"/></span>
-                    <span className="text-white text-[10px] sm:text-xs md:text-sm font-normal leading-tight md:leading-[8.38px] max-sm:text-[10px]">(100분 무작위 추첨, 행사 종료 후 일괄 지급)</span>
+                    <span className="text-white text-xs sm:text-sm font-medium leading-tight max-sm:text-xs">해당 온라인 행사에 참여 및 설문조사에 참여하신분들을 대상으로 '</span>
+                    <span className="text-emerald-500 text-xs sm:text-sm font-medium leading-tight max-sm:text-xs">메가박스 2인 관람권' 기프트콘</span>
+                    <span className="text-white text-xs sm:text-sm font-medium leading-tight max-sm:text-xs">을 발송해 드립니다.<br/></span>
+                    <span className="text-white text-[10px] sm:text-xs font-normal leading-tight max-sm:text-[10px]">(100분 무작위 추첨, 행사 종료 후 일괄 지급)</span>
                   </div>
                   {/* Ticket Image - 모바일: 텍스트 옆에 표시, 높이 맞춤 */}
                   <img 
-                    className="block md:hidden w-20 h-auto flex-shrink-0 self-center" 
+                    className="w-20 h-auto flex-shrink-0 self-center" 
                     src="/img/hpe/ticket.png" 
                     alt="Movie Ticket" 
                     style={{ height: 'fit-content', maxHeight: '72px' }}
@@ -322,7 +319,7 @@ export default function OnDemandPlayerPage({ webinar, session }: OnDemandPlayerP
                 </div>
                 
                 {/* Icons Section - 모바일: 가로 배치 */}
-                <div className="flex md:hidden items-center justify-center gap-6 max-sm:gap-4 mt-2 max-sm:flex-wrap">
+                <div className="flex items-center justify-center gap-6 max-sm:gap-4 mt-2 max-sm:flex-wrap">
                   <a
                     href="https://www.seminar-registration-page.com/juniper-meeting-maker"
                     target="_blank"
@@ -349,11 +346,11 @@ export default function OnDemandPlayerPage({ webinar, session }: OnDemandPlayerP
         </div>
       </div>
 
-      {/* Footer - 온디맨드 페이지 통일 */}
-      <footer className="w-full max-sm:h-[50px]" style={{ height: '113px', color: '#FFFFFF', backgroundColor: '#171F32' }}>
-        <div className="max-w-[1600px] mx-auto h-full flex justify-center items-center max-sm:items-start pt-[40px] max-sm:pt-4 max-sm:px-4">
+      {/* Footer - 온디맨드 페이지 통일 / 태블릿: 높이 조정 */}
+      <footer className="w-full max-sm:h-[50px] md:h-[100px] lg:h-[113px]" style={{ color: '#FFFFFF', backgroundColor: '#171F32' }}>
+        <div className="max-w-[1600px] mx-auto h-full flex justify-center items-center max-sm:items-start pt-[40px] md:pt-[35px] lg:pt-[40px] max-sm:pt-4 max-sm:px-4">
           <p
-            className="text-center text-[10px] font-thin max-sm:leading-relaxed max-sm:break-words max-sm:px-2"
+            className="text-center text-[10px] md:text-[9px] lg:text-[10px] font-thin max-sm:leading-relaxed max-sm:break-words max-sm:px-2"
             style={{ color: '#FFFFFF', fontWeight: 100 }}
           >
             © Copyright 2026 Hewlett Packard Enterprise Development LP.
