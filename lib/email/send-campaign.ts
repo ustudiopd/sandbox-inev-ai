@@ -256,7 +256,11 @@ export async function getCampaignEmailPolicy(
   // 캠페인 override 우선
   const fromDomain = campaignOverride?.from_domain || policy.from_domain
   const fromLocalpart = campaignOverride?.from_localpart || policy.from_localpart_default
-  const fromName = campaignOverride?.from_name || policy.from_name_default
+  let fromName = campaignOverride?.from_name || policy.from_name_default || ''
+  // 발송자 표시명: 인텔리전트 → 인텔리전스 통일
+  if (fromName && fromName.includes('인텔리전트')) {
+    fromName = fromName.replace(/인텔리전트/g, '인텔리전스')
+  }
   const replyTo = campaignOverride?.reply_to || policy.reply_to_default
 
   // From 주소 생성: "고객사명" <no-reply@eventflow.kr>

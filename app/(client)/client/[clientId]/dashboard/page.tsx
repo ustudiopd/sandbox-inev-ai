@@ -101,10 +101,10 @@ export default async function ClientDashboard({
       redirect('/')
     }
     
-    // 워트인텔리전트 → 워트인텔리전스로 변환
+    // 인텔리전트 → 인텔리전스로 변환
     let clientName = client.name || ''
-    if (clientName.includes('워트인텔리전트')) {
-      clientName = clientName.replace(/워트인텔리전트/g, '워트인텔리전스')
+    if (clientName.includes('인텔리전트')) {
+      clientName = clientName.replace(/인텔리전트/g, '인텔리전스')
     }
     
     const admin = createAdminSupabase()

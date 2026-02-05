@@ -4,10 +4,10 @@ import Link from 'next/link'
 import ClientCreateModal from './components/ClientCreateModal'
 import ClientInviteButton from './components/ClientInviteButton'
 
-// 워트인텔리전트 → 워트인텔리전스로 변환하는 헬퍼 함수
+// 인텔리전트 → 인텔리전스로 변환하는 헬퍼 함수
 function normalizeClientName(name: string): string {
-  if (name.includes('워트인텔리전트')) {
-    return name.replace(/워트인텔리전트/g, '워트인텔리전스')
+  if (name.includes('인텔리전트')) {
+    return name.replace(/인텔리전트/g, '인텔리전스')
   }
   return name
 }

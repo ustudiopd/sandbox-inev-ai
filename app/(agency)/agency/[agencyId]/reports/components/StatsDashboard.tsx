@@ -65,9 +65,9 @@ export default function StatsDashboard({
         >
           <option value="all">전체</option>
           {clients.map((client) => {
-            // 워트인텔리전트 → 워트인텔리전스로 변환
-            const displayName = client.name.includes('워트인텔리전트') 
-              ? client.name.replace(/워트인텔리전트/g, '워트인텔리전스')
+            // 인텔리전트 → 인텔리전스로 변환
+            const displayName = client.name.includes('인텔리전트') 
+              ? client.name.replace(/인텔리전트/g, '인텔리전스')
               : client.name
             return (
               <option key={client.id} value={client.id}>
