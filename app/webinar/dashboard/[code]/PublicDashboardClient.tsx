@@ -46,29 +46,29 @@ export default function PublicDashboardClient({ webinar }: PublicDashboardClient
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* 헤더 */}
         <div className="mb-6 sm:mb-8">
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">
             {webinar.title}
           </h1>
-          <p className="text-sm sm:text-base text-gray-600">참여자 관리 대시보드</p>
+          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">참여자 관리 대시보드</p>
         </div>
 
         {/* 통계 카드 */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
-          <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 sm:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">총 등록자</p>
-                <p className="text-2xl sm:text-3xl font-bold text-gray-900 mt-2">
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-300">총 등록자</p>
+                <p className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mt-2">
                   {webinar.stats?.total_registrants || 0}
                 </p>
               </div>
-              <div className="bg-blue-100 rounded-full p-3">
+              <div className="bg-blue-100 dark:bg-blue-900/30 rounded-full p-3">
                 <svg
-                  className="w-6 h-6 sm:w-8 sm:h-8 text-blue-600"
+                  className="w-6 h-6 sm:w-8 sm:h-8 text-blue-600 dark:text-blue-400"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -86,15 +86,15 @@ export default function PublicDashboardClient({ webinar }: PublicDashboardClient
         </div>
 
         {/* 탭 네비게이션 */}
-        <div className="bg-white rounded-xl shadow-lg mb-6 sm:mb-8">
-          <div className="border-b border-gray-200">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg mb-6 sm:mb-8">
+          <div className="border-b border-gray-200 dark:border-gray-700">
             <nav className="flex -mb-px">
               <button
                 onClick={() => setActiveTab('participants')}
                 className={`px-4 sm:px-6 py-3 sm:py-4 text-sm sm:text-base font-medium border-b-2 transition-colors ${
                   activeTab === 'participants'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    ? 'border-blue-500 dark:border-blue-400 text-blue-600 dark:text-blue-400'
+                    : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
                 }`}
               >
                 참여자 관리

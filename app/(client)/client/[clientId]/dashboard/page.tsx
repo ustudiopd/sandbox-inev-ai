@@ -220,21 +220,21 @@ export default async function ClientDashboard({
         <div className="mb-6 sm:mb-8">
           <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4 mb-4">
             <div className="flex-1 min-w-0">
-              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2 bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400 bg-clip-text text-transparent">
                 {clientName} 대시보드
               </h1>
-              <p className="text-sm sm:text-base text-gray-600">웨비나, 설문조사, 등록페이지를 생성하고 관리하세요</p>
+              <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">웨비나, 설문조사, 등록페이지를 생성하고 관리하세요</p>
             </div>
-            <div className="bg-white px-3 py-2 sm:px-4 sm:py-3 rounded-lg shadow border border-gray-200 w-full md:w-auto">
+            <div className="bg-white dark:bg-gray-800 px-3 py-2 sm:px-4 sm:py-3 rounded-lg shadow border border-gray-200 dark:border-gray-700 w-full md:w-auto">
               <div className="flex items-center justify-between">
                 <div className="flex-1 min-w-0">
-                  <div className="text-xs sm:text-sm text-gray-600">접속 계정</div>
-                  <div className="font-semibold text-gray-900 truncate">{finalProfile?.display_name || finalProfile?.email || user.email}</div>
-                  <div className="text-xs text-blue-600 mt-1">클라이언트 {roleNames[role] || role}</div>
+                  <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-300">접속 계정</div>
+                  <div className="font-semibold text-gray-900 dark:text-white truncate">{finalProfile?.display_name || finalProfile?.email || user.email}</div>
+                  <div className="text-xs text-blue-600 dark:text-blue-400 mt-1">클라이언트 {roleNames[role] || role}</div>
                 </div>
                 <Link
                   href="/settings/profile"
-                  className="ml-4 px-3 py-1.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors min-h-[44px] flex items-center justify-center flex-shrink-0"
+                  className="ml-4 px-3 py-1.5 text-sm bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors min-h-[44px] flex items-center justify-center flex-shrink-0"
                 >
                   수정
                 </Link>
@@ -282,50 +282,50 @@ export default async function ClientDashboard({
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6 sm:mb-8">
-          <div className="bg-white p-4 md:p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow border-l-4 border-blue-500">
+          <div className="bg-white dark:bg-gray-800 p-4 md:p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow border-l-4 border-blue-500 dark:border-blue-400">
             <div className="flex items-center justify-between min-w-0">
               <div className="flex-1 min-w-0">
-                <h2 className="text-xs sm:text-sm font-medium text-gray-600 mb-1 truncate">웨비나 수</h2>
-                <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900">{webinars?.length || 0}</p>
+                <h2 className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-300 mb-1 truncate">웨비나 수</h2>
+                <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-white">{webinars?.length || 0}</p>
               </div>
-              <div className="text-3xl sm:text-4xl opacity-20 flex-shrink-0 ml-2">🎥</div>
+              <div className="text-3xl sm:text-4xl opacity-20 dark:opacity-30 flex-shrink-0 ml-2">🎥</div>
             </div>
           </div>
-          <div className="bg-white p-4 md:p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow border-l-4 border-teal-500">
+          <div className="bg-white dark:bg-gray-800 p-4 md:p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow border-l-4 border-teal-500 dark:border-teal-400">
             <div className="flex items-center justify-between min-w-0">
               <div className="flex-1 min-w-0">
-                <h2 className="text-xs sm:text-sm font-medium text-gray-600 mb-1 truncate">온디맨드 수</h2>
-                <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900">{ondemands?.length || 0}</p>
+                <h2 className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-300 mb-1 truncate">온디맨드 수</h2>
+                <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-white">{ondemands?.length || 0}</p>
               </div>
-              <div className="text-3xl sm:text-4xl opacity-20 flex-shrink-0 ml-2">📺</div>
+              <div className="text-3xl sm:text-4xl opacity-20 dark:opacity-30 flex-shrink-0 ml-2">📺</div>
             </div>
           </div>
-          <div className="bg-white p-4 md:p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow border-l-4 border-purple-500">
+          <div className="bg-white dark:bg-gray-800 p-4 md:p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow border-l-4 border-purple-500 dark:border-purple-400">
             <div className="flex items-center justify-between min-w-0">
               <div className="flex-1 min-w-0">
-                <h2 className="text-xs sm:text-sm font-medium text-gray-600 mb-1 truncate">설문조사 수</h2>
-                <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900">
+                <h2 className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-300 mb-1 truncate">설문조사 수</h2>
+                <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-white">
                   {campaigns?.filter((c: any) => (c.type || 'survey') === 'survey').length || 0}
                 </p>
               </div>
-              <div className="text-3xl sm:text-4xl opacity-20 flex-shrink-0 ml-2">📋</div>
+              <div className="text-3xl sm:text-4xl opacity-20 dark:opacity-30 flex-shrink-0 ml-2">📋</div>
             </div>
           </div>
-          <div className="bg-white p-4 md:p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow border-l-4 border-cyan-500">
+          <div className="bg-white dark:bg-gray-800 p-4 md:p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow border-l-4 border-cyan-500 dark:border-cyan-400">
             <div className="flex items-center justify-between min-w-0">
               <div className="flex-1 min-w-0">
-                <h2 className="text-xs sm:text-sm font-medium text-gray-600 mb-1 truncate">등록페이지 수</h2>
-                <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900">
+                <h2 className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-300 mb-1 truncate">등록페이지 수</h2>
+                <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-white">
                   {campaigns?.filter((c: any) => c.type === 'registration').length || 0}
                 </p>
               </div>
-              <div className="text-3xl sm:text-4xl opacity-20 flex-shrink-0 ml-2">📝</div>
+              <div className="text-3xl sm:text-4xl opacity-20 dark:opacity-30 flex-shrink-0 ml-2">📝</div>
             </div>
           </div>
         </div>
         
-        <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-          <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-4 sm:p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
+          <div className="bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-500 dark:to-purple-500 p-4 sm:p-6">
             <h2 className="text-lg sm:text-xl font-semibold text-white">웨비나 & 온디맨드 & 설문조사 & 등록페이지 목록</h2>
           </div>
           <div className="p-4 sm:p-6">
@@ -340,7 +340,7 @@ export default async function ClientDashboard({
                 ))}
               </div>
             ) : (
-              <div className="text-center text-gray-500 py-8 sm:py-12">
+              <div className="text-center text-gray-500 dark:text-gray-400 py-8 sm:py-12">
                 <div className="text-4xl sm:text-5xl mb-4">📋</div>
                 <p className="text-base sm:text-lg">웨비나나 설문조사가 없습니다.</p>
                 <p className="text-sm mt-2">새 웨비나나 설문조사를 생성해주세요.</p>

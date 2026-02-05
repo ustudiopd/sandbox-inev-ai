@@ -257,8 +257,8 @@ export default function OnDemandRegisterPage({ webinar }: OnDemandRegisterPagePr
         <div className="absolute bottom-0 left-0 right-0 h-px bg-gray-300 z-20"></div>
       </div>
 
-      {/* Registration Form Section - 모바일: 전체 너비, 터치 영역 확보 / 태블릿: 패딩 조정 */}
-      <div className="bg-white flex items-start sm:items-center justify-center px-3 sm:px-4 md:px-5 lg:px-8 min-h-[400px] overflow-x-hidden max-sm:px-4 max-sm:py-8 max-sm:items-center sm:pt-[70px] sm:pb-[70px] md:pt-[60px] md:pb-[60px] lg:pt-[70px] lg:pb-[70px]">
+      {/* Registration Form Section - 모바일: 전체 너비, 터치 영역 확보 / 태블릿: 패딩 조정 / 다크 모드 지원 */}
+      <div className="bg-white dark:bg-gray-900 flex items-start sm:items-center justify-center px-3 sm:px-4 md:px-5 lg:px-8 min-h-[400px] overflow-x-hidden max-sm:px-4 max-sm:py-8 max-sm:items-center sm:pt-[70px] sm:pb-[70px] md:pt-[60px] md:pb-[60px] lg:pt-[70px] lg:pb-[70px]">
         <div className="w-[355px] md:w-[340px] lg:w-[355px] max-sm:w-full max-sm:max-w-[min(100%,355px)]">
           <form onSubmit={handleSubmit} className="space-y-3 md:space-y-2.5 lg:space-y-3 w-full">
             {/* Title */}
@@ -269,9 +269,9 @@ export default function OnDemandRegisterPage({ webinar }: OnDemandRegisterPagePr
               <div className="h-1 bg-[#00B388] w-full"></div>
             </div>
             
-            {/* Name Input - 모바일: 터치 최소 44px / 태블릿: 너비 조정 */}
+            {/* Name Input - 모바일: 터치 최소 44px / 태블릿: 너비 조정 / 다크 모드 지원 */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4 md:gap-3 lg:gap-4">
-              <label htmlFor="name" className="text-sm md:text-sm lg:text-sm font-semibold text-gray-700 whitespace-nowrap text-left" style={{ letterSpacing: '0.5px' }}>
+              <label htmlFor="name" className="text-sm md:text-sm lg:text-sm font-semibold text-gray-700 dark:text-gray-200 whitespace-nowrap text-left" style={{ letterSpacing: '0.5px' }}>
                 성 함<span className="text-red-500">*</span>
               </label>
               <input
@@ -280,14 +280,14 @@ export default function OnDemandRegisterPage({ webinar }: OnDemandRegisterPagePr
                 value={formData.name}
                 onChange={(e) => handleChange('name', e.target.value)}
                 required
-                className="w-full sm:w-[253px] md:w-[240px] lg:w-[253px] px-4 rounded bg-gray-100 focus:outline-none focus:ring-2 focus:ring-[#00B388] focus:ring-offset-1 h-[37px] max-sm:min-h-[44px] max-sm:text-base"
+                className="w-full sm:w-[253px] md:w-[240px] lg:w-[253px] px-4 rounded bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#00B388] focus:ring-offset-1 h-[37px] max-sm:min-h-[44px] max-sm:text-base placeholder:text-gray-500 dark:placeholder:text-gray-400"
                 placeholder="성 함을 입력하세요"
               />
             </div>
             
-            {/* Email Input - 모바일: 터치 최소 44px / 태블릿: 너비 조정 */}
+            {/* Email Input - 모바일: 터치 최소 44px / 태블릿: 너비 조정 / 다크 모드 지원 */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4 md:gap-3 lg:gap-4">
-              <label htmlFor="email" className="text-sm md:text-sm lg:text-sm font-semibold text-gray-700 whitespace-nowrap text-left" style={{ letterSpacing: '0.5px' }}>
+              <label htmlFor="email" className="text-sm md:text-sm lg:text-sm font-semibold text-gray-700 dark:text-gray-200 whitespace-nowrap text-left" style={{ letterSpacing: '0.5px' }}>
                 이메일 주소<span className="text-red-500">*</span>
               </label>
               <input
@@ -296,14 +296,14 @@ export default function OnDemandRegisterPage({ webinar }: OnDemandRegisterPagePr
                 value={formData.email}
                 onChange={(e) => handleChange('email', e.target.value)}
                 required
-                className="w-full sm:w-[253px] md:w-[240px] lg:w-[253px] px-4 rounded bg-gray-100 focus:outline-none focus:ring-2 focus:ring-[#00B388] focus:ring-offset-1 h-[37px] max-sm:min-h-[44px] max-sm:text-base"
+                className="w-full sm:w-[253px] md:w-[240px] lg:w-[253px] px-4 rounded bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#00B388] focus:ring-offset-1 h-[37px] max-sm:min-h-[44px] max-sm:text-base placeholder:text-gray-500 dark:placeholder:text-gray-400"
                 placeholder="이메일 주소를 입력하세요"
               />
             </div>
             
-            {/* Company Input - 모바일: 터치 최소 44px / 태블릿: 너비 조정 */}
+            {/* Company Input - 모바일: 터치 최소 44px / 태블릿: 너비 조정 / 다크 모드 지원 */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4 md:gap-3 lg:gap-4">
-              <label htmlFor="company" className="text-sm md:text-sm lg:text-sm font-semibold text-gray-700 whitespace-nowrap text-left" style={{ letterSpacing: '0.5px' }}>
+              <label htmlFor="company" className="text-sm md:text-sm lg:text-sm font-semibold text-gray-700 dark:text-gray-200 whitespace-nowrap text-left" style={{ letterSpacing: '0.5px' }}>
                 회사명<span className="text-red-500">*</span>
               </label>
               <input
@@ -312,14 +312,14 @@ export default function OnDemandRegisterPage({ webinar }: OnDemandRegisterPagePr
                 value={formData.company}
                 onChange={(e) => handleChange('company', e.target.value)}
                 required
-                className="w-full sm:w-[253px] md:w-[240px] lg:w-[253px] px-4 rounded bg-gray-100 focus:outline-none focus:ring-2 focus:ring-[#00B388] focus:ring-offset-1 h-[37px] max-sm:min-h-[44px] max-sm:text-base"
+                className="w-full sm:w-[253px] md:w-[240px] lg:w-[253px] px-4 rounded bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#00B388] focus:ring-offset-1 h-[37px] max-sm:min-h-[44px] max-sm:text-base placeholder:text-gray-500 dark:placeholder:text-gray-400"
                 placeholder="회사명을 입력하세요"
               />
             </div>
             
-            {/* Job Title Input - 모바일: 터치 최소 44px / 태블릿: 너비 조정 */}
+            {/* Job Title Input - 모바일: 터치 최소 44px / 태블릿: 너비 조정 / 다크 모드 지원 */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4 md:gap-3 lg:gap-4">
-              <label htmlFor="jobTitle" className="text-sm md:text-sm lg:text-sm font-semibold text-gray-700 whitespace-nowrap text-left" style={{ letterSpacing: '0.5px' }}>
+              <label htmlFor="jobTitle" className="text-sm md:text-sm lg:text-sm font-semibold text-gray-700 dark:text-gray-200 whitespace-nowrap text-left" style={{ letterSpacing: '0.5px' }}>
                 직 급<span className="text-red-500">*</span>
               </label>
               <input
@@ -328,14 +328,14 @@ export default function OnDemandRegisterPage({ webinar }: OnDemandRegisterPagePr
                 value={formData.jobTitle}
                 onChange={(e) => handleChange('jobTitle', e.target.value)}
                 required
-                className="w-full sm:w-[253px] md:w-[240px] lg:w-[253px] px-4 rounded bg-gray-100 focus:outline-none focus:ring-2 focus:ring-[#00B388] focus:ring-offset-1 h-[37px] max-sm:min-h-[44px] max-sm:text-base"
+                className="w-full sm:w-[253px] md:w-[240px] lg:w-[253px] px-4 rounded bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#00B388] focus:ring-offset-1 h-[37px] max-sm:min-h-[44px] max-sm:text-base placeholder:text-gray-500 dark:placeholder:text-gray-400"
                 placeholder="직급을 입력하세요"
               />
             </div>
             
-            {/* Mobile Input - 모바일: 터치 최소 44px / 태블릿: 너비 조정 */}
+            {/* Mobile Input - 모바일: 터치 최소 44px / 태블릿: 너비 조정 / 다크 모드 지원 */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4 md:gap-3 lg:gap-4">
-              <label htmlFor="mobile" className="text-sm md:text-sm lg:text-sm font-semibold text-gray-700 whitespace-nowrap text-left" style={{ letterSpacing: '0.5px' }}>
+              <label htmlFor="mobile" className="text-sm md:text-sm lg:text-sm font-semibold text-gray-700 dark:text-gray-200 whitespace-nowrap text-left" style={{ letterSpacing: '0.5px' }}>
                 모바일 번호<span className="text-red-500">*</span>
               </label>
               <input
@@ -344,14 +344,14 @@ export default function OnDemandRegisterPage({ webinar }: OnDemandRegisterPagePr
                 value={formData.mobile}
                 onChange={(e) => handleChange('mobile', e.target.value)}
                 required
-                className="w-full sm:w-[253px] md:w-[240px] lg:w-[253px] px-4 rounded bg-gray-100 focus:outline-none focus:ring-2 focus:ring-[#00B388] focus:ring-offset-1 h-[37px] max-sm:min-h-[44px] max-sm:text-base"
+                className="w-full sm:w-[253px] md:w-[240px] lg:w-[253px] px-4 rounded bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#00B388] focus:ring-offset-1 h-[37px] max-sm:min-h-[44px] max-sm:text-base placeholder:text-gray-500 dark:placeholder:text-gray-400"
                 placeholder="모바일 번호를 입력하세요"
               />
             </div>
             
-            {/* Privacy Policy - 태블릿: 텍스트 크기 조정 */}
+            {/* Privacy Policy - 태블릿: 텍스트 크기 조정 / 다크 모드 지원 */}
             <div className="mb-4" style={{ marginTop: '23px' }}>
-              <div className="text-[11px] md:text-[10px] lg:text-[11px] leading-tight" style={{ color: '#666666' }}>
+              <div className="text-[11px] md:text-[10px] lg:text-[11px] leading-tight text-gray-600 dark:text-gray-300">
                 <p className="font-semibold mb-2 text-xs sm:text-sm md:text-xs lg:text-sm">※ 개인정보 제3자 제공 동의</p>
                 <p className="break-words mb-0.5" style={{ marginBottom: '2px' }}>1) 개인정보를 제공 받는 자: HPE</p>
                 <p className="break-words mb-0.5" style={{ marginBottom: '2px' }}>2) 개인정보를 제공 받는자의 개인정보 이용 목적: 뉴스레터와 행사/세미나, 제품정보, 특별 판매, 교육 관련 정보 등의 email 제공, 기타 새로운 서비스 안내 및 마케팅 활동</p>
@@ -360,16 +360,16 @@ export default function OnDemandRegisterPage({ webinar }: OnDemandRegisterPagePr
               </div>
             </div>
             
-            {/* Agreement Checkbox - 태블릿: 텍스트 크기 조정 */}
+            {/* Agreement Checkbox - 태블릿: 텍스트 크기 조정 / 다크 모드 지원 */}
             <div className="flex items-center gap-2 mb-4">
               <input
                 type="checkbox"
                 id="agreement"
                 checked={agreed}
                 onChange={(e) => setAgreed(e.target.checked)}
-                className="w-4 h-4 text-[#00B388] border-gray-300 rounded focus:ring-[#00B388]"
+                className="w-4 h-4 text-[#00B388] border-gray-300 dark:border-gray-600 rounded focus:ring-[#00B388] bg-white dark:bg-gray-800"
               />
-              <label htmlFor="agreement" className="text-sm md:text-xs lg:text-sm text-gray-700">
+              <label htmlFor="agreement" className="text-sm md:text-xs lg:text-sm text-gray-700 dark:text-gray-200">
                 상기 내용에 동의합니다.
               </label>
             </div>
