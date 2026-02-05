@@ -225,11 +225,8 @@ export default function WebinarView({ webinar, isAdminMode = false }: WebinarVie
         
         const formsResult = await formsResponse.json()
         if (formsResponse.ok && formsResult.forms) {
-          const loadedForms = formsResult.forms
+          const loadedForms = formsResult.forms || []
           const currentFormsMap = new Map<string, string>(loadedForms.map((f: any) => [f.id, f.status]))
-          
-          // 먼저 openForms 상태를 업데이트하여 UI가 즉시 반영되도록 함
-          setOpenForms(loadedForms)
           
           // 삭제된 폼 찾기 (이전에 있었는데 지금은 없는 것)
           const deletedFormIds = Array.from(previousItemsRef.current.forms.keys())
@@ -249,6 +246,10 @@ export default function WebinarView({ webinar, isAdminMode = false }: WebinarVie
               return next
             })
           }
+          
+          // openForms 상태를 업데이트하여 UI가 즉시 반영되도록 함
+          // 삭제된 폼은 loadedForms에 없으므로 자동으로 제거됨
+          setOpenForms(loadedForms)
           
           // 새로 오픈된 폼 찾기 (이전에 없었거나 상태가 'open'으로 변경된 것)
           if (!isInitialLoadRef.current) {
@@ -272,30 +273,28 @@ export default function WebinarView({ webinar, isAdminMode = false }: WebinarVie
               const isNewForm = !previousStatus
               const wasReopened = previousStatus && previousStatus !== 'open'
               
-              // 삭제되었다가 다시 생성된 경우도 포함 (previousStatus가 없고, shownPopups에도 없음)
-              // 또는 닫혔다가 다시 오픈된 경우
-              // 함수형 업데이트를 사용하여 최신 shownPopups 상태 확인
-              let shouldShowPopup = false
+              // 함수형 업데이트를 사용하여 최신 shownPopups 상태 확인하고 업데이트
               setShownPopups((prev) => {
                 const isInShownPopups = prev.has(popupKey)
                 // 새 폼이거나, 다시 오픈된 폼이거나, shownPopups에 없으면 팝업 표시
                 if (isNewForm || wasReopened || !isInShownPopups) {
-                  shouldShowPopup = true
                   const next = new Set(prev)
                   next.add(popupKey)
+                  
+                  // 팝업 표시는 여기서 바로 실행 (상태 업데이트와 동시에)
+                  // setTimeout을 사용하여 상태 업데이트 후 실행
+                  setTimeout(() => {
+                    setPopupContent({
+                      type: 'form',
+                      id: newForm.id,
+                      title: newForm.title || newForm.name || '설문',
+                    })
+                  }, 0)
+                  
                   return next
                 }
                 return prev
               })
-              
-              // 팝업 표시 (상태 업데이트 후)
-              if (shouldShowPopup) {
-                setPopupContent({
-                  type: 'form',
-                  id: newForm.id,
-                  title: newForm.title,
-                })
-              }
             }
             
             // 닫힌 폼은 shownPopups에서 제거하여 다시 오픈될 때 팝업이 뜨도록 함
