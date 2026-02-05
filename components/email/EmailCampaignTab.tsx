@@ -128,13 +128,6 @@ export default function EmailCampaignTab({ clientId, scopeType, scopeId }: Email
   const [images, setImages] = useState<Array<{ url: string; path: string; name: string }>>([])
   const [loadingImages, setLoadingImages] = useState(false)
   
-  // 텍스트 선택 툴팁 상태
-  const [showFormatTooltip, setShowFormatTooltip] = useState(false)
-  const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 })
-  const [selectedText, setSelectedText] = useState({ start: 0, end: 0, text: '' })
-  const textareaRef = useRef<HTMLTextAreaElement>(null)
-  const tooltipRef = useRef<HTMLDivElement>(null)
-  
   useEffect(() => {
     fetchCampaigns()
     fetchClientEmailPolicy()

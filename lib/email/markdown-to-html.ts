@@ -42,7 +42,7 @@ function preserveSpaces(html: string): string {
     
     // 연속된 공백 2개 이상을 &nbsp;로 변환
     // 단, 줄바꿈 문자는 제외
-    const preserved = text.replace(/[ \t]{2,}/g, (spaces) => {
+    const preserved = text.replace(/[ \t]{2,}/g, (spaces: string) => {
       return '&nbsp;'.repeat(spaces.length)
     })
     return before + preserved + after
@@ -53,7 +53,7 @@ function preserveSpaces(html: string): string {
     if (text.includes('&nbsp;')) {
       return match
     }
-    const preserved = text.replace(/[ \t]{2,}/g, (spaces) => {
+    const preserved = text.replace(/[ \t]{2,}/g, (spaces: string) => {
       return '&nbsp;'.repeat(spaces.length)
     })
     return before + preserved
