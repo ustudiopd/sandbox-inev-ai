@@ -5,8 +5,12 @@
 - **도메인**: EventFlow.kr
 
 ## 1. 현재 집중하고 있는 작업  
-- **작업명**: 이메일 발송 시스템 안정화 및 크론 작업 설정 완료
-- **상태**: ✅ 모든 작업 완료
+- **작업명**: HPE 온디맨드 플레이어·설문조사 개선 완료
+- **상태**: ✅ 완료
+  - 온디맨드 플레이어 페이지 레이아웃·발표자 소개·Info Box·미팅 링크 적용
+  - 온디맨드 설문조사 인페이지 팝업, 5문항 설문·API·DB(ondemand_survey_responses) 적용
+  - 설문 모달 흰 배경, 전체 필수·빨간 별표 처리
+- **이전 작업**: 이메일 발송 시스템 안정화 및 크론 작업 설정 완료
   - 이메일 발송 시스템의 jsdom ESM 에러 해결 완료 (isomorphic-dompurify → sanitize-html 교체)
   - 가입하지 않은 사용자 로그인 무한루프 방지 완료
   - 크론 작업 마이그레이션 적용 완료 (marketing_stats_daily 테이블 생성)
@@ -249,3 +253,4 @@
   - `079_create_marketing_stats_daily.sql` (마케팅 통계 일일 집계 테이블)
   - `080_fix_cvr_precision.sql` (CVR 정밀도 수정)
   - `083_create_email_campaigns.sql` (이메일 캠페인 시스템)
+  - `086_create_ondemand_survey_responses.sql` (온디맨드 설문 응답 저장)

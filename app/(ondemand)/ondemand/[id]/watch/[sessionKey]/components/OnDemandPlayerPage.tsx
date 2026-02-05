@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { useState } from 'react'
 import YouTubePlayer from '@/components/media/YouTubePlayer'
 import VimeoPlayer from '@/components/media/VimeoPlayer'
+import OnDemandSurveyModal from './OnDemandSurveyModal'
 
 interface Session {
   session_key: string
@@ -67,6 +68,7 @@ function getThumbnailUrl(session: Session): string | null {
 
 export default function OnDemandPlayerPage({ webinar, session }: OnDemandPlayerPageProps) {
   const [showQnA, setShowQnA] = useState(false)
+  const [showSurveyModal, setShowSurveyModal] = useState(false)
   const webinarPath = webinar.slug || webinar.id
   
   // Supabase Storage URL 생성
@@ -84,13 +86,15 @@ export default function OnDemandPlayerPage({ webinar, session }: OnDemandPlayerP
     .sort((a, b) => (a.order || 0) - (b.order || 0))
   
   return (
-    <div className="min-h-screen bg-[#171D28]">
-      {/* Hero Section with Video */}
-      <div className="relative w-full bg-[#171D28] min-h-[500px] sm:min-h-[600px] md:min-h-[700px] lg:h-[928px]">
+    <div className="min-h-screen bg-[#171F32]">
+      {/* Hero Section with Video - 1600x928 */}
+      <div
+        className="relative bg-[#171F32] min-h-[500px] sm:min-h-[600px] md:min-h-[700px] w-full lg:w-[1600px] lg:h-[928px] lg:mx-auto"
+      >
         {/* Full width background wrapper */}
-        <div className="absolute inset-0 w-full bg-[#171D28]"></div>
-        {/* Content container with max-width */}
-        <div className="relative w-full max-w-[1600px] mx-auto h-full">
+        <div className="absolute inset-0 w-full bg-[#171F32]"></div>
+        {/* Content container 1600x928 */}
+        <div className="relative w-full h-full lg:w-[1600px] lg:h-[928px] max-w-[1600px] mx-auto">
           {/* Background Image */}
           <div className="absolute inset-0 w-full z-0">
             <img
@@ -180,8 +184,11 @@ export default function OnDemandPlayerPage({ webinar, session }: OnDemandPlayerP
             <div className="w-full max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8">
               <div className="flex flex-col gap-4 sm:gap-6 lg:gap-6 w-full max-w-[1070px] mx-auto pb-0 lg:pb-0">
                 
-                {/* Video Player */}
-                <div className="bg-black rounded-lg shadow-2xl overflow-hidden w-full" style={{ aspectRatio: '16/9' }}>
+                {/* Video Player - 1070x602 */}
+                <div
+                  className="bg-black rounded-lg shadow-2xl overflow-hidden w-full mx-auto"
+                  style={{ maxWidth: 1070, aspectRatio: '1070/602' }}
+                >
                   <div className="relative w-full h-full">
                     {session.provider === 'vimeo' ? (
                       <VimeoPlayer
@@ -206,23 +213,25 @@ export default function OnDemandPlayerPage({ webinar, session }: OnDemandPlayerP
                   </div>
                 </div>
                 
-                {/* Description and Presenter Info */}
-                <div className="flex flex-col lg:flex-row lg:justify-between gap-4 lg:gap-12 mt-2 sm:mt-4 lg:mt-6 mb-0 lg:mb-0">
+                {/* Description and Presenter Info - 플레이어와 간격 20px */}
+                <div className="flex flex-col lg:flex-row lg:justify-between gap-4 lg:gap-12 mt-2 sm:mt-4 lg:mt-2 mb-0 lg:mb-0">
                   {/* Description */}
                   <div className="w-full lg:w-[680px]">
                     <p className="text-white text-sm sm:text-base leading-relaxed text-left">
-                      {session.description || (session.session_key === 'campus_aruba_smart_experience'
+                      {session.description || (session.session_key === 'platform_ai_native_networking' || session.session_key === 'datacenter_ai_high_performance'
+                        ? 'AI 워크로드는 성능, 네트워크 설계, 운영 측면에서 기존의 방식으로는 감당하기 어려운 복잡성을 만들어 내며, 네트워크는 이러한 AI 데이터센터의 핵심 기반이 됩니다. HPE Juniper Networking의 데이터센터 솔루션은 개방형 유연성과 통합 AIOps를 통해 운영을 단순화하고 비용과 복잡성을 줄이며, 검증된 솔루션 성능으로 보안과 안정성을 갖춘 AI 데이터센터 구축을 가속화할 수 있습니다.'
+                        : session.session_key === 'campus_aruba_smart_experience'
                         ? '네트워크의 품질은 이제 단순히 \'연결\'이 아니라 \'경험\'으로 평가됩니다. HPE Aruba Networking 세션에서는 Aruba User Experience Insight(UXI) 를 통해 실제 사용자의 체감 품질을 실시간으로 가시화하고, 문제를 선제적으로 감지·해결하는 사례와 전세계 최초 HPE Aruba 솔루션으로 이룬HIMSS Stage7취득 & 802.11mc/802.11az 고정밀 위치기반 서비스를 소개합니다.'
-                        : 'AI 워크로드는 성능, 네트워크 설계, 운영 측면에서 기존의 방식으로는 감당하기 어려운 복잡성을 만들어 내며, 네트워크는 이러한 AI 데이터센터의 핵심 기반이 됩니다. HPE Juniper Networking의 데이터센터 솔루션은 개방형 유연성과 통합 AIOps를 통해 운영을 단순화하고 비용과 복잡성을 줄이며, 검증된 솔루션 성능으로 보안과 안정성을 갖춘 AI 데이터센터 구축을 가속화할 수 있습니다.')}
+                        : 'HPE Juniper Networking 세션에서는 Mist AI 기반 실시간 인사이트와 클라이언트부터 클라우드까지의 풀스택 자동화를 통해 문제 해결을 간소화, 가속화하고 일관된 사용자 경험을 보장하는 솔루션을 다룹니다.')}
                     </p>
                   </div>
                   
-                  {/* Presenter Introduction */}
-                  <div className="flex-shrink-0 flex flex-row lg:flex-col items-center lg:items-end gap-3 lg:gap-0 w-full lg:w-auto">
-                    <div className="bg-[#00AB84] text-black px-4 py-2 rounded-full text-sm font-medium lg:mb-4 text-center whitespace-nowrap">
+                  {/* Presenter Introduction - 히어로(1600px) 오른쪽 끝에서 347px, 블록 전체 15px 오른쪽 / 간격: 박스-이름 20px, 이름-HPE 14px */}
+                  <div className="flex-shrink-0 flex flex-row lg:flex-col items-center lg:items-start w-full lg:w-auto lg:mr-[42px] lg:ml-[15px] gap-3 lg:gap-0">
+                    <div className="bg-[#00AB84] text-black rounded-full text-sm font-medium whitespace-nowrap flex items-center justify-center w-[112px] h-[32px] lg:mb-2">
                       발표자 소개
                     </div>
-                    <div className="flex flex-row lg:flex-col items-center lg:items-center gap-2 lg:gap-2 text-left lg:text-center">
+                    <div className="flex flex-row lg:flex-col items-center lg:items-start text-left lg:pl-6 lg:min-w-0 gap-2 lg:gap-0">
                       {session.speaker && (
                         <>
                           <p className="text-white text-sm sm:text-base font-medium">
@@ -248,7 +257,7 @@ export default function OnDemandPlayerPage({ webinar, session }: OnDemandPlayerP
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="w-full flex justify-center">
             {/* Desktop Info Box */}
-            <div className="hidden lg:block w-full max-w-[1070px] h-40 relative bg-[#171D28] mx-auto">
+            <div className="hidden lg:block w-full max-w-[1070px] h-40 relative bg-[#171F32] mx-auto">
               {/* Ticket Image */}
               <img className="w-32 h-20 left-[354.80px] top-[48.37px] absolute" src="/img/hpe/ticket.png" alt="Movie Ticket" />
               
@@ -260,30 +269,39 @@ export default function OnDemandPlayerPage({ webinar, session }: OnDemandPlayerP
                 <span className="text-white text-sm font-normal leading-[8.38px]">(100분 무작위 추첨, 행사 종료 후 일괄 지급)</span>
               </div>
               
-              {/* Divider 1 */}
-              <div className="w-[0.76px] h-28 left-[760px] top-[30.08px] absolute opacity-25 bg-gray-400"></div>
+              {/* Divider 1 - 구분선 간격 183px */}
+              <div className="w-[0.76px] h-28 left-[704px] top-[30.08px] absolute opacity-25 bg-gray-400"></div>
               
               {/* Divider 2 */}
-              <div className="w-[0.76px] h-28 left-[910px] top-[30.08px] absolute opacity-25 bg-gray-400"></div>
+              <div className="w-[0.76px] h-28 left-[887px] top-[30.08px] absolute opacity-25 bg-gray-400"></div>
               
-              {/* Divider 3 - 플레이어 끝선에 맞춤 */}
-              <div className="w-[0.76px] h-28 left-[1059.24px] top-[30.08px] absolute opacity-25 bg-gray-400"></div>
+              {/* Divider 3 - 컨테이너 오른쪽 끝 테두리 */}
+              <div className="w-[0.76px] h-28 right-0 top-[30.08px] absolute opacity-25 bg-gray-400"></div>
               
-              {/* Meeting Request Text */}
-              <div className="w-32 left-[771px] top-[118.07px] absolute text-center text-emerald-500 text-xs font-normal">온/오프라인 미팅 신청</div>
+              {/* Meeting - 구분선 704~887 (183px) 가운데, 클릭 시 새창 */}
+              <a
+                href="https://www.seminar-registration-page.com/juniper-meeting-maker"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="absolute left-[704px] w-[183px] top-[30.08px] flex flex-col items-center gap-5 hover:opacity-90 transition-opacity cursor-pointer"
+              >
+                <img className="w-16 h-16" src="/img/hpe/ic_3.png" alt="온/오프라인 미팅 신청" />
+                <div className="text-center text-emerald-500 text-xs font-normal">온/오프라인 미팅 신청</div>
+              </a>
               
-              {/* Survey Text */}
-              <div className="w-14 left-[953px] top-[118.07px] absolute text-center text-emerald-500 text-xs font-normal">설문조사</div>
-              
-              {/* Meeting Icon */}
-              <img className="w-16 h-16 left-[803px] top-[33.13px] absolute" src="/img/hpe/ic_3.png" alt="온/오프라인 미팅 신청" />
-              
-              {/* Survey Icon */}
-              <img className="w-16 h-16 left-[953px] top-[31.61px] absolute" src="/img/hpe/ic_2.png" alt="설문조사" />
+              {/* Survey - 구분선 887~1070 (183px) 가운데, 클릭 시 인페이지 팝업 */}
+              <button
+                type="button"
+                onClick={() => setShowSurveyModal(true)}
+                className="absolute left-[887px] right-0 top-[30.08px] flex flex-col items-center gap-5 hover:opacity-90 transition-opacity cursor-pointer bg-transparent border-0 p-0 text-left"
+              >
+                <img className="w-16 h-16" src="/img/hpe/ic_2.png" alt="설문조사" />
+                <div className="text-center text-emerald-500 text-xs font-normal -ml-2.5">설문조사</div>
+              </button>
             </div>
             
             {/* Mobile Info Box */}
-            <div className="lg:hidden w-full bg-[#171D28] rounded-lg p-3 sm:p-6">
+            <div className="lg:hidden w-full bg-[#171F32] rounded-lg p-3 sm:p-6">
               {/* Text Section */}
               <div className="text-center mb-3 sm:mb-4">
                 <p className="text-white text-sm sm:text-base leading-relaxed mb-1 sm:mb-2">
@@ -298,32 +316,52 @@ export default function OnDemandPlayerPage({ webinar, session }: OnDemandPlayerP
               
               {/* Action Buttons */}
               <div className="flex flex-row gap-6 sm:gap-8 justify-center items-center pt-3 sm:pt-4 border-t border-gray-700">
-                {/* Meeting Button */}
-                <div className="flex flex-col items-center gap-2">
+                {/* Meeting Button - 클릭 시 새창 */}
+                <a
+                  href="https://www.seminar-registration-page.com/juniper-meeting-maker"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex flex-col items-center gap-2 hover:opacity-90 transition-opacity"
+                >
                   <img className="w-12 h-12 sm:w-16 sm:h-16" src="/img/hpe/ic_3.png" alt="온/오프라인 미팅 신청" />
                   <span className="text-emerald-500 text-xs font-normal">온/오프라인 미팅 신청</span>
-                </div>
+                </a>
                 
                 {/* 구분줄 */}
                 <div className="w-[0.76px] h-16 opacity-25 bg-gray-400"></div>
                 
-                {/* Survey Button */}
-                <div className="flex flex-col items-center gap-2">
+                {/* Survey Button - 클릭 시 인페이지 팝업 */}
+                <button
+                  type="button"
+                  onClick={() => setShowSurveyModal(true)}
+                  className="flex flex-col items-center gap-2 hover:opacity-90 transition-opacity bg-transparent border-0 p-0 text-left"
+                >
                   <img className="w-12 h-12 sm:w-16 sm:h-16" src="/img/hpe/ic_2.png" alt="설문조사" />
                   <span className="text-emerald-500 text-xs font-normal">설문조사</span>
-                </div>
+                </button>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Footer */}
-      <footer className="w-full bg-gray-900 text-white" style={{ height: '113px' }}>
-        <div className="max-w-[1600px] mx-auto h-full flex items-center justify-center">
-          <p className="text-center text-sm">© Copyright 2026 Hewlett Packard Enterprise Development LP.</p>
+      {/* Footer - 온디맨드 페이지 통일 */}
+      <footer className="w-full" style={{ height: '113px', color: '#FFFFFF', backgroundColor: '#171F32' }}>
+        <div className="max-w-[1600px] mx-auto h-full flex justify-center" style={{ paddingTop: '40px' }}>
+          <p
+            className="text-center text-[10px] font-thin"
+            style={{ color: '#FFFFFF', fontWeight: 100 }}
+          >
+            © Copyright 2026 Hewlett Packard Enterprise Development LP.
+          </p>
         </div>
       </footer>
+
+      <OnDemandSurveyModal
+        open={showSurveyModal}
+        onClose={() => setShowSurveyModal(false)}
+        webinarIdOrSlug={webinarPath}
+      />
     </div>
   )
 }

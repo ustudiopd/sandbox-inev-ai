@@ -1,5 +1,23 @@
 # 완료된 작업 내역 (Progress)
 
+## [2026-02-05] HPE 온디맨드 플레이어·설문조사 개선
+- ✅ 온디맨드 플레이어 페이지 UI 정리
+  - 히어로 섹션 1600×928 고정, 영상 1070×602
+  - 발표자 소개 박스 112×32, 텍스트 왼쪽 라인 정렬, 간격 조정
+  - 플레이어–설명 간격, 푸터·배경색 #171F32 통일
+  - Info Box 구분선 183px 간격, 미팅/설문 구역 가운데 정렬
+  - 온/오프라인 미팅 신청 클릭 시 새창 (juniper-meeting-maker 링크)
+- ✅ 온디맨드 설문조사 추가 (웨비나 설문 로직 준수)
+  - 설문조사 클릭 시 인페이지 팝업(모달)
+  - `OnDemandSurveyModal`: HPE 데이터센터 5문항 단일 선택, 이름·회사명·휴대폰
+  - `POST /api/public/ondemand/[id]/survey/submit`: 전화번호 1인 1회, survey_no/code6 발급
+  - DB: `ondemand_survey_responses` (마이그레이션 086, Supabase MCP 적용)
+  - OnDemandPlayerPage·OnDemandWatchPage 양쪽에 모달 연동
+- ✅ 설문 모달 UI
+  - 배경 흰색, 텍스트/입력 필드 진한 색으로 가독성 확보
+  - 모든 항목 필수, 필수 표시 `*` 빨간색(`text-red-500`)
+  - 회사명 필수 검증 추가
+
 ## [2026-02-04] 이메일 발송 시스템 에러 해결 및 크론 작업 설정
 - ✅ 이메일 발송 시스템 jsdom ESM 에러 해결
   - `lib/email/markdown-to-html.ts`: `isomorphic-dompurify`를 `sanitize-html`로 교체

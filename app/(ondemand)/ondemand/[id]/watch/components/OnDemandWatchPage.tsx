@@ -1,7 +1,9 @@
 'use client'
 
+import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
+import OnDemandSurveyModal from '../[sessionKey]/components/OnDemandSurveyModal'
 
 interface Session {
   session_key: string
@@ -37,6 +39,7 @@ interface OnDemandWatchPageProps {
 }
 
 export default function OnDemandWatchPage({ webinar }: OnDemandWatchPageProps) {
+  const [showSurveyModal, setShowSurveyModal] = useState(false)
   const webinarPath = webinar.slug || webinar.id
   const sortedSessions = [...webinar.sessions].sort((a, b) => (a.order || 0) - (b.order || 0))
   
@@ -197,24 +200,47 @@ export default function OnDemandWatchPage({ webinar }: OnDemandWatchPageProps) {
                     
                     {/* Icons Section - 모바일: 가로 배치, 데스크톱: 절대 위치 */}
                     <div className="flex md:hidden items-center justify-center gap-12 sm:gap-16 mt-2">
-                      <div className="flex flex-col items-center gap-1">
+                      <a
+                        href="https://www.seminar-registration-page.com/juniper-meeting-maker"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex flex-col items-center gap-1 hover:opacity-90 transition-opacity"
+                      >
                         <img className="w-12 h-12" src="/img/hpe/ic_3.png" alt="온/오프라인 미팅 신청" />
                         <span className="text-emerald-500 text-xs font-normal">온/오프라인 미팅 신청</span>
-                      </div>
+                      </a>
                       {/* 모바일 구분줄 */}
                       <div className="w-[0.76px] h-16 opacity-25 bg-gray-400"></div>
-                      <div className="flex flex-col items-center gap-1">
+                      <button
+                        type="button"
+                        onClick={() => setShowSurveyModal(true)}
+                        className="flex flex-col items-center gap-1 hover:opacity-90 transition-opacity bg-transparent border-0 p-0 text-left"
+                      >
                         <img className="w-12 h-12" src="/img/hpe/ic_2.png" alt="설문조사" />
                         <span className="text-emerald-500 text-xs font-normal relative left-[-2px]">설문조사</span>
-                      </div>
+                      </button>
                     </div>
                     
                     {/* 데스크톱 아이콘들 */}
                     <div className="hidden md:block">
-                      <div className="w-32 absolute left-[526.32px] top-[118.07px] text-emerald-500 text-xs font-normal">온/오프라인 미팅 신청</div>
-                      <div className="w-14 absolute left-[734.98px] top-[118.07px] text-emerald-500 text-sm font-normal">설문조사</div>
-                      <img className="w-16 h-16 absolute left-[555.16px] top-[33.13px]" src="/img/hpe/ic_3.png" alt="온/오프라인 미팅 신청" />
-                      <img className="w-16 h-16 absolute left-[735.70px] top-[31.61px]" src="/img/hpe/ic_2.png" alt="설문조사" />
+                      <a
+                        href="https://www.seminar-registration-page.com/juniper-meeting-maker"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="absolute left-[526.32px] top-[33.13px] w-[130px] h-[95px] z-10 hover:opacity-90 transition-opacity"
+                      >
+                        <img className="w-16 h-16 absolute left-[28.84px] top-0" src="/img/hpe/ic_3.png" alt="온/오프라인 미팅 신청" />
+                        <span className="absolute left-0 top-[84.94px] text-emerald-500 text-xs font-normal block w-32">온/오프라인 미팅 신청</span>
+                      </a>
+                      <button
+                        type="button"
+                        onClick={() => setShowSurveyModal(true)}
+                        className="absolute left-[526.32px] top-[33.13px] w-[130px] h-[95px] z-10 hover:opacity-90 transition-opacity cursor-pointer bg-transparent border-0 p-0 text-left"
+                        style={{ left: '735.70px', width: '100px', height: '95px' }}
+                      >
+                        <img className="w-16 h-16 absolute left-0 top-0" src="/img/hpe/ic_2.png" alt="설문조사" />
+                        <span className="absolute left-0 top-[84.94px] text-emerald-500 text-xs font-normal block w-24">설문조사</span>
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -344,6 +370,12 @@ export default function OnDemandWatchPage({ webinar }: OnDemandWatchPageProps) {
           </p>
         </div>
       </footer>
+
+      <OnDemandSurveyModal
+        open={showSurveyModal}
+        onClose={() => setShowSurveyModal(false)}
+        webinarIdOrSlug={webinarPath}
+      />
     </div>
   )
 }
