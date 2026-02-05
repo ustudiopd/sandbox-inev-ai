@@ -565,12 +565,38 @@ export default function FormManagement({ webinarId }: FormManagementProps) {
             <option value="closed">마감</option>
           </select>
         </div>
-        <button
-          onClick={() => setShowCreateModal(true)}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-        >
-          + 새 폼 만들기
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={() => {
+              // 테스트 폼 데이터로 자동 채우기
+              setNewFormKind('survey')
+              setNewFormTitle('[테스트] 설문')
+              setNewFormDescription('만족도 조사 테스트 폼')
+              setNewFormQuestions([{
+                id: `temp-${Date.now()}`,
+                type: 'single',
+                body: '이 웨비나에 대한 전반적인 만족도는 어떠신가요?',
+                options: [
+                  { id: '1', text: '매우 만족' },
+                  { id: '2', text: '만족' },
+                  { id: '3', text: '보통' },
+                  { id: '4', text: '불만족' },
+                  { id: '5', text: '매우 불만족' }
+                ]
+              }])
+              setShowCreateModal(true)
+            }}
+            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+          >
+            테스트 폼 생성
+          </button>
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            + 새 폼 만들기
+          </button>
+        </div>
       </div>
       
       {/* 폼 목록 */}
