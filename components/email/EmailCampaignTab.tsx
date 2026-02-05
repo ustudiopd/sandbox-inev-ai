@@ -99,12 +99,19 @@ export default function EmailCampaignTab({ clientId, scopeType, scopeId }: Email
   const [showTestSendModal, setShowTestSendModal] = useState(false)
   const [testEmails, setTestEmails] = useState('')
   
-  // 텍스트 선택 툴팁 상태
+  // 텍스트 선택 툴팁 상태 (본문용)
   const [showFormatTooltip, setShowFormatTooltip] = useState(false)
   const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 })
   const [selectedText, setSelectedText] = useState({ start: 0, end: 0, text: '' })
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const tooltipRef = useRef<HTMLDivElement>(null)
+  
+  // 텍스트 선택 툴팁 상태 (푸터용)
+  const [showFooterFormatTooltip, setShowFooterFormatTooltip] = useState(false)
+  const [footerTooltipPosition, setFooterTooltipPosition] = useState({ x: 0, y: 0 })
+  const [selectedFooterText, setSelectedFooterText] = useState({ start: 0, end: 0, text: '' })
+  const footerTextareaRef = useRef<HTMLTextAreaElement>(null)
+  const footerTooltipRef = useRef<HTMLDivElement>(null)
   const [sendingTest, setSendingTest] = useState(false)
   const [sending, setSending] = useState(false)
   const [showScheduleModal, setShowScheduleModal] = useState(false)
@@ -230,9 +237,55 @@ export default function EmailCampaignTab({ clientId, scopeType, scopeId }: Email
     setShowFormatTooltip(true)
   }
   
+  // 푸터 텍스트 선택 핸들러
+  const handleFooterTextSelection = () => {
+    const textarea = footerTextareaRef.current
+    if (!textarea) return
+    
+    const start = textarea.selectionStart
+    const end = textarea.selectionEnd
+    
+    if (start === end) {
+      setShowFooterFormatTooltip(false)
+      return
+    }
+    
+    const selectedTextValue = textarea.value.substring(start, end)
+    setSelectedFooterText({ start, end, text: selectedTextValue })
+    
+    const textBeforeCursor = textarea.value.substring(0, start)
+    const textAfterCursor = textarea.value.substring(0, end)
+    
+    const computedStyle = window.getComputedStyle(textarea)
+    const lineHeight = parseFloat(computedStyle.lineHeight) || 20
+    const paddingLeft = parseFloat(computedStyle.paddingLeft) || 12
+    const paddingTop = parseFloat(computedStyle.paddingTop) || 8
+    const fontSize = parseFloat(computedStyle.fontSize) || 14
+    
+    const linesBefore = textBeforeCursor.split('\n')
+    const linesAfter = textAfterCursor.split('\n')
+    const lineNumber = linesBefore.length - 1
+    const columnStart = linesBefore[linesBefore.length - 1].length
+    const columnEnd = linesAfter[linesAfter.length - 1].length
+    
+    const rect = textarea.getBoundingClientRect()
+    const scrollTop = textarea.scrollTop
+    
+    const charWidth = fontSize * 0.6
+    const x = rect.left + paddingLeft + ((columnStart + columnEnd) / 2) * charWidth
+    const y = rect.top + paddingTop + (lineNumber + 0.5) * lineHeight - scrollTop
+    
+    const tooltipWidth = 200
+    const adjustedX = Math.max(rect.left + tooltipWidth / 2, Math.min(x, rect.right - tooltipWidth / 2))
+    
+    setFooterTooltipPosition({ x: adjustedX, y })
+    setShowFooterFormatTooltip(true)
+  }
+  
   // 외부 클릭 시 툴팁 숨기기
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
+      // 본문 툴팁
       if (
         tooltipRef.current &&
         !tooltipRef.current.contains(event.target as Node) &&
@@ -240,6 +293,16 @@ export default function EmailCampaignTab({ clientId, scopeType, scopeId }: Email
         !textareaRef.current.contains(event.target as Node)
       ) {
         setShowFormatTooltip(false)
+      }
+      
+      // 푸터 툴팁
+      if (
+        footerTooltipRef.current &&
+        !footerTooltipRef.current.contains(event.target as Node) &&
+        footerTextareaRef.current &&
+        !footerTextareaRef.current.contains(event.target as Node)
+      ) {
+        setShowFooterFormatTooltip(false)
       }
     }
     
@@ -249,7 +312,7 @@ export default function EmailCampaignTab({ clientId, scopeType, scopeId }: Email
     }
   }, [])
   
-  // 포맷팅 함수들
+  // 포맷팅 함수들 (본문용)
   const applyFormat = (format: 'bold' | 'underline' | 'align-left' | 'align-center' | 'align-right') => {
     const textarea = textareaRef.current
     if (!textarea || selectedText.start === selectedText.end) return
@@ -259,7 +322,6 @@ export default function EmailCampaignTab({ clientId, scopeType, scopeId }: Email
     
     switch (format) {
       case 'bold':
-        // 이미 **로 감싸져 있는지 확인
         if (text.startsWith('**') && text.endsWith('**')) {
           formattedText = text.slice(2, -2)
         } else {
@@ -267,7 +329,6 @@ export default function EmailCampaignTab({ clientId, scopeType, scopeId }: Email
         }
         break
       case 'underline':
-        // 이미 __로 감싸져 있거나 <u> 태그가 있는지 확인
         if ((text.startsWith('__') && text.endsWith('__')) || 
             (text.startsWith('<u>') && text.endsWith('</u>'))) {
           formattedText = text.startsWith('<u>') 
@@ -278,8 +339,6 @@ export default function EmailCampaignTab({ clientId, scopeType, scopeId }: Email
         }
         break
       case 'align-left':
-        // 줄 단위로 정렬 적용 (마크다운에서는 직접 지원하지 않으므로 HTML 태그 사용)
-        // 단, 이미 정렬 태그가 있으면 제거하고 새로 적용
         const lines = text.replace(/<div[^>]*style="text-align:[^"]*"[^>]*>/gi, '').replace(/<\/div>/gi, '').split('\n')
         formattedText = lines.map(line => line.trim() ? `<div style="text-align: left;">${line.trim()}</div>` : '').filter(l => l).join('\n')
         break
@@ -293,7 +352,6 @@ export default function EmailCampaignTab({ clientId, scopeType, scopeId }: Email
         break
     }
     
-    // 텍스트 교체
     const newValue = 
       editForm.body_md.substring(0, start) + 
       formattedText + 
@@ -301,7 +359,6 @@ export default function EmailCampaignTab({ clientId, scopeType, scopeId }: Email
     
     setEditForm({ ...editForm, body_md: newValue })
     
-    // 커서 위치 조정
     setTimeout(() => {
       if (textarea) {
         const newCursorPos = start + formattedText.length
@@ -310,8 +367,65 @@ export default function EmailCampaignTab({ clientId, scopeType, scopeId }: Email
       }
     }, 0)
     
-    // 툴팁 숨기기
     setShowFormatTooltip(false)
+  }
+  
+  // 포맷팅 함수들 (푸터용)
+  const applyFooterFormat = (format: 'bold' | 'underline' | 'align-left' | 'align-center' | 'align-right') => {
+    const textarea = footerTextareaRef.current
+    if (!textarea || selectedFooterText.start === selectedFooterText.end) return
+    
+    const { start, end, text } = selectedFooterText
+    let formattedText = ''
+    
+    switch (format) {
+      case 'bold':
+        if (text.startsWith('**') && text.endsWith('**')) {
+          formattedText = text.slice(2, -2)
+        } else {
+          formattedText = `**${text}**`
+        }
+        break
+      case 'underline':
+        if ((text.startsWith('__') && text.endsWith('__')) || 
+            (text.startsWith('<u>') && text.endsWith('</u>'))) {
+          formattedText = text.startsWith('<u>') 
+            ? text.slice(3, -4) 
+            : text.slice(2, -2)
+        } else {
+          formattedText = `__${text}__`
+        }
+        break
+      case 'align-left':
+        const lines = text.replace(/<div[^>]*style="text-align:[^"]*"[^>]*>/gi, '').replace(/<\/div>/gi, '').split('\n')
+        formattedText = lines.map(line => line.trim() ? `<div style="text-align: left;">${line.trim()}</div>` : '').filter(l => l).join('\n')
+        break
+      case 'align-center':
+        const linesCenter = text.replace(/<div[^>]*style="text-align:[^"]*"[^>]*>/gi, '').replace(/<\/div>/gi, '').split('\n')
+        formattedText = linesCenter.map(line => line.trim() ? `<div style="text-align: center;">${line.trim()}</div>` : '').filter(l => l).join('\n')
+        break
+      case 'align-right':
+        const linesRight = text.replace(/<div[^>]*style="text-align:[^"]*"[^>]*>/gi, '').replace(/<\/div>/gi, '').split('\n')
+        formattedText = linesRight.map(line => line.trim() ? `<div style="text-align: right;">${line.trim()}</div>` : '').filter(l => l).join('\n')
+        break
+    }
+    
+    const newValue = 
+      editForm.footer_text.substring(0, start) + 
+      formattedText + 
+      editForm.footer_text.substring(end)
+    
+    setEditForm({ ...editForm, footer_text: newValue })
+    
+    setTimeout(() => {
+      if (textarea) {
+        const newCursorPos = start + formattedText.length
+        textarea.setSelectionRange(newCursorPos, newCursorPos)
+        textarea.focus()
+      }
+    }, 0)
+    
+    setShowFooterFormatTooltip(false)
   }
   
   const fetchCampaigns = async () => {
@@ -1314,12 +1428,84 @@ export default function EmailCampaignTab({ clientId, scopeType, scopeId }: Email
               
               <div>
                 <label className="block text-sm font-medium mb-2">하단 푸터 텍스트 (선택)</label>
-                <textarea
-                  value={editForm.footer_text}
-                  onChange={(e) => setEditForm({ ...editForm, footer_text: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg h-32"
-                  placeholder="이메일 하단에 표시될 푸터 텍스트를 입력하세요 (마크다운 지원). 비워두면 기본 푸터가 사용됩니다."
-                />
+                <div className="relative">
+                  <textarea
+                    ref={footerTextareaRef}
+                    value={editForm.footer_text}
+                    onChange={(e) => setEditForm({ ...editForm, footer_text: e.target.value })}
+                    onSelect={handleFooterTextSelection}
+                    onMouseUp={handleFooterTextSelection}
+                    onKeyUp={handleFooterTextSelection}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg h-32"
+                    placeholder="이메일 하단에 표시될 푸터 텍스트를 입력하세요 (마크다운 지원). 비워두면 기본 푸터가 사용됩니다."
+                  />
+                  
+                  {/* 푸터 포맷팅 툴팁 */}
+                  {showFooterFormatTooltip && selectedFooterText.text && (
+                    <div
+                      ref={footerTooltipRef}
+                      className="fixed z-50 bg-white rounded-lg shadow-xl border border-gray-300 p-1.5 flex items-center gap-0.5"
+                      style={{
+                        left: `${footerTooltipPosition.x}px`,
+                        top: `${footerTooltipPosition.y - 45}px`,
+                        transform: 'translateX(-50%)',
+                      }}
+                      onMouseDown={(e) => e.preventDefault()}
+                    >
+                      <button
+                        onClick={() => applyFooterFormat('bold')}
+                        className="p-2 rounded hover:bg-gray-100 active:bg-gray-200 transition-colors"
+                        title="굵게 (**텍스트**)"
+                        type="button"
+                      >
+                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                          <path d="M5 4a1 1 0 011 1v10a1 1 0 01-2 0V5a1 1 0 011-1zm4 0h3a3 3 0 013 3v4a3 3 0 01-3 3H9V4zm0 2v8h3a1 1 0 001-1V7a1 1 0 00-1-1H9z" />
+                        </svg>
+                      </button>
+                      <button
+                        onClick={() => applyFooterFormat('underline')}
+                        className="p-2 rounded hover:bg-gray-100 active:bg-gray-200 transition-colors"
+                        title="밑줄 (__텍스트__)"
+                        type="button"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 19h14M5 5h14" />
+                        </svg>
+                      </button>
+                      <div className="w-px h-6 bg-gray-300 mx-0.5" />
+                      <button
+                        onClick={() => applyFooterFormat('align-left')}
+                        className="p-2 rounded hover:bg-gray-100 active:bg-gray-200 transition-colors"
+                        title="왼쪽 정렬"
+                        type="button"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 6h18M3 12h12M3 18h6" />
+                        </svg>
+                      </button>
+                      <button
+                        onClick={() => applyFooterFormat('align-center')}
+                        className="p-2 rounded hover:bg-gray-100 active:bg-gray-200 transition-colors"
+                        title="가운데 정렬"
+                        type="button"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 6h18M6 12h12M9 18h6" />
+                        </svg>
+                      </button>
+                      <button
+                        onClick={() => applyFooterFormat('align-right')}
+                        className="p-2 rounded hover:bg-gray-100 active:bg-gray-200 transition-colors"
+                        title="오른쪽 정렬"
+                        type="button"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 6h18M9 12h12M15 18h6" />
+                        </svg>
+                      </button>
+                    </div>
+                  )}
+                </div>
                 <p className="mt-1 text-xs text-gray-500">비워두면 기본 워트 푸터가 사용됩니다</p>
               </div>
             </div>
