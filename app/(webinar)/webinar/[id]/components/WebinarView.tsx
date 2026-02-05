@@ -113,8 +113,8 @@ export default function WebinarView({ webinar, isAdminMode = false }: WebinarVie
   const [popupContent, setPopupContent] = useState<{ type: 'form' | 'giveaway' | 'file'; id: string; title: string } | null>(null)
   const [shownPopups, setShownPopups] = useState<Set<string>>(new Set())
   const isInitialLoadRef = useRef(true)
-  const previousItemsRef = useRef<{ forms: Set<string>; giveaways: Set<string>; files: Set<string> }>({
-    forms: new Set(),
+  const previousItemsRef = useRef<{ forms: Map<string, string>; giveaways: Set<string>; files: Set<string> }>({
+    forms: new Map(), // formId -> status 매핑으로 변경하여 상태 변경 추적
     giveaways: new Set(),
     files: new Set(),
   })
@@ -226,30 +226,70 @@ export default function WebinarView({ webinar, isAdminMode = false }: WebinarVie
         const formsResult = await formsResponse.json()
         if (formsResponse.ok && formsResult.forms) {
           const loadedForms = formsResult.forms
-          const currentFormIds = new Set<string>(loadedForms.map((f: any) => f.id))
+          const currentFormsMap = new Map<string, string>(loadedForms.map((f: any) => [f.id, f.status]))
           
-          // 새로 오픈된 폼 찾기 (이전에 없던 것)
+          // 새로 오픈된 폼 찾기 (이전에 없었거나 상태가 'open'으로 변경된 것)
           if (!isInitialLoadRef.current) {
-            const newForms = loadedForms.filter((form: any) => !previousItemsRef.current.forms.has(form.id))
-            if (newForms.length > 0) {
-              // 첫 번째 새 폼만 팝업으로 표시
-              const newForm = newForms[0]
+            const newlyOpenedForms = loadedForms.filter((form: any) => {
+              const previousStatus = previousItemsRef.current.forms.get(form.id)
+              // 이전에 없었거나, 이전 상태가 'open'이 아니었는데 지금 'open'인 경우
+              return form.status === 'open' && (
+                !previousStatus || 
+                (previousStatus !== 'open')
+              )
+            })
+            
+            if (newlyOpenedForms.length > 0) {
+              // 모든 새로 오픈된 폼에 대해 팝업 표시 (마지막 것이 우선)
+              // 여러 폼이 동시에 오픈되면 마지막 폼만 팝업으로 표시
+              const newForm = newlyOpenedForms[newlyOpenedForms.length - 1]
               const popupKey = `form-${newForm.id}`
+              
+              // 이미 표시된 팝업이 아니거나, 폼이 닫혔다가 다시 오픈된 경우 팝업 표시
+              if (!shownPopups.has(popupKey)) {
+                setShownPopups((prev) => {
+                  const next = new Set(prev)
+                  next.add(popupKey)
+                  return next
+                })
+                setPopupContent({
+                  type: 'form',
+                  id: newForm.id,
+                  title: newForm.title,
+                })
+              } else {
+                // 이미 표시된 팝업이지만 폼이 닫혔다가 다시 오픈된 경우 다시 표시
+                const previousStatus = previousItemsRef.current.forms.get(newForm.id)
+                if (previousStatus && previousStatus !== 'open') {
+                  setPopupContent({
+                    type: 'form',
+                    id: newForm.id,
+                    title: newForm.title,
+                  })
+                }
+              }
+            }
+            
+            // 닫힌 폼은 shownPopups에서 제거하여 다시 오픈될 때 팝업이 뜨도록 함
+            const closedForms = Array.from(previousItemsRef.current.forms.entries())
+              .filter(([formId, status]) => {
+                const currentForm = loadedForms.find((f: any) => f.id === formId)
+                return status === 'open' && (!currentForm || currentForm.status !== 'open')
+              })
+            
+            if (closedForms.length > 0) {
               setShownPopups((prev) => {
                 const next = new Set(prev)
-                next.add(popupKey)
+                closedForms.forEach(([formId]) => {
+                  next.delete(`form-${formId}`)
+                })
                 return next
-              })
-              setPopupContent({
-                type: 'form',
-                id: newForm.id,
-                title: newForm.title,
               })
             }
           }
           
           setOpenForms(loadedForms)
-          previousItemsRef.current.forms = currentFormIds
+          previousItemsRef.current.forms = currentFormsMap
         }
 
         // 오픈된 추첨 조회
@@ -762,11 +802,11 @@ export default function WebinarView({ webinar, isAdminMode = false }: WebinarVie
                 <div className="flex items-center gap-2">
                   <h3 className="text-base sm:text-base font-semibold text-gray-900">세션 소개</h3>
                   {/* 설문 버튼 - 모바일 */}
-                  {openForms.filter((f) => f.kind === 'survey').length > 0 ? (
+                  {openForms.filter((f) => f.kind === 'survey' && f.status === 'open').length > 0 ? (
                     <button
                       onClick={(e) => {
                         e.stopPropagation()
-                        const survey = openForms.find((f) => f.kind === 'survey')
+                        const survey = openForms.find((f) => f.kind === 'survey' && f.status === 'open')
                         if (survey) {
                           setPopupContent({
                             type: 'form',
@@ -801,10 +841,10 @@ export default function WebinarView({ webinar, isAdminMode = false }: WebinarVie
               <div className="hidden lg:flex lg:items-center lg:justify-between lg:mb-3 lg:mb-4">
                 <h3 className="text-base sm:text-base lg:text-lg font-semibold text-gray-900">세션 소개</h3>
                 {/* 설문 버튼 - PC */}
-                {openForms.filter((f) => f.kind === 'survey').length > 0 ? (
+                {openForms.filter((f) => f.kind === 'survey' && f.status === 'open').length > 0 ? (
                   <button
                     onClick={() => {
-                      const survey = openForms.find((f) => f.kind === 'survey')
+                      const survey = openForms.find((f) => f.kind === 'survey' && f.status === 'open')
                       if (survey) {
                         setPopupContent({
                           type: 'form',
@@ -1117,10 +1157,10 @@ export default function WebinarView({ webinar, isAdminMode = false }: WebinarVie
                   {/* 설문/퀴즈/발표자료/추첨 버튼 */}
                   <div className="mt-4 pt-4 border-t border-gray-200">
                     <div className="flex flex-wrap gap-2 sm:gap-3">
-                      {openForms.filter((f) => f.kind === 'survey').length > 0 && (
+                      {openForms.filter((f) => f.kind === 'survey' && f.status === 'open').length > 0 && (
                         <button
                           onClick={() => {
-                            const survey = openForms.find((f) => f.kind === 'survey')
+                            const survey = openForms.find((f) => f.kind === 'survey' && f.status === 'open')
                             if (survey) {
                               setPopupContent({
                                 type: 'form',
@@ -1132,17 +1172,17 @@ export default function WebinarView({ webinar, isAdminMode = false }: WebinarVie
                           className="px-3 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors text-xs sm:text-sm font-medium flex items-center gap-1.5"
                         >
                           📝 설문
-                          {openForms.filter((f) => f.kind === 'survey').length > 1 && (
+                          {openForms.filter((f) => f.kind === 'survey' && f.status === 'open').length > 1 && (
                             <span className="bg-blue-500 text-white text-xs px-1.5 py-0.5 rounded-full">
-                              {openForms.filter((f) => f.kind === 'survey').length}
+                              {openForms.filter((f) => f.kind === 'survey' && f.status === 'open').length}
                             </span>
                           )}
                         </button>
                       )}
-                      {openForms.filter((f) => f.kind === 'quiz').length > 0 && (
+                      {openForms.filter((f) => f.kind === 'quiz' && f.status === 'open').length > 0 && (
                         <button
                           onClick={() => {
-                            const quiz = openForms.find((f) => f.kind === 'quiz')
+                            const quiz = openForms.find((f) => f.kind === 'quiz' && f.status === 'open')
                             if (quiz) {
                               setPopupContent({
                                 type: 'form',
@@ -1154,9 +1194,9 @@ export default function WebinarView({ webinar, isAdminMode = false }: WebinarVie
                           className="px-3 py-2 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors text-xs sm:text-sm font-medium flex items-center gap-1.5"
                         >
                           🎯 퀴즈
-                          {openForms.filter((f) => f.kind === 'quiz').length > 1 && (
+                          {openForms.filter((f) => f.kind === 'quiz' && f.status === 'open').length > 1 && (
                             <span className="bg-purple-500 text-white text-xs px-1.5 py-0.5 rounded-full">
-                              {openForms.filter((f) => f.kind === 'quiz').length}
+                              {openForms.filter((f) => f.kind === 'quiz' && f.status === 'open').length}
                             </span>
                           )}
                         </button>
