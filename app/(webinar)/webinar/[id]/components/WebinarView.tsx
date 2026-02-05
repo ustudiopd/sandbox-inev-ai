@@ -228,11 +228,15 @@ export default function WebinarView({ webinar, isAdminMode = false }: WebinarVie
           const loadedForms = formsResult.forms
           const currentFormsMap = new Map<string, string>(loadedForms.map((f: any) => [f.id, f.status]))
           
+          // 먼저 openForms 상태를 업데이트하여 UI가 즉시 반영되도록 함
+          setOpenForms(loadedForms)
+          
           // 삭제된 폼 찾기 (이전에 있었는데 지금은 없는 것)
           const deletedFormIds = Array.from(previousItemsRef.current.forms.keys())
             .filter((formId) => !currentFormsMap.has(formId))
           
           // 삭제된 폼을 previousItemsRef와 shownPopups에서 제거
+          // 삭제된 폼이 다시 생성될 수 있으므로 shownPopups에서도 제거하여 팝업이 다시 뜨도록 함
           if (deletedFormIds.length > 0) {
             deletedFormIds.forEach((formId) => {
               previousItemsRef.current.forms.delete(formId)
@@ -263,17 +267,29 @@ export default function WebinarView({ webinar, isAdminMode = false }: WebinarVie
               const newForm = newlyOpenedForms[newlyOpenedForms.length - 1]
               const popupKey = `form-${newForm.id}`
               
-              // 새로 생성된 폼이거나, 폼이 닫혔다가 다시 오픈된 경우 팝업 표시
+              // 새로 생성된 폼이거나, 폼이 닫혔다가(또는 삭제되었다가) 다시 오픈된 경우 팝업 표시
               const previousStatus = previousItemsRef.current.forms.get(newForm.id)
               const isNewForm = !previousStatus
               const wasReopened = previousStatus && previousStatus !== 'open'
               
-              if (isNewForm || wasReopened || !shownPopups.has(popupKey)) {
-                setShownPopups((prev) => {
+              // 삭제되었다가 다시 생성된 경우도 포함 (previousStatus가 없고, shownPopups에도 없음)
+              // 또는 닫혔다가 다시 오픈된 경우
+              // 함수형 업데이트를 사용하여 최신 shownPopups 상태 확인
+              let shouldShowPopup = false
+              setShownPopups((prev) => {
+                const isInShownPopups = prev.has(popupKey)
+                // 새 폼이거나, 다시 오픈된 폼이거나, shownPopups에 없으면 팝업 표시
+                if (isNewForm || wasReopened || !isInShownPopups) {
+                  shouldShowPopup = true
                   const next = new Set(prev)
                   next.add(popupKey)
                   return next
-                })
+                }
+                return prev
+              })
+              
+              // 팝업 표시 (상태 업데이트 후)
+              if (shouldShowPopup) {
                 setPopupContent({
                   type: 'form',
                   id: newForm.id,
@@ -300,7 +316,7 @@ export default function WebinarView({ webinar, isAdminMode = false }: WebinarVie
             }
           }
           
-          setOpenForms(loadedForms)
+          // previousItemsRef 업데이트 (openForms는 이미 위에서 업데이트됨)
           previousItemsRef.current.forms = currentFormsMap
         }
 
