@@ -124,8 +124,8 @@ export default function OnDemandLandingPage({ webinar }: OnDemandLandingPageProp
   
   return (
     <div className="min-h-screen flex flex-col overflow-x-hidden" style={{ backgroundColor: '#171F32' }}>
-      {/* Hero Section */}
-      <div className="relative w-full bg-[#171D28] h-[272px] sm:h-[480px] md:h-[521px] lg:h-[521px]">
+      {/* Hero Section - 모바일: 높이 조정 */}
+      <div className="relative w-full bg-[#171D28] h-[272px] sm:h-[480px] md:h-[521px] lg:h-[521px] max-sm:h-[242px] max-sm:flex max-sm:flex-col">
         {/* 배경 이미지 - 1600px까지만 적용 */}
         <div className="absolute inset-0 w-full h-full flex items-center justify-center">
           <div className="relative w-full max-w-[1600px] h-full">
@@ -185,8 +185,8 @@ export default function OnDemandLandingPage({ webinar }: OnDemandLandingPageProp
             </div>
           </div>
           
-          {/* HPE Logo - 1600px 컨테이너 기준 정렬 */}
-          <div className="absolute top-4 sm:top-8 md:top-12 left-4 sm:left-6 lg:left-8 z-20">
+          {/* HPE Logo - 1600px 컨테이너 기준 정렬 / 모바일: 상단 여백 확보 */}
+          <div className="absolute top-4 sm:top-8 md:top-12 left-4 sm:left-6 lg:left-8 z-20 max-sm:top-3">
             <Image
               src="/img/hpe/hpe_logo.png"
               alt="HPE"
@@ -196,30 +196,30 @@ export default function OnDemandLandingPage({ webinar }: OnDemandLandingPageProp
               priority
             />
           </div>
-        {/* 텍스트 콘텐츠: 도형 위에 위치하도록 z-index 관리 */}
-        <div className="relative z-10 w-full h-full flex flex-col justify-center py-4 sm:py-6 md:py-8 lg:py-12">
+        {/* 텍스트 콘텐츠: 도형 위에 위치하도록 z-index 관리 / 모바일: 로고와 간격 확보 */}
+        <div className="relative z-10 w-full h-full flex flex-col justify-center py-4 sm:py-6 md:py-8 lg:py-12 max-sm:pt-20 max-sm:pb-4">
           
           {/* Center: Title and Info */}
-          <div className="flex-1 flex items-center">
-            <div className="w-full px-4 sm:px-6 lg:px-8">
+          <div className="flex-1 flex items-center max-sm:items-start max-sm:pt-0">
+            <div className="w-full px-4 sm:px-6 lg:px-8 max-sm:px-3">
               {/* 로고와 기간 줄을 같은 컨테이너에 배치 */}
               <div className="flex flex-col items-center w-full">
-                {/* 로고 너비에 맞춘 컨테이너 - 가운데 정렬 */}
-                <div className="flex flex-col items-start w-[410px]">
-                  {/* 제목 - 가운데 정렬 */}
-                  <div className="mb-2 sm:mb-3 md:mb-4 lg:mb-6 self-center">
+                {/* 로고 너비에 맞춘 컨테이너 - 가운데 정렬 / 모바일: 기간 설명 기준 너비, 가운데 정렬 */}
+                <div className="flex flex-col items-start w-[410px] max-sm:w-auto max-sm:max-w-[calc(100vw-1.5rem)] max-sm:mx-auto">
+                  {/* 제목 - 가운데 정렬 / 모바일: 크기 축소, 간격 확대 */}
+                  <div className="mb-2 sm:mb-3 md:mb-4 lg:mb-6 self-center max-sm:w-full max-sm:mb-4">
                     <Image
                       src={hpeWebinarSeriesImageUrl}
                       alt="HPE Webinar Series"
                       width={410}
                       height={80}
-                      className="w-[410px] h-auto object-contain"
+                      className="w-[410px] h-auto object-contain max-sm:w-[85%] max-sm:max-w-[320px]"
                       priority
                     />
                   </div>
                   
-                  {/* 기간 배지와 날짜 - 왼쪽 정렬 */}
-                  <div className="flex flex-row items-center justify-start gap-1.5 sm:gap-2 md:gap-2.5 mb-1.5 sm:mb-2 md:mb-3 flex-wrap">
+                  {/* 기간 배지와 날짜 - 왼쪽 정렬 / 모바일: 줄바꿈 허용, 간격 확대 */}
+                  <div className="flex flex-row items-center justify-start gap-1.5 sm:gap-2 md:gap-2.5 mb-1.5 sm:mb-2 md:mb-3 flex-wrap max-sm:mb-4 max-sm:mb-1">
                     <div className="inline-flex items-center shrink-0">
                       <Image
                         src={hpeDueIconUrl}
@@ -230,13 +230,13 @@ export default function OnDemandLandingPage({ webinar }: OnDemandLandingPageProp
                         priority
                       />
                     </div>
-                    <span className="text-white text-xs sm:text-sm md:text-base lg:text-lg xl:text-xl whitespace-nowrap">
+                    <span className="text-white text-xs sm:text-sm md:text-base lg:text-lg xl:text-xl max-sm:whitespace-normal">
                       2026년 3월 2일 (월) ~ 3월 6일 (금)
                     </span>
                   </div>
                   
-                  {/* 안내 텍스트 - 기간 아이콘과 같은 위치에서 시작 */}
-                  <p className="text-white/90 text-[10px] sm:text-xs text-left">
+                  {/* 안내 텍스트 - 기간 아이콘과 같은 위치에서 시작 / 모바일: 기간과 붙임 */}
+                  <p className="text-white/90 text-[10px] sm:text-xs text-left max-sm:leading-relaxed max-sm:mt-0 max-sm:-mt-1">
                     * 기간 내, 언제든지 입장하셔서 컨텐츠를 반복적으로 시청하실 수 있습니다.
                   </p>
                 </div>
@@ -250,9 +250,9 @@ export default function OnDemandLandingPage({ webinar }: OnDemandLandingPageProp
         <div className="absolute bottom-0 left-0 right-0 h-px bg-gray-300 z-20"></div>
       </div>
 
-      {/* Login Form Section */}
-      <div className="bg-white flex items-start sm:items-center justify-center px-3 sm:px-4 md:px-6 lg:px-8 py-6 sm:py-10 md:py-16 lg:py-32 min-h-[300px] overflow-x-hidden" style={{ paddingTop: '70px', paddingBottom: '70px' }}>
-        <div className="w-[355px]">
+      {/* Login Form Section - 모바일: 전체 너비, 터치 영역 확보, 버튼 가운데 정렬 */}
+      <div className="bg-white flex items-start sm:items-center justify-center px-3 sm:px-4 md:px-6 lg:px-8 min-h-[300px] overflow-x-hidden max-sm:px-4 max-sm:py-8 max-sm:items-center sm:pt-[70px] sm:pb-[70px]">
+        <div className="w-[355px] max-sm:w-full max-sm:max-w-[min(100%,355px)]">
           <form onSubmit={handleLogin} className="space-y-4 sm:space-y-6 w-full">
             {/* Title */}
             <div className="mb-6 sm:mb-8">
@@ -262,7 +262,7 @@ export default function OnDemandLandingPage({ webinar }: OnDemandLandingPageProp
               <div className="h-1 bg-[#00B388] w-full"></div>
             </div>
             
-            {/* Name Input */}
+            {/* Name Input - 모바일: 터치 최소 44px */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
               <label htmlFor="name" className="text-sm font-semibold text-gray-700 whitespace-nowrap text-left">
                 성 함<span className="text-red-500">*</span>
@@ -276,13 +276,12 @@ export default function OnDemandLandingPage({ webinar }: OnDemandLandingPageProp
                   setErrorMessage('')
                 }}
                 required
-                className="w-full sm:w-[253px] px-4 rounded bg-gray-100 focus:outline-none focus:ring-2 focus:ring-[#00B388] focus:ring-offset-1"
-                style={{ height: '37px' }}
+                className="w-full sm:w-[253px] px-4 rounded bg-gray-100 focus:outline-none focus:ring-2 focus:ring-[#00B388] focus:ring-offset-1 h-[37px] max-sm:min-h-[44px] max-sm:text-base"
                 placeholder="성함을 입력하세요"
               />
             </div>
             
-            {/* Email Input */}
+            {/* Email Input - 모바일: 터치 최소 44px */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
               <label htmlFor="email" className="text-sm font-semibold text-gray-700 whitespace-nowrap text-left">
                 이메일 주소<span className="text-red-500">*</span>
@@ -296,8 +295,7 @@ export default function OnDemandLandingPage({ webinar }: OnDemandLandingPageProp
                   setErrorMessage('')
                 }}
                 required
-                className="w-full sm:w-[253px] px-4 rounded bg-gray-100 focus:outline-none focus:ring-2 focus:ring-[#00B388] focus:ring-offset-1"
-                style={{ height: '37px' }}
+                className="w-full sm:w-[253px] px-4 rounded bg-gray-100 focus:outline-none focus:ring-2 focus:ring-[#00B388] focus:ring-offset-1 h-[37px] max-sm:min-h-[44px] max-sm:text-base"
                 placeholder="이메일 주소를 입력하세요"
               />
             </div>
@@ -312,12 +310,12 @@ export default function OnDemandLandingPage({ webinar }: OnDemandLandingPageProp
               </div>
             )}
             
-            {/* Login Button */}
-            <div className="flex flex-col items-center gap-3">
+            {/* Login Button - 모바일: 터치 영역 확대, 상단 간격 확대 */}
+            <div className="flex flex-col items-center gap-3 max-sm:!mt-8">
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="px-8 py-2.5 bg-[#00B388] text-white font-medium rounded-full hover:bg-[#00A077] focus:outline-none focus:ring-2 focus:ring-[#00B388] focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-8 py-2.5 bg-[#00B388] text-white font-medium rounded-full hover:bg-[#00A077] focus:outline-none focus:ring-2 focus:ring-[#00B388] focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed max-sm:min-h-[44px] max-sm:min-w-[165px] max-sm:px-6"
                 style={{ width: '165px' }}
               >
                 {isSubmitting ? '처리 중...' : '로그인'}
@@ -335,11 +333,11 @@ export default function OnDemandLandingPage({ webinar }: OnDemandLandingPageProp
         </div>
       </div>
 
-      {/* Footer */}
-      <footer className="w-full" style={{ height: '113px', color: '#FFFFFF', backgroundColor: '#171F32' }}>
-        <div className="max-w-[1600px] mx-auto h-full flex justify-center" style={{ paddingTop: '40px' }}>
+      {/* Footer - 모바일: 높이 50px, 텍스트 위치 조정 */}
+      <footer className="w-full max-sm:h-[50px]" style={{ height: '113px', color: '#FFFFFF', backgroundColor: '#171F32' }}>
+        <div className="max-w-[1600px] mx-auto h-full flex justify-center items-center pt-[40px] max-sm:px-4 max-sm:items-start max-sm:pt-4">
           <p 
-            className="text-center text-[10px] font-thin" 
+            className="text-center text-[10px] font-thin max-sm:leading-relaxed max-sm:break-words max-sm:px-2" 
             style={{ 
               color: '#FFFFFF', 
               fontWeight: 100

@@ -1,5 +1,42 @@
 # 완료된 작업 내역 (Progress)
 
+## [2026-02-05] HPE 온디맨드 페이지 모바일 최적화 완료
+- ✅ 온디맨드 랜딩 페이지 모바일 최적화 (`OnDemandLandingPage.tsx`)
+  - 히어로 섹션 높이 조정 (`max-sm:h-[242px]`)
+  - HPE 로고 위치 조정 (`max-sm:top-3`)
+  - 제목 이미지 크기 조정 (`max-sm:w-[85%] max-sm:max-w-[320px]`)
+  - 컨테이너 반응형 너비 (`max-sm:max-w-[calc(100vw-1.5rem)]`)
+  - 로그인 폼 섹션 패딩 조정 (`max-sm:px-4 max-sm:py-8`)
+  - 입력 필드 및 버튼 터치 영역 확보 (`max-sm:min-h-[44px]`)
+  - 푸터 높이 및 텍스트 위치 조정 (`max-sm:h-[50px]`)
+- ✅ 온디맨드 등록 페이지 모바일 최적화 (`OnDemandRegisterPage.tsx`)
+  - 랜딩 페이지와 동일한 모바일 최적화 적용
+  - 등록 폼 섹션 모바일 최적화
+- ✅ 온디맨드 세션 목록 페이지 모바일 최적화 (`OnDemandWatchPage.tsx`)
+  - 히어로 섹션 높이 자동 조정 (`max-sm:h-auto max-sm:min-h-[400px]`)
+  - HPE 로고 및 제목 간격 조정
+  - Info Box 모바일 최적화 (티켓 아이콘 인라인 배치)
+  - 세션 카드 너비 조정 (`max-sm:max-w-[calc(100vw-2rem)]`)
+  - 세션 카드 제목 한 줄 표시 (`max-sm:hidden` on `<br />`)
+  - Market Analysis 섹션 폰트 크기 조정 (`max-sm:text-2xl`)
+  - 스크롤 제거 (`max-sm:overflow-visible`)
+- ✅ 온디맨드 플레이어 페이지 모바일 최적화 (`OnDemandPlayerPage.tsx`)
+  - 히어로 섹션 높이 조정 (`max-sm:min-h-[400px]`)
+  - HPE 로고 위치 및 크기 조정 (`max-sm:left-4 max-sm:top-3`)
+  - 닫기 버튼 크기 조정 (`max-sm:w-8 max-sm:h-8`)
+  - Shape Layer 모바일에서 숨김 (`max-sm:hidden`)
+  - 홈 아이콘 및 카테고리 텍스트 크기 조정
+  - 비디오 플레이어 위치 조정 (`max-sm:relative max-sm:top-0`)
+  - 설명 텍스트 및 발표자 소개 레이아웃 조정
+  - Info Box 모바일 구성 변경 (메인 페이지와 동일: 티켓 아이콘 인라인, 아이콘 가로 배치)
+  - 푸터 높이 및 텍스트 위치 조정
+- ✅ 주요 개선사항
+  - 모든 페이지에서 `max-sm:` 브레이크포인트 사용 (모바일 전용)
+  - 태블릿 및 PC 버전은 변경 없음
+  - 인라인 스타일을 Tailwind 클래스로 변환하여 모바일 오버라이드 가능하도록 개선
+  - 터치 영역 최소 44px 확보
+  - 스크롤 문제 해결
+
 ## [2026-02-05] HPE 온디맨드 플레이어·설문조사 개선
 - ✅ 온디맨드 플레이어 페이지 UI 정리
   - 히어로 섹션 1600×928 고정, 영상 1070×602

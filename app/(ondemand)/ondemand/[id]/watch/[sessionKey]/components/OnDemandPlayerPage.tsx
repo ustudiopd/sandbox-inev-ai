@@ -89,7 +89,7 @@ export default function OnDemandPlayerPage({ webinar, session }: OnDemandPlayerP
     <div className="min-h-screen bg-[#171F32]">
       {/* Hero Section with Video - 1600x928 */}
       <div
-        className="relative bg-[#171F32] min-h-[500px] sm:min-h-[600px] md:min-h-[700px] w-full lg:w-[1600px] lg:h-[928px] lg:mx-auto"
+        className="relative bg-[#171F32] min-h-[500px] sm:min-h-[600px] md:min-h-[700px] w-full lg:w-[1600px] lg:h-[928px] lg:mx-auto max-sm:min-h-[400px]"
       >
         {/* Full width background wrapper */}
         <div className="absolute inset-0 w-full bg-[#171F32]"></div>
@@ -109,7 +109,7 @@ export default function OnDemandPlayerPage({ webinar, session }: OnDemandPlayerP
           </div>
           
           {/* Shape Layer */}
-          <div className="absolute inset-0 z-[1]">
+          <div className="absolute inset-0 z-[1] max-sm:hidden">
             <div 
               className="absolute inset-0 min-[1601px]:left-0 max-[1600px]:left-1/2 max-[1600px]:-translate-x-1/2"
               style={{ width: '1600px', minWidth: '1600px' }}
@@ -128,11 +128,11 @@ export default function OnDemandPlayerPage({ webinar, session }: OnDemandPlayerP
           {/* Close Button - 오른쪽 위 */}
           <button
             onClick={() => window.close()}
-            className="absolute top-4 sm:top-8 md:top-12 right-4 sm:right-6 lg:right-8 z-30 w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 bg-black/50 hover:bg-black/70 rounded-full flex items-center justify-center transition-colors"
+            className="absolute top-4 sm:top-8 md:top-12 right-4 sm:right-6 lg:right-8 z-30 w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 bg-black/50 hover:bg-black/70 rounded-full flex items-center justify-center transition-colors max-sm:w-8 max-sm:h-8 max-sm:top-3 max-sm:right-3"
             aria-label="닫기"
           >
             <svg
-              className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-white"
+              className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-white max-sm:w-4 max-sm:h-4"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -147,32 +147,32 @@ export default function OnDemandPlayerPage({ webinar, session }: OnDemandPlayerP
           </button>
           
           {/* HPE Logo - 왼쪽 50px */}
-          <div className="absolute left-[50px] z-20" style={{ top: '90px' }}>
+          <div className="absolute left-[50px] top-[90px] z-20 max-sm:left-4 max-sm:top-3">
             <Image
               src="/img/hpe/hpe_logo.png"
               alt="HPE"
               width={120}
               height={40}
-              className="object-contain w-20 h-7 sm:w-24 sm:h-8 md:w-[120px] md:h-10"
+              className="object-contain w-20 h-7 sm:w-24 sm:h-8 md:w-[120px] md:h-10 max-sm:w-16 max-sm:h-5"
               priority
             />
           </div>
           
           {/* Home Icon and Category - 플레이어 카드 왼쪽 선에 맞춤 */}
-          <div className="absolute top-4 sm:top-8 md:top-12 z-20 flex items-center gap-3 sm:gap-4 md:gap-6 w-full max-w-[1200px] left-1/2 -translate-x-1/2 px-4 sm:px-6 lg:px-8">
-            <div className="w-full max-w-[1070px] mx-auto flex items-center gap-3 sm:gap-4 md:gap-6">
+          <div className="absolute top-4 sm:top-8 md:top-12 z-20 flex items-center gap-3 sm:gap-4 md:gap-6 w-full max-w-[1200px] left-1/2 -translate-x-1/2 px-4 sm:px-6 lg:px-8 max-sm:top-16 max-sm:px-4">
+            <div className="w-full max-w-[1070px] mx-auto flex items-center gap-3 sm:gap-4 md:gap-6 max-sm:gap-2">
               <Link href={`/ondemand/${webinarPath}/watch`}>
                 <Image
                   src="/img/hpe/ic_5.png"
                   alt="홈으로"
                   width={48}
                   height={48}
-                  className="w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16 object-contain cursor-pointer hover:opacity-80 transition-opacity"
+                  className="w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16 object-contain cursor-pointer hover:opacity-80 transition-opacity max-sm:w-8 max-sm:h-8"
                   priority
                 />
               </Link>
               {session.category_label && (
-                <span className="text-white text-lg sm:text-xl md:text-2xl lg:text-3xl font-medium">
+                <span className="text-white text-lg sm:text-xl md:text-2xl lg:text-3xl font-medium max-sm:text-base">
                   {session.category_label}
                 </span>
               )}
@@ -180,9 +180,9 @@ export default function OnDemandPlayerPage({ webinar, session }: OnDemandPlayerP
           </div>
           
           {/* Video Player */}
-          <div className="absolute z-20 w-full" style={{ top: '127px' }}>
-            <div className="w-full max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8">
-              <div className="flex flex-col gap-4 sm:gap-6 lg:gap-6 w-full max-w-[1070px] mx-auto pb-0 lg:pb-0">
+          <div className="absolute top-[127px] z-20 w-full max-sm:relative max-sm:top-0">
+            <div className="w-full max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 max-sm:px-4 max-sm:pt-28">
+              <div className="flex flex-col gap-4 sm:gap-6 lg:gap-6 w-full max-w-[1070px] mx-auto pb-0 lg:pb-0 max-sm:gap-4">
                 
                 {/* Video Player - 1070x602 */}
                 <div
@@ -214,10 +214,10 @@ export default function OnDemandPlayerPage({ webinar, session }: OnDemandPlayerP
                 </div>
                 
                 {/* Description and Presenter Info - 플레이어와 간격 20px */}
-                <div className="flex flex-col lg:flex-row lg:justify-between gap-4 lg:gap-12 mt-2 sm:mt-4 lg:mt-2 mb-0 lg:mb-0">
+                <div className="flex flex-col lg:flex-row lg:justify-between gap-4 lg:gap-12 mt-2 sm:mt-4 lg:mt-2 mb-0 lg:mb-0 max-sm:mt-4">
                   {/* Description */}
                   <div className="w-full lg:w-[680px]">
-                    <p className="text-white text-sm sm:text-base leading-relaxed text-left">
+                    <p className="text-white text-sm sm:text-base leading-relaxed text-left max-sm:text-xs max-sm:leading-relaxed">
                       {session.description || (session.session_key === 'platform_ai_native_networking' || session.session_key === 'datacenter_ai_high_performance'
                         ? 'AI 워크로드는 성능, 네트워크 설계, 운영 측면에서 기존의 방식으로는 감당하기 어려운 복잡성을 만들어 내며, 네트워크는 이러한 AI 데이터센터의 핵심 기반이 됩니다. HPE Juniper Networking의 데이터센터 솔루션은 개방형 유연성과 통합 AIOps를 통해 운영을 단순화하고 비용과 복잡성을 줄이며, 검증된 솔루션 성능으로 보안과 안정성을 갖춘 AI 데이터센터 구축을 가속화할 수 있습니다.'
                         : session.session_key === 'campus_aruba_smart_experience'
@@ -227,20 +227,20 @@ export default function OnDemandPlayerPage({ webinar, session }: OnDemandPlayerP
                   </div>
                   
                   {/* Presenter Introduction - 히어로(1600px) 오른쪽 끝에서 347px, 블록 전체 15px 오른쪽 / 간격: 박스-이름 20px, 이름-HPE 14px */}
-                  <div className="flex-shrink-0 flex flex-row lg:flex-col items-center lg:items-start w-full lg:w-auto lg:mr-[42px] lg:ml-[15px] gap-3 lg:gap-0">
-                    <div className="bg-[#00AB84] text-black rounded-full text-sm font-medium whitespace-nowrap flex items-center justify-center w-[112px] h-[32px] lg:mb-2">
+                  <div className="flex-shrink-0 flex flex-row lg:flex-col items-center lg:items-start w-full lg:w-auto lg:mr-[42px] lg:ml-[15px] gap-3 lg:gap-0 max-sm:gap-2">
+                    <div className="bg-[#00AB84] text-black rounded-full text-sm font-medium whitespace-nowrap flex items-center justify-center w-[112px] h-[32px] lg:mb-2 max-sm:text-xs max-sm:w-24 max-sm:h-7">
                       발표자 소개
                     </div>
-                    <div className="flex flex-row lg:flex-col items-center lg:items-start text-left lg:pl-6 lg:min-w-0 gap-2 lg:gap-0">
+                    <div className="flex flex-row lg:flex-col items-center lg:items-start text-left lg:pl-6 lg:min-w-0 gap-2 lg:gap-0 max-sm:gap-1.5">
                       {session.speaker && (
                         <>
-                          <p className="text-white text-sm sm:text-base font-medium">
+                          <p className="text-white text-sm sm:text-base font-medium max-sm:text-xs">
                             {session.speaker}
                           </p>
-                          <span className="text-white text-sm sm:text-base lg:hidden">|</span>
+                          <span className="text-white text-sm sm:text-base lg:hidden max-sm:text-xs">|</span>
                         </>
                       )}
-                      <p className="text-white text-xs sm:text-sm">
+                      <p className="text-white text-xs sm:text-sm max-sm:text-[10px]">
                         HPE Networking
                       </p>
                     </div>
@@ -253,8 +253,8 @@ export default function OnDemandPlayerPage({ webinar, session }: OnDemandPlayerP
       </div>
 
       {/* Info Box Section */}
-      <div className="pt-8 pb-0 sm:pt-10 sm:pb-8">
-        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="pt-8 pb-0 sm:pt-10 sm:pb-8 max-sm:pt-6 max-sm:pb-6">
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 max-sm:px-4">
           <div className="w-full flex justify-center">
             {/* Desktop Info Box */}
             <div className="hidden lg:block w-full max-w-[1070px] h-40 relative bg-[#171F32] mx-auto">
@@ -301,44 +301,48 @@ export default function OnDemandPlayerPage({ webinar, session }: OnDemandPlayerP
             </div>
             
             {/* Mobile Info Box */}
-            <div className="lg:hidden w-full bg-[#171F32] rounded-lg p-3 sm:p-6">
-              {/* Text Section */}
-              <div className="text-center mb-3 sm:mb-4">
-                <p className="text-white text-sm sm:text-base leading-relaxed mb-1 sm:mb-2">
-                  해당 온라인 행사에 참여 및 설문조사에 참여하신분들을 대상으로{' '}
-                  <span className="text-emerald-500">메가박스 2인 관람권' 기프트콘</span>
-                  을 발송해 드립니다.
-                </p>
-                <p className="text-white text-xs text-gray-400">
-                  (100분 무작위 추첨, 행사 종료 후 일괄 지급)
-                </p>
-              </div>
-              
-              {/* Action Buttons */}
-              <div className="flex flex-row gap-6 sm:gap-8 justify-center items-center pt-3 sm:pt-4 border-t border-gray-700">
-                {/* Meeting Button - 클릭 시 새창 */}
-                <a
-                  href="https://www.seminar-registration-page.com/juniper-meeting-maker"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex flex-col items-center gap-2 hover:opacity-90 transition-opacity"
-                >
-                  <img className="w-12 h-12 sm:w-16 sm:h-16" src="/img/hpe/ic_3.png" alt="온/오프라인 미팅 신청" />
-                  <span className="text-emerald-500 text-xs font-normal">온/오프라인 미팅 신청</span>
-                </a>
+            <div className="lg:hidden w-full bg-[#171F32] rounded-lg p-3 sm:p-6 max-sm:p-4">
+              {/* 모바일: 세로 레이아웃 */}
+              <div className="flex flex-col gap-4 md:gap-0">
+                {/* Left Text Section with Ticket - 모바일: 같은 줄 */}
+                <div className="flex-1 max-sm:flex max-sm:items-center max-sm:gap-3">
+                  <div className="flex-1">
+                    <span className="text-white text-xs sm:text-sm md:text-base font-medium leading-tight md:leading-6 max-sm:text-xs">해당 온라인 행사에 참여 및 설문조사에 참여하신분들을 대상으로 '</span>
+                    <span className="text-emerald-500 text-xs sm:text-sm md:text-base font-medium leading-tight md:leading-6 max-sm:text-xs">메가박스 2인 관람권' 기프트콘</span>
+                    <span className="text-white text-xs sm:text-sm md:text-base font-medium leading-tight md:leading-6 max-sm:text-xs">을 발송해 드립니다.<br className="md:hidden"/><br className="hidden md:block"/></span>
+                    <span className="text-white text-[10px] sm:text-xs md:text-sm font-normal leading-tight md:leading-[8.38px] max-sm:text-[10px]">(100분 무작위 추첨, 행사 종료 후 일괄 지급)</span>
+                  </div>
+                  {/* Ticket Image - 모바일: 텍스트 옆에 표시, 높이 맞춤 */}
+                  <img 
+                    className="block md:hidden w-20 h-auto flex-shrink-0 self-center" 
+                    src="/img/hpe/ticket.png" 
+                    alt="Movie Ticket" 
+                    style={{ height: 'fit-content', maxHeight: '72px' }}
+                  />
+                </div>
                 
-                {/* 구분줄 */}
-                <div className="w-[0.76px] h-16 opacity-25 bg-gray-400"></div>
-                
-                {/* Survey Button - 클릭 시 인페이지 팝업 */}
-                <button
-                  type="button"
-                  onClick={() => setShowSurveyModal(true)}
-                  className="flex flex-col items-center gap-2 hover:opacity-90 transition-opacity bg-transparent border-0 p-0 text-left"
-                >
-                  <img className="w-12 h-12 sm:w-16 sm:h-16" src="/img/hpe/ic_2.png" alt="설문조사" />
-                  <span className="text-emerald-500 text-xs font-normal">설문조사</span>
-                </button>
+                {/* Icons Section - 모바일: 가로 배치 */}
+                <div className="flex md:hidden items-center justify-center gap-6 max-sm:gap-4 mt-2 max-sm:flex-wrap">
+                  <a
+                    href="https://www.seminar-registration-page.com/juniper-meeting-maker"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex flex-col items-center gap-1 hover:opacity-90 transition-opacity max-sm:flex-1 max-sm:min-w-0"
+                  >
+                    <img className="w-12 h-12 max-sm:w-10 max-sm:h-10" src="/img/hpe/ic_3.png" alt="온/오프라인 미팅 신청" />
+                    <span className="text-emerald-500 text-xs font-normal max-sm:text-[10px] max-sm:text-center">온/오프라인 미팅 신청</span>
+                  </a>
+                  {/* 모바일 구분줄 */}
+                  <div className="w-[0.76px] h-16 opacity-25 bg-gray-400 max-sm:hidden"></div>
+                  <button
+                    type="button"
+                    onClick={() => setShowSurveyModal(true)}
+                    className="flex flex-col items-center gap-1 hover:opacity-90 transition-opacity bg-transparent border-0 p-0 text-left max-sm:flex-1 max-sm:min-w-0"
+                  >
+                    <img className="w-12 h-12 max-sm:w-10 max-sm:h-10" src="/img/hpe/ic_2.png" alt="설문조사" />
+                    <span className="text-emerald-500 text-xs font-normal max-sm:text-[10px] max-sm:text-center max-sm:left-0">설문조사</span>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -346,10 +350,10 @@ export default function OnDemandPlayerPage({ webinar, session }: OnDemandPlayerP
       </div>
 
       {/* Footer - 온디맨드 페이지 통일 */}
-      <footer className="w-full" style={{ height: '113px', color: '#FFFFFF', backgroundColor: '#171F32' }}>
-        <div className="max-w-[1600px] mx-auto h-full flex justify-center" style={{ paddingTop: '40px' }}>
+      <footer className="w-full max-sm:h-[50px]" style={{ height: '113px', color: '#FFFFFF', backgroundColor: '#171F32' }}>
+        <div className="max-w-[1600px] mx-auto h-full flex justify-center items-center max-sm:items-start pt-[40px] max-sm:pt-4 max-sm:px-4">
           <p
-            className="text-center text-[10px] font-thin"
+            className="text-center text-[10px] font-thin max-sm:leading-relaxed max-sm:break-words max-sm:px-2"
             style={{ color: '#FFFFFF', fontWeight: 100 }}
           >
             © Copyright 2026 Hewlett Packard Enterprise Development LP.
