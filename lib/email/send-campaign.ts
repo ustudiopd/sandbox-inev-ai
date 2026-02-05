@@ -5,9 +5,11 @@ import { processTemplate } from './template-processor'
 import type { AudienceRecipient } from './audience-query'
 
 // 환경변수로 설정 가능 (하드코딩 금지)
+// Resend 기본 제한: 초당 2건 → MAX_CONCURRENT 2, 동시 배치 후 1초 대기 권장
 const BATCH_SIZE = parseInt(process.env.EMAIL_BATCH_SIZE || '50', 10)
 const BATCH_DELAY_MS = parseInt(process.env.EMAIL_BATCH_DELAY_MS || '500', 10)
-const MAX_CONCURRENT = parseInt(process.env.EMAIL_MAX_CONCURRENT || '10', 10) // 동시 요청 수 제한
+const MAX_CONCURRENT = parseInt(process.env.EMAIL_MAX_CONCURRENT || '2', 10) // Resend 초당 2건 제한
+const CONCURRENT_BATCH_DELAY_MS = parseInt(process.env.EMAIL_CONCURRENT_BATCH_DELAY_MS || '1000', 10) // 동시 2건 발송 후 대기(ms)
 
 export interface CampaignEmailData {
   campaignId: string
@@ -197,7 +199,7 @@ export async function sendCampaignBatch(
   for (let i = 0; i < recipients.length; i += BATCH_SIZE) {
     const batch = recipients.slice(i, i + BATCH_SIZE)
 
-    // 동시성 제한: MAX_CONCURRENT개씩만 동시 발송
+    // 동시성 제한: MAX_CONCURRENT개씩만 동시 발송 (Resend 초당 2건 제한 준수)
     for (let j = 0; j < batch.length; j += MAX_CONCURRENT) {
       const concurrentBatch = batch.slice(j, j + MAX_CONCURRENT)
       const results = await Promise.allSettled(
@@ -217,9 +219,14 @@ export async function sendCampaignBatch(
           failed++
         }
       })
+
+      // Resend rate limit(초당 2건) 준수를 위해 동시 발송 후 대기
+      if (j + MAX_CONCURRENT < batch.length || i + BATCH_SIZE < recipients.length) {
+        await new Promise(resolve => setTimeout(resolve, CONCURRENT_BATCH_DELAY_MS))
+      }
     }
 
-    // 마지막 배치가 아니면 딜레이
+    // 배치 간 추가 딜레이
     if (i + BATCH_SIZE < recipients.length) {
       await new Promise(resolve => setTimeout(resolve, BATCH_DELAY_MS))
     }

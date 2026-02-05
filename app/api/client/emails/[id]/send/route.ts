@@ -17,11 +17,10 @@ export async function POST(
   try {
     const { id: campaignId } = await params
     const body = await req.json().catch(() => ({}))
-    const { selectedEmails } = body as { selectedEmails?: string[] }
+    const { selectedEmails, resendFailedOnly } = body as { selectedEmails?: string[]; resendFailedOnly?: boolean }
 
     const admin = createAdminSupabase()
 
-    // 캠페인 조회 및 원자적 lock (IDOR 방지)
     const { data: campaign, error: campaignError } = await admin
       .from('email_campaigns')
       .select('id, client_id, status, subject, body_md, variables_json, audience_query_json, from_domain, from_localpart, from_name, reply_to, header_image_url, footer_text')
@@ -35,34 +34,42 @@ export async function POST(
       )
     }
 
-    // 권한 확인
     const { user } = await requireClientMember(campaign.client_id, ['owner', 'admin', 'operator'])
 
-    // ready 상태에서만 발송 가능
-    if (campaign.status !== 'ready') {
-      return NextResponse.json(
-        { success: false, error: `${campaign.status} 상태에서는 발송할 수 없습니다` },
-        { status: 400 }
-      )
-    }
+    const isResendFailed = Boolean(resendFailedOnly) && (campaign.status === 'sent' || campaign.status === 'failed')
 
-    // 원자적 lock: ready → sending
-    const { data: lockedCampaign, error: lockError } = await admin
-      .from('email_campaigns')
-      .update({
-        status: 'sending',
-        sending_started_at: new Date().toISOString(),
-      })
-      .eq('id', campaignId)
-      .eq('status', 'ready') // 원자적 조건
-      .select()
-      .single()
+    if (isResendFailed) {
+      if (!selectedEmails?.length) {
+        return NextResponse.json(
+          { success: false, error: '실패한 수신자 재발송 시 선택된 이메일이 필요합니다' },
+          { status: 400 }
+        )
+      }
+    } else {
+      if (campaign.status !== 'ready') {
+        return NextResponse.json(
+          { success: false, error: `${campaign.status} 상태에서는 발송할 수 없습니다` },
+          { status: 400 }
+        )
+      }
 
-    if (lockError || !lockedCampaign) {
-      return NextResponse.json(
-        { success: false, error: '발송 실패: 상태가 변경되었거나 이미 발송 중입니다' },
-        { status: 409 }
-      )
+      const { data: lockedCampaign, error: lockError } = await admin
+        .from('email_campaigns')
+        .update({
+          status: 'sending',
+          sending_started_at: new Date().toISOString(),
+        })
+        .eq('id', campaignId)
+        .eq('status', 'ready')
+        .select()
+        .single()
+
+      if (lockError || !lockedCampaign) {
+        return NextResponse.json(
+          { success: false, error: '발송 실패: 상태가 변경되었거나 이미 발송 중입니다' },
+          { status: 409 }
+        )
+      }
     }
 
     try {
@@ -122,21 +129,20 @@ export async function POST(
         footerText: campaign.footer_text,
       })
 
-      // 결과에 따라 상태 전이
       const total = recipients.length
-      const failureRate = failed / total
-
+      const failureRate = total > 0 ? failed / total : 0
       const finalStatus = failureRate >= 0.5 ? 'failed' : 'sent'
 
-      await admin
-        .from('email_campaigns')
-        .update({
-          status: finalStatus,
-          sent_at: new Date().toISOString(),
-        })
-        .eq('id', campaignId)
+      if (!isResendFailed) {
+        await admin
+          .from('email_campaigns')
+          .update({
+            status: finalStatus,
+            sent_at: new Date().toISOString(),
+          })
+          .eq('id', campaignId)
+      }
 
-      // email_runs에 로그 기록 (서버 전용)
       await admin.from('email_runs').insert({
         email_campaign_id: campaignId,
         run_type: 'send',
@@ -146,29 +152,30 @@ export async function POST(
           total,
           success,
           failed,
+          resend_failed_only: isResendFailed,
         },
         error: finalStatus === 'failed' ? `실패율 ${(failureRate * 100).toFixed(1)}%` : null,
         created_by: user.id,
       })
 
-      // audit_logs 기록
       await admin.from('audit_logs').insert({
         actor_user_id: user.id,
         client_id: campaign.client_id,
-        action: 'EMAIL_CAMPAIGN_SEND',
+        action: isResendFailed ? 'EMAIL_CAMPAIGN_RESEND_FAILED' : 'EMAIL_CAMPAIGN_SEND',
         payload: {
           campaign_id: campaignId,
           total,
           success,
           failed,
           final_status: finalStatus,
+          resend_failed_only: isResendFailed,
         },
       })
 
       return NextResponse.json({
         success: true,
         data: {
-          campaign: { status: finalStatus },
+          campaign: { status: isResendFailed ? campaign.status : finalStatus },
           run: {
             status: finalStatus === 'sent' ? 'success' : 'failed',
             meta_json: {
@@ -180,14 +187,12 @@ export async function POST(
         },
       })
     } catch (sendError: any) {
-      // 발송 중 오류 발생 시 failed로 전이
-      await admin
-        .from('email_campaigns')
-        .update({
-          status: 'failed',
-        })
-        .eq('id', campaignId)
-
+      if (!isResendFailed) {
+        await admin
+          .from('email_campaigns')
+          .update({ status: 'failed' })
+          .eq('id', campaignId)
+      }
       await admin.from('email_runs').insert({
         email_campaign_id: campaignId,
         run_type: 'send',

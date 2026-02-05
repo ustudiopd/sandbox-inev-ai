@@ -29,6 +29,16 @@ async function safeJsonParse<T = any>(response: Response): Promise<T> {
   }
 }
 
+// 발송 중 표시용 회전 스피너 아이콘
+function SendingSpinnerIcon({ className = 'w-4 h-4' }: { className?: string }) {
+  return (
+    <svg className={`animate-spin ${className}`} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden>
+      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+    </svg>
+  )
+}
+
 // 기본 푸터 텍스트 (마크다운 형식)
 const DEFAULT_FOOTER_TEXT = `본 이메일은 워트 웨비나 등록 확인을 위해 발송되었습니다.
 
@@ -128,6 +138,8 @@ export default function EmailCampaignTab({ clientId, scopeType, scopeId }: Email
   const [selectedRecipients, setSelectedRecipients] = useState<Set<string>>(new Set())
   const [loadingAllRecipients, setLoadingAllRecipients] = useState(false)
   const [recipientSearchTerm, setRecipientSearchTerm] = useState('')
+  const [resendFailedOnlyMode, setResendFailedOnlyMode] = useState(false)
+  const [markingSent, setMarkingSent] = useState(false)
   const [uploadingImage, setUploadingImage] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [showVariableHelp, setShowVariableHelp] = useState(false)
@@ -435,7 +447,7 @@ export default function EmailCampaignTab({ clientId, scopeType, scopeId }: Email
       
       console.log('이메일 캠페인 조회:', { clientId, scopeType, scopeId })
       
-      const response = await fetch(`/api/client/emails?clientId=${clientId}&scopeType=${scopeType}&scopeId=${scopeId}`)
+      const response = await fetch(`/api/client/emails?clientId=${clientId}&scopeType=${scopeType}&scopeId=${scopeId}`, { cache: 'no-store' })
       const result = await response.json()
       
       console.log('이메일 캠페인 조회 결과:', result)
@@ -772,10 +784,10 @@ export default function EmailCampaignTab({ clientId, scopeType, scopeId }: Email
       const listResult = await listResponse.json()
       
       if (previewResult.success && listResult.success) {
+        setResendFailedOnlyMode(false)
         setRecipientCount(previewResult.data.totalCount)
         setRecipientSamples(previewResult.data.samples || [])
         setAllRecipients(listResult.data.recipients || [])
-        // 기본값: 전체 선택
         setSelectedRecipients(new Set(listResult.data.recipients.map((r: { email: string }) => r.email)))
         setShowSendConfirmModal(true)
       } else {
@@ -784,6 +796,62 @@ export default function EmailCampaignTab({ clientId, scopeType, scopeId }: Email
     } catch (error: any) {
       console.error('수신자 조회 오류:', error)
       alert(`네트워크 오류: ${error.message || '알 수 없는 오류'}`)
+    } finally {
+      setLoadingRecipientCount(false)
+      setLoadingAllRecipients(false)
+    }
+  }
+
+  const handleMarkSent = async () => {
+    if (!selectedCampaign) return
+    if (!confirm('재발송이 완료되었나요? 이 캠페인 상태를 발송 완료(성공)로 변경합니다.')) return
+    try {
+      setMarkingSent(true)
+      const res = await fetch(`/api/client/emails/${selectedCampaign.id}/mark-sent`, { method: 'PATCH' })
+      const result = await res.json()
+      if (result.success) {
+        const campaignId = selectedCampaign.id
+        setCampaigns((prev) => prev.map((c) => (c.id === campaignId ? { ...c, status: 'sent' as const } : c)))
+        if (campaignDetail?.id === campaignId) {
+          setCampaignDetail((prev) => (prev ? { ...prev, status: 'sent' as const } : null))
+        }
+        setSelectedCampaign((prev) => (prev ? { ...prev, status: 'sent' as const } : null))
+        await fetchCampaigns()
+        alert(result.data?.message || '발송 완료(성공)로 변경되었습니다.')
+      } else {
+        alert(result.error || '변경 실패')
+      }
+    } catch (e: any) {
+      alert(e?.message || '변경 실패')
+    } finally {
+      setMarkingSent(false)
+    }
+  }
+
+  const handleFailedResendClick = async () => {
+    if (!selectedCampaign) return
+    try {
+      setLoadingRecipientCount(true)
+      setLoadingAllRecipients(true)
+      const res = await fetch(`/api/client/emails/${selectedCampaign.id}/failed-recipients`)
+      const result = await res.json()
+      if (!result.success || !result.data?.recipients?.length) {
+        alert(result.error || '실패한 수신자 목록이 없습니다.')
+        return
+      }
+      const recipients = result.data.recipients as Array<{ email: string; error_message?: string }>
+      setResendFailedOnlyMode(true)
+      setRecipientCount(recipients.length)
+      setRecipientSamples([])
+      setAllRecipients(recipients.map((r) => ({
+        email: r.email,
+        displayName: r.error_message ? (r.error_message.length > 60 ? r.error_message.slice(0, 60) + '…' : r.error_message) : undefined,
+      })))
+      setSelectedRecipients(new Set(recipients.map((r) => r.email)))
+      setRecipientSearchTerm('')
+      setShowSendConfirmModal(true)
+    } catch (e: any) {
+      alert(e?.message || '실패 목록 조회 실패')
     } finally {
       setLoadingRecipientCount(false)
       setLoadingAllRecipients(false)
@@ -807,13 +875,17 @@ export default function EmailCampaignTab({ clientId, scopeType, scopeId }: Email
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           selectedEmails: Array.from(selectedRecipients),
+          resendFailedOnly: resendFailedOnlyMode,
         }),
       })
       
       const result = await response.json()
       
       if (result.success) {
-        alert(`이메일 발송이 시작되었습니다. (총 ${result.data.run.meta_json.total}명, 성공: ${result.data.run.meta_json.success}개, 실패: ${result.data.run.meta_json.failed}개)`)
+        alert(resendFailedOnlyMode
+          ? `실패한 수신자 재발송이 완료되었습니다. (총 ${result.data.run.meta_json.total}명, 성공: ${result.data.run.meta_json.success}개, 실패: ${result.data.run.meta_json.failed}개)`
+          : `이메일 발송이 시작되었습니다. (총 ${result.data.run.meta_json.total}명, 성공: ${result.data.run.meta_json.success}개, 실패: ${result.data.run.meta_json.failed}개)`)
+        setResendFailedOnlyMode(false)
         await fetchCampaigns()
         setShowEditModal(false)
         setSelectedCampaign(null)
@@ -1129,15 +1201,19 @@ export default function EmailCampaignTab({ clientId, scopeType, scopeId }: Email
                   <td className="px-4 py-3">{getStatusBadge(campaign.status)}</td>
                   <td className="px-4 py-3 text-sm">
                     {campaign.total_recipients !== null ? (
-                      <>
-                        총 {campaign.total_recipients}명
-                        {campaign.sent_count !== null && campaign.sent_count > 0 && (
-                          <span className="text-green-600 ml-2">✓ {campaign.sent_count}명 발송</span>
-                        )}
-                        {campaign.failed_count !== null && campaign.failed_count > 0 && (
-                          <span className="text-red-600 ml-2">✗ {campaign.failed_count}명 실패</span>
-                        )}
-                      </>
+                      campaign.status === 'sent' ? (
+                        <span className="text-green-600">총 {campaign.total_recipients}명 ✓ {campaign.total_recipients}명 발송 성공</span>
+                      ) : (
+                        <>
+                          총 {campaign.total_recipients}명
+                          {campaign.sent_count !== null && campaign.sent_count > 0 && (
+                            <span className="text-green-600 ml-2">✓ {campaign.sent_count}명 발송</span>
+                          )}
+                          {campaign.failed_count !== null && campaign.failed_count > 0 && (
+                            <span className="text-red-600 ml-2">✗ {campaign.failed_count}명 실패</span>
+                          )}
+                        </>
+                      )
                     ) : (
                       '-'
                     )}
@@ -1570,9 +1646,9 @@ export default function EmailCampaignTab({ clientId, scopeType, scopeId }: Email
                     <button
                       onClick={handleSendClick}
                       disabled={sending || loadingRecipientCount}
-                      className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
+                      className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
                     >
-                      {loadingRecipientCount ? '수신자 조회 중...' : sending ? '발송 중...' : '지금 발송'}
+                      {loadingRecipientCount ? '수신자 조회 중...' : sending ? (<><SendingSpinnerIcon className="w-4 h-4" /> 발송 중...</>) : '지금 발송'}
                     </button>
                     <button
                       onClick={handleCancelApproval}
@@ -1581,6 +1657,24 @@ export default function EmailCampaignTab({ clientId, scopeType, scopeId }: Email
                       승인 취소
                     </button>
                   </>
+                )}
+                {(campaignDetail.status === 'sent' || campaignDetail.status === 'failed') && (selectedCampaign?.failed_count ?? 0) > 0 && (
+                  <button
+                    onClick={handleFailedResendClick}
+                    disabled={sending || loadingRecipientCount}
+                    className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                  >
+                    {loadingRecipientCount ? '목록 불러오는 중...' : sending ? (<><SendingSpinnerIcon className="w-4 h-4" /> 발송 중...</>) : `실패한 수신자 재발송 (${selectedCampaign?.failed_count ?? 0}명)`}
+                  </button>
+                )}
+                {campaignDetail.status === 'failed' && (
+                  <button
+                    onClick={handleMarkSent}
+                    disabled={markingSent}
+                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
+                  >
+                    {markingSent ? '변경 중...' : '상태를 성공으로 변경'}
+                  </button>
                 )}
               </div>
             </div>
@@ -1638,9 +1732,9 @@ export default function EmailCampaignTab({ clientId, scopeType, scopeId }: Email
               <button
                 onClick={handleTestSend}
                 disabled={sendingTest || !testEmails.trim()}
-                className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50"
+                className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
               >
-                {sendingTest ? '발송 중...' : '발송'}
+                {sendingTest ? (<><SendingSpinnerIcon className="w-4 h-4" /> 발송 중...</>) : '발송'}
               </button>
             </div>
           </div>
@@ -1832,13 +1926,20 @@ export default function EmailCampaignTab({ clientId, scopeType, scopeId }: Email
       {showSendConfirmModal && selectedCampaign && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-            <h3 className="text-lg font-semibold mb-4">이메일 발송 확인</h3>
+            <h3 className="text-lg font-semibold mb-4">
+              {resendFailedOnlyMode ? '실패한 수신자 재발송' : '이메일 발송 확인'}
+            </h3>
             <div className="mb-4">
               <div className="bg-gray-50 p-3 rounded-lg mb-4">
                 <p className="font-medium text-gray-900 mb-1">{selectedCampaign.subject}</p>
                 <p className="text-sm text-gray-600">
                   상태: {getStatusBadge(selectedCampaign.status)}
                 </p>
+                {resendFailedOnlyMode && (
+                  <p className="text-sm text-amber-700 mt-2">
+                    발송 실패했던 수신자만 목록에 표시됩니다. 필요시 선택 해제 후 발송하세요.
+                  </p>
+                )}
               </div>
               
               <div className="mb-4">
@@ -1939,6 +2040,7 @@ export default function EmailCampaignTab({ clientId, scopeType, scopeId }: Email
               <button
                 onClick={() => {
                   setShowSendConfirmModal(false)
+                  setResendFailedOnlyMode(false)
                   setRecipientCount(null)
                   setRecipientSamples([])
                   setAllRecipients([])
@@ -1953,9 +2055,9 @@ export default function EmailCampaignTab({ clientId, scopeType, scopeId }: Email
               <button
                 onClick={handleSend}
                 disabled={sending || selectedRecipients.size === 0}
-                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
+                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
               >
-                {sending ? '발송 중...' : selectedRecipients.size === 0 ? '수신자 선택 필요' : `발송하기 (${selectedRecipients.size}명)`}
+                {sending ? (<><SendingSpinnerIcon className="w-4 h-4" /> 발송 중...</>) : selectedRecipients.size === 0 ? '수신자 선택 필요' : `발송하기 (${selectedRecipients.size}명)`}
               </button>
             </div>
           </div>

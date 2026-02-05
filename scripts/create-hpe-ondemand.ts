@@ -132,7 +132,7 @@ async function createHPEOnDemand() {
       provider: 'youtube',
       asset_id: '', // TODO: 실제 YouTube 영상 ID 입력 필요
       order: 3,
-      description: '',
+      description: "네트워크의 품질은 이제 단순히 '연결'이 아니라 '경험'으로 평가됩니다. HPE Aruba Networking 세션에서는 Aruba User Experience Insight(UXI) 를 통해 실제 사용자의 체감 품질을 실시간으로 가시화하고, 문제를 선제적으로 감지·해결하는 사례와 전세계 최초 HPE Aruba 솔루션으로 이룬HIMSS Stage7취득 & 802.11mc/802.11az 고정밀 위치기반 서비스를 소개합니다.",
     },
     {
       session_key: 'campus_juniper_fullstack_network',
