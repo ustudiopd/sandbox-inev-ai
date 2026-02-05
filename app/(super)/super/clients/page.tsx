@@ -3,6 +3,14 @@ import { createAdminSupabase } from '@/lib/supabase/admin'
 import Link from 'next/link'
 import ClientDeleteButton from './_components/ClientDeleteButton'
 
+// 워트인텔리전트 → 워트인텔리전스로 변환하는 헬퍼 함수
+function normalizeClientName(name: string): string {
+  if (name.includes('워트인텔리전트')) {
+    return name.replace(/워트인텔리전트/g, '워트인텔리전스')
+  }
+  return name
+}
+
 export default async function ClientsPage() {
   await requireSuperAdmin()
   // 슈퍼어드민은 Admin Supabase 사용 (RLS 우회, 성능 향상)
@@ -60,7 +68,7 @@ export default async function ClientsPage() {
                   {clients.map((client: any) => (
                     <tr key={client.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900">{client.name}</div>
+                        <div className="text-sm font-medium text-gray-900">{normalizeClientName(client.name)}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-900">
@@ -93,7 +101,7 @@ export default async function ClientsPage() {
                           </Link>
                           <ClientDeleteButton
                             clientId={client.id}
-                            clientName={client.name}
+                            clientName={normalizeClientName(client.name)}
                           />
                         </div>
                       </td>

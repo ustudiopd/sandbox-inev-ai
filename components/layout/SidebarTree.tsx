@@ -26,6 +26,14 @@ interface SidebarTreeProps {
   } | null
 }
 
+// 워트인텔리전트 → 워트인텔리전스로 변환하는 헬퍼 함수
+function normalizeClientName(name: string): string {
+  if (name.includes('워트인텔리전트')) {
+    return name.replace(/워트인텔리전트/g, '워트인텔리전스')
+  }
+  return name
+}
+
 export default function SidebarTree({ organizations }: SidebarTreeProps) {
   const pathname = usePathname()
   const params = useParams()
@@ -235,7 +243,7 @@ export default function SidebarTree({ organizations }: SidebarTreeProps) {
         agencyClients.forEach(client => {
           const clientNode: TreeNode = {
             id: `client-${client.id}`,
-            label: client.name,
+            label: normalizeClientName(client.name),
             type: 'client',
             href: `/client/${client.id}/dashboard`,
             icon: '👥',
@@ -374,7 +382,7 @@ export default function SidebarTree({ organizations }: SidebarTreeProps) {
           agencyClients.forEach(client => {
             const clientNode: TreeNode = {
               id: `client-${client.id}`,
-              label: client.name,
+              label: normalizeClientName(client.name),
               type: 'client',
               href: `/client/${client.id}/dashboard`,
               icon: '👥',
@@ -470,7 +478,7 @@ export default function SidebarTree({ organizations }: SidebarTreeProps) {
         directClients.forEach(client => {
           const clientNode: TreeNode = {
             id: `client-${client.id}`,
-            label: client.name,
+            label: normalizeClientName(client.name),
             type: 'client',
             icon: '👥',
             expanded: expandedNodes.has(`client-${client.id}`),

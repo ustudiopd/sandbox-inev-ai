@@ -123,6 +123,10 @@ export default function WebinarView({ webinar, isAdminMode = false }: WebinarVie
   const router = useRouter()
   const searchParams = useSearchParams()
   
+  // 중복 로그인 방지: 세션 관리 (관리자 제외)
+  const sessionKeyRef = useRef<string | null>(null)
+  const sessionChannelRef = useRef<any>(null)
+  
   // Chat 컴포넌트를 한 번만 렌더링하여 중복 구독 방지 (해결책.md 권장사항)
   const chatComponent = useMemo(() => (
     <Chat
@@ -158,6 +162,163 @@ export default function WebinarView({ webinar, isAdminMode = false }: WebinarVie
 
   // Presence ping (접속 통계 수집)
   usePresencePing(webinar.id)
+  
+  // 중복 로그인 방지: 세션 관리 (관리자 제외)
+  useEffect(() => {
+    // 관리자는 중복 로그인 방지 제외
+    if (isAdminMode) {
+      return
+    }
+    
+    let isActive = true
+    let channel: any = null
+    let checkInterval: NodeJS.Timeout | null = null
+    
+    const setupSessionManagement = async () => {
+      try {
+        // 현재 사용자 확인
+        const { data: { user }, error: authError } = await supabase.auth.getUser()
+        if (authError || !user) {
+          return
+        }
+        
+        // 세션 키 생성 (페이지 진입 시 1회)
+        if (!sessionKeyRef.current) {
+          sessionKeyRef.current = `session_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`
+        }
+        const sessionKey = sessionKeyRef.current
+        
+        // 세션 관리 채널 생성 (presence 사용)
+        const channelName = `session:webinar-${webinar.id}`
+        channel = supabase.channel(channelName, {
+          config: {
+            presence: {
+              key: 'user',
+            },
+            broadcast: { self: false },
+          },
+        })
+        
+        // 다른 세션에서 충돌 알림을 받았을 때 처리
+        channel.on('broadcast', { event: 'session_conflict' }, (payload: any) => {
+          const { userId, newSessionKey } = payload.payload || payload
+          
+          // 자신의 user_id이고 자신의 세션이 아니면 충돌 (이전 세션)
+          if (userId === user.id && newSessionKey !== sessionKey && isActive) {
+            console.log('[WebinarView] 중복 로그인 감지: 다른 세션에서 접속했습니다.')
+            
+            // 이전 세션 종료 처리
+            isActive = false
+            
+            // 사용자에게 알림
+            alert('다른 기기 또는 브라우저에서 로그인하여 이 세션이 종료됩니다.')
+            
+            // 페이지 닫기 또는 로그아웃
+            window.location.href = `/webinar/${webinar.slug || webinar.id}`
+          }
+        })
+        
+        // Presence sync 이벤트: 다른 세션 감지
+        channel.on('presence', { event: 'sync' }, () => {
+          if (!isActive) return
+          
+          checkForDuplicateSessions(user.id, sessionKey, channel)
+        })
+        
+        // Presence join 이벤트: 새 세션 참가 감지
+        channel.on('presence', { event: 'join' }, ({ key, newPresences }: any) => {
+          if (!isActive) return
+          
+          // 잠시 후 체크 (presence state 업데이트 대기)
+          setTimeout(() => {
+            checkForDuplicateSessions(user.id, sessionKey, channel)
+          }, 500)
+        })
+        
+        // 구독 완료 후 현재 세션 등록
+        channel.subscribe(async (status: string) => {
+          if (status === 'SUBSCRIBED' && isActive) {
+            // Presence track으로 현재 세션 등록
+            await channel.track({
+              userId: user.id,
+              sessionKey: sessionKey,
+              timestamp: Date.now(),
+            })
+            
+            // 초기 체크 (다른 세션이 이미 있는지 확인)
+            setTimeout(() => {
+              checkForDuplicateSessions(user.id, sessionKey, channel)
+            }, 1000)
+            
+            // 주기적으로 체크 (5초마다)
+            checkInterval = setInterval(() => {
+              if (isActive) {
+                checkForDuplicateSessions(user.id, sessionKey, channel)
+              }
+            }, 5000)
+          }
+        })
+        
+        sessionChannelRef.current = channel
+      } catch (error) {
+        console.error('[WebinarView] 세션 관리 설정 오류:', error)
+      }
+    }
+    
+    // 중복 세션 체크 함수
+    const checkForDuplicateSessions = (userId: string, currentSessionKey: string, ch: any) => {
+      if (!isActive) return
+      
+      try {
+        const presenceState = ch.presenceState()
+        const allPresences = Object.values(presenceState).flat() as any[]
+        
+        // 같은 user_id의 다른 세션 찾기
+        const otherSessions = allPresences.filter((presence: any) => {
+          return presence.userId === userId && presence.sessionKey !== currentSessionKey
+        })
+        
+        if (otherSessions.length > 0 && isActive) {
+          // 다른 세션이 있으면 이전 세션들에 종료 알림
+          console.log('[WebinarView] 다른 세션 발견, 이전 세션 종료 알림 전송:', otherSessions.length, '개')
+          
+          // 가장 최근 세션(현재 세션)이 이전 세션들을 종료
+          otherSessions.forEach((otherSession: any) => {
+            ch.send({
+              type: 'broadcast',
+              event: 'session_conflict',
+              payload: {
+                userId: userId,
+                newSessionKey: currentSessionKey,
+                oldSessionKey: otherSession.sessionKey,
+                timestamp: Date.now(),
+              },
+            })
+          })
+        }
+      } catch (error) {
+        console.error('[WebinarView] 중복 세션 체크 오류:', error)
+      }
+    }
+    
+    setupSessionManagement()
+    
+    // 정리 함수
+    return () => {
+      isActive = false
+      if (checkInterval) {
+        clearInterval(checkInterval)
+      }
+      if (channel) {
+        channel.untrack().then(() => {
+          channel.unsubscribe()
+          supabase.removeChannel(channel)
+        }).catch((err: any) => {
+          console.warn('[WebinarView] 세션 채널 정리 오류:', err)
+        })
+      }
+    }
+  }, [webinar.id, webinar.slug, isAdminMode, supabase])
   
   // Visit 수집 (웨비나 시청 페이지 진입 시 — 통계 시스템 연동)
   // Phase 0: Visit 커버리지 확보

@@ -18,8 +18,8 @@ interface MarketingSummary {
   conversions_by_source: Array<{ source: string | null; count: number; is_untracked?: boolean }>
   conversions_by_medium: Array<{ medium: string | null; count: number }>
   conversions_by_campaign: Array<{ campaign: string | null; count: number }>
-  conversions_by_combo: Array<{ source: string | null; medium: string | null; campaign: string | null; count: number }>
-  conversions_by_link?: Array<{ link_id: string; link_name: string; count: number }> // Phase 2
+  conversions_by_combo: Array<{ source: string | null; medium: string | null; campaign: string | null; count: number; visits?: number; cvr?: number }>
+  conversions_by_link?: Array<{ link_id: string; link_name: string; count: number; visits?: number; cvr?: number }> // Phase 2
   tracking_metadata?: {
     tracked_count: number
     untracked_count: number
@@ -361,13 +361,15 @@ export default function CampaignsPageClient({ clientId, clientName, clientCreate
                       <th className="text-left py-2 px-3 text-sm font-semibold text-gray-700">Source</th>
                       <th className="text-left py-2 px-3 text-sm font-semibold text-gray-700">Medium</th>
                       <th className="text-left py-2 px-3 text-sm font-semibold text-gray-700">Campaign</th>
-                      <th className="text-right py-2 px-3 text-sm font-semibold text-gray-700">전환 수</th>
+                      <th className="text-right py-2 px-3 text-sm font-semibold text-gray-700">Visits</th>
+                      <th className="text-right py-2 px-3 text-sm font-semibold text-gray-700">전환</th>
+                      <th className="text-right py-2 px-3 text-sm font-semibold text-gray-700">CVR</th>
                     </tr>
                   </thead>
                   <tbody>
                     {summary.conversions_by_combo.length === 0 ? (
                       <tr>
-                        <td colSpan={4} className="text-center py-4 text-gray-500">
+                        <td colSpan={6} className="text-center py-4 text-gray-500">
                           데이터가 없습니다
                         </td>
                       </tr>
@@ -377,7 +379,9 @@ export default function CampaignsPageClient({ clientId, clientName, clientCreate
                           <td className="py-2 px-3 text-sm text-gray-700">{formatSource(item.source)}</td>
                           <td className="py-2 px-3 text-sm text-gray-700">{formatMedium(item.medium)}</td>
                           <td className="py-2 px-3 text-sm text-gray-700">{formatCampaign(item.campaign)}</td>
+                          <td className="py-2 px-3 text-sm text-right text-gray-700">{(item.visits || 0).toLocaleString()}</td>
                           <td className="py-2 px-3 text-sm text-right font-semibold text-gray-900">{item.count.toLocaleString()}</td>
+                          <td className="py-2 px-3 text-sm text-right text-gray-700">{item.cvr !== undefined ? `${item.cvr.toFixed(1)}%` : '-'}</td>
                         </tr>
                       ))
                     )}

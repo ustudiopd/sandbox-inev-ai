@@ -64,11 +64,17 @@ export default function StatsDashboard({
           className="px-3 py-2 border rounded"
         >
           <option value="all">전체</option>
-          {clients.map((client) => (
-            <option key={client.id} value={client.id}>
-              {client.name}
-            </option>
-          ))}
+          {clients.map((client) => {
+            // 워트인텔리전트 → 워트인텔리전스로 변환
+            const displayName = client.name.includes('워트인텔리전트') 
+              ? client.name.replace(/워트인텔리전트/g, '워트인텔리전스')
+              : client.name
+            return (
+              <option key={client.id} value={client.id}>
+                {displayName}
+              </option>
+            )
+          })}
         </select>
       </div>
       

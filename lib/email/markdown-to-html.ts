@@ -241,7 +241,7 @@ function addListStyles(html: string): string {
   
   // <ul> 태그에 스타일 추가 (list-style-type: none으로 설정하고 - 기호를 직접 추가)
   styledHtml = styledHtml.replace(/<ul(?![^>]*style=)/gi, (match) => {
-    return '<ul style="margin: 10px 0; padding-left: 20px; list-style-type: none;">'
+    return '<ul style="margin: 10px 0; padding-left: 0; list-style-type: none;">'
   })
   
   // <ul> 내부의 <li> 태그에 - 기호 추가 (이미 - 로 시작하지 않는 경우만)
@@ -249,7 +249,7 @@ function addListStyles(html: string): string {
   styledHtml = styledHtml.replace(/<ul[^>]*>([\s\S]*?)<\/ul>/gi, (ulMatch, content) => {
     // <ul> 태그를 찾아서 스타일 적용
     const ulTag = ulMatch.match(/<ul[^>]*>/i)?.[0] || '<ul>'
-    const styledUlTag = ulTag.replace(/<ul(?![^>]*style=)/i, '<ul style="margin: 10px 0; padding-left: 20px; list-style-type: none;"')
+    const styledUlTag = ulTag.replace(/<ul(?![^>]*style=)/i, '<ul style="margin: 10px 0; padding-left: 0; list-style-type: none;"')
     
     // <li> 태그들을 처리
     let processedContent = content.replace(/<li([^>]*)>([\s\S]*?)<\/li>/gi, (liMatch: string, attrs: string, liContent: string) => {
@@ -268,7 +268,7 @@ function addListStyles(html: string): string {
       if (attrs.includes('style=')) {
         styleAttr = attrs
       } else {
-        styleAttr = `${attrs} style="margin: 5px 0; padding-left: 5px; line-height: 1.6;"`
+        styleAttr = `${attrs} style="margin: 0; padding-left: 0; line-height: 1.6;"`
       }
       
       // - 로 시작하지 않으면 - 추가
@@ -297,7 +297,7 @@ function addListStyles(html: string): string {
       if (attrs.includes('style=')) {
         return match
       } else {
-        return `<li${attrs} style="margin: 5px 0; padding-left: 5px; line-height: 1.6;">`
+        return `<li${attrs} style="margin: 0; padding-left: 5px; line-height: 1.6;">`
       }
     })
     

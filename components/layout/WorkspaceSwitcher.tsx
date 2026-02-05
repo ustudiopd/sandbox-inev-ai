@@ -20,6 +20,14 @@ interface WorkspaceSwitcherProps {
   } | null
 }
 
+// 워트인텔리전트 → 워트인텔리전스로 변환하는 헬퍼 함수
+function normalizeClientName(name: string): string {
+  if (name.includes('워트인텔리전트')) {
+    return name.replace(/워트인텔리전트/g, '워트인텔리전스')
+  }
+  return name
+}
+
 export default function WorkspaceSwitcher({ organizations }: WorkspaceSwitcherProps) {
   const pathname = usePathname()
   const params = useParams()
@@ -222,7 +230,7 @@ export default function WorkspaceSwitcher({ organizations }: WorkspaceSwitcherPr
       if (client) {
         setWorkspace(prev => ({
           ...prev,
-          currentClient: { id: client.id, name: client.name }
+          currentClient: { id: client.id, name: normalizeClientName(client.name) }
         }))
       }
     }
@@ -377,7 +385,7 @@ export default function WorkspaceSwitcher({ organizations }: WorkspaceSwitcherPr
                 {clients.length > 0 ? (
                   clients.map(client => (
                     <option key={client.id} value={client.id}>
-                      {client.name}
+                      {normalizeClientName(client.name)}
                     </option>
                   ))
                 ) : (
@@ -390,7 +398,7 @@ export default function WorkspaceSwitcher({ organizations }: WorkspaceSwitcherPr
               </select>
             ) : (
               <div className="px-3 py-2 bg-gray-700 rounded-lg text-sm">
-                {workspace.currentClient?.name || '클라이언트'}
+                {workspace.currentClient?.name ? normalizeClientName(workspace.currentClient.name) : '클라이언트'}
               </div>
             )}
           </div>

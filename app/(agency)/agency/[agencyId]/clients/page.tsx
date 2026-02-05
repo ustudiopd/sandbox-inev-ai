@@ -4,6 +4,14 @@ import Link from 'next/link'
 import ClientCreateModal from './components/ClientCreateModal'
 import ClientInviteButton from './components/ClientInviteButton'
 
+// 워트인텔리전트 → 워트인텔리전스로 변환하는 헬퍼 함수
+function normalizeClientName(name: string): string {
+  if (name.includes('워트인텔리전트')) {
+    return name.replace(/워트인텔리전트/g, '워트인텔리전스')
+  }
+  return name
+}
+
 export default async function ClientsPage({
   params,
 }: {
@@ -61,9 +69,9 @@ export default async function ClientsPage({
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
                           {client.logo_url && (
-                            <img src={client.logo_url} alt={client.name} className="h-10 w-10 rounded-full mr-3 border-2 border-gray-200" />
+                            <img src={client.logo_url} alt={normalizeClientName(client.name)} className="h-10 w-10 rounded-full mr-3 border-2 border-gray-200" />
                           )}
-                          <span className="text-sm font-medium text-gray-900">{client.name}</span>
+                          <span className="text-sm font-medium text-gray-900">{normalizeClientName(client.name)}</span>
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -88,7 +96,7 @@ export default async function ClientsPage({
                         <ClientInviteButton 
                           agencyId={agencyId}
                           clientId={client.id}
-                          clientName={client.name}
+                          clientName={normalizeClientName(client.name)}
                         />
                         <Link 
                           href={`/client/${client.id}/settings/branding`}

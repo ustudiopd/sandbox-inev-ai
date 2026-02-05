@@ -4,6 +4,14 @@ import { createAdminSupabase } from '@/lib/supabase/admin'
 import Link from 'next/link'
 import ClientMemberAddButton from './components/ClientMemberAddButton'
 
+// 워트인텔리전트 → 워트인텔리전스로 변환하는 헬퍼 함수
+function normalizeClientName(name: string): string {
+  if (name.includes('워트인텔리전트')) {
+    return name.replace(/워트인텔리전트/g, '워트인텔리전스')
+  }
+  return name
+}
+
 export default async function ClientAccountsPage({
   params,
 }: {
@@ -97,7 +105,7 @@ export default async function ClientAccountsPage({
           <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
             가입계정관리
           </h1>
-          <p className="text-gray-600">{client?.name} 클라이언트의 계정 및 관리 조직을 확인하세요</p>
+          <p className="text-gray-600">{client?.name ? normalizeClientName(client.name) : ''} 클라이언트의 계정 및 관리 조직을 확인하세요</p>
         </div>
         
         {/* 1. 이 클라이언트와 관련된 계정들 */}
@@ -261,7 +269,7 @@ export default async function ClientAccountsPage({
                     className="p-4 border border-gray-200 rounded-lg hover:border-purple-500 hover:shadow-md transition-all"
                   >
                     <div className="flex items-center justify-between mb-2">
-                      <h3 className="font-semibold text-gray-900">{otherClient.name}</h3>
+                      <h3 className="font-semibold text-gray-900">{normalizeClientName(otherClient.name)}</h3>
                       <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
                         otherClient.status === 'active' 
                           ? 'bg-green-100 text-green-800' 

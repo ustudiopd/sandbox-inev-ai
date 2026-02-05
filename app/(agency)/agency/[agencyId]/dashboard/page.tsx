@@ -2,6 +2,14 @@ import { requireAgencyMember } from '@/lib/auth/guards'
 import { createServerSupabase } from '@/lib/supabase/server'
 import Link from 'next/link'
 
+// 워트인텔리전트 → 워트인텔리전스로 변환하는 헬퍼 함수
+function normalizeClientName(name: string): string {
+  if (name.includes('워트인텔리전트')) {
+    return name.replace(/워트인텔리전트/g, '워트인텔리전스')
+  }
+  return name
+}
+
 export default async function AgencyDashboard({
   params,
 }: {
@@ -108,7 +116,7 @@ export default async function AgencyDashboard({
                 {clients.map((client) => (
                   <div key={client.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-3 sm:p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
                     <div className="flex-1 min-w-0">
-                      <span className="font-medium text-gray-800 block truncate">{client.name}</span>
+                      <span className="font-medium text-gray-800 block truncate">{normalizeClientName(client.name)}</span>
                     </div>
                     <Link 
                       href={`/client/${client.id}/dashboard`}

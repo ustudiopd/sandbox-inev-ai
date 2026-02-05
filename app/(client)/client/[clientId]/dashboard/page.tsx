@@ -101,6 +101,12 @@ export default async function ClientDashboard({
       redirect('/')
     }
     
+    // 워트인텔리전트 → 워트인텔리전스로 변환
+    let clientName = client.name || ''
+    if (clientName.includes('워트인텔리전트')) {
+      clientName = clientName.replace(/워트인텔리전트/g, '워트인텔리전스')
+    }
+    
     const admin = createAdminSupabase()
     
     // 웨비나 목록 조회 (라이브만, 온디맨드 제외)
@@ -215,7 +221,7 @@ export default async function ClientDashboard({
           <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4 mb-4">
             <div className="flex-1 min-w-0">
               <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                {client?.name} 대시보드
+                {clientName} 대시보드
               </h1>
               <p className="text-sm sm:text-base text-gray-600">웨비나, 설문조사, 등록페이지를 생성하고 관리하세요</p>
             </div>
