@@ -68,6 +68,74 @@ function preserveSpaces(html: string): string {
 }
 
 /**
+ * - 텍스트 - 형식을 불릿 리스트로 변환되지 않도록 보호
+ * @param markdown 마크다운 텍스트
+ * @returns 보호된 마크다운 텍스트
+ */
+function protectDashText(markdown: string): { protected: string; replacements: string[] } {
+  const replacements: string[] = []
+  let protectedMarkdown = markdown
+  
+  // - 텍스트 - 패턴 찾기 (줄 시작에 - 가 있고, 같은 줄에 - 로 끝나는 경우)
+  // 단, 코드 블록 내부는 제외
+  const codeBlocks: string[] = []
+  protectedMarkdown = protectedMarkdown.replace(/```[\s\S]*?```/g, (match) => {
+    codeBlocks.push(match)
+    return `__CODE_BLOCK_${codeBlocks.length - 1}__`
+  })
+  
+  protectedMarkdown = protectedMarkdown.replace(/`[^`]+`/g, (match) => {
+    codeBlocks.push(match)
+    return `__CODE_BLOCK_${codeBlocks.length - 1}__`
+  })
+  
+  // - 텍스트 - 패턴 보호 (줄 시작의 - 텍스트 - 형식)
+  protectedMarkdown = protectedMarkdown.replace(/^- (.+?) -$/gm, (match, text) => {
+    const placeholder = `__DASH_TEXT_${replacements.length}__`
+    replacements.push(match)
+    return placeholder
+  })
+  
+  // 코드 블록 복원
+  codeBlocks.forEach((code, index) => {
+    protectedMarkdown = protectedMarkdown.replace(`__CODE_BLOCK_${index}__`, code)
+  })
+  
+  return { protected: protectedMarkdown, replacements }
+}
+
+/**
+ * 보호된 텍스트를 원래대로 복원
+ * @param html HTML 문자열
+ * @param replacements 원래 텍스트 배열
+ * @returns 복원된 HTML 문자열
+ */
+function restoreDashText(html: string, replacements: string[]): string {
+  let restored = html
+  replacements.forEach((original, index) => {
+    const placeholder = `__DASH_TEXT_${index}__`
+    // HTML에서 placeholder를 찾아서 원래 텍스트로 복원
+    // placeholder가 <p> 태그 안에 있을 수 있으므로 여러 경우를 처리
+    const patterns = [
+      new RegExp(`<p>${placeholder}</p>`, 'g'),
+      new RegExp(`<p[^>]*>${placeholder}</p>`, 'g'),
+      new RegExp(placeholder, 'g'),
+    ]
+    
+    // 원래 텍스트를 HTML 이스케이프 처리
+    const escaped = original
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+    
+    patterns.forEach(pattern => {
+      restored = restored.replace(pattern, escaped)
+    })
+  })
+  return restored
+}
+
+/**
  * 마크다운 밑줄 문법(__텍스트__)을 HTML <u> 태그로 변환
  * @param markdown 마크다운 텍스트
  * @returns 밑줄이 변환된 마크다운 텍스트
@@ -163,16 +231,19 @@ export function markdownToHtml(
   headerImageUrl?: string | null,
   footerText?: string | null
 ): string {
-  // 1. 밑줄 문법(__텍스트__)을 <u> 태그로 변환
-  const markdownWithUnderline = convertUnderline(markdown)
+  // 1. - 텍스트 - 형식을 불릿 리스트로 변환되지 않도록 보호
+  const { protected: protectedMarkdown, replacements } = protectDashText(markdown)
   
-  // 2. 마크다운 → HTML 변환
+  // 2. 밑줄 문법(__텍스트__)을 <u> 태그로 변환
+  const markdownWithUnderline = convertUnderline(protectedMarkdown)
+  
+  // 3. 마크다운 → HTML 변환
   const htmlBody = marked(markdownWithUnderline, {
     breaks: true, // 줄바꿈을 <br>로 변환
     gfm: true, // GitHub Flavored Markdown 지원
   }) as string
 
-  // 3. XSS 방지: HTML sanitization (sanitize-html 사용, jsdom 의존성 없음)
+  // 4. XSS 방지: HTML sanitization (sanitize-html 사용, jsdom 의존성 없음)
   const sanitizedHtml = sanitizeHtml(htmlBody, {
     allowedTags: [
       'p', 'br', 'strong', 'em', 'u', 'a', 'ul', 'ol', 'li',
@@ -185,10 +256,13 @@ export function markdownToHtml(
     allowedSchemes: ['http', 'https', 'mailto'],
   })
 
-  // 4. 연속된 공백을 &nbsp;로 변환 (띄어쓰기 보존)
-  const htmlWithSpaces = preserveSpaces(sanitizedHtml)
+  // 5. 보호된 - 텍스트 - 형식 복원
+  const htmlWithRestoredDash = restoreDashText(sanitizedHtml, replacements)
 
-  // 5. 링크를 버튼 스타일로 변환 (style 속성이 없는 링크만 변환)
+  // 6. 연속된 공백을 &nbsp;로 변환 (띄어쓰기 보존)
+  const htmlWithSpaces = preserveSpaces(htmlWithRestoredDash)
+
+  // 7. 링크를 버튼 스타일로 변환 (style 속성이 없는 링크만 변환)
   const htmlWithButtons = convertLinksToButtons(htmlWithSpaces)
 
   if (includeTemplate) {
