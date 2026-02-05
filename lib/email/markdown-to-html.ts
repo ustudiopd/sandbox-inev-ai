@@ -11,6 +11,95 @@ const DEFAULT_FOOTER_TEXT = `본 이메일은 워트 웨비나 등록 확인을 
 메일문의: crm@wert.co.kr`
 
 /**
+ * 연속된 공백을 &nbsp;로 변환 (띄어쓰기 보존)
+ * @param html HTML 문자열
+ * @returns 공백이 보존된 HTML 문자열
+ */
+function preserveSpaces(html: string): string {
+  // HTML 태그 내부가 아닌 텍스트 영역에서만 공백 처리
+  // 연속된 공백 2개 이상을 &nbsp;로 변환하여 띄어쓰기 보존
+  // 단, 코드 블록 내부와 이미 &nbsp;가 있는 경우는 제외
+  
+  // 먼저 코드 블록과 인라인 코드를 임시로 마스킹
+  const codeBlocks: string[] = []
+  let maskedHtml = html.replace(/<pre[^>]*>[\s\S]*?<\/pre>/gi, (match) => {
+    codeBlocks.push(match)
+    return `__CODE_BLOCK_${codeBlocks.length - 1}__`
+  })
+  
+  maskedHtml = maskedHtml.replace(/<code[^>]*>[\s\S]*?<\/code>/gi, (match) => {
+    codeBlocks.push(match)
+    return `__CODE_BLOCK_${codeBlocks.length - 1}__`
+  })
+  
+  // HTML 태그를 제외한 텍스트 영역에서 연속된 공백 처리
+  // 방법: 태그 사이의 텍스트를 찾아서 공백 변환
+  maskedHtml = maskedHtml.replace(/(>)([^<]+?)(<)/g, (match, before, text, after) => {
+    // 이미 &nbsp;가 포함된 경우는 제외 (중복 변환 방지)
+    if (text.includes('&nbsp;')) {
+      return match
+    }
+    
+    // 연속된 공백 2개 이상을 &nbsp;로 변환
+    // 단, 줄바꿈 문자는 제외
+    const preserved = text.replace(/[ \t]{2,}/g, (spaces) => {
+      return '&nbsp;'.repeat(spaces.length)
+    })
+    return before + preserved + after
+  })
+  
+  // 마지막 태그 뒤의 텍스트도 처리 (문서 끝 부분)
+  maskedHtml = maskedHtml.replace(/(>)([^<]+?)$/g, (match, before, text) => {
+    if (text.includes('&nbsp;')) {
+      return match
+    }
+    const preserved = text.replace(/[ \t]{2,}/g, (spaces) => {
+      return '&nbsp;'.repeat(spaces.length)
+    })
+    return before + preserved
+  })
+  
+  // 마스킹된 코드 블록 복원
+  codeBlocks.forEach((code, index) => {
+    maskedHtml = maskedHtml.replace(`__CODE_BLOCK_${index}__`, code)
+  })
+  
+  return maskedHtml
+}
+
+/**
+ * 마크다운 밑줄 문법(__텍스트__)을 HTML <u> 태그로 변환
+ * @param markdown 마크다운 텍스트
+ * @returns 밑줄이 변환된 마크다운 텍스트
+ */
+function convertUnderline(markdown: string): string {
+  // 코드 블록과 인라인 코드를 임시로 마스킹
+  const codeBlocks: string[] = []
+  let maskedMarkdown = markdown.replace(/```[\s\S]*?```/g, (match) => {
+    codeBlocks.push(match)
+    return `__CODE_BLOCK_${codeBlocks.length - 1}__`
+  })
+  
+  maskedMarkdown = maskedMarkdown.replace(/`[^`]+`/g, (match) => {
+    codeBlocks.push(match)
+    return `__CODE_BLOCK_${codeBlocks.length - 1}__`
+  })
+  
+  // __텍스트__ 형식을 <u>텍스트</u>로 변환
+  // 단, 앞뒤에 공백이나 문장 부호가 있어야 함 (단어 경계)
+  maskedMarkdown = maskedMarkdown.replace(/(^|[^\w])__(.+?)__([^\w]|$)/g, (match, before, text, after) => {
+    return before + '<u>' + text + '</u>' + after
+  })
+  
+  // 마스킹된 코드 블록 복원
+  codeBlocks.forEach((code, index) => {
+    maskedMarkdown = maskedMarkdown.replace(`__CODE_BLOCK_${index}__`, code)
+  })
+  
+  return maskedMarkdown
+}
+
+/**
  * 링크를 버튼 스타일로 변환
  * @param html HTML 문자열
  * @returns 버튼 스타일이 적용된 HTML 문자열
@@ -74,13 +163,16 @@ export function markdownToHtml(
   headerImageUrl?: string | null,
   footerText?: string | null
 ): string {
-  // 마크다운 → HTML 변환
-  const htmlBody = marked(markdown, {
+  // 1. 밑줄 문법(__텍스트__)을 <u> 태그로 변환
+  const markdownWithUnderline = convertUnderline(markdown)
+  
+  // 2. 마크다운 → HTML 변환
+  const htmlBody = marked(markdownWithUnderline, {
     breaks: true, // 줄바꿈을 <br>로 변환
     gfm: true, // GitHub Flavored Markdown 지원
   }) as string
 
-  // XSS 방지: HTML sanitization (sanitize-html 사용, jsdom 의존성 없음)
+  // 3. XSS 방지: HTML sanitization (sanitize-html 사용, jsdom 의존성 없음)
   const sanitizedHtml = sanitizeHtml(htmlBody, {
     allowedTags: [
       'p', 'br', 'strong', 'em', 'u', 'a', 'ul', 'ol', 'li',
@@ -93,8 +185,11 @@ export function markdownToHtml(
     allowedSchemes: ['http', 'https', 'mailto'],
   })
 
-  // 먼저 링크를 버튼 스타일로 변환 (style 속성이 없는 링크만 변환)
-  const htmlWithButtons = convertLinksToButtons(sanitizedHtml)
+  // 4. 연속된 공백을 &nbsp;로 변환 (띄어쓰기 보존)
+  const htmlWithSpaces = preserveSpaces(sanitizedHtml)
+
+  // 5. 링크를 버튼 스타일로 변환 (style 속성이 없는 링크만 변환)
+  const htmlWithButtons = convertLinksToButtons(htmlWithSpaces)
 
   if (includeTemplate) {
     return wrapEmailTemplate(htmlWithButtons, headerImageUrl, footerText)
@@ -142,7 +237,8 @@ function wrapEmailTemplate(
   const footerTextToUse = (footerText && footerText.trim()) ? footerText : DEFAULT_FOOTER_TEXT
   
   // 푸터 텍스트를 마크다운으로 처리
-  const footerMarkdown = marked(footerTextToUse, {
+  const footerMarkdownWithUnderline = convertUnderline(footerTextToUse)
+  const footerMarkdown = marked(footerMarkdownWithUnderline, {
     breaks: true,
     gfm: true,
   }) as string
@@ -153,6 +249,9 @@ function wrapEmailTemplate(
     },
     allowedSchemes: ['http', 'https', 'mailto'],
   })
+  
+  // 푸터에도 공백 보존 적용
+  const footerWithSpaces = preserveSpaces(sanitizedFooter)
   
   // 푸터의 <p> 태그에 인라인 스타일 추가
   const footerWithStyles = sanitizedFooter
