@@ -228,6 +228,24 @@ export default function WebinarView({ webinar, isAdminMode = false }: WebinarVie
           const loadedForms = formsResult.forms
           const currentFormsMap = new Map<string, string>(loadedForms.map((f: any) => [f.id, f.status]))
           
+          // 삭제된 폼 찾기 (이전에 있었는데 지금은 없는 것)
+          const deletedFormIds = Array.from(previousItemsRef.current.forms.keys())
+            .filter((formId) => !currentFormsMap.has(formId))
+          
+          // 삭제된 폼을 previousItemsRef와 shownPopups에서 제거
+          if (deletedFormIds.length > 0) {
+            deletedFormIds.forEach((formId) => {
+              previousItemsRef.current.forms.delete(formId)
+            })
+            setShownPopups((prev) => {
+              const next = new Set(prev)
+              deletedFormIds.forEach((formId) => {
+                next.delete(`form-${formId}`)
+              })
+              return next
+            })
+          }
+          
           // 새로 오픈된 폼 찾기 (이전에 없었거나 상태가 'open'으로 변경된 것)
           if (!isInitialLoadRef.current) {
             const newlyOpenedForms = loadedForms.filter((form: any) => {
@@ -245,8 +263,12 @@ export default function WebinarView({ webinar, isAdminMode = false }: WebinarVie
               const newForm = newlyOpenedForms[newlyOpenedForms.length - 1]
               const popupKey = `form-${newForm.id}`
               
-              // 이미 표시된 팝업이 아니거나, 폼이 닫혔다가 다시 오픈된 경우 팝업 표시
-              if (!shownPopups.has(popupKey)) {
+              // 새로 생성된 폼이거나, 폼이 닫혔다가 다시 오픈된 경우 팝업 표시
+              const previousStatus = previousItemsRef.current.forms.get(newForm.id)
+              const isNewForm = !previousStatus
+              const wasReopened = previousStatus && previousStatus !== 'open'
+              
+              if (isNewForm || wasReopened || !shownPopups.has(popupKey)) {
                 setShownPopups((prev) => {
                   const next = new Set(prev)
                   next.add(popupKey)
@@ -257,16 +279,6 @@ export default function WebinarView({ webinar, isAdminMode = false }: WebinarVie
                   id: newForm.id,
                   title: newForm.title,
                 })
-              } else {
-                // 이미 표시된 팝업이지만 폼이 닫혔다가 다시 오픈된 경우 다시 표시
-                const previousStatus = previousItemsRef.current.forms.get(newForm.id)
-                if (previousStatus && previousStatus !== 'open') {
-                  setPopupContent({
-                    type: 'form',
-                    id: newForm.id,
-                    title: newForm.title,
-                  })
-                }
               }
             }
             

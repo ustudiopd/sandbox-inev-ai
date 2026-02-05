@@ -86,8 +86,8 @@ export async function generateMetadata({
     console.error('[generateMetadata] 캠페인 메타데이터 조회 오류:', error)
   }
   
-  // 149403 페이지에 대한 메타데이터 (fallback)
-  if (publicPath === '/149403' || publicPath === '149403') {
+  // 149403, 149400 페이지에 대한 메타데이터 (fallback)
+  if (publicPath === '/149403' || publicPath === '149403' || publicPath === '/149400' || publicPath === '149400') {
     const thumbnailUrl = 'https://yqsayphssjznthrxpgfb.supabase.co/storage/v1/object/public/webinar-thumbnails/wert/thumb_wert1.png'
     return {
       title: 'AI 특허리서치 실무 활용 웨비나 | Keywert Insight',
@@ -98,7 +98,7 @@ export async function generateMetadata({
         title: 'AI 특허리서치 실무 활용 웨비나',
         description: 'Keywert Insight',
         type: 'website',
-        url: 'https://eventflow.kr/event/149403',
+        url: publicPath === '/149400' || publicPath === '149400' ? 'https://eventflow.kr/event/149400' : 'https://eventflow.kr/event/149403',
         siteName: 'Keywert Insight',
         images: [
           {
@@ -116,7 +116,7 @@ export async function generateMetadata({
         images: [thumbnailUrl],
       },
       alternates: {
-        canonical: 'https://eventflow.kr/event/149403',
+        canonical: publicPath === '/149400' || publicPath === '149400' ? 'https://eventflow.kr/event/149400' : 'https://eventflow.kr/event/149403',
       },
     }
   }
@@ -390,8 +390,8 @@ export default async function SurveyPublicPage({
   
   // subPath에 따라 다른 페이지 렌더링
   if (!subPath) {
-    // 149403은 WebinarFormWertPage를 보여줌 (캠페인 조회 실패해도 표시)
-    if (publicPath === '/149403' || publicPath === '149403') {
+    // 149403, 149400은 WebinarFormWertPage를 보여줌 (캠페인 조회 실패해도 표시)
+    if (publicPath === '/149403' || publicPath === '149403' || publicPath === '/149400' || publicPath === '149400') {
       return (
         <Suspense fallback={
           <div className="min-h-screen bg-white flex items-center justify-center">

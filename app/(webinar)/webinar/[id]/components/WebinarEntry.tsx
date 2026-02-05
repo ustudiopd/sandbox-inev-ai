@@ -43,14 +43,16 @@ export default function WebinarEntry({ webinar, isWertPage: serverIsWertPage }: 
   const webinarSlug = webinar.slug || webinar.id
   const webinarPath = webinar.slug || webinar.id
   
-  // 149402인지 즉시 확인 (서버 prop 우선, 없으면 webinar.slug 확인)
+  // 149402, 149400인지 즉시 확인 (서버 prop 우선, 없으면 webinar.slug 확인)
   // slugValue는 나중에 정의되므로 여기서는 직접 비교
   const isSlug149402 = String(webinar.slug) === '149402' || webinarSlug === '149402'
+  const isSlug149400 = String(webinar.slug) === '149400' || webinarSlug === '149400'
+  const isSlug149402Or149400 = isSlug149402 || isSlug149400
   const isSlug149402Immediate = 
     serverIsWertPage === true ||
-    isSlug149402
+    isSlug149402Or149400
   
-  // slug가 '149402'이면 항상 name_email_auth 모드로 시작
+  // slug가 '149402' 또는 '149400'이면 항상 name_email_auth 모드로 시작
   const initialMode = isSlug149402Immediate ? 'name_email_auth' : 
     webinar.access_policy === 'guest_allowed' ? 'guest' : 
     webinar.access_policy === 'email_auth' ? 'email_auth' :
@@ -152,7 +154,7 @@ export default function WebinarEntry({ webinar, isWertPage: serverIsWertPage }: 
           }
           
           // 등록 확인
-          if (webinar.registration_campaign_id || isSlug149402) {
+          if (webinar.registration_campaign_id || isSlug149402Or149400) {
             const checkResponse = await fetch(`/api/webinars/${webinar.id}/check-registration`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -240,7 +242,7 @@ export default function WebinarEntry({ webinar, isWertPage: serverIsWertPage }: 
       
       performAutoEnter()
     }
-  }, [searchParams, webinar.id, webinar.registration_campaign_id, webinarPath, isSlug149402, autoEntering, loading, supabase])
+    }, [searchParams, webinar.id, webinar.registration_campaign_id, webinarPath, isSlug149402Or149400, autoEntering, loading, supabase])
 
   // Visit 수집 (웨비나 입장 페이지 진입 시 — 통계 시스템 연동)
   useEffect(() => {
@@ -799,8 +801,8 @@ export default function WebinarEntry({ webinar, isWertPage: serverIsWertPage }: 
     
     try {
       // 웨비나에 연동된 등록 페이지 캠페인에 등록된 사용자인지 확인
-      // 149402는 항상 등록 캠페인 확인 필요
-      if (webinar.registration_campaign_id || isSlug149402) {
+      // 149402, 149400은 항상 등록 캠페인 확인 필요
+      if (webinar.registration_campaign_id || isSlug149402Or149400) {
         const checkResponse = await fetch(`/api/webinars/${webinar.id}/check-registration`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -821,7 +823,10 @@ export default function WebinarEntry({ webinar, isWertPage: serverIsWertPage }: 
           setTimeout(() => {
             const searchParams = new URLSearchParams(window.location.search)
             const utmParams = extractUTMParams(searchParams)
-            const redirectUrl = appendUTMToURL('/event/149403', utmParams)
+            // API 응답에서 public_path 사용, 없으면 slug 기반으로 추정
+            const publicPath = checkResult.public_path || checkResult.campaign_path || 
+              (isSlug149400 ? '/149400' : isSlug149402 ? '/149403' : '/149403')
+            const redirectUrl = appendUTMToURL(`/event${publicPath}`, utmParams)
             window.location.href = redirectUrl
           }, 2000)
           return
@@ -1082,14 +1087,14 @@ export default function WebinarEntry({ webinar, isWertPage: serverIsWertPage }: 
   const thumbnailUrl = getThumbnailUrl()
   // registration_campaign_id가 있으면 등록 페이지와 연동된 웨비나로 간주
   const hasRegistrationCampaign = !!webinar.registration_campaign_id
-  // slug가 '149402'이거나 registration_campaign_id가 있으면 WERT 스타일 적용
+  // slug가 '149402', '149400'이거나 registration_campaign_id가 있으면 WERT 스타일 적용
   // 초기 렌더링 시에도 슬러그를 확인하여 즉시 WERT 스타일 적용
   // 서버 사이드에서 전달된 webinar.slug를 우선 확인 (초기 렌더링 보장)
   // 숫자로 저장된 경우도 문자열로 변환하여 비교
   const slugValue = String(webinar.slug || webinarSlug || '')
   // 서버에서 전달된 slug를 우선 확인 (초기 렌더링 보장)
-  // isSlug149402는 이미 위에서 정의됨
-  const isWertSlug = isSlug149402
+  // isSlug149402Or149400는 이미 위에서 정의됨
+  const isWertSlug = isSlug149402Or149400
   const isWertSummit = isWertSlug || hasRegistrationCampaign
   const wertLogoUrl = supabaseUrl 
     ? `${supabaseUrl}/storage/v1/object/public/webinar-thumbnails/wert.png`
@@ -1101,25 +1106,29 @@ export default function WebinarEntry({ webinar, isWertPage: serverIsWertPage }: 
   // 서버 사이드에서 전달된 데이터를 우선 사용하여 SSR/CSR 일치 보장
   // window.location.pathname은 클라이언트에서만 사용 가능하므로 제외
   // 서버와 클라이언트에서 동일한 조건 평가를 보장하기 위해 서버 데이터만 사용
-  const isSlug149402Strict = 
+  const isSlug149402Or149400Strict = 
     serverIsWertPage === true ||
     String(webinar.slug) === '149402' || 
+    String(webinar.slug) === '149400' ||
     slugValue === '149402' || 
+    slugValue === '149400' ||
     webinarSlug === '149402' || 
+    webinarSlug === '149400' ||
     webinar.slug === '149402' ||
-    isSlug149402 ||
+    webinar.slug === '149400' ||
+    isSlug149402Or149400 ||
     isWertSlug
   
   // shouldShowWertStyle은 서버에서 전달된 prop을 우선 사용하고, 없으면 클라이언트에서 계산
-  // 149402는 항상 WERT 스타일 강제 적용 (기본 UI 제거)
+  // 149402, 149400은 항상 WERT 스타일 강제 적용 (기본 UI 제거)
   const shouldShowWertStyle = serverIsWertPage !== undefined 
     ? serverIsWertPage 
-    : (isSlug149402Strict || isWertSummit || hasRegistrationCampaign)
+    : (isSlug149402Or149400Strict || isWertSummit || hasRegistrationCampaign)
   
-  // 149402인 경우 강제로 WERT 스타일 적용 (기본 UI 완전 제거)
-  // 서버 prop이 true이거나 slug가 149402이면 항상 true
+  // 149402, 149400인 경우 강제로 WERT 스타일 적용 (기본 UI 완전 제거)
+  // 서버 prop이 true이거나 slug가 149402 또는 149400이면 항상 true
   // 초기 렌더링 시에도 즉시 판단 가능하도록 서버 데이터만 사용
-  const finalShouldShowWertStyle = (serverIsWertPage === true || isSlug149402Strict || String(webinar.slug) === '149402' || webinarSlug === '149402') ? true : shouldShowWertStyle
+  const finalShouldShowWertStyle = (serverIsWertPage === true || isSlug149402Or149400Strict || String(webinar.slug) === '149402' || String(webinar.slug) === '149400' || webinarSlug === '149402' || webinarSlug === '149400') ? true : shouldShowWertStyle
   
   // 디버깅: 초기 렌더링 시 값 확인
   if (typeof window !== 'undefined') {
@@ -1127,7 +1136,7 @@ export default function WebinarEntry({ webinar, isWertPage: serverIsWertPage }: 
       serverIsWertPage,
       'webinar.slug': webinar.slug,
       webinarSlug,
-      isSlug149402Strict,
+      isSlug149402Or149400Strict,
       shouldShowWertStyle,
       finalShouldShowWertStyle,
     })
@@ -1865,13 +1874,13 @@ export default function WebinarEntry({ webinar, isWertPage: serverIsWertPage }: 
       <style jsx global>{allStyles}</style>
       <div className="bg-white min-h-screen" style={{ backgroundColor: '#fff', background: '#fff', position: 'relative', zIndex: 0 }}>
       
-      {/* 웨비나 입장 페이지 UI - 149402는 항상 WERT 스타일만 렌더링 (기본 UI 완전 제거) */}
+      {/* 웨비나 입장 페이지 UI - 149402, 149400은 항상 WERT 스타일만 렌더링 (기본 UI 완전 제거) */}
       {/* 서버에서 전달된 prop 또는 webinar.slug로 즉시 판단하여 SSR/CSR 일치 보장 */}
-      {/* 149402는 149403 스타일 참고 */}
-      {(serverIsWertPage === true || String(webinar.slug) === '149402' || webinarSlug === '149402' || finalShouldShowWertStyle) ? (
+      {/* 149402, 149400은 149403 스타일 참고 */}
+      {(serverIsWertPage === true || String(webinar.slug) === '149402' || String(webinar.slug) === '149400' || webinarSlug === '149402' || webinarSlug === '149400' || finalShouldShowWertStyle) ? (
         <>
-          {/* 149402는 149403 등록 페이지 스타일 참고 */}
-          {isSlug149402 ? (
+          {/* 149402, 149400은 149403 등록 페이지 스타일 참고 */}
+          {isSlug149402Or149400 ? (
             <>
               {/* 149403 스타일 참고 - 등록 페이지와 유사한 디자인 */}
               <section className="registration-hero">

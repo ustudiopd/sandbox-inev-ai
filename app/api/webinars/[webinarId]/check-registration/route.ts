@@ -99,6 +99,7 @@ export async function POST(
       return NextResponse.json({
         registered: false,
         message: `등록 정보를 찾을 수 없습니다. ${campaign.public_path ? `/event${campaign.public_path}` : '등록 페이지'}에서 먼저 등록해주세요.`,
+        public_path: campaign.public_path || null,
       })
     }
     
@@ -166,6 +167,7 @@ export async function POST(
       return NextResponse.json({
         registered: false,
         message: '등록 정보를 찾을 수 없습니다. 성함을 확인해주세요.',
+        public_path: campaign.public_path,
       })
     }
     
@@ -175,6 +177,7 @@ export async function POST(
         id: foundEntry.id,
         name: foundEntry.name,
       },
+      public_path: campaign.public_path,
     })
   } catch (error: any) {
     console.error('등록 확인 오류:', error)

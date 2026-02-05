@@ -214,10 +214,11 @@ export default async function WebinarPage({
       queryBuilder = queryBuilder.eq(query.column, query.value)
     }
     
-    // 149402 또는 426307 slug인 경우 등록 캠페인에서 데이터 가져오기
+    // 149402, 149400 또는 426307 slug인 경우 등록 캠페인에서 데이터 가져오기
     const is149402 = query.column === 'slug' && query.value === '149402'
+    const is149400 = query.column === 'slug' && query.value === '149400'
     const is426307 = query.column === 'slug' && String(query.value) === '426307'
-    const isWertSlug = is149402 || is426307
+    const isWertSlug = is149402 || is149400 || is426307
     
     // 426307은 등록 페이지로 리다이렉트 (당분간 숨김 처리)
     if (is426307) {
@@ -351,7 +352,7 @@ export default async function WebinarPage({
         (error.details !== undefined && error.details !== null) ||
         (error.hint !== undefined && error.hint !== null)
       
-      // 149402 또는 426307이고 PGRST116 에러인 경우는 등록 캠페인에서 데이터 가져오기
+      // 149402, 149400 또는 426307이고 PGRST116 에러인 경우는 등록 캠페인에서 데이터 가져오기
       const isExpectedError = isWertSlug && (error?.code === 'PGRST116' || error?.message?.includes('No rows') || error?.message?.includes('0 rows'))
       
       if (hasErrorProperties) {
@@ -403,12 +404,12 @@ export default async function WebinarPage({
       }
     }
     
-    // 데이터 없음 체크 - 426307 또는 149402인 경우 등록 캠페인에서 데이터 가져오기
+    // 데이터 없음 체크 - 426307, 149402 또는 149400인 경우 등록 캠페인에서 데이터 가져오기
     if (!webinar) {
       if (isWertSlug) {
-        // 426307 또는 149402는 등록 캠페인에서 데이터 가져오기
-        const campaignPath = is426307 ? '/426307' : '/149403'
-        const slugValue = is426307 ? '426307' : '149402'
+        // 426307, 149402 또는 149400는 등록 캠페인에서 데이터 가져오기
+        const campaignPath = is426307 ? '/426307' : (is149400 ? '/149400' : '/149403')
+        const slugValue = is426307 ? '426307' : (is149400 ? '149400' : '149402')
         console.log(`[WebinarPage] ${slugValue} 웨비나가 없음 - ${campaignPath} 등록 캠페인에서 데이터 가져오기`)
         
         // 등록 캠페인 조회
@@ -525,7 +526,7 @@ export default async function WebinarPage({
     // 실제 접근 제어는 WebinarEntry 컴포넌트에서 access_policy에 따라 처리
     
     // 서버 사이드에서 WERT 페이지 여부 확인하여 SSR/CSR 일치 보장
-    const isWertPage = String(webinarData.slug) === '149402' || String(webinarData.slug) === '426307' || !!webinarData.registration_campaign_id
+    const isWertPage = String(webinarData.slug) === '149402' || String(webinarData.slug) === '149400' || String(webinarData.slug) === '426307' || !!webinarData.registration_campaign_id
     
     return <WebinarEntry webinar={webinarData} isWertPage={isWertPage} />
   } catch (catchError: any) {
