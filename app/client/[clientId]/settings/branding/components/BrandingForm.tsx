@@ -16,7 +16,7 @@ export default function BrandingForm({ client }: { client: Client }) {
     logoUrl: client.logo_url || '',
     primaryColor: client.brand_config?.primaryColor || '#3B82F6',
     secondaryColor: client.brand_config?.secondaryColor || '#10B981',
-    fontFamily: client.brand_config?.fontFamily || 'Inter',
+    fontFamily: client.brand_config?.fontFamily || 'Noto Sans KR',
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -141,6 +141,7 @@ export default function BrandingForm({ client }: { client: Client }) {
           onChange={(e) => setFormData({ ...formData, fontFamily: e.target.value })}
           className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-all"
         >
+          <option value="Noto Sans KR">Noto Sans KR</option>
           <option value="Inter">Inter</option>
           <option value="Roboto">Roboto</option>
           <option value="Open Sans">Open Sans</option>

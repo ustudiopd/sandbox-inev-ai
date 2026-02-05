@@ -116,15 +116,28 @@ export default function OnDemandRegisterPage({ webinar }: OnDemandRegisterPagePr
     }))
   }
   
+  // Supabase Storage URL (로컬/프로덕션 모두 사용)
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
+  
+  const hpeWebinarSeriesImageUrl = supabaseUrl
+    ? `${supabaseUrl}/storage/v1/object/public/webinar-thumbnails/hpe/HPE_Webinar_Series.png`
+    : '/img/hpe/HPE_Webinar_Series.png'
+  const hpeBackgroundImageUrl = supabaseUrl
+    ? `${supabaseUrl}/storage/v1/object/public/webinar-thumbnails/hpe/webinar_login_BG_1600px.png`
+    : '/img/hpe/webinar_login_BG_1600px.png'
+  const hpeDueIconUrl = supabaseUrl
+    ? `${supabaseUrl}/storage/v1/object/public/webinar-thumbnails/hpe/due.png`
+    : '/img/hpe/due.png'
+  
   return (
-    <div className="min-h-screen bg-white flex flex-col overflow-x-hidden">
+    <div className="min-h-screen flex flex-col overflow-x-hidden" style={{ backgroundColor: '#171F32' }}>
       {/* Hero Section */}
-      <div className="relative w-full bg-[#171D28] h-[272px] sm:h-[480px] md:h-[520px] lg:h-[520px]">
+      <div className="relative w-full bg-[#171D28] h-[272px] sm:h-[480px] md:h-[521px] lg:h-[521px]">
         {/* 배경 이미지 - 1600px까지만 적용 */}
         <div className="absolute inset-0 w-full h-full flex items-center justify-center">
           <div className="relative w-full max-w-[1600px] h-full">
             <Image
-              src="/img/hpe/bg_b_3984x520_1.png"
+              src={hpeBackgroundImageUrl}
               alt="HPE Webinar Series Background"
               fill
               className="object-cover object-left"
@@ -190,34 +203,54 @@ export default function OnDemandRegisterPage({ webinar }: OnDemandRegisterPagePr
               priority
             />
           </div>
-          <div className="relative z-10 w-full h-full flex flex-col justify-center py-4 sm:py-6 md:py-8 lg:py-12">
-            {/* Center: Title and Info */}
-            <div className="flex-1 flex items-center">
-              <div className="w-full px-4 sm:px-6 lg:px-8">
-                <div className="text-center">
-                  {/* 제목 */}
-                  <h2 className="text-3xl sm:text-4xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-white mb-2 sm:mb-3 md:mb-4 lg:mb-6">
-                    {webinar.title}
-                  </h2>
+        {/* 텍스트 콘텐츠: 도형 위에 위치하도록 z-index 관리 */}
+        <div className="relative z-10 w-full h-full flex flex-col justify-center py-4 sm:py-6 md:py-8 lg:py-12">
+          
+          {/* Center: Title and Info */}
+          <div className="flex-1 flex items-center">
+            <div className="w-full px-4 sm:px-6 lg:px-8">
+              {/* 로고와 기간 줄을 같은 컨테이너에 배치 */}
+              <div className="flex flex-col items-center w-full">
+                {/* 로고 너비에 맞춘 컨테이너 - 가운데 정렬 */}
+                <div className="flex flex-col items-start w-[410px]">
+                  {/* 제목 - 가운데 정렬 */}
+                  <div className="mb-2 sm:mb-3 md:mb-4 lg:mb-6 self-center">
+                    <Image
+                      src={hpeWebinarSeriesImageUrl}
+                      alt="HPE Webinar Series"
+                      width={410}
+                      height={80}
+                      className="w-[410px] h-auto object-contain"
+                      priority
+                    />
+                  </div>
                   
-                  {/* 기간 배지와 날짜 */}
-                  <div className="flex flex-row items-center justify-center gap-1.5 sm:gap-2 md:gap-2.5 mb-1.5 sm:mb-2 md:mb-3 flex-wrap">
-                    <span className="inline-flex items-center px-2 sm:px-2.5 md:px-3 py-0.5 sm:py-1 rounded-full text-xs sm:text-sm md:text-base font-medium bg-white text-gray-900 whitespace-nowrap">
-                      기간
-                    </span>
+                  {/* 기간 배지와 날짜 - 왼쪽 정렬 */}
+                  <div className="flex flex-row items-center justify-start gap-1.5 sm:gap-2 md:gap-2.5 mb-1.5 sm:mb-2 md:mb-3 flex-wrap">
+                    <div className="inline-flex items-center shrink-0">
+                      <Image
+                        src={hpeDueIconUrl}
+                        alt="기간"
+                        width={50}
+                        height={26}
+                        className="h-5 sm:h-6 md:h-7 w-auto object-contain"
+                        priority
+                      />
+                    </div>
                     <span className="text-white text-xs sm:text-sm md:text-base lg:text-lg xl:text-xl whitespace-nowrap">
                       2026년 3월 2일 (월) ~ 3월 6일 (금)
                     </span>
                   </div>
                   
-                  {/* 안내 텍스트 */}
-                  <p className="text-white/90 text-xs sm:text-sm max-w-2xl mx-auto px-4">
-                    기간 내, 언제든지 입장하셔서 컨텐츠를 반복적으로 시청하실 수 있습니다.
+                  {/* 안내 텍스트 - 기간 아이콘과 같은 위치에서 시작 */}
+                  <p className="text-white/90 text-[10px] sm:text-xs text-left">
+                    * 기간 내, 언제든지 입장하셔서 컨텐츠를 반복적으로 시청하실 수 있습니다.
                   </p>
                 </div>
               </div>
             </div>
           </div>
+        </div>
         </div>
         
         {/* Divider */}
@@ -225,12 +258,12 @@ export default function OnDemandRegisterPage({ webinar }: OnDemandRegisterPagePr
       </div>
 
       {/* Registration Form Section */}
-      <div className="bg-white flex items-start sm:items-center justify-center px-3 sm:px-4 md:px-6 lg:px-8 py-6 sm:py-10 md:py-16 lg:py-32 min-h-[400px] overflow-x-hidden">
-        <div className="w-full max-w-lg">
-          <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6 w-full">
+      <div className="bg-white flex items-start sm:items-center justify-center px-3 sm:px-4 md:px-6 lg:px-8 py-6 sm:py-10 md:py-16 lg:py-32 min-h-[400px] overflow-x-hidden" style={{ paddingTop: '70px', paddingBottom: '70px' }}>
+        <div className="w-[355px]">
+          <form onSubmit={handleSubmit} className="space-y-3 w-full">
             {/* Title */}
             <div className="mb-6 sm:mb-8">
-              <h3 className="text-xl sm:text-2xl text-[#00B388] mb-2">
+              <h3 className="text-xl sm:text-2xl text-[#00B388] mb-2 font-semibold">
                 등록하기
               </h3>
               <div className="h-1 bg-[#00B388] w-full"></div>
@@ -238,7 +271,7 @@ export default function OnDemandRegisterPage({ webinar }: OnDemandRegisterPagePr
             
             {/* Name Input */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
-              <label htmlFor="name" className="text-sm font-medium text-gray-700 whitespace-nowrap text-left">
+              <label htmlFor="name" className="text-sm font-semibold text-gray-700 whitespace-nowrap text-left" style={{ letterSpacing: '0.5px' }}>
                 성 함<span className="text-red-500">*</span>
               </label>
               <input
@@ -247,15 +280,15 @@ export default function OnDemandRegisterPage({ webinar }: OnDemandRegisterPagePr
                 value={formData.name}
                 onChange={(e) => handleChange('name', e.target.value)}
                 required
-                className="w-full sm:w-[330px] px-4 rounded bg-gray-100 focus:outline-none focus:ring-2 focus:ring-[#00B388] focus:ring-offset-1"
+                className="w-full sm:w-[253px] px-4 rounded bg-gray-100 focus:outline-none focus:ring-2 focus:ring-[#00B388] focus:ring-offset-1"
                 style={{ height: '37px' }}
-                placeholder="성함을 입력하세요"
+                placeholder="성 함을 입력하세요"
               />
             </div>
             
             {/* Email Input */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
-              <label htmlFor="email" className="text-sm font-medium text-gray-700 whitespace-nowrap text-left">
+              <label htmlFor="email" className="text-sm font-semibold text-gray-700 whitespace-nowrap text-left" style={{ letterSpacing: '0.5px' }}>
                 이메일 주소<span className="text-red-500">*</span>
               </label>
               <input
@@ -264,7 +297,7 @@ export default function OnDemandRegisterPage({ webinar }: OnDemandRegisterPagePr
                 value={formData.email}
                 onChange={(e) => handleChange('email', e.target.value)}
                 required
-                className="w-full sm:w-[330px] px-4 rounded bg-gray-100 focus:outline-none focus:ring-2 focus:ring-[#00B388] focus:ring-offset-1"
+                className="w-full sm:w-[253px] px-4 rounded bg-gray-100 focus:outline-none focus:ring-2 focus:ring-[#00B388] focus:ring-offset-1"
                 style={{ height: '37px' }}
                 placeholder="이메일 주소를 입력하세요"
               />
@@ -272,7 +305,7 @@ export default function OnDemandRegisterPage({ webinar }: OnDemandRegisterPagePr
             
             {/* Company Input */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
-              <label htmlFor="company" className="text-sm font-medium text-gray-700 whitespace-nowrap text-left">
+              <label htmlFor="company" className="text-sm font-semibold text-gray-700 whitespace-nowrap text-left" style={{ letterSpacing: '0.5px' }}>
                 회사명<span className="text-red-500">*</span>
               </label>
               <input
@@ -281,7 +314,7 @@ export default function OnDemandRegisterPage({ webinar }: OnDemandRegisterPagePr
                 value={formData.company}
                 onChange={(e) => handleChange('company', e.target.value)}
                 required
-                className="w-full sm:w-[330px] px-4 rounded bg-gray-100 focus:outline-none focus:ring-2 focus:ring-[#00B388] focus:ring-offset-1"
+                className="w-full sm:w-[253px] px-4 rounded bg-gray-100 focus:outline-none focus:ring-2 focus:ring-[#00B388] focus:ring-offset-1"
                 style={{ height: '37px' }}
                 placeholder="회사명을 입력하세요"
               />
@@ -289,7 +322,7 @@ export default function OnDemandRegisterPage({ webinar }: OnDemandRegisterPagePr
             
             {/* Job Title Input */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
-              <label htmlFor="jobTitle" className="text-sm font-medium text-gray-700 whitespace-nowrap text-left">
+              <label htmlFor="jobTitle" className="text-sm font-semibold text-gray-700 whitespace-nowrap text-left" style={{ letterSpacing: '0.5px' }}>
                 직 급<span className="text-red-500">*</span>
               </label>
               <input
@@ -298,7 +331,7 @@ export default function OnDemandRegisterPage({ webinar }: OnDemandRegisterPagePr
                 value={formData.jobTitle}
                 onChange={(e) => handleChange('jobTitle', e.target.value)}
                 required
-                className="w-full sm:w-[330px] px-4 rounded bg-gray-100 focus:outline-none focus:ring-2 focus:ring-[#00B388] focus:ring-offset-1"
+                className="w-full sm:w-[253px] px-4 rounded bg-gray-100 focus:outline-none focus:ring-2 focus:ring-[#00B388] focus:ring-offset-1"
                 style={{ height: '37px' }}
                 placeholder="직급을 입력하세요"
               />
@@ -306,7 +339,7 @@ export default function OnDemandRegisterPage({ webinar }: OnDemandRegisterPagePr
             
             {/* Mobile Input */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
-              <label htmlFor="mobile" className="text-sm font-medium text-gray-700 whitespace-nowrap text-left">
+              <label htmlFor="mobile" className="text-sm font-semibold text-gray-700 whitespace-nowrap text-left" style={{ letterSpacing: '0.5px' }}>
                 모바일 번호<span className="text-red-500">*</span>
               </label>
               <input
@@ -315,20 +348,20 @@ export default function OnDemandRegisterPage({ webinar }: OnDemandRegisterPagePr
                 value={formData.mobile}
                 onChange={(e) => handleChange('mobile', e.target.value)}
                 required
-                className="w-full sm:w-[330px] px-4 rounded bg-gray-100 focus:outline-none focus:ring-2 focus:ring-[#00B388] focus:ring-offset-1"
+                className="w-full sm:w-[253px] px-4 rounded bg-gray-100 focus:outline-none focus:ring-2 focus:ring-[#00B388] focus:ring-offset-1"
                 style={{ height: '37px' }}
                 placeholder="모바일 번호를 입력하세요"
               />
             </div>
             
             {/* Privacy Policy */}
-            <div className="mt-6 sm:mt-8 mb-4">
-              <div className="text-xs sm:text-sm text-gray-700 leading-relaxed space-y-1.5 sm:space-y-2">
-                <p className="font-semibold mb-2 text-sm sm:text-base">※ 개인정보 제3자 제공 동의</p>
-                <p className="break-words">1) 개인정보를 제공 받는 자: HPE</p>
-                <p className="break-words">2) 개인정보를 제공 받는자의 개인정보 이용 목적: 뉴스레터와 행사/세미나, 제품정보, 특별 판매, 교육 관련 정보 등의 email 제공, 기타 새로운 서비스 안내 및 마케팅 활동</p>
-                <p className="break-words">3) 제공하는 개인정보 항목: 성함, 회사명, 직급, 이메일 주소, 휴대폰 번호</p>
-                <p className="break-words">4) 개인정보를 제공 받는 자의 개인정보 보유 및 이용 기간: 정보 주체의 탈퇴 요청 혹은 개인정보 활용 거부 의사 표현시까지 해당 정보를 보유</p>
+            <div className="mb-4" style={{ marginTop: '23px' }}>
+              <div className="text-[11px] leading-tight" style={{ color: '#666666' }}>
+                <p className="font-semibold mb-2 text-xs sm:text-sm">※ 개인정보 제3자 제공 동의</p>
+                <p className="break-words mb-0.5" style={{ marginBottom: '2px' }}>1) 개인정보를 제공 받는 자: HPE</p>
+                <p className="break-words mb-0.5" style={{ marginBottom: '2px' }}>2) 개인정보를 제공 받는자의 개인정보 이용 목적: 뉴스레터와 행사/세미나, 제품정보, 특별 판매, 교육 관련 정보 등의 email 제공, 기타 새로운 서비스 안내 및 마케팅 활동</p>
+                <p className="break-words mb-0.5" style={{ marginBottom: '2px' }}>3) 제공하는 개인정보 항목: 성 함, 회사명, 직급, 이메일 주소, 휴대폰 번호</p>
+                <p className="break-words mb-0" style={{ marginBottom: '0' }}>4) 개인정보를 제공 받는 자의 개인정보 보유 및 이용 기간: 정보 주체의 탈퇴 요청 혹은 개인정보 활용 거부 의사 표현시까지 해당 정보를 보유</p>
               </div>
             </div>
             
@@ -350,7 +383,7 @@ export default function OnDemandRegisterPage({ webinar }: OnDemandRegisterPagePr
             <div className="h-1 bg-[#00B388] w-full"></div>
             
             {/* Submit Button */}
-            <div className="flex justify-center mt-6">
+            <div className="flex justify-center" style={{ marginTop: '34px' }}>
               <button
                 type="submit"
                 disabled={isSubmitting}
@@ -365,9 +398,17 @@ export default function OnDemandRegisterPage({ webinar }: OnDemandRegisterPagePr
       </div>
 
       {/* Footer */}
-      <footer className="w-full bg-gray-900 text-white" style={{ height: '113px' }}>
-        <div className="max-w-[1600px] mx-auto h-full flex items-center justify-center">
-          <p className="text-center text-sm">© Copyright 2026 Hewlett Packard Enterprise Development LP.</p>
+      <footer className="w-full" style={{ height: '113px', color: '#FFFFFF', backgroundColor: '#171F32' }}>
+        <div className="max-w-[1600px] mx-auto h-full flex justify-center" style={{ paddingTop: '40px' }}>
+          <p 
+            className="text-center text-[10px] font-thin" 
+            style={{ 
+              color: '#FFFFFF', 
+              fontWeight: 100
+            }}
+          >
+            © Copyright 2026 Hewlett Packard Enterprise Development LP.
+          </p>
         </div>
       </footer>
     </div>

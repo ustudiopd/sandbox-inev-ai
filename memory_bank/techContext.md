@@ -49,6 +49,10 @@
 - **@supabase/supabase-js**: Supabase JavaScript 클라이언트
 - **next/navigation**: Next.js 네비게이션 (useRouter, useParams 등)
 - **react-dom**: React Portal 사용
+- **sanitize-html**: HTML sanitization (XSS 방지, 이메일 템플릿용)
+- **marked**: Markdown 파싱 (이메일 템플릿용)
+- **resend**: 이메일 발송 (Resend API, 프로덕션 사용 중)
+- **nodemailer**: 이메일 발송 (SMTP, 레거시, 현재 미사용)
 
 ### 차트 라이브러리
 - **Recharts**: 데이터 시각화 (리포트 페이지 및 통계 대시보드에 사용 중)
@@ -127,6 +131,12 @@
 /lib                   # 유틸리티 및 헬퍼
   /supabase            # Supabase 클라이언트 설정
   /auth                # 인증/권한 가드
+  /email               # 이메일 발송 시스템
+    /resend.ts         # Resend API 통합
+    /send-campaign.ts  # 캠페인 배치 발송
+    /markdown-to-html.ts # 마크다운 → HTML 변환
+    /template-processor.ts # 템플릿 변수 치환
+    /audience-query.ts # 대상자 쿼리
 /memory_bank           # 프로젝트 컨텍스트 문서
 /supabase/migrations   # 데이터베이스 마이그레이션 파일
 ```

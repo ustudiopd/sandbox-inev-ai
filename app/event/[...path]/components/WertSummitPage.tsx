@@ -27,14 +27,12 @@ export default function WertSummitPage() {
   return (
     <>
       <style jsx global>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
-        
         html {
           background-color: #000 !important;
         }
         
         body {
-          font-family: 'Inter', sans-serif;
+          font-family: 'Noto Sans KR', sans-serif;
           margin: 0;
           padding: 0;
           background: #000 !important;

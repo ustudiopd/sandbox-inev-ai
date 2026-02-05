@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 
 interface OnDemandWebinar {
   id: string
@@ -41,7 +42,20 @@ export default function OnDemandLandingPage({ webinar }: OnDemandLandingPageProp
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [showModal, setShowModal] = useState(false)
+  const [errorMessage, setErrorMessage] = useState('')
+  
+  // Supabase Storage URL (로컬/프로덕션 모두 사용)
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
+  
+  const hpeWebinarSeriesImageUrl = supabaseUrl
+    ? `${supabaseUrl}/storage/v1/object/public/webinar-thumbnails/hpe/HPE_Webinar_Series.png`
+    : '/img/hpe/HPE_Webinar_Series.png'
+  const hpeBackgroundImageUrl = supabaseUrl
+    ? `${supabaseUrl}/storage/v1/object/public/webinar-thumbnails/hpe/webinar_login_BG_1600px.png`
+    : '/img/hpe/webinar_login_BG_1600px.png'
+  const hpeDueIconUrl = supabaseUrl
+    ? `${supabaseUrl}/storage/v1/object/public/webinar-thumbnails/hpe/due.png`
+    : '/img/hpe/due.png'
   
   // 기간 포맷팅
   const formatDateRange = () => {
@@ -67,6 +81,9 @@ export default function OnDemandLandingPage({ webinar }: OnDemandLandingPageProp
   
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    // 에러 메시지 초기화
+    setErrorMessage('')
     
     // 브라우저 기본 유효성 검사가 통과한 경우에만 실행
     if (!name.trim() || !email.trim()) {
@@ -94,37 +111,26 @@ export default function OnDemandLandingPage({ webinar }: OnDemandLandingPageProp
         // 등록된 사용자: 세션 목록 페이지로 이동
         router.push(`/ondemand/${webinarPath}/watch`)
       } else {
-        // 등록되지 않은 사용자: 모달 표시
+        // 등록되지 않은 사용자: 에러 메시지 표시
         setIsSubmitting(false)
-        setShowModal(true)
+        setErrorMessage('가입되지 않은 계정입니다.')
       }
     } catch (error) {
       console.error('로그인 확인 오류:', error)
       setIsSubmitting(false)
-      // API 오류 시 모달 표시
-      setShowModal(true)
+      setErrorMessage('가입되지 않은 계정입니다.')
     }
   }
   
-  const handleConfirmRegister = () => {
-    setShowModal(false)
-    // 등록 페이지로 이동 (이름과 이메일을 쿼리 파라미터로 전달)
-    router.push(`/ondemand/${webinarPath}/register?name=${encodeURIComponent(name.trim())}&email=${encodeURIComponent(email.trim())}`)
-  }
-  
-  const handleCancelRegister = () => {
-    setShowModal(false)
-  }
-  
   return (
-    <div className="min-h-screen bg-white flex flex-col overflow-x-hidden">
+    <div className="min-h-screen flex flex-col overflow-x-hidden" style={{ backgroundColor: '#171F32' }}>
       {/* Hero Section */}
-      <div className="relative w-full bg-[#171D28] h-[272px] sm:h-[480px] md:h-[520px] lg:h-[520px]">
+      <div className="relative w-full bg-[#171D28] h-[272px] sm:h-[480px] md:h-[521px] lg:h-[521px]">
         {/* 배경 이미지 - 1600px까지만 적용 */}
         <div className="absolute inset-0 w-full h-full flex items-center justify-center">
           <div className="relative w-full max-w-[1600px] h-full">
             <Image
-              src="/img/hpe/bg_b_3984x520_1.png"
+              src={hpeBackgroundImageUrl}
               alt="HPE Webinar Series Background"
               fill
               className="object-cover object-left"
@@ -196,26 +202,44 @@ export default function OnDemandLandingPage({ webinar }: OnDemandLandingPageProp
           {/* Center: Title and Info */}
           <div className="flex-1 flex items-center">
             <div className="w-full px-4 sm:px-6 lg:px-8">
-              <div className="text-center">
-                {/* 제목 */}
-                <h2 className="text-3xl sm:text-4xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-white mb-2 sm:mb-3 md:mb-4 lg:mb-6">
-                  {webinar.title}
-                </h2>
-                
-                {/* 기간 배지와 날짜 */}
-                <div className="flex flex-row items-center justify-center gap-1.5 sm:gap-2 md:gap-2.5 mb-1.5 sm:mb-2 md:mb-3 flex-wrap">
-                  <span className="inline-flex items-center px-2 sm:px-2.5 md:px-3 py-0.5 sm:py-1 rounded-full text-xs sm:text-sm md:text-base font-medium bg-white text-gray-900 whitespace-nowrap">
-                    기간
-                  </span>
-                  <span className="text-white text-xs sm:text-sm md:text-base lg:text-lg xl:text-xl whitespace-nowrap">
-                    2026년 3월 2일 (월) ~ 3월 6일 (금)
-                  </span>
+              {/* 로고와 기간 줄을 같은 컨테이너에 배치 */}
+              <div className="flex flex-col items-center w-full">
+                {/* 로고 너비에 맞춘 컨테이너 - 가운데 정렬 */}
+                <div className="flex flex-col items-start w-[410px]">
+                  {/* 제목 - 가운데 정렬 */}
+                  <div className="mb-2 sm:mb-3 md:mb-4 lg:mb-6 self-center">
+                    <Image
+                      src={hpeWebinarSeriesImageUrl}
+                      alt="HPE Webinar Series"
+                      width={410}
+                      height={80}
+                      className="w-[410px] h-auto object-contain"
+                      priority
+                    />
+                  </div>
+                  
+                  {/* 기간 배지와 날짜 - 왼쪽 정렬 */}
+                  <div className="flex flex-row items-center justify-start gap-1.5 sm:gap-2 md:gap-2.5 mb-1.5 sm:mb-2 md:mb-3 flex-wrap">
+                    <div className="inline-flex items-center shrink-0">
+                      <Image
+                        src={hpeDueIconUrl}
+                        alt="기간"
+                        width={50}
+                        height={26}
+                        className="h-5 sm:h-6 md:h-7 w-auto object-contain"
+                        priority
+                      />
+                    </div>
+                    <span className="text-white text-xs sm:text-sm md:text-base lg:text-lg xl:text-xl whitespace-nowrap">
+                      2026년 3월 2일 (월) ~ 3월 6일 (금)
+                    </span>
+                  </div>
+                  
+                  {/* 안내 텍스트 - 기간 아이콘과 같은 위치에서 시작 */}
+                  <p className="text-white/90 text-[10px] sm:text-xs text-left">
+                    * 기간 내, 언제든지 입장하셔서 컨텐츠를 반복적으로 시청하실 수 있습니다.
+                  </p>
                 </div>
-                
-                {/* 안내 텍스트 */}
-                <p className="text-white/90 text-xs sm:text-sm max-w-2xl mx-auto px-4">
-                  기간 내, 언제든지 입장하셔서 컨텐츠를 반복적으로 시청하실 수 있습니다.
-                </p>
               </div>
             </div>
           </div>
@@ -227,12 +251,12 @@ export default function OnDemandLandingPage({ webinar }: OnDemandLandingPageProp
       </div>
 
       {/* Login Form Section */}
-      <div className="bg-white flex items-start sm:items-center justify-center px-3 sm:px-4 md:px-6 lg:px-8 py-6 sm:py-10 md:py-16 lg:py-32 min-h-[300px] overflow-x-hidden">
-        <div className="w-full max-w-md">
+      <div className="bg-white flex items-start sm:items-center justify-center px-3 sm:px-4 md:px-6 lg:px-8 py-6 sm:py-10 md:py-16 lg:py-32 min-h-[300px] overflow-x-hidden" style={{ paddingTop: '70px', paddingBottom: '70px' }}>
+        <div className="w-[355px]">
           <form onSubmit={handleLogin} className="space-y-4 sm:space-y-6 w-full">
             {/* Title */}
             <div className="mb-6 sm:mb-8">
-              <h3 className="text-xl sm:text-2xl text-[#00B388] mb-2">
+              <h3 className="text-xl sm:text-2xl text-[#00B388] mb-2 font-semibold">
                 로그인
               </h3>
               <div className="h-1 bg-[#00B388] w-full"></div>
@@ -240,14 +264,17 @@ export default function OnDemandLandingPage({ webinar }: OnDemandLandingPageProp
             
             {/* Name Input */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
-              <label htmlFor="name" className="text-sm font-medium text-gray-700 whitespace-nowrap text-left">
+              <label htmlFor="name" className="text-sm font-semibold text-gray-700 whitespace-nowrap text-left">
                 성 함<span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
                 id="name"
                 value={name}
-                onChange={(e) => setName(e.target.value)}
+                onChange={(e) => {
+                  setName(e.target.value)
+                  setErrorMessage('')
+                }}
                 required
                 className="w-full sm:w-[253px] px-4 rounded bg-gray-100 focus:outline-none focus:ring-2 focus:ring-[#00B388] focus:ring-offset-1"
                 style={{ height: '37px' }}
@@ -257,14 +284,17 @@ export default function OnDemandLandingPage({ webinar }: OnDemandLandingPageProp
             
             {/* Email Input */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
-              <label htmlFor="email" className="text-sm font-medium text-gray-700 whitespace-nowrap text-left">
+              <label htmlFor="email" className="text-sm font-semibold text-gray-700 whitespace-nowrap text-left">
                 이메일 주소<span className="text-red-500">*</span>
               </label>
               <input
                 type="email"
                 id="email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => {
+                  setEmail(e.target.value)
+                  setErrorMessage('')
+                }}
                 required
                 className="w-full sm:w-[253px] px-4 rounded bg-gray-100 focus:outline-none focus:ring-2 focus:ring-[#00B388] focus:ring-offset-1"
                 style={{ height: '37px' }}
@@ -275,8 +305,15 @@ export default function OnDemandLandingPage({ webinar }: OnDemandLandingPageProp
             {/* Bottom Line */}
             <div className="h-1 bg-[#00B388] w-full"></div>
             
+            {/* Error Message */}
+            {errorMessage && (
+              <div className="text-center">
+                <p className="text-sm text-red-600">{errorMessage}</p>
+              </div>
+            )}
+            
             {/* Login Button */}
-            <div className="flex justify-center">
+            <div className="flex flex-col items-center gap-3">
               <button
                 type="submit"
                 disabled={isSubmitting}
@@ -285,47 +322,34 @@ export default function OnDemandLandingPage({ webinar }: OnDemandLandingPageProp
               >
                 {isSubmitting ? '처리 중...' : '로그인'}
               </button>
+              
+              {/* 등록하기 링크 */}
+              <Link 
+                href={`/ondemand/${webinarPath}/register`}
+                className="text-sm text-gray-600 hover:text-[#00B388] underline transition-colors"
+              >
+                등록하기
+              </Link>
             </div>
           </form>
         </div>
       </div>
 
       {/* Footer */}
-      <footer className="w-full bg-gray-900 text-white" style={{ height: '113px' }}>
-        <div className="max-w-[1600px] mx-auto h-full flex items-center justify-center">
-          <p className="text-center text-sm">© Copyright 2026 Hewlett Packard Enterprise Development LP.</p>
+      <footer className="w-full" style={{ height: '113px', color: '#FFFFFF', backgroundColor: '#171F32' }}>
+        <div className="max-w-[1600px] mx-auto h-full flex justify-center" style={{ paddingTop: '40px' }}>
+          <p 
+            className="text-center text-[10px] font-thin" 
+            style={{ 
+              color: '#FFFFFF', 
+              fontWeight: 100
+            }}
+          >
+            © Copyright 2026 Hewlett Packard Enterprise Development LP.
+          </p>
         </div>
       </footer>
 
-      {/* Registration Modal */}
-      {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
-            {/* Modal Body */}
-            <div className="px-6 py-4">
-              <p className="text-base text-gray-900">
-                등록되지 않은 사용자입니다. 등록하시겠습니까?
-              </p>
-            </div>
-            
-            {/* Modal Footer */}
-            <div className="px-6 py-4 border-t border-gray-200 flex justify-end gap-3">
-              <button
-                onClick={handleCancelRegister}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded hover:bg-gray-200 transition-colors"
-              >
-                취소
-              </button>
-              <button
-                onClick={handleConfirmRegister}
-                className="px-4 py-2 text-sm font-medium text-white bg-[#00B388] border border-[#00A077] rounded hover:bg-[#00A077] transition-colors"
-              >
-                확인
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   )
 }

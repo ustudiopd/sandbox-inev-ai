@@ -5,8 +5,14 @@
 - **도메인**: EventFlow.kr
 
 ## 1. 현재 집중하고 있는 작업  
-- **작업명**: 웨비나 프로젝트명 필드 추가 및 OnePredict 페이지 개선
-- **상태**: ✅ 웨비나 콘솔 설정에 프로젝트명 필드 추가 완료, 웨비나 생성 시 기본 옵션 개선 완료, OnePredict 페이지 메타 링크 설정 완료
+- **작업명**: 이메일 발송 시스템 안정화 및 크론 작업 설정 완료
+- **상태**: ✅ 모든 작업 완료
+  - 이메일 발송 시스템의 jsdom ESM 에러 해결 완료 (isomorphic-dompurify → sanitize-html 교체)
+  - 가입하지 않은 사용자 로그인 무한루프 방지 완료
+  - 크론 작업 마이그레이션 적용 완료 (marketing_stats_daily 테이블 생성)
+  - 크론 작업 인증 설정 완료 (CRON_SECRET 생성)
+  - 이메일 캠페인 시스템 구현 완료 (Resend 기반, 대시보드, 생성/편집/발송 기능)
+- **이전 작업**: 웨비나 프로젝트명 필드 추가 및 OnePredict 페이지 개선 완료
   - 웨비나 콘솔 설정에 프로젝트명 필드 추가 (대시보드 표시용)
   - 웨비나 생성 시 제목이 없으면 프로젝트명을 사용하는 기본 옵션
   - OnePredict 웨비나 페이지 메인 제목 두 줄 표시
@@ -87,6 +93,21 @@
 - 설문조사 및 발표자료 다운로드 기능에 대한 상세 요구사항 검토 필요
 
 ## 4. 최근 해결된 이슈
+- ✅ 이메일 발송 시스템 jsdom ESM 에러 해결
+  - `isomorphic-dompurify`의 `jsdom` 의존성으로 인한 ESM 로딩 에러 해결
+  - `sanitize-html`로 교체하여 CommonJS 호환성 확보
+  - Vercel 프로덕션 환경에서 정상 작동 확인 (POST /api/client/emails/{id}/test-send 200 응답)
+- ✅ 가입하지 않은 사용자 로그인 무한루프 방지
+  - `/api/auth/dashboard`에서 프로필이 없는 경우 명시적 에러 반환
+  - 클라이언트에서 `NOT_REGISTERED` 에러 감지 및 처리
+  - 로그아웃 후 메인 페이지로 리다이렉트
+- ✅ 크론 작업 마이그레이션 적용
+  - `marketing_stats_daily` 테이블 생성 마이그레이션 적용 완료
+  - CVR 정밀도 수정 마이그레이션 적용 완료
+  - `/api/cron/aggregate-marketing-stats` 크론 작업 정상 작동 확인
+- ✅ 크론 작업 인증 설정
+  - `CRON_SECRET` 환경 변수 생성 및 Vercel 설정 완료
+  - `/api/cron/webinar-access-snapshot` 크론 작업 인증 정상 작동 확인
 - ✅ `/webinarform/wert` 페이지 빌드 에러 해결
   - `useSearchParams()` Suspense boundary 에러 해결
   - 서버 컴포넌트(`page.tsx`)와 클라이언트 컴포넌트(`WebinarFormWertPageContent.tsx`) 분리
@@ -225,3 +246,6 @@
   - `036_make_form_submissions_nullable_for_public_surveys.sql` (공개 설문 제출 지원)
   - `037_add_consent_data_to_survey_entries.sql` (개인정보 동의 데이터 저장)
   - `038_add_form_config_for_survey_fields.sql` (폼 설정 시스템)
+  - `079_create_marketing_stats_daily.sql` (마케팅 통계 일일 집계 테이블)
+  - `080_fix_cvr_precision.sql` (CVR 정밀도 수정)
+  - `083_create_email_campaigns.sql` (이메일 캠페인 시스템)

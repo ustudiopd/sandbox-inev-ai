@@ -1,5 +1,87 @@
 # 완료된 작업 내역 (Progress)
 
+## [2026-02-04] 이메일 발송 시스템 에러 해결 및 크론 작업 설정
+- ✅ 이메일 발송 시스템 jsdom ESM 에러 해결
+  - `lib/email/markdown-to-html.ts`: `isomorphic-dompurify`를 `sanitize-html`로 교체
+  - `markdownToHtml` 함수를 동기 함수로 변경 (async/await 제거)
+  - `next.config.ts`: `serverExternalPackages` 설정 제거 (더 이상 필요 없음)
+  - `app/api/client/emails/[id]/test-send/route.ts`: `markdownToHtml` 호출 시 await 제거
+  - `lib/email/send-campaign.ts`: `markdownToHtml` 호출 시 await 제거
+  - `components/email/EmailCampaignTab.tsx`: `handlePreview` 함수를 동기 함수로 변경
+  - Vercel 프로덕션 환경에서 정상 작동 확인 (405/500 에러 해결)
+
+## [2026-02-03] 이메일 캠페인 시스템 구현 완료
+- ✅ 이메일 제작/발송 대시보드 구현 (`이메일발송시스템_확정명세서.md` 기반)
+  - **데이터베이스 마이그레이션**: `supabase/migrations/083_create_email_campaigns.sql`
+    - `email_campaigns` 테이블: 캠페인 초안/발송 단위 관리
+    - `email_runs` 테이블: 실행 로그 (generate/test_send/send)
+    - `email_send_logs` 테이블: 개별 발송 로그 (중복 방지, dedupe_key)
+    - `clients.email_policy_json` 컬럼: 클라이언트별 발송 정책 (from_domain, reply_to 등)
+  - **이메일 프로바이더**: Resend 통합 (`lib/email/resend.ts`)
+  - **상태 전이**: `draft` → `ready` → `sending` → `sent`/`failed` (승인 취소: `ready` → `draft`)
+  - **권한 관리**: `owner`/`admin`/`operator`만 편집/승인/발송 가능, `analyst`/`viewer`는 조회만
+- ✅ 이메일 캠페인 생성 API (`/api/client/emails/generate`)
+  - 웨비나/등록캠페인/설문캠페인 단위로 캠페인 생성
+  - 캠페인 유형: `reminder_d1`, `reminder_h1`, `confirmation`, `custom`
+  - AI 기반 초안 생성 (템플릿 변수 자동 추출)
+  - 대상자 쿼리 자동 설정 (`audience_query_json`)
+- ✅ 이메일 캠페인 편집/관리 UI (`components/email/EmailCampaignTab.tsx`)
+  - 마크다운 편집기 (제목/본문)
+  - 템플릿 변수 미리보기 (`{{변수명}}` 형식)
+  - 대상자 미리보기 및 선택적 발송 (특정 이메일만 선택 가능)
+  - 헤더 이미지/푸터 텍스트 설정
+- ✅ 테스트 발송 API (`/api/client/emails/[id]/test-send`)
+  - 최대 10개 이메일 주소로 테스트 발송
+  - `ready` 상태에서만 테스트 발송 가능
+  - 템플릿 변수 치환 및 개인화 (이름, 이메일, 입장 링크 등)
+- ✅ 실제 발송 API (`/api/client/emails/[id]/send`)
+  - 원자적 lock으로 중복 발송 방지 (`ready` → `sending`)
+  - 배치 발송 (기본 50개씩, 0.5초 간격, 환경변수로 조정 가능)
+  - 동시 요청 수 제한 (기본 10개, `EMAIL_MAX_CONCURRENT`)
+  - 개별 발송 로그 기록 (`email_send_logs`, dedupe_key로 중복 방지)
+  - 실패율 50% 이상 시 `failed` 상태, 그 외는 `sent` 상태
+- ✅ 승인/취소 API
+  - `/api/client/emails/[id]/approve`: `draft` → `ready` (발송 준비 완료)
+  - `/api/client/emails/[id]/cancel-approval`: `ready` → `draft` (재편집 가능)
+  - `/api/client/emails/[id]/cancel`: `ready` → `canceled` (발송 중단, 재승인 불가)
+- ✅ 발송 정책 관리 (`/api/client/emails/policy`)
+  - 클라이언트별 발송 도메인/Reply-To 설정
+  - 캠페인별 override 지원 (캠페인 설정 우선)
+- ✅ 템플릿 변수 처리 (`lib/email/template-processor.ts`)
+  - `{{변수명}}` 형식의 템플릿 변수 치환
+  - 개인화 변수: `{{name}}`, `{{email}}`, `{{entry_url}}` 등
+  - 이벤트 변수: `{{title}}`, `{{date}}`, `{{url}}` 등
+- ✅ 마크다운 → HTML 변환 (`lib/email/markdown-to-html.ts`)
+  - `marked`로 마크다운 파싱
+  - `sanitize-html`로 XSS 방지
+  - 헤더 이미지/푸터 텍스트 자동 삽입
+  - HTML/텍스트 형식 모두 생성 (Resend 전송용)
+- ✅ 대상자 쿼리 시스템 (`lib/email/audience-query.ts`)
+  - 웨비나 등록자 조회 (`webinar_registrants`)
+  - 등록캠페인 참여자 조회 (`registration_campaign_participants`)
+  - 설문캠페인 참여자 조회 (`survey_campaign_participants`)
+  - 입장 여부 필터링 (`exclude_entered` 옵션)
+- ✅ 발송 로그 및 통계
+  - `email_send_logs`: 개별 발송 성공/실패 로그
+  - `email_runs`: 캠페인 실행 로그 (총 발송 수, 성공/실패 수)
+  - `audit_logs`: 감사 로그 (`EMAIL_CAMPAIGN_GENERATE`, `EMAIL_CAMPAIGN_SEND` 등)
+- ✅ 고착 상태 복구 (`/api/client/emails/[id]/reset-stuck`)
+  - `sending` 상태가 1시간 이상 지속 시 자동/수동 복구
+  - `failed` 상태로 전이하여 재발송 가능하도록 처리
+- ✅ 가입하지 않은 사용자 로그인 무한루프 방지
+  - `app/api/auth/dashboard/route.ts`: 프로필이 없는 경우 `NOT_REGISTERED` 에러 반환 (403 상태)
+  - `app/login/page.tsx`: `NOT_REGISTERED` 에러 감지 시 알림 표시, 로그아웃, 메인 페이지로 리다이렉트
+  - 가입되지 않은 계정으로 로그인 시도 시 무한루프 방지
+- ✅ 크론 작업 마이그레이션 적용
+  - `supabase/migrations/079_create_marketing_stats_daily.sql`: 마케팅 통계 일일 집계 테이블 생성
+  - `supabase/migrations/080_fix_cvr_precision.sql`: CVR 정밀도 수정
+  - MCP Supabase `execute_sql` 도구를 사용하여 마이그레이션 적용 완료
+  - `/api/cron/aggregate-marketing-stats` 크론 작업 정상 작동 확인
+- ✅ 크론 작업 인증 설정
+  - `CRON_SECRET` 환경 변수 생성 및 Vercel에 설정 안내
+  - `/api/cron/webinar-access-snapshot` 크론 작업 인증 정상 작동 확인 (HTTP 204)
+  - 중복 키 에러는 정상 동작 (idempotency 보장을 위한 처리)
+
 ## [2026-02-03] 온디맨드 웨비나 등록 시스템 개선 및 사용자 등록
 - ✅ 온디맨드 웨비나 등록 확인 API 개선
   - `app/api/ondemand/[id]/check-registration/route.ts`: `event_survey_entries`에 없으면 `registrations` 테이블도 확인하도록 수정

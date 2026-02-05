@@ -69,6 +69,10 @@ export default function OnDemandPlayerPage({ webinar, session }: OnDemandPlayerP
   const [showQnA, setShowQnA] = useState(false)
   const webinarPath = webinar.slug || webinar.id
   
+  // Supabase Storage URL 생성
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
+  const hpeVideoBgImageUrl = `${supabaseUrl}/storage/v1/object/public/webinar-thumbnails/hpe/webinar_video_bg.png`
+  
   // 비디오 URL 생성
   const videoUrl = session.provider === 'youtube' 
     ? `https://www.youtube.com/watch?v=${session.asset_id}`
@@ -107,7 +111,7 @@ export default function OnDemandPlayerPage({ webinar, session }: OnDemandPlayerP
               style={{ width: '1600px', minWidth: '1600px' }}
             >
               <Image
-                src="/img/hpe/rec_2.png"
+                src={hpeVideoBgImageUrl}
                 alt="HPE Shape"
                 fill
                 className="object-cover object-left"
@@ -117,8 +121,29 @@ export default function OnDemandPlayerPage({ webinar, session }: OnDemandPlayerP
             </div>
           </div>
           
-          {/* HPE Logo, Home Icon and Category - 한 줄로 배치 */}
-          <div className="absolute top-4 sm:top-8 md:top-12 left-4 sm:left-6 lg:left-8 z-20 flex items-center gap-3 sm:gap-4 md:gap-6">
+          {/* Close Button - 오른쪽 위 */}
+          <button
+            onClick={() => window.close()}
+            className="absolute top-4 sm:top-8 md:top-12 right-4 sm:right-6 lg:right-8 z-30 w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 bg-black/50 hover:bg-black/70 rounded-full flex items-center justify-center transition-colors"
+            aria-label="닫기"
+          >
+            <svg
+              className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-white"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+          
+          {/* HPE Logo - 왼쪽 50px */}
+          <div className="absolute left-[50px] z-20" style={{ top: '90px' }}>
             <Image
               src="/img/hpe/hpe_logo.png"
               alt="HPE"
@@ -127,25 +152,31 @@ export default function OnDemandPlayerPage({ webinar, session }: OnDemandPlayerP
               className="object-contain w-20 h-7 sm:w-24 sm:h-8 md:w-[120px] md:h-10"
               priority
             />
-            <Link href={`/ondemand/${webinarPath}/watch`}>
-              <Image
-                src="/img/hpe/ic_5.png"
-                alt="홈으로"
-                width={48}
-                height={48}
-                className="w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16 object-contain cursor-pointer hover:opacity-80 transition-opacity"
-                priority
-              />
-            </Link>
-            {session.category_label && (
-              <span className="text-white text-lg sm:text-xl md:text-2xl lg:text-3xl font-medium">
-                {session.category_label}
-              </span>
-            )}
+          </div>
+          
+          {/* Home Icon and Category - 플레이어 카드 왼쪽 선에 맞춤 */}
+          <div className="absolute top-4 sm:top-8 md:top-12 z-20 flex items-center gap-3 sm:gap-4 md:gap-6 w-full max-w-[1200px] left-1/2 -translate-x-1/2 px-4 sm:px-6 lg:px-8">
+            <div className="w-full max-w-[1070px] mx-auto flex items-center gap-3 sm:gap-4 md:gap-6">
+              <Link href={`/ondemand/${webinarPath}/watch`}>
+                <Image
+                  src="/img/hpe/ic_5.png"
+                  alt="홈으로"
+                  width={48}
+                  height={48}
+                  className="w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16 object-contain cursor-pointer hover:opacity-80 transition-opacity"
+                  priority
+                />
+              </Link>
+              {session.category_label && (
+                <span className="text-white text-lg sm:text-xl md:text-2xl lg:text-3xl font-medium">
+                  {session.category_label}
+                </span>
+              )}
+            </div>
           </div>
           
           {/* Video Player */}
-          <div className="absolute z-20 w-full" style={{ top: '80px' }}>
+          <div className="absolute z-20 w-full" style={{ top: '127px' }}>
             <div className="w-full max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8">
               <div className="flex flex-col gap-4 sm:gap-6 lg:gap-6 w-full max-w-[1070px] mx-auto pb-0 lg:pb-0">
                 

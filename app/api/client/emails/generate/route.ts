@@ -39,7 +39,12 @@ export async function POST(req: Request) {
       .eq('id', clientId)
       .single()
 
-    const clientName = client?.name || 'EventFlow'
+    let clientName = client?.name || 'EventFlow'
+    
+    // 워트인텔리전트 → 워트인텔리전스로 변환
+    if (clientName.includes('워트인텔리전트')) {
+      clientName = clientName.replace(/워트인텔리전트/g, '워트인텔리전스')
+    }
     
     // 워트 클라이언트인 경우 기본 헤더 이미지 설정
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://eventflow.kr'

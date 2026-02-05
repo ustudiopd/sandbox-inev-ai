@@ -151,10 +151,10 @@ function OrganizationCarousel() {
             >
               <div className="self-stretch flex-1 flex flex-col justify-start items-start overflow-x-hidden overflow-y-hidden gap-4">
                 <div className="self-stretch flex flex-col justify-start items-start gap-3">
-                  <div className="self-stretch justify-start text-teal-600 font-bold text-2xl" style={{ fontFamily: 'Pretendard, sans-serif' }}>
+                  <div className="self-stretch justify-start text-teal-600 font-bold text-2xl" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
                     {card.title}
                   </div>
-                  <div className="self-stretch justify-start text-black/90 font-normal text-base leading-relaxed" style={{ fontFamily: 'Pretendard, sans-serif' }}>
+                  <div className="self-stretch justify-start text-black/90 font-normal text-base leading-relaxed" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
                     <span dangerouslySetInnerHTML={{ __html: card.description.replace(/<br\s*\/?>/gi, '<span class="sm:hidden"> </span><span class="hidden sm:inline"><br /></span>') }} />
                   </div>
                 </div>
@@ -191,10 +191,10 @@ function OrganizationCarousel() {
             >
               <div className="self-stretch flex-1 flex flex-col justify-between items-start overflow-x-hidden overflow-y-hidden gap-6">
                 <div className="self-stretch flex flex-col justify-start items-start gap-4">
-                  <div className="self-stretch justify-start text-teal-600 font-bold text-[36px]" style={{ fontFamily: 'Pretendard, sans-serif' }}>
+                  <div className="self-stretch justify-start text-teal-600 font-bold text-[36px]" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
                     {card.title}
                   </div>
-                  <div className="self-stretch justify-start text-black/90 font-normal text-[24px] leading-[40px]" style={{ fontFamily: 'Pretendard, sans-serif' }}>
+                  <div className="self-stretch justify-start text-black/90 font-normal text-[24px] leading-[40px]" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
                     <span dangerouslySetInnerHTML={{ __html: card.description }} />
                   </div>
                 </div>
@@ -344,7 +344,7 @@ export function WebinarFormWertPageContent() {
       <section 
         className="w-screen relative overflow-hidden" 
         style={{ 
-          fontFamily: 'Pretendard, sans-serif', 
+          fontFamily: 'Noto Sans KR, sans-serif', 
           minHeight: 'auto',
           marginLeft: 'calc(-50vw + 50%)',
           marginRight: 'calc(-50vw + 50%)',
@@ -391,31 +391,31 @@ export function WebinarFormWertPageContent() {
                 />
               </div>
               <div className="self-stretch flex flex-col justify-start items-center gap-1 sm:gap-4 lg:gap-2">
-                <div className="self-stretch text-center justify-start text-black/80 font-bold text-base sm:text-lg lg:text-[32px] leading-relaxed sm:leading-relaxed lg:leading-[48px]" style={{ fontFamily: 'Pretendard, sans-serif', marginBottom: '16px' }}>
+                <div className="self-stretch text-center justify-start text-black/80 font-bold text-base sm:text-lg lg:text-[32px] leading-relaxed sm:leading-relaxed lg:leading-[48px]" style={{ fontFamily: 'Noto Sans KR, sans-serif', marginBottom: '16px' }}>
                   고객사례로 알아보는
                 </div>
-                <div className="self-stretch text-center justify-start text-black font-bold text-4xl sm:text-3xl lg:text-[96px] leading-tight sm:leading-tight lg:leading-[117.60px]" style={{ fontFamily: 'Pretendard, sans-serif', marginBottom: '8px' }}>
+                <div className="self-stretch text-center justify-start text-black font-bold text-4xl sm:text-3xl lg:text-[96px] leading-tight sm:leading-tight lg:leading-[117.60px]" style={{ fontFamily: 'Noto Sans KR, sans-serif', marginBottom: '8px' }}>
                   AI 특허리서치<br /><span className="whitespace-nowrap">실무 활용 웨비나</span>
                 </div>
               </div>
               <div className="inline-flex justify-start items-center gap-2 flex-wrap" style={{ marginTop: '8px', marginBottom: '8px' }}>
                 <div className="px-2.5 sm:px-4 lg:px-6 py-[0.8rem] bg-black rounded-lg sm:rounded-xl lg:rounded-2xl flex justify-center items-center gap-2 overflow-hidden">
-                  <div className="text-center justify-start text-white font-bold text-xs sm:text-base lg:text-[36px] leading-tight" style={{ fontFamily: 'Pretendard, sans-serif' }}>
+                  <div className="text-center justify-start text-white font-bold text-xs sm:text-base lg:text-[36px] leading-tight" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
                     2026. 02. 06{" "}
                   </div>
                 </div>
                 <div className="px-2.5 sm:px-4 lg:px-6 py-[0.8rem] bg-black rounded-lg sm:rounded-xl lg:rounded-2xl flex justify-center items-center gap-2 overflow-hidden">
-                  <div className="text-center justify-start text-white font-bold text-xs sm:text-base lg:text-[36px] leading-tight" style={{ fontFamily: 'Pretendard, sans-serif' }}>
+                  <div className="text-center justify-start text-white font-bold text-xs sm:text-base lg:text-[36px] leading-tight" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
                     14:00
                   </div>
                 </div>
               </div>
             </div>
             <div className="self-stretch flex flex-col justify-start items-start gap-2 sm:gap-4 lg:gap-8" style={{ marginTop: '8px' }}>
-              <div className="self-stretch text-center justify-start text-black font-bold text-base sm:text-base lg:text-[36px] leading-relaxed sm:leading-relaxed lg:leading-[60px]" style={{ fontFamily: 'Pretendard, sans-serif' }}>
+              <div className="self-stretch text-center justify-start text-black font-bold text-base sm:text-base lg:text-[36px] leading-relaxed sm:leading-relaxed lg:leading-[60px]" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
                 IP팀·특허사무소·R&D팀의<br />키워트 인사이트 활용 방식이 궁금하다면,
               </div>
-              <div className="self-stretch text-center justify-start text-black font-bold text-base sm:text-base lg:text-[36px] leading-relaxed sm:leading-relaxed lg:leading-[60px]" style={{ fontFamily: 'Pretendard, sans-serif' }}>
+              <div className="self-stretch text-center justify-start text-black font-bold text-base sm:text-base lg:text-[36px] leading-relaxed sm:leading-relaxed lg:leading-[60px]" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
                 2월 6일 웨비나에서 직접 확인하세요.
               </div>
             </div>
@@ -425,7 +425,7 @@ export function WebinarFormWertPageContent() {
               href={getRegisterLink()}
               className="w-auto sm:self-stretch px-4 sm:px-8 lg:pl-16 lg:pr-10 py-2.5 sm:py-3 lg:py-6 bg-[#00A08C] rounded-full lg:rounded-[200px] inline-flex justify-center items-center gap-2 sm:gap-3 lg:gap-6 overflow-hidden min-h-[44px] sm:min-h-[48px]"
             >
-              <div className="text-center justify-start text-white font-bold text-sm sm:text-lg lg:text-[36px] leading-tight" style={{ fontFamily: 'Pretendard, sans-serif' }}>
+              <div className="text-center justify-start text-white font-bold text-sm sm:text-lg lg:text-[36px] leading-tight" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
                 웨비나 등록하기
               </div>
               <Image
@@ -441,7 +441,7 @@ export function WebinarFormWertPageContent() {
               href="/webinar/149402"
               className="w-auto sm:self-stretch px-4 sm:px-8 lg:pl-16 lg:pr-10 py-2.5 sm:py-3 lg:py-6 bg-[#000000] rounded-full lg:rounded-[200px] inline-flex justify-center items-center gap-2 sm:gap-3 lg:gap-6 overflow-hidden min-h-[44px] sm:min-h-[48px]"
             >
-              <div className="text-center justify-start text-[#ffffff] font-bold text-sm sm:text-lg lg:text-[36px] leading-tight" style={{ fontFamily: 'Pretendard, sans-serif' }}>
+              <div className="text-center justify-start text-[#ffffff] font-bold text-sm sm:text-lg lg:text-[36px] leading-tight" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
                 웨비나 시청하기
               </div>
               <Image
@@ -474,23 +474,23 @@ export function WebinarFormWertPageContent() {
               </div>
             </div>
             <div className="self-stretch flex flex-col justify-start items-center gap-4 sm:gap-6 lg:gap-12">
-              <div className="text-center justify-start text-teal-600 font-bold text-lg sm:text-2xl lg:text-[48px] leading-tight sm:leading-tight lg:leading-[72px]" style={{ fontFamily: 'Pretendard, sans-serif' }}>
+              <div className="text-center justify-start text-teal-600 font-bold text-lg sm:text-2xl lg:text-[48px] leading-tight sm:leading-tight lg:leading-[72px]" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
                 "AI 특허리서치가 과연 우리 조직에<br />실질적인 도움이 될까?"
               </div>
               <div className="self-stretch text-center justify-start text-[15px] sm:text-base lg:text-[36px] leading-relaxed sm:leading-relaxed lg:leading-[60px]">
-                <span className="text-black/80 font-normal" style={{ fontFamily: 'Pretendard, sans-serif' }}>
+                <span className="text-black/80 font-normal" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
                   AI 특허리서치 활용을 고민하고 있지만<span className="hidden sm:inline"><br /></span>이 질문이 남아 있다면,<span className="hidden sm:inline"><br /></span>{" "}
                 </span>
-                <span className="text-black/80 font-bold" style={{ fontFamily: 'Pretendard, sans-serif' }}>
+                <span className="text-black/80 font-bold" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
                   이번 웨비나
                 </span>
-                <span className="text-black/80 font-normal" style={{ fontFamily: 'Pretendard, sans-serif' }}>
+                <span className="text-black/80 font-normal" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
                   가{" "}
                 </span>
-                <span className="text-black/80 font-bold" style={{ fontFamily: 'Pretendard, sans-serif' }}>
+                <span className="text-black/80 font-bold" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
                   그 해답을 찾는 시간
                 </span>
-                <span className="text-black/80 font-normal" style={{ fontFamily: 'Pretendard, sans-serif' }}>
+                <span className="text-black/80 font-normal" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
                   이 될 것입니다.
                 </span>
               </div>
@@ -502,58 +502,58 @@ export function WebinarFormWertPageContent() {
               <div className="self-stretch text-center justify-start text-teal-600 font-bold text-sm sm:text-base lg:text-[24px] leading-tight sm:leading-tight lg:leading-[40px]" style={{ fontFamily: 'Figtree, sans-serif' }}>
                 IN THE WEBINAR
               </div>
-              <div className="self-stretch text-center justify-start text-black/80 font-bold text-xl sm:text-xl lg:text-[38px] leading-tight sm:leading-tight lg:leading-[57px]" style={{ fontFamily: 'Pretendard, sans-serif' }}>
+              <div className="self-stretch text-center justify-start text-black/80 font-bold text-xl sm:text-xl lg:text-[38px] leading-tight sm:leading-tight lg:leading-[57px]" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
                 이번 웨비나에서는
               </div>
             </div>
             <div className="self-stretch flex flex-col justify-start items-start gap-3 sm:gap-4">
               <div className="self-stretch p-4 sm:p-8 lg:p-16 bg-black rounded-xl sm:rounded-2xl lg:rounded-[40px] outline outline-1 outline-black/10 flex flex-col justify-center items-center gap-4 sm:gap-8 lg:gap-16">
                 <div className="self-stretch justify-start">
-                  <span className="font-normal text-lg sm:text-2xl lg:text-[36px] leading-tight sm:leading-tight lg:leading-[54px]" style={{ fontFamily: 'Pretendard, sans-serif', background: 'linear-gradient(to right, #88EDE7, #DCFFBC)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+                  <span className="font-normal text-lg sm:text-2xl lg:text-[36px] leading-tight sm:leading-tight lg:leading-[54px]" style={{ fontFamily: 'Noto Sans KR, sans-serif', background: 'linear-gradient(to right, #88EDE7, #DCFFBC)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
                     WEBINAR
                   </span>
-                  <span className="font-bold text-lg sm:text-2xl lg:text-[36px] leading-tight sm:leading-tight lg:leading-[54px]" style={{ fontFamily: 'Pretendard, sans-serif', background: 'linear-gradient(to right, #88EDE7, #DCFFBC)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+                  <span className="font-bold text-lg sm:text-2xl lg:text-[36px] leading-tight sm:leading-tight lg:leading-[54px]" style={{ fontFamily: 'Noto Sans KR, sans-serif', background: 'linear-gradient(to right, #88EDE7, #DCFFBC)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
                     {" "}POINT 1
                   </span>
                 </div>
                 <div className="self-stretch justify-start text-xs sm:text-base lg:text-[28px] leading-relaxed sm:leading-relaxed lg:leading-[42px]">
-                  <span className="text-white/90 font-normal" style={{ fontFamily: 'Pretendard, sans-serif' }}>
+                  <span className="text-white/90 font-normal" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
                     기업의 IP팀, 특허사무소, R&D팀 등<span className="hidden sm:inline"> </span>
                   </span>
-                  <span className="text-white font-bold" style={{ fontFamily: 'Pretendard, sans-serif' }}>
+                  <span className="text-white font-bold" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
                     서로 다른 조직이<span className="hidden sm:inline"><br /></span>{" "}
                   </span>
-                  <span className="text-white/90 font-normal" style={{ fontFamily: 'Pretendard, sans-serif' }}>
+                  <span className="text-white/90 font-normal" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
                     키워트 인사이트를 실제 업무에<span className="hidden sm:inline"> </span>
                   </span>
-                  <span className="text-white font-bold" style={{ fontFamily: 'Pretendard, sans-serif' }}>
+                  <span className="text-white font-bold" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
                     어떻게 적용하고 있는<span className="hidden sm:inline"><br /></span>{" "}
                   </span>
-                  <span className="text-white font-bold" style={{ fontFamily: 'Pretendard, sans-serif' }}>
+                  <span className="text-white font-bold" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
                     지<span className="hidden sm:inline"> </span>
                   </span>
-                  <span className="text-white/90 font-normal" style={{ fontFamily: 'Pretendard, sans-serif' }}>
+                  <span className="text-white/90 font-normal" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
                     고객사례를 통해 살펴봅니다.
                   </span>
                 </div>
               </div>
               <div className="self-stretch p-4 sm:p-8 lg:p-16 bg-black rounded-xl sm:rounded-2xl lg:rounded-[40px] outline outline-1 outline-black/10 flex flex-col justify-center items-center gap-4 sm:gap-8 lg:gap-16">
                 <div className="self-stretch justify-start">
-                  <span className="font-normal text-lg sm:text-2xl lg:text-[36px] leading-tight sm:leading-tight lg:leading-[54px]" style={{ fontFamily: 'Pretendard, sans-serif', background: 'linear-gradient(to right, #88EDE7, #DCFFBC)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+                  <span className="font-normal text-lg sm:text-2xl lg:text-[36px] leading-tight sm:leading-tight lg:leading-[54px]" style={{ fontFamily: 'Noto Sans KR, sans-serif', background: 'linear-gradient(to right, #88EDE7, #DCFFBC)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
                     WEBINAR
                   </span>
-                  <span className="font-bold text-lg sm:text-2xl lg:text-[36px] leading-tight sm:leading-tight lg:leading-[54px]" style={{ fontFamily: 'Pretendard, sans-serif', background: 'linear-gradient(to right, #88EDE7, #DCFFBC)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+                  <span className="font-bold text-lg sm:text-2xl lg:text-[36px] leading-tight sm:leading-tight lg:leading-[54px]" style={{ fontFamily: 'Noto Sans KR, sans-serif', background: 'linear-gradient(to right, #88EDE7, #DCFFBC)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
                     {" "}POINT 2
                   </span>
                 </div>
                 <div className="self-stretch justify-start text-xs sm:text-base lg:text-[28px] leading-relaxed sm:leading-relaxed lg:leading-[42px]">
-                  <span className="text-white font-bold" style={{ fontFamily: 'Pretendard, sans-serif' }}>
+                  <span className="text-white font-bold" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
                     키워트 인사이트를 활용함
                   </span>
-                  <span className="text-white/90 font-normal" style={{ fontFamily: 'Pretendard, sans-serif' }}>
+                  <span className="text-white/90 font-normal" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
                     으로써 다른 언어를<span className="hidden sm:inline"><br /></span>사용하는 부서의<span className="hidden sm:inline"> </span>
                   </span>
-                  <span className="text-white font-bold" style={{ fontFamily: 'Pretendard, sans-serif' }}>
+                  <span className="text-white font-bold" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
                     워크플로우와 커뮤니케이션 방식이 어떻게 개선될 수 있는지도 함께 공유합니다.
                   </span>
                 </div>
@@ -578,77 +578,77 @@ export function WebinarFormWertPageContent() {
             <div className="text-center justify-start text-green-200 font-bold text-sm sm:text-lg lg:text-[24px] leading-tight sm:leading-tight lg:leading-[32px]" style={{ fontFamily: 'Figtree, sans-serif' }}>
               OVERVIEW
             </div>
-            <div className="text-center justify-start text-white font-bold text-xl sm:text-2xl lg:text-[38px]" style={{ fontFamily: 'Pretendard, sans-serif' }}>
+            <div className="text-center justify-start text-white font-bold text-xl sm:text-2xl lg:text-[38px]" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
               행사 개요
             </div>
           </div>
           {/* 모바일/태블릿용 - 일시만 표시 */}
           <div className="self-stretch lg:hidden pl-3 sm:pl-5 pr-3 sm:pr-6 py-3 sm:py-4 bg-white/10 rounded-lg sm:rounded-xl outline outline-1 outline-offset-[-1px] outline-white/20 flex flex-row justify-start items-center gap-2 sm:gap-3 overflow-hidden">
-            <div className="text-white font-bold text-xs sm:text-sm leading-tight whitespace-pre flex-shrink-0" style={{ fontFamily: 'Pretendard, sans-serif', textAlign: 'left' }}>
+            <div className="text-white font-bold text-xs sm:text-sm leading-tight whitespace-pre flex-shrink-0" style={{ fontFamily: 'Noto Sans KR, sans-serif', textAlign: 'left' }}>
               일     시
             </div>
             <div className="w-0.5 h-4 sm:h-5 bg-white/20 flex-shrink-0"></div>
-            <div className="text-white font-bold text-xs sm:text-sm leading-tight sm:leading-tight" style={{ fontFamily: 'Pretendard, sans-serif' }}>
+            <div className="text-white font-bold text-xs sm:text-sm leading-tight sm:leading-tight" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
               2026년 2월 6일(금) 오후 2시-3시 30분
             </div>
           </div>
           {/* 모바일용 장소, 참가비 */}
           <div className="self-stretch sm:hidden flex flex-col justify-start items-start gap-1">
             <div className="self-stretch pl-3 pr-3 py-3 bg-white/10 rounded-lg outline outline-1 outline-offset-[-1px] outline-white/20 flex flex-row justify-start items-center gap-2 overflow-hidden">
-              <div className="text-white font-bold text-xs leading-tight whitespace-pre flex-shrink-0" style={{ fontFamily: 'Pretendard, sans-serif', textAlign: 'left' }}>
+              <div className="text-white font-bold text-xs leading-tight whitespace-pre flex-shrink-0" style={{ fontFamily: 'Noto Sans KR, sans-serif', textAlign: 'left' }}>
                 장     소
               </div>
               <div className="w-0.5 h-4 bg-white/20 flex-shrink-0"></div>
-              <div className="text-white font-bold text-xs leading-tight" style={{ fontFamily: 'Pretendard, sans-serif' }}>
+              <div className="text-white font-bold text-xs leading-tight" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
                 온라인 LIVE
               </div>
             </div>
             <div className="self-stretch pl-3 pr-3 py-3 bg-white/10 rounded-lg outline outline-1 outline-offset-[-1px] outline-white/20 flex flex-row justify-start items-center gap-2 overflow-hidden">
-              <div className="text-white font-bold text-xs leading-tight whitespace-pre flex-shrink-0" style={{ fontFamily: 'Pretendard, sans-serif', textAlign: 'left' }}>
+              <div className="text-white font-bold text-xs leading-tight whitespace-pre flex-shrink-0" style={{ fontFamily: 'Noto Sans KR, sans-serif', textAlign: 'left' }}>
                 참 가 비
               </div>
               <div className="w-0.5 h-4 bg-white/20 flex-shrink-0"></div>
-              <div className="text-white font-bold text-xs leading-tight" style={{ fontFamily: 'Pretendard, sans-serif' }}>
+              <div className="text-white font-bold text-xs leading-tight" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
                 무료
               </div>
             </div>
           </div>
           {/* 태블릿용 - 일시, 장소 */}
           <div className="hidden sm:flex lg:hidden self-stretch pl-5 pr-6 py-4 bg-white/10 rounded-xl outline outline-1 outline-offset-[-1px] outline-white/20 flex flex-row justify-start items-center gap-3 overflow-hidden">
-            <div className="text-white font-bold text-sm leading-tight whitespace-pre flex-shrink-0" style={{ fontFamily: 'Pretendard, sans-serif', width: '40px', textAlign: 'right' }}>
+            <div className="text-white font-bold text-sm leading-tight whitespace-pre flex-shrink-0" style={{ fontFamily: 'Noto Sans KR, sans-serif', width: '40px', textAlign: 'right' }}>
               장 소
             </div>
             <div className="w-0.5 h-5 bg-white/20 flex-shrink-0"></div>
-            <div className="text-white font-bold text-sm leading-tight" style={{ fontFamily: 'Pretendard, sans-serif' }}>
+            <div className="text-white font-bold text-sm leading-tight" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
               온라인 LIVE
             </div>
           </div>
           {/* PC용 - 각 항목을 한 줄씩 표시 */}
           <div className="hidden lg:flex self-stretch flex-col justify-start items-start gap-2.5">
             <div className="self-stretch pl-6 pr-8 py-6 bg-white/10 rounded-[32px] outline outline-1 outline-offset-[-1px] outline-white/20 flex flex-row justify-start items-center gap-6 overflow-hidden">
-              <div className="text-white font-bold text-[20px] leading-tight whitespace-pre flex-shrink-0" style={{ fontFamily: 'Pretendard, sans-serif', width: '80px', textAlign: 'right' }}>
+              <div className="text-white font-bold text-[20px] leading-tight whitespace-pre flex-shrink-0" style={{ fontFamily: 'Noto Sans KR, sans-serif', width: '80px', textAlign: 'right' }}>
                 일      시
               </div>
               <div className="w-0.5 h-5 bg-white/20 flex-shrink-0"></div>
-              <div className="text-white font-bold text-[30px] leading-[40px] whitespace-nowrap" style={{ fontFamily: 'Pretendard, sans-serif' }}>
+              <div className="text-white font-bold text-[30px] leading-[40px] whitespace-nowrap" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
                 2026년 2월 6일(금) 오후 2시-3시 30분
               </div>
             </div>
             <div className="self-stretch pl-6 pr-8 py-6 bg-white/10 rounded-[32px] outline outline-1 outline-offset-[-1px] outline-white/20 flex flex-row justify-start items-center gap-6 overflow-hidden">
-              <div className="text-white font-bold text-[20px] leading-tight whitespace-pre flex-shrink-0" style={{ fontFamily: 'Pretendard, sans-serif', width: '80px', textAlign: 'right' }}>
+              <div className="text-white font-bold text-[20px] leading-tight whitespace-pre flex-shrink-0" style={{ fontFamily: 'Noto Sans KR, sans-serif', width: '80px', textAlign: 'right' }}>
                 장      소
               </div>
               <div className="w-0.5 h-5 bg-white/20 flex-shrink-0"></div>
-              <div className="text-white font-bold text-[30px] leading-[40px]" style={{ fontFamily: 'Pretendard, sans-serif' }}>
+              <div className="text-white font-bold text-[30px] leading-[40px]" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
                 온라인 LIVE
               </div>
             </div>
             <div className="self-stretch pl-6 pr-8 py-6 bg-white/10 rounded-[32px] outline outline-1 outline-offset-[-1px] outline-white/20 flex flex-row justify-start items-center gap-6 overflow-hidden">
-              <div className="text-white font-bold text-[20px] leading-tight whitespace-pre flex-shrink-0" style={{ fontFamily: 'Pretendard, sans-serif', width: '80px', textAlign: 'right' }}>
+              <div className="text-white font-bold text-[20px] leading-tight whitespace-pre flex-shrink-0" style={{ fontFamily: 'Noto Sans KR, sans-serif', width: '80px', textAlign: 'right' }}>
                 참 가 비
               </div>
               <div className="w-0.5 h-5 bg-white/20 flex-shrink-0"></div>
-              <div className="text-white font-bold text-[30px] leading-[40px]" style={{ fontFamily: 'Pretendard, sans-serif' }}>
+              <div className="text-white font-bold text-[30px] leading-[40px]" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
                 무료
               </div>
             </div>
@@ -661,17 +661,17 @@ export function WebinarFormWertPageContent() {
             <div className="text-center justify-start text-green-200 font-bold text-sm sm:text-lg lg:text-[24px] leading-tight sm:leading-tight lg:leading-[32px]" style={{ fontFamily: 'Figtree, sans-serif' }}>
               AUDIENCE
             </div>
-            <div className="text-center justify-start text-white font-bold text-xl sm:text-2xl lg:text-[38px]" style={{ fontFamily: 'Pretendard, sans-serif' }}>
+            <div className="text-center justify-start text-white font-bold text-xl sm:text-2xl lg:text-[38px]" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
               참석 대상
             </div>
           </div>
           <div className="self-stretch p-4 sm:p-8 lg:p-16 bg-white/10 rounded-xl sm:rounded-2xl lg:rounded-[48px] outline outline-1 outline-offset-[-1px] outline-white/20 flex flex-col justify-start items-start gap-3 sm:gap-5 lg:gap-8 overflow-hidden">
             <div className="self-stretch inline-flex justify-start items-center gap-4 sm:gap-6">
               <div className="flex-1 justify-start">
-                <span className="text-white/80 font-normal text-sm sm:text-base lg:text-[24px] leading-relaxed sm:leading-relaxed lg:leading-[40px]" style={{ fontFamily: 'Pretendard, sans-serif' }}>
+                <span className="text-white/80 font-normal text-sm sm:text-base lg:text-[24px] leading-relaxed sm:leading-relaxed lg:leading-[40px]" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
                   특허 리서치·분석 업무를 효율화하고 싶은<br />
                 </span>
-                <span className="text-green-200 font-bold text-sm sm:text-base lg:text-[24px] leading-relaxed sm:leading-relaxed lg:leading-[40px]" style={{ fontFamily: 'Pretendard, sans-serif' }}>
+                <span className="text-green-200 font-bold text-sm sm:text-base lg:text-[24px] leading-relaxed sm:leading-relaxed lg:leading-[40px]" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
                   IP 담당자 및 특허사무소
                 </span>
               </div>
@@ -679,10 +679,10 @@ export function WebinarFormWertPageContent() {
             <div className="self-stretch h-px bg-white/20"></div>
             <div className="self-stretch inline-flex justify-start items-center gap-4 sm:gap-6">
               <div className="flex-1 justify-start">
-                <span className="text-white/80 font-normal text-sm sm:text-base lg:text-[24px] leading-relaxed sm:leading-relaxed lg:leading-[40px]" style={{ fontFamily: 'Pretendard, sans-serif' }}>
+                <span className="text-white/80 font-normal text-sm sm:text-base lg:text-[24px] leading-relaxed sm:leading-relaxed lg:leading-[40px]" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
                   연구 초기부터 특허 리스크를 줄이고 싶은<br />
                 </span>
-                <span className="text-green-200 font-bold text-sm sm:text-base lg:text-[24px] leading-relaxed sm:leading-relaxed lg:leading-[40px]" style={{ fontFamily: 'Pretendard, sans-serif' }}>
+                <span className="text-green-200 font-bold text-sm sm:text-base lg:text-[24px] leading-relaxed sm:leading-relaxed lg:leading-[40px]" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
                   R&D 연구원
                 </span>
               </div>
@@ -690,17 +690,17 @@ export function WebinarFormWertPageContent() {
             <div className="self-stretch h-px bg-white/20"></div>
             <div className="self-stretch inline-flex justify-start items-center gap-4 sm:gap-6">
               <div className="flex-1 justify-start">
-                <span className="text-white/80 font-normal text-sm sm:text-base lg:text-[24px] leading-relaxed sm:leading-relaxed lg:leading-[40px]" style={{ fontFamily: 'Pretendard, sans-serif' }}>
+                <span className="text-white/80 font-normal text-sm sm:text-base lg:text-[24px] leading-relaxed sm:leading-relaxed lg:leading-[40px]" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
                   IP 및 R&D 조직 내 협업과 의사결정을<br />
                 </span>
-                <span className="text-green-200 font-bold text-sm sm:text-base lg:text-[24px] leading-relaxed sm:leading-relaxed lg:leading-[40px]" style={{ fontFamily: 'Pretendard, sans-serif' }}>
+                <span className="text-green-200 font-bold text-sm sm:text-base lg:text-[24px] leading-relaxed sm:leading-relaxed lg:leading-[40px]" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
                   빠르게 만들고 싶은 담당자
                 </span>
               </div>
             </div>
             <div className="self-stretch h-px bg-white/20"></div>
             <div className="self-stretch inline-flex justify-start items-center gap-4 sm:gap-6">
-              <div className="flex-1 justify-start text-green-200 font-bold text-sm sm:text-base lg:text-[24px] leading-relaxed sm:leading-relaxed lg:leading-[40px]" style={{ fontFamily: 'Pretendard, sans-serif' }}>
+              <div className="flex-1 justify-start text-green-200 font-bold text-sm sm:text-base lg:text-[24px] leading-relaxed sm:leading-relaxed lg:leading-[40px]" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
                 키워트 인사이트 도입을 고민 중인 담당자
               </div>
             </div>
@@ -713,7 +713,7 @@ export function WebinarFormWertPageContent() {
             <div className="self-stretch text-center justify-start text-green-200 font-bold text-sm sm:text-lg lg:text-[24px] leading-tight sm:leading-tight lg:leading-[32px]" style={{ fontFamily: 'Figtree, sans-serif' }}>
               AGENDA & SPEAKER
             </div>
-            <div className="self-stretch text-center justify-start text-white font-bold text-xl sm:text-xl lg:text-[38px]" style={{ fontFamily: 'Pretendard, sans-serif' }}>
+            <div className="self-stretch text-center justify-start text-white font-bold text-xl sm:text-xl lg:text-[38px]" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
               세션 소개 및 발표연사
             </div>
           </div>
@@ -726,12 +726,12 @@ export function WebinarFormWertPageContent() {
                 <div className="self-stretch flex flex-col justify-start items-start gap-6 sm:gap-8 lg:gap-10">
                   <div className="inline-flex justify-start items-center gap-2 flex-wrap">
                     <div className="px-3 sm:px-4 py-1.5 sm:py-2 bg-teal-500 rounded-lg flex justify-center items-center gap-2.5 overflow-hidden">
-                      <div className="justify-start text-white font-bold text-base sm:text-lg lg:text-[24px]" style={{ fontFamily: 'Pretendard, sans-serif' }}>
+                      <div className="justify-start text-white font-bold text-base sm:text-lg lg:text-[24px]" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
                         {session.label}
                       </div>
                     </div>
                     <div className="px-3 sm:px-4 py-1.5 sm:py-2 bg-teal-500/10 rounded-lg flex justify-center items-center gap-2.5 overflow-hidden">
-                      <div className="justify-start text-teal-500 font-bold text-base sm:text-lg lg:text-[24px]" style={{ fontFamily: 'Pretendard, sans-serif' }}>
+                      <div className="justify-start text-teal-500 font-bold text-base sm:text-lg lg:text-[24px]" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
                         {session.duration}
                       </div>
                     </div>
@@ -741,7 +741,7 @@ export function WebinarFormWertPageContent() {
                       ['SESSION 1', 'SESSION 2'].includes(session.label)
                         ? 'text-lg sm:text-2xl lg:text-3xl leading-[28px] sm:leading-[40px] lg:leading-[48px]'
                         : 'text-base sm:text-lg lg:text-[24px] leading-relaxed sm:leading-relaxed lg:leading-[48px]'
-                    }`} style={{ fontFamily: 'Pretendard, sans-serif' }}>
+                    }`} style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
                       <span className="sm:hidden">{(session as any).titleMobile ? (session as any).titleMobile.split('\n').map((line: string, idx: number) => (
                         <span key={idx}>
                           {line}
@@ -792,7 +792,7 @@ export function WebinarFormWertPageContent() {
                                       ['SESSION 1', 'SESSION 2'].includes(session.label)
                                         ? 'text-sm sm:text-xl lg:text-2xl'
                                         : 'text-sm sm:text-base lg:text-[24px]'
-                                    } leading-relaxed sm:leading-relaxed lg:leading-normal`} style={{ fontFamily: 'Pretendard, sans-serif' }}>
+                                    } leading-relaxed sm:leading-relaxed lg:leading-normal`} style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
                                       {part}
                                     </div>
                                   </div>
@@ -818,7 +818,7 @@ export function WebinarFormWertPageContent() {
                                   ['SESSION 1', 'SESSION 2'].includes(session.label)
                                     ? 'text-sm sm:text-xl lg:text-2xl'
                                     : 'text-sm sm:text-base lg:text-[24px]'
-                                } leading-relaxed sm:leading-relaxed lg:leading-normal`} style={{ fontFamily: 'Pretendard, sans-serif' }}>
+                                } leading-relaxed sm:leading-relaxed lg:leading-normal`} style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
                                   {isMobileSingleLine ? (
                                     <>
                                       <span className="sm:hidden">{bullet.replace(/\n/g, ' ')}</span>
@@ -841,7 +841,7 @@ export function WebinarFormWertPageContent() {
                       {session.note && (
                         <div className="self-stretch inline-flex justify-start items-center gap-2 sm:gap-4 mt-1 sm:-mt-2">
                           <div className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 relative"></div>
-                          <div className="flex-1 justify-start text-white/40 font-normal text-xs sm:text-sm lg:text-[18px] leading-relaxed sm:leading-relaxed lg:leading-[20px]" style={{ fontFamily: 'Pretendard, sans-serif' }}>
+                          <div className="flex-1 justify-start text-white/40 font-normal text-xs sm:text-sm lg:text-[18px] leading-relaxed sm:leading-relaxed lg:leading-[20px]" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
                             {session.note}
                           </div>
                         </div>
@@ -864,10 +864,10 @@ export function WebinarFormWertPageContent() {
                         />
                       </div>
                       <div className="flex-1 sm:w-64 inline-flex flex-col justify-start items-start gap-1.5 sm:gap-3 lg:gap-4">
-                        <div className={`justify-start text-white/80 font-normal whitespace-pre-line ${['SESSION 1', 'SESSION 2'].includes(session.label) ? 'text-sm sm:text-xl lg:text-2xl leading-[20px] sm:leading-[32px] lg:leading-9' : 'text-sm sm:text-base lg:text-[24px] leading-relaxed sm:leading-relaxed lg:leading-[36px]'}`} style={{ fontFamily: 'Pretendard, sans-serif' }}>
+                        <div className={`justify-start text-white/80 font-normal whitespace-pre-line ${['SESSION 1', 'SESSION 2'].includes(session.label) ? 'text-sm sm:text-xl lg:text-2xl leading-[20px] sm:leading-[32px] lg:leading-9' : 'text-sm sm:text-base lg:text-[24px] leading-relaxed sm:leading-relaxed lg:leading-[36px]'}`} style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
                           {session.speaker.role}
                         </div>
-                        <div className={`self-stretch justify-start text-white font-bold ${['SESSION 1', 'SESSION 2'].includes(session.label) ? 'text-base sm:text-2xl lg:text-3xl leading-[20px] sm:leading-[28px] lg:leading-6' : 'text-base sm:text-xl lg:text-[30px] leading-tight sm:leading-tight lg:leading-[24px]'}`} style={{ fontFamily: 'Pretendard, sans-serif' }}>
+                        <div className={`self-stretch justify-start text-white font-bold ${['SESSION 1', 'SESSION 2'].includes(session.label) ? 'text-base sm:text-2xl lg:text-3xl leading-[20px] sm:leading-[28px] lg:leading-6' : 'text-base sm:text-xl lg:text-[30px] leading-tight sm:leading-tight lg:leading-[24px]'}`} style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
                           {session.speaker.name}
                         </div>
                       </div>
@@ -895,7 +895,7 @@ export function WebinarFormWertPageContent() {
             <div className="text-center justify-start text-teal-600 font-bold text-sm sm:text-lg lg:text-[24px] leading-tight sm:leading-tight lg:leading-[32px]" style={{ fontFamily: 'Figtree, sans-serif' }}>
               ABOUT keywert Insight
             </div>
-            <div className="text-center justify-start text-black/80 font-bold text-xl sm:text-2xl lg:text-[38px] leading-tight sm:leading-tight lg:leading-normal" style={{ fontFamily: 'Pretendard, sans-serif' }}>
+            <div className="text-center justify-start text-black/80 font-bold text-xl sm:text-2xl lg:text-[38px] leading-tight sm:leading-tight lg:leading-normal" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
               AI 특허리서치<br />'키워트 인사이트'
             </div>
           </div>
@@ -912,7 +912,7 @@ export function WebinarFormWertPageContent() {
                     quality={100}
                   />
                 </div>
-                <div className="self-stretch justify-start text-xl sm:text-2xl lg:text-[34px] leading-tight sm:leading-tight lg:leading-normal" style={{ fontFamily: 'Pretendard, sans-serif' }}>
+                <div className="self-stretch justify-start text-xl sm:text-2xl lg:text-[34px] leading-tight sm:leading-tight lg:leading-normal" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
                   <span className="text-black/80 font-normal">
                     대규모 특허 데이터를 학습한{" "}
                   </span>
@@ -933,68 +933,68 @@ export function WebinarFormWertPageContent() {
             </div>
             <div className="self-stretch flex flex-col justify-start items-start gap-3 sm:gap-4 lg:gap-6">
               <div className="self-stretch inline-flex flex-row justify-between items-center gap-2 sm:gap-0">
-                <div className="text-left justify-start text-black/80 font-semibold text-base sm:text-xl lg:text-[36px]" style={{ fontFamily: 'Pretendard, sans-serif' }}>
+                <div className="text-left justify-start text-black/80 font-semibold text-base sm:text-xl lg:text-[36px]" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
                   특허 문헌
                 </div>
                 <div className="text-right justify-start">
-                  <span className="text-teal-600 font-bold text-2xl sm:text-3xl lg:text-[60px]" style={{ fontFamily: 'Pretendard, sans-serif' }}>
+                  <span className="text-teal-600 font-bold text-2xl sm:text-3xl lg:text-[60px]" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
                     1.7
                   </span>
-                  <span className="text-teal-600 font-bold tracking-wider text-2xl sm:text-3xl lg:text-[60px]" style={{ fontFamily: 'Pretendard, sans-serif' }}>
+                  <span className="text-teal-600 font-bold tracking-wider text-2xl sm:text-3xl lg:text-[60px]" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
                     억
                   </span>
-                  <span className="text-teal-600 font-bold text-base sm:text-xl lg:text-[36px]" style={{ fontFamily: 'Pretendard, sans-serif' }}>
+                  <span className="text-teal-600 font-bold text-base sm:text-xl lg:text-[36px]" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
                     건
                   </span>
                 </div>
               </div>
               <div className="self-stretch h-0.5 bg-black/10"></div>
               <div className="self-stretch inline-flex flex-row justify-between items-center gap-2 sm:gap-0">
-                <div className="text-left justify-start text-black/80 font-semibold text-base sm:text-xl lg:text-[36px]" style={{ fontFamily: 'Pretendard, sans-serif' }}>
+                <div className="text-left justify-start text-black/80 font-semibold text-base sm:text-xl lg:text-[36px]" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
                   특허 문장
                 </div>
                 <div className="text-right justify-start">
-                  <span className="text-teal-600 font-bold text-2xl sm:text-3xl lg:text-[60px]" style={{ fontFamily: 'Pretendard, sans-serif' }}>
+                  <span className="text-teal-600 font-bold text-2xl sm:text-3xl lg:text-[60px]" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
                     2,500
                   </span>
-                  <span className="text-teal-600 font-bold tracking-wider text-2xl sm:text-3xl lg:text-[60px]" style={{ fontFamily: 'Pretendard, sans-serif' }}>
+                  <span className="text-teal-600 font-bold tracking-wider text-2xl sm:text-3xl lg:text-[60px]" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
                     억
                   </span>
-                  <span className="text-teal-600 font-bold text-base sm:text-xl lg:text-[36px]" style={{ fontFamily: 'Pretendard, sans-serif' }}>
+                  <span className="text-teal-600 font-bold text-base sm:text-xl lg:text-[36px]" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
                     개
                   </span>
                 </div>
               </div>
               <div className="self-stretch h-0.5 bg-black/10"></div>
               <div className="self-stretch inline-flex flex-row justify-between items-center gap-2 sm:gap-0">
-                <div className="text-left justify-start text-black/80 font-semibold text-base sm:text-xl lg:text-[36px]" style={{ fontFamily: 'Pretendard, sans-serif' }}>
+                <div className="text-left justify-start text-black/80 font-semibold text-base sm:text-xl lg:text-[36px]" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
                   특허 도면
                 </div>
                 <div className="text-right justify-start">
-                  <span className="text-teal-600 font-bold text-2xl sm:text-3xl lg:text-[60px]" style={{ fontFamily: 'Pretendard, sans-serif' }}>
+                  <span className="text-teal-600 font-bold text-2xl sm:text-3xl lg:text-[60px]" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
                     16
                   </span>
-                  <span className="text-teal-600 font-bold tracking-wider text-2xl sm:text-3xl lg:text-[60px]" style={{ fontFamily: 'Pretendard, sans-serif' }}>
+                  <span className="text-teal-600 font-bold tracking-wider text-2xl sm:text-3xl lg:text-[60px]" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
                     억
                   </span>
-                  <span className="text-teal-600 font-bold text-base sm:text-xl lg:text-[36px]" style={{ fontFamily: 'Pretendard, sans-serif' }}>
+                  <span className="text-teal-600 font-bold text-base sm:text-xl lg:text-[36px]" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
                     장
                   </span>
                 </div>
               </div>
               <div className="self-stretch h-0.5 bg-black/10"></div>
               <div className="self-stretch inline-flex flex-row justify-between items-center gap-2 sm:gap-0">
-                <div className="text-left justify-start text-black/80 font-semibold text-base sm:text-xl lg:text-[36px]" style={{ fontFamily: 'Pretendard, sans-serif' }}>
+                <div className="text-left justify-start text-black/80 font-semibold text-base sm:text-xl lg:text-[36px]" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
                   가공 데이터
                 </div>
                 <div className="text-right justify-start">
-                  <span className="text-teal-600 font-bold text-2xl sm:text-3xl lg:text-[60px]" style={{ fontFamily: 'Pretendard, sans-serif' }}>
+                  <span className="text-teal-600 font-bold text-2xl sm:text-3xl lg:text-[60px]" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
                     1.5
                   </span>
-                  <span className="text-teal-600 font-bold tracking-wider text-2xl sm:text-3xl lg:text-[60px]" style={{ fontFamily: 'Pretendard, sans-serif' }}>
+                  <span className="text-teal-600 font-bold tracking-wider text-2xl sm:text-3xl lg:text-[60px]" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
                     억
                   </span>
-                  <span className="text-teal-600 font-bold text-base sm:text-xl lg:text-[36px]" style={{ fontFamily: 'Pretendard, sans-serif' }}>
+                  <span className="text-teal-600 font-bold text-base sm:text-xl lg:text-[36px]" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
                     건
                   </span>
                 </div>
@@ -1004,7 +1004,7 @@ export function WebinarFormWertPageContent() {
         </div>
 
         {/* Title */}
-        <div className="w-full max-w-[856px] mx-auto px-4 sm:px-6 lg:px-8 mt-8 sm:mt-12 lg:mt-16 text-center justify-start text-black/80 font-bold text-xl sm:text-2xl lg:text-[38px] leading-relaxed sm:leading-relaxed lg:leading-[57px]" style={{ fontFamily: 'Pretendard, sans-serif' }}>
+        <div className="w-full max-w-[856px] mx-auto px-4 sm:px-6 lg:px-8 mt-8 sm:mt-12 lg:mt-16 text-center justify-start text-black/80 font-bold text-xl sm:text-2xl lg:text-[38px] leading-relaxed sm:leading-relaxed lg:leading-[57px]" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
           키워트 인사이트,<br />각 조직은 이렇게 활용합니다
         </div>
 
@@ -1028,7 +1028,7 @@ export function WebinarFormWertPageContent() {
             <div className="text-center justify-start text-green-200 font-bold text-sm sm:text-lg lg:text-[24px] leading-tight sm:leading-tight lg:leading-[32px]" style={{ fontFamily: 'Figtree, sans-serif' }}>
               EVENT
             </div>
-            <div className="text-center justify-start text-white font-bold text-xl sm:text-xl lg:text-[38px] leading-tight sm:leading-tight lg:leading-[57px]" style={{ fontFamily: 'Pretendard, sans-serif' }}>
+            <div className="text-center justify-start text-white font-bold text-xl sm:text-xl lg:text-[38px] leading-tight sm:leading-tight lg:leading-[57px]" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
               웨비나 참여 이벤트
             </div>
           </div>
@@ -1037,22 +1037,22 @@ export function WebinarFormWertPageContent() {
             <div className="self-stretch flex flex-col justify-start items-start gap-3 sm:gap-8 lg:gap-10">
               <div className="self-stretch flex flex-col justify-center items-center gap-4 sm:gap-8 lg:gap-10">
                 <div className="px-4 sm:px-5 lg:px-6 py-0.5 sm:py-1 bg-white/25 rounded-2xl sm:rounded-3xl lg:rounded-[48px] inline-flex justify-center items-center gap-2 overflow-hidden">
-                  <div className="text-center justify-start text-white font-bold text-base sm:text-lg lg:text-[24px] leading-tight sm:leading-tight lg:leading-[40px]" style={{ fontFamily: 'Pretendard, sans-serif' }}>
+                  <div className="text-center justify-start text-white font-bold text-base sm:text-lg lg:text-[24px] leading-tight sm:leading-tight lg:leading-[40px]" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
                     Event 1
                   </div>
                 </div>
                 <div className="self-stretch flex flex-col justify-start items-center gap-4 sm:gap-5 lg:gap-6">
-                  <div className="justify-start text-white font-bold text-xl sm:text-3xl lg:text-[48px] leading-tight sm:leading-tight lg:leading-[40px]" style={{ fontFamily: 'Pretendard, sans-serif' }}>
+                  <div className="justify-start text-white font-bold text-xl sm:text-3xl lg:text-[48px] leading-tight sm:leading-tight lg:leading-[40px]" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
                     QnA 이벤트
                   </div>
                   <div className="text-center justify-start">
-                    <span className="text-white font-normal text-base sm:text-xl lg:text-[30px] leading-relaxed sm:leading-relaxed lg:leading-[48px]" style={{ fontFamily: 'Pretendard, sans-serif' }}>
+                    <span className="text-white font-normal text-base sm:text-xl lg:text-[30px] leading-relaxed sm:leading-relaxed lg:leading-[48px]" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
                       웨비나에서{" "}
                     </span>
-                    <span className="text-white font-bold text-base sm:text-xl lg:text-[30px] leading-relaxed sm:leading-relaxed lg:leading-[48px]" style={{ fontFamily: 'Pretendard, sans-serif' }}>
+                    <span className="text-white font-bold text-base sm:text-xl lg:text-[30px] leading-relaxed sm:leading-relaxed lg:leading-[48px]" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
                       좋은 질문을 해주신 분들 중
                     </span>
-                    <span className="text-white font-normal text-base sm:text-xl lg:text-[30px] leading-relaxed sm:leading-relaxed lg:leading-[48px]" style={{ fontFamily: 'Pretendard, sans-serif' }}>
+                    <span className="text-white font-normal text-base sm:text-xl lg:text-[30px] leading-relaxed sm:leading-relaxed lg:leading-[48px]" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
                       <span className="sm:hidden"><br />추첨을 통해 선물을 드립니다.</span>
                       <span className="hidden sm:inline">{" "}추첨을 통해<br />선물을 드립니다.</span>
                     </span>
@@ -1060,7 +1060,7 @@ export function WebinarFormWertPageContent() {
                 </div>
               </div>
               <div className="self-stretch h-[128px] sm:h-44 lg:h-56 p-4 sm:p-6 lg:p-10 bg-black/10 rounded-xl sm:rounded-2xl lg:rounded-[32px] outline outline-1 outline-offset-[-1px] outline-white/20 flex flex-row justify-start items-center gap-3 sm:gap-4 lg:gap-2.5 overflow-hidden">
-                <div className="flex-1 justify-start text-white font-bold text-[17px] sm:text-xl lg:text-[36px] leading-relaxed sm:leading-relaxed lg:leading-[60px] text-left" style={{ fontFamily: 'Pretendard, sans-serif' }}>
+                <div className="flex-1 justify-start text-white font-bold text-[17px] sm:text-xl lg:text-[36px] leading-relaxed sm:leading-relaxed lg:leading-[60px] text-left" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
                   스타벅스 아메리카노 Tall<br />기프티콘 증정
                 </div>
                 <img
@@ -1078,22 +1078,22 @@ export function WebinarFormWertPageContent() {
             <div className="self-stretch flex flex-col justify-start items-start gap-6 sm:gap-8 lg:gap-10">
               <div className="self-stretch flex flex-col justify-center items-center gap-6 sm:gap-8 lg:gap-10">
                 <div className="px-4 sm:px-5 lg:px-6 py-0.5 sm:py-1 bg-white/25 rounded-xl sm:rounded-2xl lg:rounded-[32px] inline-flex justify-center items-center gap-2 overflow-hidden">
-                  <div className="text-center justify-start text-white font-bold text-base sm:text-lg lg:text-[24px] leading-tight sm:leading-tight lg:leading-[40px]" style={{ fontFamily: 'Pretendard, sans-serif' }}>
+                  <div className="text-center justify-start text-white font-bold text-base sm:text-lg lg:text-[24px] leading-tight sm:leading-tight lg:leading-[40px]" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
                     Event 2
                   </div>
                 </div>
                 <div className="self-stretch flex flex-col justify-center items-center gap-4 sm:gap-5 lg:gap-6">
-                  <div className="text-center justify-start text-neutral-100 font-bold text-xl sm:text-3xl lg:text-[48px] leading-tight sm:leading-tight lg:leading-[40px]" style={{ fontFamily: 'Pretendard, sans-serif' }}>
+                  <div className="text-center justify-start text-neutral-100 font-bold text-xl sm:text-3xl lg:text-[48px] leading-tight sm:leading-tight lg:leading-[40px]" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
                     특별 혜택 이벤트
                   </div>
                   <div className="text-center justify-start">
-                    <span className="text-white font-normal text-base sm:text-xl lg:text-[30px] leading-relaxed sm:leading-relaxed lg:leading-[48px]" style={{ fontFamily: 'Pretendard, sans-serif' }}>
+                    <span className="text-white font-normal text-base sm:text-xl lg:text-[30px] leading-relaxed sm:leading-relaxed lg:leading-[48px]" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
                       참석자 한정{" "}
                     </span>
-                    <span className="text-white font-bold text-base sm:text-xl lg:text-[30px] leading-relaxed sm:leading-relaxed lg:leading-[48px]" style={{ fontFamily: 'Pretendard, sans-serif' }}>
+                    <span className="text-white font-bold text-base sm:text-xl lg:text-[30px] leading-relaxed sm:leading-relaxed lg:leading-[48px]" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
                       특별한 혜택을 모두
                     </span>
-                    <span className="text-white font-normal text-base sm:text-xl lg:text-[30px] leading-relaxed sm:leading-relaxed lg:leading-[48px]" style={{ fontFamily: 'Pretendard, sans-serif' }}>
+                    <span className="text-white font-normal text-base sm:text-xl lg:text-[30px] leading-relaxed sm:leading-relaxed lg:leading-[48px]" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
                       {" "}드립니다!
                     </span>
                   </div>
@@ -1102,7 +1102,7 @@ export function WebinarFormWertPageContent() {
               <div className="self-stretch flex flex-col justify-start items-start gap-3 sm:gap-5 lg:gap-6 relative">
                 {/* 1달 무료 체험 */}
                 <div className="self-stretch h-[128px] sm:h-40 lg:h-56 p-4 sm:p-6 lg:p-10 bg-gradient-to-r from-black/5 to-black/10 rounded-xl sm:rounded-2xl lg:rounded-[32px] outline outline-1 outline-offset-[-1px] outline-white/20 flex flex-row justify-start items-center gap-3 sm:gap-3 lg:gap-2.5 overflow-hidden">
-                  <div className="flex-1 justify-start text-white font-bold text-[17px] sm:text-xl lg:text-[36px] leading-relaxed sm:leading-relaxed lg:leading-[60px] text-left" style={{ fontFamily: 'Pretendard, sans-serif' }}>
+                  <div className="flex-1 justify-start text-white font-bold text-[17px] sm:text-xl lg:text-[36px] leading-relaxed sm:leading-relaxed lg:leading-[60px] text-left" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
                     키워트 인사이트 신규회원 대상<br />무료 체험 제공
                   </div>
                   <img
@@ -1135,7 +1135,7 @@ export function WebinarFormWertPageContent() {
                 </div>
                 {/* 특별 견적 */}
                 <div className="self-stretch h-[128px] sm:h-40 lg:h-56 p-4 sm:p-6 lg:p-10 bg-black/10 rounded-xl sm:rounded-2xl lg:rounded-[32px] outline outline-1 outline-offset-[-1px] outline-white/20 flex flex-row justify-start items-center gap-3 sm:gap-3 lg:gap-2.5 overflow-hidden">
-                  <div className="flex-1 justify-start text-white font-bold text-[17px] sm:text-xl lg:text-[36px] leading-relaxed sm:leading-relaxed lg:leading-[60px] text-left" style={{ fontFamily: 'Pretendard, sans-serif' }}>
+                  <div className="flex-1 justify-start text-white font-bold text-[17px] sm:text-xl lg:text-[36px] leading-relaxed sm:leading-relaxed lg:leading-[60px] text-left" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
                     웨비나 참여 후 엔터프라이즈용<br />상담 신청하면 특별 견적 제공
                   </div>
                   <img
@@ -1161,7 +1161,7 @@ export function WebinarFormWertPageContent() {
       >
         <div className="w-full max-w-[856px] mx-auto flex flex-col justify-start items-start gap-8 sm:gap-12 lg:gap-16">
         <div className="self-stretch flex flex-col justify-start items-start gap-6 sm:gap-8 lg:gap-10">
-          <div className="self-stretch justify-start text-black/60 font-bold text-xl sm:text-2xl lg:text-[36px] leading-relaxed sm:leading-relaxed lg:leading-[47.82px]" style={{ fontFamily: 'Pretendard, sans-serif' }}>
+          <div className="self-stretch justify-start text-black/60 font-bold text-xl sm:text-2xl lg:text-[36px] leading-relaxed sm:leading-relaxed lg:leading-[47.82px]" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
             키워트 인사이트 유즈케이스 웨비나 주의사항
           </div>
           <div className="self-stretch flex flex-col justify-start items-start gap-4 sm:gap-6 lg:gap-8">
@@ -1172,19 +1172,19 @@ export function WebinarFormWertPageContent() {
                   <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 left-0 top-[11px] sm:top-[14px] absolute bg-black/60 rounded-full"></div>
                 </div>
                 <div className="flex-1 justify-start">
-                  <span className="text-black/60 font-normal text-xs sm:text-base lg:text-[26px] leading-relaxed sm:leading-relaxed lg:leading-[40px]" style={{ fontFamily: 'Pretendard, sans-serif', letterSpacing: '-0.4px' }}>
+                  <span className="text-black/60 font-normal text-xs sm:text-base lg:text-[26px] leading-relaxed sm:leading-relaxed lg:leading-[40px]" style={{ fontFamily: 'Noto Sans KR, sans-serif', letterSpacing: '-0.4px' }}>
                     본 웨비나는{" "}
                   </span>
-                  <span className="text-black/60 font-bold text-xs sm:text-base lg:text-[26px] leading-relaxed sm:leading-relaxed lg:leading-[40px]" style={{ fontFamily: 'Pretendard, sans-serif', letterSpacing: '-0.4px' }}>
+                  <span className="text-black/60 font-bold text-xs sm:text-base lg:text-[26px] leading-relaxed sm:leading-relaxed lg:leading-[40px]" style={{ fontFamily: 'Noto Sans KR, sans-serif', letterSpacing: '-0.4px' }}>
                     무료
                   </span>
-                  <span className="text-black/60 font-normal text-xs sm:text-base lg:text-[26px] leading-relaxed sm:leading-relaxed lg:leading-[40px]" style={{ fontFamily: 'Pretendard, sans-serif', letterSpacing: '-0.4px' }}>
+                  <span className="text-black/60 font-normal text-xs sm:text-base lg:text-[26px] leading-relaxed sm:leading-relaxed lg:leading-[40px]" style={{ fontFamily: 'Noto Sans KR, sans-serif', letterSpacing: '-0.4px' }}>
                     이며,{" "}
                   </span>
-                  <span className="text-black/60 font-bold text-xs sm:text-base lg:text-[26px] leading-relaxed sm:leading-relaxed lg:leading-[40px]" style={{ fontFamily: 'Pretendard, sans-serif', letterSpacing: '-0.4px' }}>
+                  <span className="text-black/60 font-bold text-xs sm:text-base lg:text-[26px] leading-relaxed sm:leading-relaxed lg:leading-[40px]" style={{ fontFamily: 'Noto Sans KR, sans-serif', letterSpacing: '-0.4px' }}>
                     사전등록 하신 분
                   </span>
-                  <span className="text-black/60 font-normal text-xs sm:text-base lg:text-[26px] leading-relaxed sm:leading-relaxed lg:leading-[40px]" style={{ fontFamily: 'Pretendard, sans-serif', letterSpacing: '-0.4px' }}>
+                  <span className="text-black/60 font-normal text-xs sm:text-base lg:text-[26px] leading-relaxed sm:leading-relaxed lg:leading-[40px]" style={{ fontFamily: 'Noto Sans KR, sans-serif', letterSpacing: '-0.4px' }}>
                     에 한하여 참여 가능합니다.
                   </span>
                 </div>
@@ -1194,13 +1194,13 @@ export function WebinarFormWertPageContent() {
                   <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 left-0 top-[11px] sm:top-[14px] absolute bg-black/60 rounded-full"></div>
                 </div>
                 <div className="flex-1 justify-start">
-                  <span className="text-black/60 font-normal text-xs sm:text-base lg:text-[26px] leading-relaxed sm:leading-relaxed lg:leading-[40px]" style={{ fontFamily: 'Pretendard, sans-serif', letterSpacing: '-0.4px' }}>
+                  <span className="text-black/60 font-normal text-xs sm:text-base lg:text-[26px] leading-relaxed sm:leading-relaxed lg:leading-[40px]" style={{ fontFamily: 'Noto Sans KR, sans-serif', letterSpacing: '-0.4px' }}>
                     신청자에게는{" "}
                   </span>
-                  <span className="text-black/60 font-bold text-xs sm:text-base lg:text-[26px] leading-relaxed sm:leading-relaxed lg:leading-[40px]" style={{ fontFamily: 'Pretendard, sans-serif', letterSpacing: '-0.4px' }}>
+                  <span className="text-black/60 font-bold text-xs sm:text-base lg:text-[26px] leading-relaxed sm:leading-relaxed lg:leading-[40px]" style={{ fontFamily: 'Noto Sans KR, sans-serif', letterSpacing: '-0.4px' }}>
                     2월 4일(수) 및 2월 5일(목)에 리마인드 메일 및 문자가 발송<span className="lg:hidden"> </span><span className="hidden lg:inline"> </span><span className="hidden sm:inline lg:hidden"><br /></span>
                   </span>
-                  <span className="text-black/60 font-normal text-xs sm:text-base lg:text-[26px] leading-relaxed sm:leading-relaxed lg:leading-[40px]" style={{ fontFamily: 'Pretendard, sans-serif', letterSpacing: '-0.4px' }}>
+                  <span className="text-black/60 font-normal text-xs sm:text-base lg:text-[26px] leading-relaxed sm:leading-relaxed lg:leading-[40px]" style={{ fontFamily: 'Noto Sans KR, sans-serif', letterSpacing: '-0.4px' }}>
                     됩니다.
                   </span>
                 </div>
@@ -1210,7 +1210,7 @@ export function WebinarFormWertPageContent() {
                   <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 left-0 top-[11px] sm:top-[14px] absolute bg-black/60 rounded-full"></div>
                 </div>
                 <div className="flex-1 justify-start">
-                  <span className="text-black/60 font-normal text-xs sm:text-base lg:text-[26px] leading-relaxed sm:leading-relaxed lg:leading-[40px]" style={{ fontFamily: 'Pretendard, sans-serif', letterSpacing: '-0.4px' }}>
+                  <span className="text-black/60 font-normal text-xs sm:text-base lg:text-[26px] leading-relaxed sm:leading-relaxed lg:leading-[40px]" style={{ fontFamily: 'Noto Sans KR, sans-serif', letterSpacing: '-0.4px' }}>
                     업무용 이메일을 자성하지 않으실 경우 웨비나 참가가 제한될 수 있습니다.
                   </span>
                 </div>
@@ -1220,7 +1220,7 @@ export function WebinarFormWertPageContent() {
                   <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 left-0 top-[11px] sm:top-[14px] absolute bg-black/60 rounded-full"></div>
                 </div>
                 <div className="flex-1 justify-start">
-                  <span className="text-black/60 font-normal text-xs sm:text-base lg:text-[26px] leading-relaxed sm:leading-relaxed lg:leading-[40px]" style={{ fontFamily: 'Pretendard, sans-serif', letterSpacing: '-0.4px' }}>
+                  <span className="text-black/60 font-normal text-xs sm:text-base lg:text-[26px] leading-relaxed sm:leading-relaxed lg:leading-[40px]" style={{ fontFamily: 'Noto Sans KR, sans-serif', letterSpacing: '-0.4px' }}>
                     Q&A 이벤트는 중복 참여가 불가하며, 2월 13일(금)에 경품이 발송됩니다.
                   </span>
                 </div>
@@ -1230,7 +1230,7 @@ export function WebinarFormWertPageContent() {
                   <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 left-0 top-[11px] sm:top-[14px] absolute bg-black/60 rounded-full"></div>
                 </div>
                 <div className="flex-1 justify-start">
-                  <span className="text-black/60 font-normal text-xs sm:text-base lg:text-[26px] leading-relaxed sm:leading-relaxed lg:leading-[40px]" style={{ fontFamily: 'Pretendard, sans-serif', letterSpacing: '-0.4px' }}>
+                  <span className="text-black/60 font-normal text-xs sm:text-base lg:text-[26px] leading-relaxed sm:leading-relaxed lg:leading-[40px]" style={{ fontFamily: 'Noto Sans KR, sans-serif', letterSpacing: '-0.4px' }}>
                     잘못된 개인정보 입력으로 경품을 못받으실 경우 당사는 책임지지 않습니다.
                   </span>
                 </div>
@@ -1249,7 +1249,7 @@ export function WebinarFormWertPageContent() {
                   </div>
                 </div>
                 <div className="flex-1 justify-start">
-                  <span className="text-orange-600 font-normal text-xs sm:text-base lg:text-[26px] leading-relaxed sm:leading-relaxed lg:leading-[40px]" style={{ fontFamily: 'Pretendard, sans-serif', letterSpacing: '-0.4px' }}>
+                  <span className="text-orange-600 font-normal text-xs sm:text-base lg:text-[26px] leading-relaxed sm:leading-relaxed lg:leading-[40px]" style={{ fontFamily: 'Noto Sans KR, sans-serif', letterSpacing: '-0.4px' }}>
                     본 웨비나는 라이브로 진행되며 녹화본은 별도 제공하지 않습니다.
                   </span>
                 </div>
@@ -1265,7 +1265,7 @@ export function WebinarFormWertPageContent() {
                   </div>
                 </div>
                 <div className="flex-1 justify-start">
-                  <span className="text-orange-600 font-normal text-xs sm:text-base lg:text-[26px] leading-relaxed sm:leading-relaxed lg:leading-[40px]" style={{ fontFamily: 'Pretendard, sans-serif', letterSpacing: '-0.4px' }}>
+                  <span className="text-orange-600 font-normal text-xs sm:text-base lg:text-[26px] leading-relaxed sm:leading-relaxed lg:leading-[40px]" style={{ fontFamily: 'Noto Sans KR, sans-serif', letterSpacing: '-0.4px' }}>
                     마케팅 활용 정보 동의를 거부한 경우, 웨비나 시청 및 콘텐츠 수신 등이<span className="sm:hidden"> </span><span className="hidden sm:inline"><br /></span>제한됩니다.
                   </span>
                 </div>
@@ -1281,7 +1281,7 @@ export function WebinarFormWertPageContent() {
                   </div>
                 </div>
                 <div className="flex-1 justify-start">
-                  <span className="text-orange-600 font-normal text-xs sm:text-base lg:text-[26px] leading-relaxed sm:leading-relaxed lg:leading-[40px]" style={{ fontFamily: 'Pretendard, sans-serif', letterSpacing: '-0.4px' }}>
+                  <span className="text-orange-600 font-normal text-xs sm:text-base lg:text-[26px] leading-relaxed sm:leading-relaxed lg:leading-[40px]" style={{ fontFamily: 'Noto Sans KR, sans-serif', letterSpacing: '-0.4px' }}>
                     본 웨비나는 관련 종사자 우선이며, 비관련 분야는 참석이 제한될 수 있습니다.
                   </span>
                 </div>
@@ -1291,7 +1291,7 @@ export function WebinarFormWertPageContent() {
         </div>
         {/* 문의 사항 */}
         <div className="self-stretch flex flex-col justify-start items-start gap-6 sm:gap-8 lg:gap-10">
-          <div className="self-stretch justify-start text-black/60 font-bold text-xl sm:text-2xl lg:text-[36px] leading-relaxed sm:leading-relaxed lg:leading-[47.82px]" style={{ fontFamily: 'Pretendard, sans-serif' }}>
+          <div className="self-stretch justify-start text-black/60 font-bold text-xl sm:text-2xl lg:text-[36px] leading-relaxed sm:leading-relaxed lg:leading-[47.82px]" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
             문의 사항
           </div>
           <div className="self-stretch flex flex-col justify-start items-start gap-1.5 sm:gap-4">
@@ -1300,7 +1300,7 @@ export function WebinarFormWertPageContent() {
                 <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 left-0 top-[11px] sm:top-[14px] absolute bg-black/60 rounded-full"></div>
               </div>
               <div className="flex-1 justify-start">
-                <span className="text-black/60 font-normal text-xs sm:text-base lg:text-[26px] leading-relaxed sm:leading-relaxed lg:leading-[40px]" style={{ fontFamily: 'Pretendard, sans-serif', letterSpacing: '-0.4px' }}>
+                <span className="text-black/60 font-normal text-xs sm:text-base lg:text-[26px] leading-relaxed sm:leading-relaxed lg:leading-[40px]" style={{ fontFamily: 'Noto Sans KR, sans-serif', letterSpacing: '-0.4px' }}>
                   웨비나와 관련된 문의사항이 있으시면 아래 연락처를 통해 문의주시기 바랍니다.
                 </span>
               </div>
@@ -1310,7 +1310,7 @@ export function WebinarFormWertPageContent() {
                 <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 left-0 top-[11px] sm:top-[14px] absolute bg-black/60 rounded-full"></div>
               </div>
               <div className="flex-1 justify-start">
-                <span className="text-black/60 font-normal text-xs sm:text-base lg:text-[26px] leading-relaxed sm:leading-relaxed lg:leading-[40px]" style={{ fontFamily: 'Pretendard, sans-serif', letterSpacing: '-0.4px' }}>
+                <span className="text-black/60 font-normal text-xs sm:text-base lg:text-[26px] leading-relaxed sm:leading-relaxed lg:leading-[40px]" style={{ fontFamily: 'Noto Sans KR, sans-serif', letterSpacing: '-0.4px' }}>
                   메일문의 crm@wert.co.kr
                 </span>
               </div>

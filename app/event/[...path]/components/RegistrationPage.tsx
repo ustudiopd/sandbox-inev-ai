@@ -564,10 +564,8 @@ export default function RegistrationPage({ campaign, baseUrl, utmParams = {} }: 
       return (
         <>
           <style jsx global>{`
-            @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css');
-            
             html, body {
-              font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+              font-family: 'Noto Sans KR', sans-serif;
               background-color: #fff;
               margin: 0;
               padding: 0;
@@ -714,7 +712,7 @@ export default function RegistrationPage({ campaign, baseUrl, utmParams = {} }: 
               border-radius: 16px;
               font-size: 18px;
               color: #000;
-              font-family: 'Pretendard', sans-serif;
+              font-family: 'Noto Sans KR', sans-serif;
               transition: all 0.3s ease;
             }
           
