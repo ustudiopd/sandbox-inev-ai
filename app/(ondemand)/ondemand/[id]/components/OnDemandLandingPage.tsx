@@ -250,8 +250,8 @@ export default function OnDemandLandingPage({ webinar }: OnDemandLandingPageProp
         <div className="absolute bottom-0 left-0 right-0 h-px bg-gray-300 z-20"></div>
       </div>
 
-      {/* Login Form Section - 모바일: 전체 너비, 터치 영역 확보, 버튼 가운데 정렬 / 태블릿: 패딩 조정 / 다크 모드 지원 */}
-      <div className="bg-white dark:bg-gray-900 flex items-start sm:items-center justify-center px-3 sm:px-4 md:px-5 lg:px-8 min-h-[300px] overflow-x-hidden max-sm:px-4 max-sm:py-8 max-sm:items-center sm:pt-[70px] sm:pb-[70px] md:pt-[60px] md:pb-[60px] lg:pt-[70px] lg:pb-[70px]">
+      {/* Login Form Section - 모바일: 전체 너비, 터치 영역 확보, 버튼 가운데 정렬 / 태블릿: 패딩 조정 */}
+      <div className="bg-white flex items-start sm:items-center justify-center px-3 sm:px-4 md:px-5 lg:px-8 min-h-[300px] overflow-x-hidden max-sm:px-4 max-sm:py-8 max-sm:items-center sm:pt-[70px] sm:pb-[70px] md:pt-[60px] md:pb-[60px] lg:pt-[70px] lg:pb-[70px]">
         <div className="w-[355px] md:w-[340px] lg:w-[355px] max-sm:w-full max-sm:max-w-[min(100%,355px)]">
           <form onSubmit={handleLogin} className="space-y-4 sm:space-y-6 md:space-y-5 lg:space-y-6 w-full">
             {/* Title */}
@@ -264,7 +264,7 @@ export default function OnDemandLandingPage({ webinar }: OnDemandLandingPageProp
             
             {/* Name Input - 모바일: 터치 최소 44px / 태블릿: 너비 조정 */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4 md:gap-3 lg:gap-4">
-              <label htmlFor="name" className="text-sm md:text-sm lg:text-sm font-semibold text-gray-700 dark:text-gray-200 whitespace-nowrap text-left">
+              <label htmlFor="name" className="text-sm md:text-sm lg:text-sm font-semibold text-gray-700 whitespace-nowrap text-left">
                 성 함<span className="text-red-500">*</span>
               </label>
               <input
@@ -276,14 +276,15 @@ export default function OnDemandLandingPage({ webinar }: OnDemandLandingPageProp
                   setErrorMessage('')
                 }}
                 required
-                className="w-full sm:w-[253px] md:w-[240px] lg:w-[253px] px-4 rounded bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#00B388] focus:ring-offset-1 h-[37px] max-sm:min-h-[44px] max-sm:text-base placeholder:text-gray-500 dark:placeholder:text-gray-400"
+                className="w-full sm:w-[253px] md:w-[240px] lg:w-[253px] px-4 rounded bg-gray-100 text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#00B388] focus:ring-offset-1 h-[37px] max-sm:min-h-[44px] max-sm:text-base placeholder:text-gray-500"
                 placeholder="성함을 입력하세요"
+                style={{ backgroundColor: '#f3f4f6', color: '#111827' }}
               />
             </div>
             
             {/* Email Input - 모바일: 터치 최소 44px / 태블릿: 너비 조정 */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4 md:gap-3 lg:gap-4">
-              <label htmlFor="email" className="text-sm md:text-sm lg:text-sm font-semibold text-gray-700 dark:text-gray-200 whitespace-nowrap text-left">
+              <label htmlFor="email" className="text-sm md:text-sm lg:text-sm font-semibold text-gray-700 whitespace-nowrap text-left">
                 이메일 주소<span className="text-red-500">*</span>
               </label>
               <input
@@ -295,8 +296,9 @@ export default function OnDemandLandingPage({ webinar }: OnDemandLandingPageProp
                   setErrorMessage('')
                 }}
                 required
-                className="w-full sm:w-[253px] md:w-[240px] lg:w-[253px] px-4 rounded bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#00B388] focus:ring-offset-1 h-[37px] max-sm:min-h-[44px] max-sm:text-base placeholder:text-gray-500 dark:placeholder:text-gray-400"
+                className="w-full sm:w-[253px] md:w-[240px] lg:w-[253px] px-4 rounded bg-gray-100 text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#00B388] focus:ring-offset-1 h-[37px] max-sm:min-h-[44px] max-sm:text-base placeholder:text-gray-500"
                 placeholder="이메일 주소를 입력하세요"
+                style={{ backgroundColor: '#f3f4f6', color: '#111827' }}
               />
             </div>
             
@@ -306,7 +308,7 @@ export default function OnDemandLandingPage({ webinar }: OnDemandLandingPageProp
             {/* Error Message */}
             {errorMessage && (
               <div className="text-center">
-                <p className="text-sm text-red-600 dark:text-red-400">{errorMessage}</p>
+                <p className="text-sm text-red-600">{errorMessage}</p>
               </div>
             )}
             
@@ -323,7 +325,7 @@ export default function OnDemandLandingPage({ webinar }: OnDemandLandingPageProp
               {/* 등록하기 링크 */}
               <Link 
                 href={`/ondemand/${webinarPath}/register`}
-                className="text-sm md:text-xs lg:text-sm text-gray-600 dark:text-gray-300 hover:text-[#00B388] dark:hover:text-[#00B388] underline transition-colors"
+                className="text-sm md:text-xs lg:text-sm text-gray-600 hover:text-[#00B388] underline transition-colors"
               >
                 등록하기
               </Link>
