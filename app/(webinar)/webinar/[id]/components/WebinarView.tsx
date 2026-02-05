@@ -280,21 +280,23 @@ export default function WebinarView({ webinar, isAdminMode = false }: WebinarVie
                 if (isNewForm || wasReopened || !isInShownPopups) {
                   const next = new Set(prev)
                   next.add(popupKey)
-                  
-                  // 팝업 표시는 여기서 바로 실행 (상태 업데이트와 동시에)
-                  // setTimeout을 사용하여 상태 업데이트 후 실행
-                  setTimeout(() => {
-                    setPopupContent({
-                      type: 'form',
-                      id: newForm.id,
-                      title: newForm.title || newForm.name || '설문',
-                    })
-                  }, 0)
-                  
                   return next
                 }
                 return prev
               })
+              
+              // 팝업 표시는 별도로 처리 (상태 업데이트와 분리)
+              // 새 폼이거나 다시 오픈된 폼이면 무조건 팝업 표시
+              if (isNewForm || wasReopened) {
+                // 약간의 지연을 두어 상태 업데이트가 완료된 후 팝업 표시
+                requestAnimationFrame(() => {
+                  setPopupContent({
+                    type: 'form',
+                    id: newForm.id,
+                    title: newForm.title || newForm.name || '설문',
+                  })
+                })
+              }
             }
             
             // 닫힌 폼은 shownPopups에서 제거하여 다시 오픈될 때 팝업이 뜨도록 함
