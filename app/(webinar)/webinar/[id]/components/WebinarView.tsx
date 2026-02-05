@@ -870,6 +870,32 @@ export default function WebinarView({ webinar, isAdminMode = false }: WebinarVie
                       📝 설문
                     </button>
                   )}
+                  {/* 경품추첨 버튼 - 모바일 */}
+                  {openGiveaways.filter((g) => g.status === 'open').length > 0 ? (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        const giveaway = openGiveaways.find((g) => g.status === 'open')
+                        if (giveaway) {
+                          setPopupContent({
+                            type: 'giveaway',
+                            id: giveaway.id,
+                            title: giveaway.name || giveaway.title || '경품추첨',
+                          })
+                        }
+                      }}
+                      className="px-2 py-1 bg-purple-100 text-purple-700 rounded text-xs font-medium hover:bg-purple-200 transition-colors"
+                    >
+                      🎁 경품추첨
+                    </button>
+                  ) : (
+                    <button
+                      disabled
+                      className="px-2 py-1 bg-gray-100 text-gray-400 rounded text-xs font-medium cursor-not-allowed"
+                    >
+                      🎁 경품추첨
+                    </button>
+                  )}
                 </div>
                 <svg
                   className={`w-5 h-5 text-gray-500 transition-transform ${isSessionIntroExpanded ? 'rotate-180' : ''}`}
@@ -880,34 +906,61 @@ export default function WebinarView({ webinar, isAdminMode = false }: WebinarVie
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
               </button>
-              {/* PC: 제목과 설문 버튼 표시 */}
+              {/* PC: 제목과 설문/경품추첨 버튼 표시 */}
               <div className="hidden lg:flex lg:items-center lg:justify-between lg:mb-3 lg:mb-4">
                 <h3 className="text-base sm:text-base lg:text-lg font-semibold text-gray-900">세션 소개</h3>
-                {/* 설문 버튼 - PC */}
-                {openForms.filter((f) => f.kind === 'survey' && f.status === 'open').length > 0 ? (
-                  <button
-                    onClick={() => {
-                      const survey = openForms.find((f) => f.kind === 'survey' && f.status === 'open')
-                      if (survey) {
-                        setPopupContent({
-                          type: 'form',
-                          id: survey.id,
-                          title: survey.name || survey.title || '설문',
-                        })
-                      }
-                    }}
-                    className="px-3 py-1.5 bg-blue-100 text-blue-700 rounded-lg text-sm font-medium hover:bg-blue-200 transition-colors"
-                  >
-                    📝 설문
-                  </button>
-                ) : (
-                  <button
-                    disabled
-                    className="px-3 py-1.5 bg-gray-100 text-gray-400 rounded-lg text-sm font-medium cursor-not-allowed"
-                  >
-                    📝 설문
-                  </button>
-                )}
+                <div className="flex items-center gap-2">
+                  {/* 설문 버튼 - PC */}
+                  {openForms.filter((f) => f.kind === 'survey' && f.status === 'open').length > 0 ? (
+                    <button
+                      onClick={() => {
+                        const survey = openForms.find((f) => f.kind === 'survey' && f.status === 'open')
+                        if (survey) {
+                          setPopupContent({
+                            type: 'form',
+                            id: survey.id,
+                            title: survey.name || survey.title || '설문',
+                          })
+                        }
+                      }}
+                      className="px-3 py-1.5 bg-blue-100 text-blue-700 rounded-lg text-sm font-medium hover:bg-blue-200 transition-colors"
+                    >
+                      📝 설문
+                    </button>
+                  ) : (
+                    <button
+                      disabled
+                      className="px-3 py-1.5 bg-gray-100 text-gray-400 rounded-lg text-sm font-medium cursor-not-allowed"
+                    >
+                      📝 설문
+                    </button>
+                  )}
+                  {/* 경품추첨 버튼 - PC */}
+                  {openGiveaways.filter((g) => g.status === 'open').length > 0 ? (
+                    <button
+                      onClick={() => {
+                        const giveaway = openGiveaways.find((g) => g.status === 'open')
+                        if (giveaway) {
+                          setPopupContent({
+                            type: 'giveaway',
+                            id: giveaway.id,
+                            title: giveaway.name || giveaway.title || '경품추첨',
+                          })
+                        }
+                      }}
+                      className="px-3 py-1.5 bg-purple-100 text-purple-700 rounded-lg text-sm font-medium hover:bg-purple-200 transition-colors"
+                    >
+                      🎁 경품추첨
+                    </button>
+                  ) : (
+                    <button
+                      disabled
+                      className="px-3 py-1.5 bg-gray-100 text-gray-400 rounded-lg text-sm font-medium cursor-not-allowed"
+                    >
+                      🎁 경품추첨
+                    </button>
+                  )}
+                </div>
               </div>
               
               {/* registration_campaign_id가 있으면 세션 카드 표시 */}
