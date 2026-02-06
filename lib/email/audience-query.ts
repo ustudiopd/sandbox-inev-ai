@@ -7,7 +7,7 @@ export interface AudienceRecipient {
 }
 
 export interface AudienceQuery {
-  type: 'webinar_registrants' | 'registration_campaign_registrants'
+  type: 'webinar_registrants' | 'registration_campaign_registrants' | 'survey_campaign_registrants'
   webinar_id?: string
   campaign_id?: string
   exclude_entered?: boolean
@@ -52,7 +52,7 @@ export async function getAudience(
     }))
   }
 
-  if (query.type === 'registration_campaign_registrants') {
+  if (query.type === 'registration_campaign_registrants' || query.type === 'survey_campaign_registrants') {
     if (!query.campaign_id) {
       throw new Error('campaign_id가 필요합니다')
     }

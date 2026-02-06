@@ -828,6 +828,22 @@ export default function EmailCampaignTab({ clientId, scopeType, scopeId }: Email
     }
   }
 
+  const handleResetStuck = async (campaign: EmailCampaign) => {
+    if (!confirm('발송 중 상태로 멈춰있는 캠페인을 실패 상태로 복구하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) return
+    try {
+      const res = await fetch(`/api/client/emails/${campaign.id}/reset-stuck`, { method: 'POST' })
+      const result = await res.json()
+      if (result.success) {
+        await fetchCampaigns()
+        alert('발송 중 상태가 실패 상태로 복구되었습니다.')
+      } else {
+        alert(`복구 실패: ${result.error || '알 수 없는 오류'}`)
+      }
+    } catch (e: any) {
+      alert(`복구 실패: ${e?.message || '알 수 없는 오류'}`)
+    }
+  }
+
   const handleFailedResendClick = async () => {
     if (!selectedCampaign) return
     try {
@@ -852,6 +868,51 @@ export default function EmailCampaignTab({ clientId, scopeType, scopeId }: Email
       setShowSendConfirmModal(true)
     } catch (e: any) {
       alert(e?.message || '실패 목록 조회 실패')
+    } finally {
+      setLoadingRecipientCount(false)
+      setLoadingAllRecipients(false)
+    }
+  }
+
+  const handleResendCampaign = async (campaign: EmailCampaign) => {
+    if (!confirm(`실패한 캠페인을 다시 발송하시겠습니까? 상태가 '승인됨'으로 변경된 후 발송됩니다.`)) return
+    
+    try {
+      // 1. 상태를 ready로 변경
+      const approveRes = await fetch(`/api/client/emails/${campaign.id}/approve`, { method: 'POST' })
+      const approveResult = await approveRes.json()
+      
+      if (!approveResult.success) {
+        alert(`상태 변경 실패: ${approveResult.error || '알 수 없는 오류'}`)
+        return
+      }
+
+      // 2. 수신자 목록 가져오기
+      setSelectedCampaign(campaign)
+      setLoadingRecipientCount(true)
+      setLoadingAllRecipients(true)
+      
+      const [previewResponse, listResponse] = await Promise.all([
+        fetch(`/api/client/emails/${campaign.id}/audience-preview`),
+        fetch(`/api/client/emails/${campaign.id}/audience-list`)
+      ])
+      
+      const previewResult = await previewResponse.json()
+      const listResult = await listResponse.json()
+      
+      if (previewResult.success && listResult.success) {
+        setResendFailedOnlyMode(false)
+        setRecipientCount(previewResult.data.totalCount)
+        setRecipientSamples(previewResult.data.samples || [])
+        setAllRecipients(listResult.data.recipients || [])
+        setSelectedRecipients(new Set(listResult.data.recipients.map((r: { email: string }) => r.email)))
+        setShowSendConfirmModal(true)
+      } else {
+        alert(`수신자 조회 실패: ${previewResult.error || listResult.error || '알 수 없는 오류'}`)
+      }
+    } catch (error: any) {
+      console.error('재발송 준비 오류:', error)
+      alert(`재발송 준비 실패: ${error.message || '알 수 없는 오류'}`)
     } finally {
       setLoadingRecipientCount(false)
       setLoadingAllRecipients(false)
@@ -1229,6 +1290,24 @@ export default function EmailCampaignTab({ clientId, scopeType, scopeId }: Email
                       >
                         편집
                       </button>
+                      {campaign.status === 'sending' && (
+                        <button
+                          onClick={() => handleResetStuck(campaign)}
+                          className="px-3 py-1 text-sm bg-yellow-50 text-yellow-700 rounded hover:bg-yellow-100 transition-colors"
+                          title="발송 중 상태로 멈춰있는 경우 복구"
+                        >
+                          복구
+                        </button>
+                      )}
+                      {campaign.status === 'failed' && (
+                        <button
+                          onClick={() => handleResendCampaign(campaign)}
+                          className="px-3 py-1 text-sm bg-green-50 text-green-600 rounded hover:bg-green-100 transition-colors"
+                          title="실패한 캠페인 다시 발송"
+                        >
+                          다시 발송
+                        </button>
+                      )}
                       {canDelete(campaign.status) && (
                         <button
                           onClick={() => handleDeleteClick(campaign)}

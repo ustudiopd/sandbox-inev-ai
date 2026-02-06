@@ -75,7 +75,35 @@ export async function POST(
     try {
       // 대상자 조회
       const audienceQuery = (campaign.audience_query_json || {}) as any
-      let recipients = await getAudience(audienceQuery, admin)
+      console.log('[EmailSend] 대상자 조회 시작:', { campaignId, audienceQuery })
+      let recipients: any[]
+      try {
+        recipients = await getAudience(audienceQuery, admin)
+        console.log('[EmailSend] 대상자 조회 완료:', { count: recipients.length })
+      } catch (audienceError: any) {
+        console.error('[EmailSend] 대상자 조회 실패:', audienceError)
+        // 대상자 조회 실패 시 failed로 전이
+        await admin
+          .from('email_campaigns')
+          .update({
+            status: 'failed',
+          })
+          .eq('id', campaignId)
+
+        await admin.from('email_runs').insert({
+          email_campaign_id: campaignId,
+          run_type: 'send',
+          status: 'failed',
+          provider: 'resend',
+          error: `대상자 조회 실패: ${audienceError.message || '알 수 없는 오류'}`,
+          created_by: user.id,
+        })
+
+        return NextResponse.json({
+          success: false,
+          error: `대상자 조회 실패: ${audienceError.message || '알 수 없는 오류'}`,
+        })
+      }
 
       // 선택된 이메일이 있으면 필터링 (요청 body 또는 audience_query_json에서)
       const emailsToFilter = selectedEmails || audienceQuery.selected_emails
@@ -109,14 +137,42 @@ export async function POST(
       }
 
       // 발송 정책 조회
-      const emailPolicy = await getCampaignEmailPolicy(campaign.client_id, {
-        from_domain: campaign.from_domain,
-        from_localpart: campaign.from_localpart,
-        from_name: campaign.from_name,
-        reply_to: campaign.reply_to,
-      })
+      console.log('[EmailSend] 발송 정책 조회 시작:', { clientId: campaign.client_id })
+      let emailPolicy
+      try {
+        emailPolicy = await getCampaignEmailPolicy(campaign.client_id, {
+          from_domain: campaign.from_domain,
+          from_localpart: campaign.from_localpart,
+          from_name: campaign.from_name,
+          reply_to: campaign.reply_to,
+        })
+        console.log('[EmailSend] 발송 정책 조회 완료:', { from: emailPolicy.from, replyTo: emailPolicy.replyTo })
+      } catch (policyError: any) {
+        console.error('[EmailSend] 발송 정책 조회 실패:', policyError)
+        await admin
+          .from('email_campaigns')
+          .update({
+            status: 'failed',
+          })
+          .eq('id', campaignId)
+
+        await admin.from('email_runs').insert({
+          email_campaign_id: campaignId,
+          run_type: 'send',
+          status: 'failed',
+          provider: 'resend',
+          error: `발송 정책 조회 실패: ${policyError.message || '알 수 없는 오류'}`,
+          created_by: user.id,
+        })
+
+        return NextResponse.json({
+          success: false,
+          error: `발송 정책 조회 실패: ${policyError.message || '알 수 없는 오류'}`,
+        })
+      }
 
       // 배치 발송
+      console.log('[EmailSend] 배치 발송 시작:', { recipientCount: recipients.length })
       const variables = (campaign.variables_json || {}) as Record<string, string>
       const { success, failed } = await sendCampaignBatch(campaignId, recipients, {
         campaignId,
@@ -132,6 +188,8 @@ export async function POST(
       const total = recipients.length
       const failureRate = total > 0 ? failed / total : 0
       const finalStatus = failureRate >= 0.5 ? 'failed' : 'sent'
+      
+      console.log('[EmailSend] 배치 발송 완료:', { total, success, failed, finalStatus })
 
       if (!isResendFailed) {
         await admin
@@ -187,6 +245,7 @@ export async function POST(
         },
       })
     } catch (sendError: any) {
+      console.error('[EmailSend] 발송 중 에러 발생:', sendError)
       if (!isResendFailed) {
         await admin
           .from('email_campaigns')
@@ -202,7 +261,11 @@ export async function POST(
         created_by: user.id,
       })
 
-      throw sendError
+      // 에러를 다시 throw하지 않고 응답 반환
+      return NextResponse.json(
+        { success: false, error: sendError.message || 'Internal server error' },
+        { status: 500 }
+      )
     }
   } catch (error: any) {
     console.error('이메일 발송 오류:', error)

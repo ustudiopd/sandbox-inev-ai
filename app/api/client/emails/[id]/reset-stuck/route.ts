@@ -51,11 +51,12 @@ export async function POST(
 
     const startedAt = new Date(campaign.sending_started_at)
     const now = new Date()
-    const hoursElapsed = (now.getTime() - startedAt.getTime()) / (1000 * 60 * 60)
+    const minutesElapsed = (now.getTime() - startedAt.getTime()) / (1000 * 60)
 
-    if (hoursElapsed < 1) {
+    // 1분 이상 경과한 경우만 복구 가능 (너무 짧은 시간 내 복구 방지)
+    if (minutesElapsed < 1) {
       return NextResponse.json(
-        { success: false, error: '1시간이 경과하지 않았습니다. 아직 발송 중일 수 있습니다.' },
+        { success: false, error: '1분이 경과하지 않았습니다. 아직 발송 중일 수 있습니다. 잠시 후 다시 시도해주세요.' },
         { status: 400 }
       )
     }
@@ -79,12 +80,13 @@ export async function POST(
     }
 
     // email_runs에 실패 로그 기록 (서버 전용)
+    const hoursElapsed = minutesElapsed / 60
     await admin.from('email_runs').insert({
       email_campaign_id: campaignId,
       run_type: 'send',
       status: 'failed',
       provider: 'resend',
-      error: `sending 고착 복구: ${hoursElapsed.toFixed(1)}시간 경과`,
+      error: `sending 고착 복구: ${minutesElapsed.toFixed(1)}분 경과`,
       created_by: user.id,
     })
 
@@ -95,6 +97,7 @@ export async function POST(
       action: 'EMAIL_CAMPAIGN_RESET_STUCK',
       payload: {
         campaign_id: campaignId,
+        minutes_elapsed: minutesElapsed,
         hours_elapsed: hoursElapsed,
       },
     })
