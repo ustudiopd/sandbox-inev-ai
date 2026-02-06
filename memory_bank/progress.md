@@ -1,5 +1,19 @@
 # 완료된 작업 내역 (Progress)
 
+## [2026-02-06] 웨비나 추첨 및 통계 기능 개선
+- ✅ 사용자 지정 방식 추첨에 저장 기능 추가
+  - `app/api/webinars/[webinarId]/giveaways/[giveawayId]/route.ts`: PUT 엔드포인트에 `manual_winners` 업데이트 기능 추가
+  - `app/(admin)/webinar/[id]/console/components/GiveawayManagement.tsx`: DrawModal에 저장 버튼 및 저장 기능 구현
+    - 사용자 지정 방식일 때만 "저장" 버튼 표시
+    - 선택한 당첨자들을 `giveaways.manual_winners` 필드에 저장
+    - 모달을 다시 열 때 저장된 당첨자 목록 자동 로드
+    - 저장된 데이터는 계속 유지되어 나중에 추첨 실행 가능
+- ✅ 접속 통계 시작 시간 변경 (1시간 전 → 2시간 전)
+  - `app/(admin)/webinar/[id]/console/components/StatsTab.tsx`: 그래프 시작 시간을 웨비나 시작 2시간 전으로 변경
+  - `app/(admin)/webinar/[id]/console/components/DashboardTab.tsx`: 대시보드 접속 통계 시작 시간 변경
+  - `app/api/webinars/[webinarId]/stats/access/route.ts`: API 데이터 조회 시작 시간을 2시간 전으로 변경
+  - 변수명 및 메시지 업데이트: `oneHourBeforeStart` → `twoHoursBeforeStart`, "1시간 전" → "2시간 전"
+
 ## [2026-02-05] HPE 온디맨드 페이지 모바일 최적화 완료
 - ✅ 온디맨드 랜딩 페이지 모바일 최적화 (`OnDemandLandingPage.tsx`)
   - 히어로 섹션 높이 조정 (`max-sm:h-[242px]`)

@@ -26,6 +26,8 @@ interface Registrant {
   utm_term?: string | null
   utm_content?: string | null
   marketing_campaign_link_id?: string | null
+  first_accessed_at?: string | null
+  last_accessed_at?: string | null
 }
 
 export default function ParticipantsTab({ webinarId }: ParticipantsTabProps) {
@@ -303,6 +305,8 @@ export default function ParticipantsTab({ webinarId }: ParticipantsTabProps) {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">이름</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">이메일</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">회사명</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">최초 접속시간</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">마지막 접속시간</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">직책</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">전화번호</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">산업</th>
@@ -338,6 +342,22 @@ export default function ParticipantsTab({ webinarId }: ParticipantsTabProps) {
                         onClick={() => handleRegistrantClick(registrant)}
                       >
                         {regData.company || registrant.company || '-'}
+                      </td>
+                      <td 
+                        className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 cursor-pointer"
+                        onClick={() => handleRegistrantClick(registrant)}
+                      >
+                        {registrant.first_accessed_at 
+                          ? new Date(registrant.first_accessed_at).toLocaleString('ko-KR') 
+                          : '-'}
+                      </td>
+                      <td 
+                        className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 cursor-pointer"
+                        onClick={() => handleRegistrantClick(registrant)}
+                      >
+                        {registrant.last_accessed_at 
+                          ? new Date(registrant.last_accessed_at).toLocaleString('ko-KR') 
+                          : '-'}
                       </td>
                       <td 
                         className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 cursor-pointer"

@@ -99,6 +99,8 @@ interface StatsData {
   }
   sessions?: {
     totalSessions: number
+    completedSessions: number
+    activeSessions: number
     uniqueUsers: number
     totalWatchSeconds: number
     totalWatchedSecondsRaw: number
@@ -129,11 +131,25 @@ interface StatsData {
 
 const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899']
 
+type TopUser = {
+  userId: string
+  displayName: string
+  email: string | null
+  visitCount: number
+  totalWatchMinutes: number
+  totalWatchedMinutesRaw: number
+  avgWatchMinutes: number
+  avgWatchedMinutesRaw: number
+  firstEnteredAt: string
+  lastExitedAt: string
+}
+
 export default function StatsTab({ webinar }: StatsTabProps) {
   const webinarId = webinar.slug || webinar.id
   const [stats, setStats] = useState<StatsData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [selectedTopUser, setSelectedTopUser] = useState<TopUser | null>(null)
 
   console.log('[StatsTab] 컴포넌트 렌더링:', { webinarId, webinar })
 
@@ -158,6 +174,9 @@ export default function StatsTab({ webinar }: StatsTabProps) {
       const webinarStartTime = webinar.webinar_start_time || webinar.start_time
       if (webinarStartTime) {
         const startTime = new Date(webinarStartTime)
+        // 웨비나 시작 시간 2시간 전부터 조회
+        const fromTime = new Date(startTime.getTime() - 2 * 60 * 60 * 1000)
+        
         // 시작 시간을 기준으로 해당 날짜의 자정 계산
         const startDate = new Date(startTime.getFullYear(), startTime.getMonth(), startTime.getDate())
         const endOfDay = new Date(startDate)
@@ -180,7 +199,7 @@ export default function StatsTab({ webinar }: StatsTabProps) {
           toTime = endOfDay
         }
         
-        params.set('from', startTime.toISOString())
+        params.set('from', fromTime.toISOString())
         params.set('to', toTime.toISOString())
       }
 
@@ -216,6 +235,11 @@ export default function StatsTab({ webinar }: StatsTabProps) {
 
       if (result.success) {
         console.log('[StatsTab] 통계 데이터 설정:', result.data)
+        console.log('[StatsTab] sessions 데이터 확인:', {
+          hasSessions: !!result.data?.sessions,
+          sessionsKeys: result.data?.sessions ? Object.keys(result.data.sessions) : [],
+          sessionsPreview: result.data?.sessions ? JSON.stringify(result.data.sessions).substring(0, 500) : 'null'
+        })
         setStats(result.data)
       } else {
         console.error('[StatsTab] API 오류:', result.error)
@@ -293,50 +317,91 @@ export default function StatsTab({ webinar }: StatsTabProps) {
 
   return (
     <div className="space-y-6">
-      {/* 개요 카드 */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="bg-white p-6 rounded-xl shadow-lg">
-          <div className="text-sm text-gray-600 mb-2">총 등록자 수</div>
+      {/* 실시간 상태 요약 - DashboardTab과 동일한 구조 */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-xl border-2 border-blue-300">
+          <div className="text-sm text-gray-700 mb-2 font-medium">총 등록자</div>
           <div className="text-3xl font-bold text-blue-600">{stats.registrants?.totalRegistrants || 0}</div>
         </div>
-        <div className="bg-white p-6 rounded-xl shadow-lg">
-          <div className="text-sm text-gray-600 mb-2">실제 접속자 수</div>
-          <div className="text-3xl font-bold text-green-600">
-            {stats.access?.totalAttendees || 0}
-          </div>
+        <div className="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-xl border-2 border-green-300">
+          <div className="text-sm text-gray-700 mb-2 font-medium">입장한 사람</div>
+          <div className="text-3xl font-bold text-green-600">{stats.access?.totalAttendees || 0}</div>
         </div>
-        <div className="bg-white p-6 rounded-xl shadow-lg">
-          <div className="text-sm text-gray-600 mb-2">최대 동시 접속자</div>
-          <div className="text-3xl font-bold text-purple-600">
+        <div className="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-xl border-2 border-green-300">
+          <div className="text-sm text-gray-700 mb-2 font-medium">최대 동시 접속자</div>
+          <div className="text-3xl font-bold text-green-600">
             {stats.access?.maxConcurrentParticipants || stats.registrants?.maxConcurrentParticipants || 0}
           </div>
         </div>
-        <div className="bg-white p-6 rounded-xl shadow-lg">
-          <div className="text-sm text-gray-600 mb-2">평균 동시 접속자</div>
+        <div className="bg-gradient-to-br from-orange-50 to-orange-100 p-6 rounded-xl border-2 border-orange-300">
+          <div className="text-sm text-gray-700 mb-2 font-medium">평균 동시 접속자</div>
           <div className="text-3xl font-bold text-orange-600">
-            {stats.access?.avgConcurrentParticipants
-              ? stats.access.avgConcurrentParticipants.toFixed(2)
-              : '0.00'}
+            {stats.access?.avgConcurrentParticipants ? Math.round(stats.access.avgConcurrentParticipants) : 0}
           </div>
         </div>
-        <div className="bg-white p-6 rounded-xl shadow-lg">
-          <div className="text-sm text-gray-600 mb-2">총 메시지 수</div>
-          <div className="text-3xl font-bold text-indigo-600">
-            {stats.chat?.totalMessages || 0}
+      </div>
+
+      {/* 참여도 / 인터랙션 - DashboardTab과 동일한 구조 */}
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+        {stats.chat ? (
+          <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-xl p-4 border-2 border-indigo-300">
+            <div className="text-sm text-gray-700 mb-1 font-medium">채팅 참여율</div>
+            <div className="text-2xl font-bold text-indigo-600">{stats.chat.participationRate.toFixed(1)}%</div>
           </div>
-        </div>
-        <div className="bg-white p-6 rounded-xl shadow-lg">
-          <div className="text-sm text-gray-600 mb-2">총 질문 수</div>
-          <div className="text-3xl font-bold text-amber-600">
-            {stats.qa?.totalQuestions || 0}
+        ) : (
+          <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-xl p-4 border-2 border-indigo-300">
+            <div className="text-sm text-gray-700 mb-1 font-medium">채팅 참여율</div>
+            <div className="text-2xl font-bold text-indigo-400">0.0%</div>
           </div>
-        </div>
-        <div className="bg-white p-6 rounded-xl shadow-lg">
-          <div className="text-sm text-gray-600 mb-2">답변된 질문 수</div>
-          <div className="text-3xl font-bold text-emerald-600">
-            {stats.qa?.answeredQuestions || 0}
+        )}
+        {stats.chat ? (
+          <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-xl p-4 border-2 border-indigo-300">
+            <div className="text-sm text-gray-700 mb-1 font-medium">총 메시지</div>
+            <div className="text-2xl font-bold text-indigo-600">{stats.chat.totalMessages}</div>
           </div>
-        </div>
+        ) : (
+          <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-xl p-4 border-2 border-indigo-300">
+            <div className="text-sm text-gray-700 mb-1 font-medium">총 메시지</div>
+            <div className="text-2xl font-bold text-indigo-400">0</div>
+          </div>
+        )}
+        {stats.qa ? (
+          <div className="bg-gradient-to-br from-amber-50 to-amber-100 rounded-xl p-4 border-2 border-amber-300">
+            <div className="text-sm text-gray-700 mb-1 font-medium">총 질문</div>
+            <div className="text-2xl font-bold text-amber-600">{stats.qa.totalQuestions}</div>
+          </div>
+        ) : (
+          <div className="bg-gradient-to-br from-amber-50 to-amber-100 rounded-xl p-4 border-2 border-amber-300">
+            <div className="text-sm text-gray-700 mb-1 font-medium">총 질문</div>
+            <div className="text-2xl font-bold text-amber-400">0</div>
+          </div>
+        )}
+        {stats.qa ? (
+          <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-4 border-2 border-purple-300">
+            <div className="text-sm text-gray-700 mb-1 font-medium">답변율</div>
+            <div className="text-2xl font-bold text-purple-600">
+              {stats.qa.totalQuestions > 0
+                ? ((stats.qa.answeredQuestions / stats.qa.totalQuestions) * 100).toFixed(1)
+                : 0}%
+            </div>
+          </div>
+        ) : (
+          <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-4 border-2 border-purple-300">
+            <div className="text-sm text-gray-700 mb-1 font-medium">답변율</div>
+            <div className="text-2xl font-bold text-purple-400">0%</div>
+          </div>
+        )}
+        {stats.forms ? (
+          <div className="bg-gradient-to-br from-cyan-50 to-cyan-100 rounded-xl p-4 border-2 border-cyan-300">
+            <div className="text-sm text-gray-700 mb-1 font-medium">설문 응답</div>
+            <div className="text-2xl font-bold text-cyan-600">{stats.forms.survey.totalSubmissions}</div>
+          </div>
+        ) : (
+          <div className="bg-gradient-to-br from-cyan-50 to-cyan-100 rounded-xl p-4 border-2 border-cyan-300">
+            <div className="text-sm text-gray-700 mb-1 font-medium">설문 응답</div>
+            <div className="text-2xl font-bold text-cyan-400">0</div>
+          </div>
+        )}
       </div>
 
       {/* 채팅 통계 */}
@@ -589,23 +654,23 @@ export default function StatsTab({ webinar }: StatsTabProps) {
             }
 
             const startTime = new Date(webinarStartTime)
-            // 웨비나 시작 시간 1시간 전
-            const oneHourBeforeStart = new Date(startTime.getTime() - 60 * 60 * 1000)
+            // 웨비나 시작 시간 2시간 전
+            const twoHoursBeforeStart = new Date(startTime.getTime() - 2 * 60 * 60 * 1000)
             // KST 기준으로 현재 시간 계산
             const nowKST = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Seoul' }))
             
-            // 웨비나 시작 시간 1시간 전 이전인지 확인
-            const isBeforeOneHourBeforeStart = nowKST < oneHourBeforeStart
+            // 웨비나 시작 시간 2시간 전 이전인지 확인
+            const isBeforeTwoHoursBeforeStart = nowKST < twoHoursBeforeStart
             
-            if (isBeforeOneHourBeforeStart || !stats?.access || accessTimelineData.length === 0) {
+            if (isBeforeTwoHoursBeforeStart || !stats?.access || accessTimelineData.length === 0) {
               return (
                 <div className="h-[300px] flex items-center justify-center bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
                   <div className="text-center">
                     <p className="text-gray-500 font-medium mb-1">
-                      {isBeforeOneHourBeforeStart ? '웨비나 시작 1시간 전부터 통계가 표시됩니다.' : '접속 통계 데이터가 아직 없습니다.'}
+                      {isBeforeTwoHoursBeforeStart ? '웨비나 시작 2시간 전부터 통계가 표시됩니다.' : '접속 통계 데이터가 아직 없습니다.'}
                     </p>
                     <p className="text-gray-400 text-sm">
-                      웨비나 시작 1시간 전부터 접속자 통계가 그래프로 표시됩니다.
+                      웨비나 시작 2시간 전부터 접속자 통계가 그래프로 표시됩니다.
                     </p>
                   </div>
                 </div>
@@ -810,30 +875,84 @@ export default function StatsTab({ webinar }: StatsTabProps) {
       )}
 
       {/* 시청시간 통계 */}
-      {stats.sessions && (
-        <div className="bg-white rounded-xl shadow-lg p-6">
-          <h3 className="text-lg font-semibold mb-4">시청시간 통계</h3>
+      {(() => {
+        console.log('[StatsTab] 시청시간 통계 렌더링 체크:', {
+          hasStats: !!stats,
+          hasSessions: !!stats?.sessions,
+          sessionsData: stats?.sessions ? Object.keys(stats.sessions) : []
+        })
+        return null
+      })()}
+      <div className="bg-white rounded-xl shadow-lg p-6">
+        <h3 className="text-lg font-semibold mb-4">시청시간 통계</h3>
+        {stats.sessions ? (
+          <>
           
-          {/* 기본 통계 */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-            <div>
-              <div className="text-sm text-gray-600 mb-1">총 세션 수</div>
-              <div className="text-2xl font-bold text-gray-900">{stats.sessions.totalSessions}</div>
-            </div>
-            <div>
-              <div className="text-sm text-gray-600 mb-1">고유 참여자</div>
-              <div className="text-2xl font-bold text-blue-600">{stats.sessions.uniqueUsers}</div>
-            </div>
-            <div>
-              <div className="text-sm text-gray-600 mb-1">평균 시청시간</div>
-              <div className="text-2xl font-bold text-green-600">
-                {stats.sessions.avgWatchedMinutesRaw}분
+          {/* 전체 통계 */}
+          <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+            <h4 className="text-md font-semibold mb-4">전체 통계</h4>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div>
+                <div className="text-sm text-gray-600 mb-1">총 세션 수</div>
+                <div className="text-2xl font-bold text-gray-900">{stats.sessions.totalSessions}개</div>
+              </div>
+              <div>
+                <div className="text-sm text-gray-600 mb-1">고유 사용자 수</div>
+                <div className="text-2xl font-bold text-blue-600">{stats.sessions.uniqueUsers}명</div>
+              </div>
+              <div>
+                <div className="text-sm text-gray-600 mb-1">완료된 세션</div>
+                <div className="text-2xl font-bold text-green-600">
+                  {stats.sessions.completedSessions || 0}개
+                </div>
+              </div>
+              <div>
+                <div className="text-sm text-gray-600 mb-1">진행 중 세션</div>
+                <div className="text-2xl font-bold text-orange-600">
+                  {stats.sessions.activeSessions || 0}개
+                </div>
               </div>
             </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+              <div>
+                <div className="text-sm text-gray-600 mb-1">총 시청시간 (heartbeat)</div>
+                <div className="text-xl font-bold text-purple-600">
+                  {Math.floor((stats.sessions.totalWatchedSecondsRaw || 0) / 60)}분 {(stats.sessions.totalWatchedSecondsRaw || 0) % 60}초
+                </div>
+              </div>
+              <div>
+                <div className="text-sm text-gray-600 mb-1">평균 시청시간</div>
+                <div className="text-xl font-bold text-indigo-600">
+                  {Math.floor((stats.sessions.avgWatchedSecondsRaw || 0) / 60)}분 {(stats.sessions.avgWatchedSecondsRaw || 0) % 60}초
+                </div>
+              </div>
+              <div>
+                <div className="text-sm text-gray-600 mb-1">총 체류시간</div>
+                <div className="text-xl font-bold text-teal-600">
+                  {Math.floor((stats.sessions.totalWatchSeconds || 0) / 60)}분 {(stats.sessions.totalWatchSeconds || 0) % 60}초
+                </div>
+              </div>
+              <div>
+                <div className="text-sm text-gray-600 mb-1">평균 체류시간</div>
+                <div className="text-xl font-bold text-cyan-600">
+                  {Math.floor((stats.sessions.avgWatchSeconds || 0) / 60)}분 {(stats.sessions.avgWatchSeconds || 0) % 60}초
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* 기본 통계 */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
             <div>
               <div className="text-sm text-gray-600 mb-1">재입장 비율</div>
               <div className="text-2xl font-bold text-purple-600">
                 {stats.sessions.returningRate}%
+              </div>
+            </div>
+            <div>
+              <div className="text-sm text-gray-600 mb-1">평균 시청시간 (분)</div>
+              <div className="text-2xl font-bold text-green-600">
+                {stats.sessions.avgWatchedMinutesRaw}분
               </div>
             </div>
           </div>
@@ -967,7 +1086,10 @@ export default function StatsTab({ webinar }: StatsTabProps) {
                   <tbody className="bg-white divide-y divide-gray-200">
                     {stats.sessions.topUsers.map((user) => (
                       <tr key={user.userId}>
-                        <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+                        <td 
+                          className="px-4 py-3 whitespace-nowrap text-sm font-medium text-blue-600 hover:text-blue-800 cursor-pointer underline"
+                          onClick={() => setSelectedTopUser(user)}
+                        >
                           {user.displayName}
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
@@ -986,6 +1108,80 @@ export default function StatsTab({ webinar }: StatsTabProps) {
               </div>
             </div>
           )}
+          </>
+        ) : (
+          <div className="text-center py-8 text-gray-500">
+            <p>시청시간 통계 데이터가 없습니다.</p>
+            <p className="text-sm mt-2">웨비나에 접속한 사용자가 있으면 통계가 표시됩니다.</p>
+          </div>
+        )}
+      </div>
+      
+      {/* 상위 참여자 상세 모달 */}
+      {selectedTopUser && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={() => setSelectedTopUser(null)}>
+          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center">
+              <h2 className="text-xl font-bold text-gray-900">
+                참여자 기본정보
+              </h2>
+              <button
+                onClick={() => setSelectedTopUser(null)}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            <div className="p-6">
+              <div className="space-y-6">
+                {/* 기본 정보 */}
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">기본 정보</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <span className="text-sm text-gray-600">이름:</span>
+                      <span className="ml-2 text-sm font-medium text-gray-900">{selectedTopUser.displayName || '-'}</span>
+                    </div>
+                    <div>
+                      <span className="text-sm text-gray-600">이메일:</span>
+                      <span className="ml-2 text-sm font-medium text-gray-900">{selectedTopUser.email || '-'}</span>
+                    </div>
+                    <div>
+                      <span className="text-sm text-gray-600">입장 횟수:</span>
+                      <span className="ml-2 text-sm font-medium text-gray-900">{selectedTopUser.visitCount}회</span>
+                    </div>
+                    <div>
+                      <span className="text-sm text-gray-600">총 시청시간:</span>
+                      <span className="ml-2 text-sm font-medium text-gray-900">{selectedTopUser.totalWatchedMinutesRaw}분</span>
+                    </div>
+                    <div>
+                      <span className="text-sm text-gray-600">평균 시청시간:</span>
+                      <span className="ml-2 text-sm font-medium text-gray-900">{selectedTopUser.avgWatchedMinutesRaw}분</span>
+                    </div>
+                    {selectedTopUser.firstEnteredAt && (
+                      <div>
+                        <span className="text-sm text-gray-600">최초 접속시간:</span>
+                        <span className="ml-2 text-sm font-medium text-gray-900">
+                          {new Date(selectedTopUser.firstEnteredAt).toLocaleString('ko-KR')}
+                        </span>
+                      </div>
+                    )}
+                    {selectedTopUser.lastExitedAt && (
+                      <div>
+                        <span className="text-sm text-gray-600">마지막 접속시간:</span>
+                        <span className="ml-2 text-sm font-medium text-gray-900">
+                          {new Date(selectedTopUser.lastExitedAt).toLocaleString('ko-KR')}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>

@@ -152,8 +152,8 @@ export async function GET(
     
     if (webinarStartTime) {
       const startTime = new Date(webinarStartTime)
-      // 웨비나 시작 시간 1시간 전부터 시작
-      from = new Date(startTime.getTime() - 60 * 60 * 1000)
+      // 웨비나 시작 시간 2시간 전부터 시작
+      from = new Date(startTime.getTime() - 2 * 60 * 60 * 1000)
       
       // 시작 시간을 기준으로 해당 날짜의 자정 계산
       const startDate = new Date(startTime.getFullYear(), startTime.getMonth(), startTime.getDate())

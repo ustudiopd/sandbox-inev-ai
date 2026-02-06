@@ -5,7 +5,18 @@
 - **도메인**: EventFlow.kr
 
 ## 1. 현재 집중하고 있는 작업  
-- **작업명**: HPE 온디맨드 플레이어 페이지 태블릿/PC 반응형 최적화 완료
+- **작업명**: 웨비나 추첨 및 통계 기능 개선
+- **상태**: ✅ 완료
+  - 사용자 지정 방식 추첨에 저장 기능 추가
+    - API 엔드포인트에 `manual_winners` 업데이트 기능 추가 (`PUT /api/webinars/[webinarId]/giveaways/[giveawayId]`)
+    - 추첨 실행 모달에 저장 버튼 추가 (사용자 지정 방식일 때만 표시)
+    - 저장된 당첨자 목록 자동 로드 기능 구현
+    - 선택한 당첨자들을 `giveaways.manual_winners` 필드에 저장하여 지속적으로 유지
+  - 접속 통계 시작 시간 변경 (1시간 전 → 2시간 전)
+    - `StatsTab.tsx`: 그래프 시작 시간을 웨비나 시작 2시간 전으로 변경
+    - `DashboardTab.tsx`: 대시보드 접속 통계 시작 시간 변경
+    - `app/api/webinars/[webinarId]/stats/access/route.ts`: API 데이터 조회 시작 시간 변경
+- **이전 작업**: HPE 온디맨드 플레이어 페이지 태블릿/PC 반응형 최적화 완료
 - **상태**: ✅ 완료
   - 온디맨드 플레이어 페이지 레이아웃·발표자 소개·Info Box·미팅 링크 적용
   - 온디맨드 설문조사 인페이지 팝업, 5문항 설문·API·DB(ondemand_survey_responses) 적용
@@ -230,6 +241,14 @@
   - glob 패키지의 high 취약점 해결 (Command injection)
   - 모든 취약점 해결 완료 (0 vulnerabilities)
   - 빌드 테스트 통과 (33개 정적 페이지 생성 완료)
+- ✅ 사용자 지정 방식 추첨 저장 기능 추가
+  - 추첨 실행 모달에 저장 버튼 추가 (사용자 지정 방식일 때만 표시)
+  - 선택한 당첨자 목록을 `giveaways.manual_winners` 필드에 저장
+  - 저장된 데이터는 모달을 다시 열 때 자동으로 로드되어 선택 상태 유지
+  - 저장 후에도 모달을 닫지 않고 계속 편집 가능
+- ✅ 접속 통계 시작 시간 변경 (1시간 전 → 2시간 전)
+  - 웨비나 시작 시간 2시간 전부터 접속 통계 그래프 표시
+  - StatsTab, DashboardTab, API 엔드포인트 모두 일관되게 변경
 
 ## 5. 현재 시스템 상태
 - **데이터베이스**: Supabase PostgreSQL (RLS 활성화)

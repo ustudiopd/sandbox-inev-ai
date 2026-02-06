@@ -848,23 +848,23 @@ export default function DashboardTab({ webinarId, webinarSlug, webinar }: Dashbo
               }
 
               const startTime = new Date(webinarStartTime)
-              // 웨비나 시작 시간 1시간 전
-              const oneHourBeforeStart = new Date(startTime.getTime() - 60 * 60 * 1000)
+              // 웨비나 시작 시간 2시간 전
+              const twoHoursBeforeStart = new Date(startTime.getTime() - 2 * 60 * 60 * 1000)
               // KST 기준으로 현재 시간 계산
               const nowKST = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Seoul' }))
               
-              // 웨비나 시작 시간 1시간 전 이전인지 확인
-              const isBeforeOneHourBeforeStart = nowKST < oneHourBeforeStart
+              // 웨비나 시작 시간 2시간 전 이전인지 확인
+              const isBeforeTwoHoursBeforeStart = nowKST < twoHoursBeforeStart
               
-              if (isBeforeOneHourBeforeStart || accessTimelineData.length === 0) {
+              if (isBeforeTwoHoursBeforeStart || accessTimelineData.length === 0) {
                 return (
                   <div className="h-[300px] flex items-center justify-center bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
                     <div className="text-center">
                       <p className="text-gray-500 font-medium mb-1">
-                        {isBeforeOneHourBeforeStart ? '웨비나 시작 1시간 전부터 통계가 표시됩니다.' : '접속 통계 데이터가 아직 없습니다.'}
+                        {isBeforeTwoHoursBeforeStart ? '웨비나 시작 2시간 전부터 통계가 표시됩니다.' : '접속 통계 데이터가 아직 없습니다.'}
                       </p>
                       <p className="text-gray-400 text-sm">
-                        웨비나 시작 1시간 전부터 접속자 통계가 그래프로 표시됩니다.
+                        웨비나 시작 2시간 전부터 접속자 통계가 그래프로 표시됩니다.
                       </p>
                     </div>
                   </div>

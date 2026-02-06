@@ -12,7 +12,8 @@ export async function PUT(
 ) {
   try {
     const { webinarId, giveawayId } = await params
-    const { name, winnersCount, status } = await req.json()
+    const body = await req.json()
+    const { name, winnersCount, status, manual_winners } = body
     
     const { user } = await requireAuth()
     const supabase = await createServerSupabase()
@@ -84,6 +85,9 @@ export async function PUT(
     if (name !== undefined) updateData.name = name.trim()
     if (winnersCount !== undefined) updateData.winners_count = winnersCount
     if (status !== undefined) updateData.status = status
+    if (manual_winners !== undefined) {
+      updateData.manual_winners = manual_winners // jsonb 배열 (null 허용)
+    }
     
     const { data: updatedGiveaway, error: updateError } = await admin
       .from('giveaways')

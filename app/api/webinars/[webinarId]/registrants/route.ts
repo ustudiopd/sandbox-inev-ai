@@ -273,11 +273,6 @@ export async function GET(
     let registrants: any[] = []
     
     if (webinar.registration_campaign_id && !isOnePredictWebinar) {
-      // 등록 페이지 참여자의 이메일 수집
-      const entryEmails = registrationEntries
-        .map((e: any) => e.registration_data?.email?.toLowerCase()?.trim())
-        .filter(Boolean)
-      
       // 웨비나의 클라이언트/에이전시 멤버십 정보 조회 (역할 확인용)
       const memberRolesMap = new Map<string, string>()
       
@@ -387,6 +382,74 @@ export async function GET(
         })
       }
       
+      // 등록 페이지 참여자의 이메일로 user_id 찾기 (세션 접속 정보 조회용)
+      const registrationEntryEmails = registrationEntries
+        .map((e: any) => e.registration_data?.email?.toLowerCase()?.trim())
+        .filter(Boolean)
+      
+      const emailToUserIdMap = new Map<string, string>()
+      if (registrationEntryEmails.length > 0) {
+        const { data: entryProfiles } = await admin
+          .from('profiles')
+          .select('id, email')
+          .in('email', registrationEntryEmails)
+        
+        if (entryProfiles) {
+          entryProfiles.forEach((p: any) => {
+            const email = p.email?.toLowerCase()?.trim()
+            if (email) {
+              emailToUserIdMap.set(email, p.id)
+            }
+          })
+        }
+      }
+      
+      // 웨비나 세션 데이터 조회 (최초/마지막 접속 시간)
+      const entryUserIds = Array.from(emailToUserIdMap.values())
+      const sessionAccessMap = new Map<string, { firstEnteredAt: string | null; lastExitedAt: string | null }>()
+      
+      if (entryUserIds.length > 0) {
+        const { data: sessions } = await admin
+          .from('webinar_user_sessions')
+          .select('user_id, entered_at, exited_at')
+          .eq('webinar_id', webinar.id)
+          .in('user_id', entryUserIds)
+          .order('entered_at', { ascending: true })
+        
+        if (sessions) {
+          // 사용자별로 그룹화하여 최초/마지막 접속 시간 계산
+          const userSessionsMap = new Map<string, Array<{ entered_at: string; exited_at: string | null }>>()
+          sessions.forEach((session: any) => {
+            if (!session.user_id) return
+            if (!userSessionsMap.has(session.user_id)) {
+              userSessionsMap.set(session.user_id, [])
+            }
+            userSessionsMap.get(session.user_id)!.push({
+              entered_at: session.entered_at,
+              exited_at: session.exited_at,
+            })
+          })
+          
+          // 각 사용자의 최초 접속 시간과 마지막 접속 시간 계산
+          userSessionsMap.forEach((userSessions, userId) => {
+            const sortedSessions = userSessions.sort((a, b) => 
+              new Date(a.entered_at).getTime() - new Date(b.entered_at).getTime()
+            )
+            const firstEnteredAt = sortedSessions[0]?.entered_at || null
+            
+            // 마지막 접속 시간: exited_at이 있는 세션 중 가장 최근 것
+            const sessionsWithExit = userSessions.filter(s => s.exited_at)
+            const lastExitedAt = sessionsWithExit.length > 0
+              ? sessionsWithExit.sort((a, b) => 
+                  new Date(b.exited_at!).getTime() - new Date(a.exited_at!).getTime()
+                )[0].exited_at
+              : null
+            
+            sessionAccessMap.set(userId, { firstEnteredAt, lastExitedAt })
+          })
+        }
+      }
+      
       // 등록 페이지 참여자 데이터 포맷팅 (event_survey_entries만 사용)
       registrants = registrationEntries.map((entry: any) => {
         const email = entry.registration_data?.email?.toLowerCase()?.trim()
@@ -429,6 +492,10 @@ export async function GET(
           }
         }
         
+        // 세션 접속 정보 가져오기 (이메일로 user_id 찾아서 매칭)
+        const userId = email ? emailToUserIdMap.get(email) : null
+        const sessionAccess = userId ? sessionAccessMap.get(userId) || { firstEnteredAt: null, lastExitedAt: null } : { firstEnteredAt: null, lastExitedAt: null }
+        
         return {
           id: `entry-${entry.id}`,
           name: name,
@@ -449,6 +516,8 @@ export async function GET(
           utm_term: entry.utm_term || null,
           utm_content: entry.utm_content || null,
           marketing_campaign_link_id: entry.marketing_campaign_link_id || null,
+          first_accessed_at: sessionAccess.firstEnteredAt,
+          last_accessed_at: sessionAccess.lastExitedAt,
         }
       })
       
@@ -581,6 +650,52 @@ export async function GET(
         })
       }
       
+      // 웨비나 세션 데이터 조회 (최초/마지막 접속 시간)
+      const sessionUserIds = (registrations || []).map((r: any) => r.user_id).filter(Boolean)
+      const sessionAccessMap = new Map<string, { firstEnteredAt: string | null; lastExitedAt: string | null }>()
+      
+      if (sessionUserIds.length > 0) {
+        const { data: sessions } = await admin
+          .from('webinar_user_sessions')
+          .select('user_id, entered_at, exited_at')
+          .eq('webinar_id', webinar.id)
+          .in('user_id', sessionUserIds)
+          .order('entered_at', { ascending: true })
+        
+        if (sessions) {
+          // 사용자별로 그룹화하여 최초/마지막 접속 시간 계산
+          const userSessionsMap = new Map<string, Array<{ entered_at: string; exited_at: string | null }>>()
+          sessions.forEach((session: any) => {
+            if (!session.user_id) return
+            if (!userSessionsMap.has(session.user_id)) {
+              userSessionsMap.set(session.user_id, [])
+            }
+            userSessionsMap.get(session.user_id)!.push({
+              entered_at: session.entered_at,
+              exited_at: session.exited_at,
+            })
+          })
+          
+          // 각 사용자의 최초 접속 시간과 마지막 접속 시간 계산
+          userSessionsMap.forEach((userSessions, userId) => {
+            const sortedSessions = userSessions.sort((a, b) => 
+              new Date(a.entered_at).getTime() - new Date(b.entered_at).getTime()
+            )
+            const firstEnteredAt = sortedSessions[0]?.entered_at || null
+            
+            // 마지막 접속 시간: exited_at이 있는 세션 중 가장 최근 것
+            const sessionsWithExit = userSessions.filter(s => s.exited_at)
+            const lastExitedAt = sessionsWithExit.length > 0
+              ? sessionsWithExit.sort((a, b) => 
+                  new Date(b.exited_at!).getTime() - new Date(a.exited_at!).getTime()
+                )[0].exited_at
+              : null
+            
+            sessionAccessMap.set(userId, { firstEnteredAt, lastExitedAt })
+          })
+        }
+      }
+      
       // 웨비나 등록자 데이터 포맷팅
       registrants = (registrations || []).map((reg: any) => {
         const profile = profilesMap.get(reg.user_id) || {}
@@ -613,6 +728,9 @@ export async function GET(
         // registration_data에서 company, phone_norm 추출
         const regData = reg.registration_data || {}
         
+        // 세션 접속 정보 가져오기
+        const sessionAccess = sessionAccessMap.get(reg.user_id) || { firstEnteredAt: null, lastExitedAt: null }
+        
         return {
           id: reg.user_id || `reg-${reg.user_id}`,
           name: reg.nickname || profile.display_name || profile.email || '익명',
@@ -627,6 +745,8 @@ export async function GET(
           phone_norm: regData.phone_norm || regData.phone || null,
           survey_no: reg.survey_no || null,
           code6: reg.code6 || null,
+          first_accessed_at: sessionAccess.firstEnteredAt,
+          last_accessed_at: sessionAccess.lastExitedAt,
         }
       })
     }

@@ -253,6 +253,7 @@ function DrawModal({
   const [loading, setLoading] = useState(true)
   const [selectedWinners, setSelectedWinners] = useState<string[]>([])
   const [updating, setUpdating] = useState<Record<string, boolean>>({})
+  const [saving, setSaving] = useState(false)
   const supabase = createClientSupabase()
   const isManual = giveaway.draw_type === 'manual'
 
@@ -286,13 +287,23 @@ function DrawModal({
         setParticipants(result.participants)
         setFilteredParticipants(result.participants)
         
-        // 사용자 지정 방식일 때, 참여 상태인 사람들을 자동으로 선택
+        // 사용자 지정 방식일 때
         if (isManual) {
-          const eligibleParticipants = result.participants
-            .filter((p: any) => p.eligible === true)
-            .map((p: any) => p.participant_id)
-            .slice(0, giveaway.winners_count) // 당첨자 수만큼만 선택
-          setSelectedWinners(eligibleParticipants)
+          // 저장된 manual_winners가 있으면 그것을 사용, 없으면 참여 상태인 사람들을 자동으로 선택
+          if (giveaway.manual_winners && Array.isArray(giveaway.manual_winners) && giveaway.manual_winners.length > 0) {
+            // 저장된 당첨자 중에서 실제로 참여자 목록에 있는 것만 선택
+            const savedWinners = giveaway.manual_winners.filter((id: string) =>
+              result.participants.some((p: any) => p.participant_id === id)
+            )
+            setSelectedWinners(savedWinners)
+          } else {
+            // 저장된 것이 없으면 참여 상태인 사람들을 자동으로 선택
+            const eligibleParticipants = result.participants
+              .filter((p: any) => p.eligible === true)
+              .map((p: any) => p.participant_id)
+              .slice(0, giveaway.winners_count) // 당첨자 수만큼만 선택
+            setSelectedWinners(eligibleParticipants)
+          }
         }
       }
     } catch (error) {
@@ -350,6 +361,39 @@ function DrawModal({
           return next
         })
       }
+    }
+  }
+
+  const handleSave = async () => {
+    if (!isManual) return
+    
+    if (selectedWinners.length === 0) {
+      alert('최소 1명 이상 선택해주세요')
+      return
+    }
+    
+    try {
+      setSaving(true)
+      const response = await fetch(`/api/webinars/${webinarId}/giveaways/${giveaway.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          manual_winners: selectedWinners,
+        }),
+      })
+      
+      const result = await response.json()
+      
+      if (!response.ok || result.error) {
+        throw new Error(result.error || '저장 실패')
+      }
+      
+      alert('저장되었습니다.')
+    } catch (error: any) {
+      console.error('저장 실패:', error)
+      alert('저장에 실패했습니다: ' + error.message)
+    } finally {
+      setSaving(false)
     }
   }
 
@@ -484,6 +528,15 @@ function DrawModal({
           >
             취소
           </button>
+          {isManual && (
+            <button
+              onClick={handleSave}
+              disabled={saving || selectedWinners.length === 0}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {saving ? '저장 중...' : '저장'}
+            </button>
+          )}
           <button
             onClick={handleDrawClick}
             disabled={isManual && selectedWinners.length === 0}

@@ -40,26 +40,62 @@ export async function GET(
     const webinarEndTime = webinarInfo?.end_time
 
     // 파라미터 파싱
-    const { from, to } = parseStatsParams(searchParams, webinarStartTime, webinarEndTime)
+    // from/to가 명시적으로 전달되면 그것을 사용, 아니면 웨비나 시작 시간 기준으로 계산
+    let from: Date
+    let to: Date
+    
+    const fromParam = searchParams.get('from')
+    const toParam = searchParams.get('to')
+    
+    if (fromParam && toParam) {
+      // 명시적으로 전달된 경우
+      from = new Date(fromParam)
+      to = new Date(toParam)
+    } else if (webinarStartTime) {
+      // 웨비나 시작 시간 2시간 전부터 조회
+      const startTime = new Date(webinarStartTime)
+      from = new Date(startTime.getTime() - 2 * 60 * 60 * 1000) // 2시간 전
+      
+      // 종료 시간이 있으면 그것을 사용, 없으면 현재 시간 또는 다음날 자정
+      if (webinarEndTime) {
+        to = new Date(webinarEndTime)
+      } else {
+        const startDate = new Date(startTime.getFullYear(), startTime.getMonth(), startTime.getDate())
+        const endOfDay = new Date(startDate)
+        endOfDay.setDate(endOfDay.getDate() + 1)
+        endOfDay.setHours(0, 0, 0, 0)
+        const now = new Date()
+        to = now < endOfDay ? now : endOfDay
+      }
+    } else {
+      // 웨비나 시작 시간이 없으면 최근 7일간 조회
+      to = new Date()
+      from = new Date(to.getTime() - 7 * 24 * 60 * 60 * 1000)
+    }
 
-    // 모든 세션 조회 (완료된 세션만)
-    const { data: sessions, error: sessionsError } = await admin
+    // 모든 세션 조회 (완료된 세션 + 진행 중 세션)
+    const { data: allSessions, error: allSessionsError } = await admin
       .from('webinar_user_sessions')
       .select('id, user_id, entered_at, exited_at, duration_seconds, watched_seconds_raw')
       .eq('webinar_id', actualWebinarId)
-      .not('exited_at', 'is', null)
       .gte('entered_at', from.toISOString())
       .lte('entered_at', to.toISOString())
 
-    if (sessionsError) {
-      console.error('[Stats Sessions] 세션 조회 오류:', sessionsError)
+    if (allSessionsError) {
+      console.error('[Stats Sessions] 세션 조회 오류:', allSessionsError)
       return NextResponse.json(
         { success: false, error: '세션 조회 실패' },
         { status: 500 }
       )
     }
 
-    const sessionsList = sessions || []
+    const allSessionsList = allSessions || []
+    
+    // 진행 중 세션 수 (exited_at이 null인 세션)
+    const activeSessions = allSessionsList.filter((s) => s.exited_at === null).length
+    
+    // 완료된 세션만 필터링 (통계 계산용)
+    const sessionsList = allSessionsList.filter((s) => s.exited_at !== null)
 
     // 1. 개인별 시청시간 집계
     const userStatsMap = new Map<string, {
@@ -133,7 +169,8 @@ export async function GET(
     })
 
     // 2. 웨비나 전체 통계
-    const totalSessions = sessionsList.length
+    const totalSessions = allSessionsList.length // 전체 세션 수 (완료 + 진행 중)
+    const completedSessions = sessionsList.length // 완료된 세션 수
     const uniqueUsers = userStats.length
     const totalWatchSeconds = sessionsList.reduce((sum, s) => sum + (s.duration_seconds || 0), 0)
     const totalWatchedSecondsRaw = sessionsList.reduce((sum, s) => sum + (s.watched_seconds_raw || 0), 0)
@@ -203,6 +240,8 @@ export async function GET(
       data: {
         // 전체 통계
         totalSessions,
+        completedSessions,
+        activeSessions,
         uniqueUsers,
         totalWatchSeconds,
         totalWatchedSecondsRaw,
