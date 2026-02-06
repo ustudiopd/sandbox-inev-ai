@@ -126,31 +126,76 @@ export default function DashboardTab({ webinarId, webinarSlug, webinar }: Dashbo
   const intervalRef = useRef<NodeJS.Timeout | null>(null)
   const logIntervalRef = useRef<NodeJS.Timeout | null>(null)
 
-  const fetchStats = async () => {
-    setRefreshing(true)
-    setError(null)
+  // 주요 수치만 빠르게 조회
+  const fetchMainStats = async () => {
     try {
       const params = new URLSearchParams()
       params.set('interval', '5m')
+      // 주요 수치만 먼저 조회 (registrants, access)
+      params.set('sections', 'registrants,access')
 
       const response = await fetch(`/api/webinars/${webinarSlug}/stats?${params.toString()}`)
       const result = await response.json()
 
       if (result.success) {
-        console.log('[DashboardTab] 통계 데이터:', result.data)
-        console.log('[DashboardTab] 현재 접속자:', result.data?.access?.currentParticipants)
-        console.log('[DashboardTab] 현재 접속자 목록:', result.data?.access?.currentParticipantList)
-        setStats(result.data)
-        // 초기 접속자 목록은 실시간 presence에서 가져오므로 여기서는 설정하지 않음
+        console.log('[DashboardTab] 주요 수치 조회 완료:', result.data)
+        // 주요 수치만 먼저 설정
+        setStats((prev) => ({
+          ...prev,
+          registrants: result.data?.registrants,
+          access: result.data?.access,
+        }))
+        setLoading(false) // 주요 수치가 로드되면 로딩 완료
       } else {
         setError(result.error || '통계 조회 실패')
+        setLoading(false)
       }
     } catch (err: any) {
+      console.error('[DashboardTab] 주요 수치 조회 오류:', err)
       setError(err.message || '통계 조회 중 오류가 발생했습니다.')
-    } finally {
       setLoading(false)
-      setRefreshing(false)
     }
+  }
+
+  // 나머지 통계를 배경에서 로드
+  const fetchDetailedStats = async () => {
+    try {
+      const params = new URLSearchParams()
+      params.set('interval', '5m')
+      // 나머지 통계 조회 (chat, qa, forms, giveaways, files, survey, sessions)
+      params.set('sections', 'chat,qa,forms,giveaways,files,survey,sessions')
+
+      const response = await fetch(`/api/webinars/${webinarSlug}/stats?${params.toString()}`)
+      const result = await response.json()
+
+      if (result.success) {
+        console.log('[DashboardTab] 상세 통계 조회 완료:', result.data)
+        // 나머지 통계 추가
+        setStats((prev) => ({
+          ...prev,
+          ...result.data,
+        }))
+      } else {
+        console.warn('[DashboardTab] 상세 통계 조회 실패:', result.error)
+        // 상세 통계 실패는 무시 (주요 수치는 이미 표시됨)
+      }
+    } catch (err: any) {
+      console.warn('[DashboardTab] 상세 통계 조회 오류:', err)
+      // 상세 통계 실패는 무시 (주요 수치는 이미 표시됨)
+    }
+  }
+
+  const fetchStats = async () => {
+    setRefreshing(true)
+    setError(null)
+    
+    // 1단계: 주요 수치 먼저 조회
+    await fetchMainStats()
+    
+    // 2단계: 나머지 통계는 배경에서 비동기로 조회
+    fetchDetailedStats().finally(() => {
+      setRefreshing(false)
+    })
   }
 
   useEffect(() => {
@@ -532,11 +577,12 @@ export default function DashboardTab({ webinarId, webinarSlug, webinar }: Dashbo
     fetchStats()
   }
 
-  if (loading && !stats) {
+  // 주요 수치가 없으면 로딩 표시
+  if (loading && !stats?.registrants && !stats?.access) {
     return (
       <div className="text-center py-12">
         <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-        <p className="mt-4 text-gray-600">통계를 불러오는 중...</p>
+        <p className="mt-4 text-gray-600">주요 수치를 불러오는 중...</p>
       </div>
     )
   }
@@ -555,22 +601,119 @@ export default function DashboardTab({ webinarId, webinarSlug, webinar }: Dashbo
     )
   }
 
-  if (!stats) {
+  // 주요 수치가 없으면 표시하지 않음
+  if (!stats?.registrants && !stats?.access) {
     return null
+  }
+
+  const handleDownloadQnA = async () => {
+    try {
+      const response = await fetch(`/api/webinars/${webinarId}/export/qna`)
+      if (!response.ok) {
+        const error = await response.json()
+        alert(error.error || 'QnA 다운로드에 실패했습니다.')
+        return
+      }
+      
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `webinar-${webinarId}-qna-${new Date().toISOString().split('T')[0]}.csv`
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+    } catch (error: any) {
+      console.error('QnA 다운로드 오류:', error)
+      alert('QnA 다운로드 중 오류가 발생했습니다.')
+    }
+  }
+
+  const handleDownloadTodayAccess = async () => {
+    try {
+      const response = await fetch(`/api/webinars/${webinarId}/export/today-access`)
+      if (!response.ok) {
+        const error = await response.json()
+        alert(error.error || '오늘 접속자 다운로드에 실패했습니다.')
+        return
+      }
+      
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      const now = new Date()
+      const kstNow = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Seoul' }))
+      const dateStr = `${kstNow.getFullYear()}${String(kstNow.getMonth() + 1).padStart(2, '0')}${String(kstNow.getDate()).padStart(2, '0')}`
+      a.download = `webinar-${webinarId}-today-access-${dateStr}.csv`
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+    } catch (error: any) {
+      console.error('오늘 접속자 다운로드 오류:', error)
+      alert('오늘 접속자 다운로드 중 오류가 발생했습니다.')
+    }
+  }
+
+  const handleDownloadSurvey = async () => {
+    try {
+      const response = await fetch(`/api/webinars/${webinarId}/export/survey`)
+      if (!response.ok) {
+        const error = await response.json()
+        alert(error.error || '설문조사 다운로드에 실패했습니다.')
+        return
+      }
+      
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      const now = new Date()
+      const kstNow = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Seoul' }))
+      const dateStr = kstNow.toISOString().split('T')[0].replace(/-/g, '')
+      a.download = `webinar-${webinarId}-survey-${dateStr}.csv`
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+    } catch (error: any) {
+      console.error('설문조사 다운로드 오류:', error)
+      alert('설문조사 다운로드 중 오류가 발생했습니다.')
+    }
   }
 
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-xl font-semibold">대시보드</h2>
-        <button
-          onClick={handleRefresh}
-          disabled={refreshing}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-        >
-          <span className={refreshing ? 'animate-spin' : ''}>🔄</span>
-          {refreshing ? '새로고침 중...' : '새로고침'}
-        </button>
+        <div className="flex items-center gap-2 flex-wrap">
+          <button
+            onClick={handleDownloadQnA}
+            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
+            title="QnA 자료 CSV 다운로드"
+          >
+            <span>📥</span>
+            <span className="hidden sm:inline">QnA 다운로드</span>
+          </button>
+          <button
+            onClick={handleDownloadSurvey}
+            className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors flex items-center gap-2"
+            title="설문조사 CSV 다운로드 (제출한 사람만)"
+          >
+            <span>📥</span>
+            <span className="hidden sm:inline">설문조사</span>
+          </button>
+          <button
+            onClick={handleRefresh}
+            disabled={refreshing}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+          >
+            <span className={refreshing ? 'animate-spin' : ''}>🔄</span>
+            {refreshing ? '새로고침 중...' : '새로고침'}
+          </button>
+        </div>
       </div>
 
       {/* 1줄: 실시간 상태 요약 - "지금 이 웨비나가 살아있는가?" */}
@@ -601,64 +744,65 @@ export default function DashboardTab({ webinarId, webinarSlug, webinar }: Dashbo
       </div>
 
       {/* 2줄: 참여도 / 인터랙션 - "사람들이 얼마나 반응했는가?" */}
+      {/* 통계가 로드 중이면 스켈레톤 표시, 로드 완료되면 실제 값 표시 */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
-        {stats.chat ? (
+        {stats.chat !== undefined ? (
           <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-xl p-4 border-2 border-indigo-300">
             <div className="text-sm text-gray-700 mb-1 font-medium">채팅 참여율</div>
-            <div className="text-2xl font-bold text-indigo-600">{stats.chat.participationRate.toFixed(1)}%</div>
+            <div className="text-2xl font-bold text-indigo-600">{stats.chat?.participationRate?.toFixed(1) || '0.0'}%</div>
           </div>
         ) : (
-          <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-xl p-4 border-2 border-indigo-300">
+          <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-xl p-4 border-2 border-indigo-300 animate-pulse">
             <div className="text-sm text-gray-700 mb-1 font-medium">채팅 참여율</div>
-            <div className="text-2xl font-bold text-indigo-400">0.0%</div>
+            <div className="text-2xl font-bold text-indigo-300">-</div>
           </div>
         )}
-        {stats.chat ? (
+        {stats.chat !== undefined ? (
           <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-xl p-4 border-2 border-indigo-300">
             <div className="text-sm text-gray-700 mb-1 font-medium">총 메시지</div>
-            <div className="text-2xl font-bold text-indigo-600">{stats.chat.totalMessages}</div>
+            <div className="text-2xl font-bold text-indigo-600">{stats.chat?.totalMessages || 0}</div>
           </div>
         ) : (
-          <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-xl p-4 border-2 border-indigo-300">
+          <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-xl p-4 border-2 border-indigo-300 animate-pulse">
             <div className="text-sm text-gray-700 mb-1 font-medium">총 메시지</div>
-            <div className="text-2xl font-bold text-indigo-400">0</div>
+            <div className="text-2xl font-bold text-indigo-300">-</div>
           </div>
         )}
-        {stats.qa ? (
+        {stats.qa !== undefined ? (
           <div className="bg-gradient-to-br from-amber-50 to-amber-100 rounded-xl p-4 border-2 border-amber-300">
             <div className="text-sm text-gray-700 mb-1 font-medium">총 질문</div>
-            <div className="text-2xl font-bold text-amber-600">{stats.qa.totalQuestions}</div>
+            <div className="text-2xl font-bold text-amber-600">{stats.qa?.totalQuestions || 0}</div>
           </div>
         ) : (
-          <div className="bg-gradient-to-br from-amber-50 to-amber-100 rounded-xl p-4 border-2 border-amber-300">
+          <div className="bg-gradient-to-br from-amber-50 to-amber-100 rounded-xl p-4 border-2 border-amber-300 animate-pulse">
             <div className="text-sm text-gray-700 mb-1 font-medium">총 질문</div>
-            <div className="text-2xl font-bold text-amber-400">0</div>
+            <div className="text-2xl font-bold text-amber-300">-</div>
           </div>
         )}
-        {stats.qa ? (
+        {stats.qa !== undefined ? (
           <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-4 border-2 border-purple-300">
             <div className="text-sm text-gray-700 mb-1 font-medium">답변율</div>
             <div className="text-2xl font-bold text-purple-600">
-              {stats.qa.totalQuestions > 0
+              {stats.qa?.totalQuestions > 0
                 ? ((stats.qa.answeredQuestions / stats.qa.totalQuestions) * 100).toFixed(1)
                 : 0}%
             </div>
           </div>
         ) : (
-          <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-4 border-2 border-purple-300">
+          <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-4 border-2 border-purple-300 animate-pulse">
             <div className="text-sm text-gray-700 mb-1 font-medium">답변율</div>
-            <div className="text-2xl font-bold text-purple-400">0%</div>
+            <div className="text-2xl font-bold text-purple-300">-</div>
           </div>
         )}
-        {stats.forms ? (
+        {stats.forms !== undefined ? (
           <div className="bg-gradient-to-br from-cyan-50 to-cyan-100 rounded-xl p-4 border-2 border-cyan-300">
             <div className="text-sm text-gray-700 mb-1 font-medium">설문 응답</div>
-            <div className="text-2xl font-bold text-cyan-600">{stats.forms.survey.totalSubmissions}</div>
+            <div className="text-2xl font-bold text-cyan-600">{stats.forms?.survey?.totalSubmissions || 0}</div>
           </div>
         ) : (
-          <div className="bg-gradient-to-br from-cyan-50 to-cyan-100 rounded-xl p-4 border-2 border-cyan-300">
+          <div className="bg-gradient-to-br from-cyan-50 to-cyan-100 rounded-xl p-4 border-2 border-cyan-300 animate-pulse">
             <div className="text-sm text-gray-700 mb-1 font-medium">설문 응답</div>
-            <div className="text-2xl font-bold text-cyan-400">0</div>
+            <div className="text-2xl font-bold text-cyan-300">-</div>
           </div>
         )}
       </div>
