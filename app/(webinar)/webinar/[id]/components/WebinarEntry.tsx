@@ -2146,28 +2146,28 @@ export default function WebinarEntry({ webinar, isWertPage: serverIsWertPage }: 
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '32px' }}>
                   {webinar.description && (
                     <div className="hero-subtitle">
-                      {webinar.description}
+                      {webinar.description || ''}
                     </div>
                   )}
                   <h1 className="hero-title">
-                    {webinar.title}
+                    {webinar.title || ''}
                   </h1>
                   {webinar.webinar_start_time && (
                     <>
                       <div className="hero-date-badges">
                         <div className="hero-date-badge">
-                          {new Date(webinar.webinar_start_time).toLocaleDateString('ko-KR', {
+                          {webinar.webinar_start_time ? new Date(webinar.webinar_start_time).toLocaleDateString('ko-KR', {
                             year: 'numeric',
                             month: '2-digit',
                             day: '2-digit'
-                          }).replace(/\. /g, '.').replace(/\.$/, '')}
+                          }).replace(/\. /g, '.').replace(/\.$/, '') : ''}
                         </div>
                         <div className="hero-date-badge">
-                          {new Date(webinar.webinar_start_time).toLocaleTimeString('ko-KR', {
+                          {webinar.webinar_start_time ? new Date(webinar.webinar_start_time).toLocaleTimeString('ko-KR', {
                             hour: '2-digit',
                             minute: '2-digit',
                             hour12: false
-                          })}
+                          }) : ''}
                         </div>
                       </div>
                       {!isWebinarStarted && countdown && (
@@ -2201,21 +2201,21 @@ export default function WebinarEntry({ webinar, isWertPage: serverIsWertPage }: 
                               <>
                                 <span style={{ fontSize: '28px', fontWeight: 700 }}>D-</span>
                                 <span style={{ fontSize: '32px', fontWeight: 700 }}>
-                                  {countdown.days}
+                                  {countdown.days || 0}
                                 </span>
                                 <span style={{ fontSize: '24px', fontWeight: 700, opacity: 0.7, margin: '0 4px' }}>:</span>
                               </>
                             )}
                             <span style={{ fontSize: '32px', fontWeight: 700 }}>
-                              {String(countdown.hours).padStart(2, '0')}
+                              {String(countdown?.hours || 0).padStart(2, '0')}
                             </span>
                             <span style={{ fontSize: '24px', fontWeight: 700, opacity: 0.7, margin: '0 4px' }}>:</span>
                             <span style={{ fontSize: '32px', fontWeight: 700 }}>
-                              {String(countdown.minutes).padStart(2, '0')}
+                              {String(countdown?.minutes || 0).padStart(2, '0')}
                             </span>
                             <span style={{ fontSize: '24px', fontWeight: 700, opacity: 0.7, margin: '0 4px' }}>:</span>
                             <span style={{ fontSize: '32px', fontWeight: 700 }}>
-                              {String(countdown.seconds).padStart(2, '0')}
+                              {String(countdown?.seconds || 0).padStart(2, '0')}
                             </span>
                           </div>
                         </div>
