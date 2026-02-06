@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { createClientSupabase } from '@/lib/supabase/client'
 
 interface Question {
@@ -30,6 +30,7 @@ export default function QAModeration({ webinarId }: QAModerationProps) {
   const [answerText, setAnswerText] = useState<Record<number, string>>({})
   const [answering, setAnswering] = useState(false)
   const [expandedAnswers, setExpandedAnswers] = useState<Set<number>>(new Set())
+  const displayWindowRef = useRef<Window | null>(null)
   const supabase = createClientSupabase()
   
   useEffect(() => {
@@ -205,6 +206,46 @@ export default function QAModeration({ webinarId }: QAModerationProps) {
     })
   }
   
+  const handleDisplayQuestion = async (questionId: number) => {
+    // 질문 데이터를 먼저 로드
+    const question = questions.find((q) => q.id === questionId)
+    
+    // 기존 중계화면 창이 있고 닫히지 않았으면 postMessage로 데이터 전달
+    if (displayWindowRef.current && !displayWindowRef.current.closed) {
+      // 질문 데이터가 있으면 즉시 전달, 없으면 API로 조회
+      if (question) {
+        displayWindowRef.current.postMessage({
+          type: 'UPDATE_QUESTION',
+          question: question,
+        }, '*')
+      } else {
+        try {
+          const response = await fetch(`/api/questions/${questionId}`)
+          if (response.ok) {
+            const result = await response.json()
+            displayWindowRef.current.postMessage({
+              type: 'UPDATE_QUESTION',
+              question: result.question,
+            }, '*')
+          }
+        } catch (error) {
+          console.error('질문 로드 실패:', error)
+        }
+      }
+      // URL도 업데이트 (히스토리만 변경, 리로드 없음)
+      displayWindowRef.current.history?.pushState?.(
+        null,
+        '',
+        `/webinar/${webinarId}/console/qa/display/${questionId}`
+      )
+      displayWindowRef.current.focus()
+    } else {
+      // 기존 창이 없거나 닫혔으면 새 창 열기
+      const url = `/webinar/${webinarId}/console/qa/display/${questionId}`
+      displayWindowRef.current = window.open(url, 'qa-display', 'width=1920,height=1080')
+    }
+  }
+  
   return (
     <div>
       {/* 필터 */}
@@ -366,45 +407,53 @@ export default function QAModeration({ webinarId }: QAModerationProps) {
                     </div>
                   )}
                 </div>
-                <div className="flex gap-2 ml-4">
-                  {question.status !== 'pinned' && (
-                    <button
-                      onClick={() => handleStatusChange(question.id, 'pinned')}
-                      className="text-xs px-3 py-1 bg-yellow-100 text-yellow-800 rounded hover:bg-yellow-200 transition-colors"
-                    >
-                      고정
-                    </button>
-                  )}
-                  {question.status === 'pinned' && (
-                    <button
-                      onClick={() => handleStatusChange(question.id, 'published')}
-                      className="text-xs px-3 py-1 bg-gray-100 text-gray-800 rounded hover:bg-gray-200 transition-colors"
-                    >
-                      고정 해제
-                    </button>
-                  )}
-                  {question.status !== 'answered' && (
-                    <button
-                      onClick={() => handleStatusChange(question.id, 'answered')}
-                      className="text-xs px-3 py-1 bg-green-100 text-green-800 rounded hover:bg-green-200 transition-colors"
-                    >
-                      답변 완료
-                    </button>
-                  )}
-                  {question.status === 'answered' && (
-                    <button
-                      onClick={() => handleStatusChange(question.id, 'published')}
-                      className="text-xs px-3 py-1 bg-gray-100 text-gray-800 rounded hover:bg-gray-200 transition-colors"
-                    >
-                      답변 취소
-                    </button>
-                  )}
+                <div className="flex flex-col gap-2 ml-4">
                   <button
-                    onClick={() => handleDelete(question.id)}
-                    className="text-xs px-3 py-1 bg-red-100 text-red-800 rounded hover:bg-red-200 transition-colors"
+                    onClick={() => handleDisplayQuestion(question.id)}
+                    className="text-xs px-3 py-1 bg-purple-100 text-purple-800 rounded hover:bg-purple-200 transition-colors whitespace-nowrap"
                   >
-                    숨김
+                    중계화면으로 보기
                   </button>
+                  <div className="flex gap-2 flex-wrap">
+                    {question.status !== 'pinned' && (
+                      <button
+                        onClick={() => handleStatusChange(question.id, 'pinned')}
+                        className="text-xs px-3 py-1 bg-yellow-100 text-yellow-800 rounded hover:bg-yellow-200 transition-colors"
+                      >
+                        고정
+                      </button>
+                    )}
+                    {question.status === 'pinned' && (
+                      <button
+                        onClick={() => handleStatusChange(question.id, 'published')}
+                        className="text-xs px-3 py-1 bg-gray-100 text-gray-800 rounded hover:bg-gray-200 transition-colors"
+                      >
+                        고정 해제
+                      </button>
+                    )}
+                    {question.status !== 'answered' && (
+                      <button
+                        onClick={() => handleStatusChange(question.id, 'answered')}
+                        className="text-xs px-3 py-1 bg-green-100 text-green-800 rounded hover:bg-green-200 transition-colors"
+                      >
+                        답변 완료
+                      </button>
+                    )}
+                    {question.status === 'answered' && (
+                      <button
+                        onClick={() => handleStatusChange(question.id, 'published')}
+                        className="text-xs px-3 py-1 bg-gray-100 text-gray-800 rounded hover:bg-gray-200 transition-colors"
+                      >
+                        답변 취소
+                      </button>
+                    )}
+                    <button
+                      onClick={() => handleDelete(question.id)}
+                      className="text-xs px-3 py-1 bg-red-100 text-red-800 rounded hover:bg-red-200 transition-colors"
+                    >
+                      숨김
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>

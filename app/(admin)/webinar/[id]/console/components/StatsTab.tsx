@@ -560,24 +560,23 @@ export default function StatsTab({ webinar }: StatsTabProps) {
             }
 
             const startTime = new Date(webinarStartTime)
+            // 웨비나 시작 시간 1시간 전
+            const oneHourBeforeStart = new Date(startTime.getTime() - 60 * 60 * 1000)
             // KST 기준으로 현재 시간 계산
             const nowKST = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Seoul' }))
-            // 시작일의 자정 (KST)
-            const startDateKST = new Date(startTime.toLocaleString('en-US', { timeZone: 'Asia/Seoul' }))
-            startDateKST.setHours(0, 0, 0, 0)
             
-            // 시작일 이전인지 확인
-            const isBeforeStartDate = nowKST < startDateKST
+            // 웨비나 시작 시간 1시간 전 이전인지 확인
+            const isBeforeOneHourBeforeStart = nowKST < oneHourBeforeStart
             
-            if (isBeforeStartDate || !stats?.access || accessTimelineData.length === 0) {
+            if (isBeforeOneHourBeforeStart || !stats?.access || accessTimelineData.length === 0) {
               return (
                 <div className="h-[300px] flex items-center justify-center bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
                   <div className="text-center">
                     <p className="text-gray-500 font-medium mb-1">
-                      {isBeforeStartDate ? '웨비나 시작일 당일부터 통계가 표시됩니다.' : '접속 통계 데이터가 아직 없습니다.'}
+                      {isBeforeOneHourBeforeStart ? '웨비나 시작 1시간 전부터 통계가 표시됩니다.' : '접속 통계 데이터가 아직 없습니다.'}
                     </p>
                     <p className="text-gray-400 text-sm">
-                      웨비나 시작 후 접속자 통계가 그래프로 표시됩니다.
+                      웨비나 시작 1시간 전부터 접속자 통계가 그래프로 표시됩니다.
                     </p>
                   </div>
                 </div>

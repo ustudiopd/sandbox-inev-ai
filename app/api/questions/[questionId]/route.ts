@@ -5,6 +5,65 @@ import { createServerSupabase } from '@/lib/supabase/server'
 
 export const runtime = 'nodejs'
 
+// 질문 조회
+export async function GET(
+  req: Request,
+  { params }: { params: Promise<{ questionId: string }> }
+) {
+  try {
+    const { questionId } = await params
+    
+    const admin = createAdminSupabase()
+    
+    // 질문 조회 (프로필 정보 포함)
+    const { data: question, error: questionError } = await admin
+      .from('questions')
+      .select(`
+        id,
+        user_id,
+        content,
+        status,
+        created_at,
+        answered_by,
+        answered_at,
+        answer,
+        webinar_id
+      `)
+      .eq('id', questionId)
+      .single()
+    
+    if (questionError || !question) {
+      return NextResponse.json(
+        { error: 'Question not found' },
+        { status: 404 }
+      )
+    }
+    
+    // 사용자 프로필 정보 조회
+    const { data: profile } = await admin
+      .from('profiles')
+      .select('display_name, email')
+      .eq('id', question.user_id)
+      .single()
+    
+    return NextResponse.json({
+      success: true,
+      question: {
+        ...question,
+        user: profile ? {
+          display_name: profile.display_name,
+          email: profile.email,
+        } : undefined,
+      },
+    })
+  } catch (error: any) {
+    return NextResponse.json(
+      { error: error.message || 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}
+
 // 질문 상태 업데이트 (고정/답변/숨김)
 export async function PATCH(
   req: Request,

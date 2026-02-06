@@ -435,7 +435,7 @@ export default function GiveawayManagement({ webinarId }: GiveawayManagementProp
                       <div className="text-xs text-gray-600">
                         {winners[giveaway.id].map((w, idx) => (
                           <span key={idx} className="mr-2">
-                            {w.rank}등: {w.user?.display_name || w.participant_id.substring(0, 8) + '...'}
+                            {w.rank}등: {w.user?.email || w.participant_id.substring(0, 8) + '...'}
                           </span>
                         ))}
                       </div>
@@ -443,6 +443,17 @@ export default function GiveawayManagement({ webinarId }: GiveawayManagementProp
                   )}
                 </div>
                 <div className="flex gap-2 ml-4 flex-wrap">
+                  {/* 새창 열기 버튼 - 모든 상태에서 표시 */}
+                  <button
+                    onClick={() => {
+                      const url = `/webinar/${webinarId}/console/giveaway/${giveaway.id}/draw`
+                      window.open(url, '_blank', 'width=1200,height=800')
+                    }}
+                    className="text-xs px-3 py-1 bg-blue-100 text-blue-800 rounded hover:bg-blue-200 transition-colors"
+                  >
+                    {giveaway.status === 'drawn' ? '결과 보기' : '새창에서 추첨'}
+                  </button>
+                  
                   {giveaway.status === 'draft' && (
                     <button
                       onClick={() => handleStatusChange(giveaway.id, 'open')}
@@ -590,13 +601,8 @@ export default function GiveawayManagement({ webinarId }: GiveawayManagementProp
                               </div>
                               <div className="text-left">
                                 <div className="text-xl font-semibold">
-                                  {winner.user?.display_name || winner.participant_id.substring(0, 8) + '...'}
+                                  {winner.user?.email || winner.participant_id.substring(0, 8) + '...'}
                                 </div>
-                                {winner.user?.email && (
-                                  <div className="text-sm text-purple-200">
-                                    {winner.user.email}
-                                  </div>
-                                )}
                               </div>
                             </div>
                             <div className="text-4xl">🏆</div>

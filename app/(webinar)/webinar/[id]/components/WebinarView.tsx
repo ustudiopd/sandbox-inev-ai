@@ -16,6 +16,113 @@ import GiveawayWidget from '@/components/webinar/GiveawayWidget'
 import { usePresencePing } from '@/components/webinar/hooks/usePresencePing'
 import { getOrCreateSessionId } from '@/lib/utils/session'
 import { extractUTMParams } from '@/lib/utils/utm'
+import type { BroadcastEnvelope } from '@/lib/webinar/realtime'
+import { isValidBroadcastEnvelope } from '@/lib/webinar/realtime'
+
+// 관리자 모드 접속자 리스트 컴포넌트
+function AdminParticipantsList({ webinarId }: { webinarId: string }) {
+  const [participants, setParticipants] = useState<Array<{
+    userId: string
+    displayName: string
+    email: string | null
+    role: string | null
+    lastSeenAt: string
+    joinedAt: string
+  }>>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchParticipants = async () => {
+      try {
+        const response = await fetch(`/api/webinars/${webinarId}/stats/access`)
+        if (response.ok) {
+          const result = await response.json()
+          if (result.success && result.data?.currentParticipantList) {
+            setParticipants(result.data.currentParticipantList)
+          }
+        }
+      } catch (error) {
+        console.error('접속자 목록 조회 실패:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchParticipants()
+    // 5초마다 갱신
+    const interval = setInterval(fetchParticipants, 5000)
+    return () => clearInterval(interval)
+  }, [webinarId])
+
+  if (loading) {
+    return (
+      <div className="h-full overflow-y-auto p-4">
+        <div className="text-center text-gray-500 py-8">접속 정보를 불러오는 중...</div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="h-full overflow-y-auto p-4">
+      <div className="mb-4">
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="text-lg font-semibold text-gray-900">현재 접속 중인 참여자</h3>
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+            <span className="text-xs text-gray-500">실시간</span>
+          </div>
+        </div>
+        <div className="text-2xl font-bold text-green-600">{participants.length}명</div>
+      </div>
+      
+      {participants.length > 0 ? (
+        <div className="border border-gray-200 rounded-lg overflow-hidden">
+          <table className="w-full text-sm">
+            <thead className="bg-gray-50 sticky top-0">
+              <tr>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">이름</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">이메일</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">역할</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">상태</th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {participants.map((participant) => (
+                <tr key={participant.userId} className="hover:bg-gray-50">
+                  <td className="px-4 py-3 whitespace-nowrap">
+                    <div className="text-sm font-medium text-gray-900">{participant.displayName}</div>
+                  </td>
+                  <td className="px-4 py-3 whitespace-nowrap">
+                    <div className="text-sm text-gray-500">{participant.email || '-'}</div>
+                  </td>
+                  <td className="px-4 py-3 whitespace-nowrap">
+                    <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                      participant.role === 'admin' || participant.role === 'moderator'
+                        ? 'bg-purple-100 text-purple-800'
+                        : 'bg-gray-100 text-gray-800'
+                    }`}>
+                      {participant.role === 'admin' ? '관리자' : participant.role === 'moderator' ? '운영자' : '참가자'}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 whitespace-nowrap">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                      <span className="text-xs text-gray-500">접속 중</span>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <div className="text-center py-8 text-gray-500">
+          현재 접속 중인 참여자가 없습니다.
+        </div>
+      )}
+    </div>
+  )
+}
 
 interface Webinar {
   id: string
@@ -118,6 +225,7 @@ export default function WebinarView({ webinar, isAdminMode = false }: WebinarVie
     giveaways: new Set(),
     files: new Set(),
   })
+  const loadOpenItemsRef = useRef<(() => Promise<void>) | null>(null)
   const fullscreenRef = useRef<HTMLDivElement>(null)
   const supabase = createClientSupabase()
   const router = useRouter()
@@ -362,6 +470,41 @@ export default function WebinarView({ webinar, isAdminMode = false }: WebinarVie
   // eslint-disable-next-line react-hooks/exhaustive-deps -- 랜딩 1회 방문만 기록
   }, [webinar.id, webinar.registration_campaign_id])
   
+  // 경품추첨 자동 참가 함수
+  const autoEnterGiveaways = async (giveaways: any[]) => {
+    const openGiveaways = giveaways.filter((g: any) => g.status === 'open')
+    if (openGiveaways.length === 0) return
+
+    // 현재 사용자 확인
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+
+    // 각 오픈된 추첨에 대해 자동 참가 시도
+    for (const giveaway of openGiveaways) {
+      try {
+        const enterResponse = await fetch(
+          `/api/webinars/${webinar.id}/giveaways/${giveaway.id}/enter`,
+          {
+            method: 'POST',
+            credentials: 'include',
+          }
+        )
+        
+        if (enterResponse.ok) {
+          console.log(`[WebinarView] 경품추첨 자동 참가 성공: ${giveaway.name || giveaway.id}`)
+        } else if (enterResponse.status === 409) {
+          // 이미 참가한 경우는 무시
+          console.log(`[WebinarView] 경품추첨 이미 참가됨: ${giveaway.name || giveaway.id}`)
+        } else {
+          const errorResult = await enterResponse.json()
+          console.warn(`[WebinarView] 경품추첨 자동 참가 실패: ${giveaway.name || giveaway.id}`, errorResult.error)
+        }
+      } catch (error) {
+        console.warn(`[WebinarView] 경품추첨 자동 참가 오류: ${giveaway.name || giveaway.id}`, error)
+      }
+    }
+  }
+
   // 오픈된 폼, 추첨, 파일 로드
   useEffect(() => {
     const loadOpenItems = async () => {
@@ -432,7 +575,7 @@ export default function WebinarView({ webinar, isAdminMode = false }: WebinarVie
               const newForm = newlyOpenedForms[newlyOpenedForms.length - 1]
               const popupKey = `form-${newForm.id}`
               
-              // 새로 생성된 폼이거나, 폼이 닫혔다가(또는 삭제되었다가) 다시 오픈된 경우 팝업 표시
+              // 설문이 오픈될 때마다 무조건 팝업 표시 (오픈-마감-다시 오픈 시에도 팝업이 뜨도록)
               const previousStatus = previousItemsRef.current.forms.get(newForm.id)
               const isNewForm = !previousStatus
               const wasReopened = previousStatus && previousStatus !== 'open'
@@ -445,33 +588,25 @@ export default function WebinarView({ webinar, isAdminMode = false }: WebinarVie
                 formId: newForm.id 
               })
               
-              // 함수형 업데이트를 사용하여 최신 shownPopups 상태 확인하고 업데이트
+              // 설문이 오픈될 때마다 무조건 팝업 표시
+              // shownPopups에 추가하고 팝업 표시
               setShownPopups((prev) => {
-                const isInShownPopups = prev.has(popupKey)
-                console.log('[WebinarView] shownPopups 체크:', { popupKey, isInShownPopups, prevSize: prev.size })
-                // 새 폼이거나, 다시 오픈된 폼이거나, shownPopups에 없으면 팝업 표시
-                if (isNewForm || wasReopened || !isInShownPopups) {
-                  const next = new Set(prev)
-                  next.add(popupKey)
-                  console.log('[WebinarView] shownPopups에 추가:', popupKey)
-                  return next
-                }
-                return prev
+                const next = new Set(prev)
+                next.add(popupKey)
+                console.log('[WebinarView] shownPopups에 추가:', popupKey)
+                return next
               })
               
-              // 팝업 표시는 별도로 처리 (상태 업데이트와 분리)
-              // 새 폼이거나 다시 오픈된 폼이면 무조건 팝업 표시
-              if (isNewForm || wasReopened) {
-                console.log('[WebinarView] 팝업 표시 실행:', { id: newForm.id, title: newForm.title || newForm.name })
-                // 약간의 지연을 두어 상태 업데이트가 완료된 후 팝업 표시
-                requestAnimationFrame(() => {
-                  setPopupContent({
-                    type: 'form',
-                    id: newForm.id,
-                    title: newForm.title || newForm.name || '설문',
-                  })
+              // 팝업 표시 (새 폼이거나 다시 오픈된 폼이면 무조건 팝업 표시)
+              console.log('[WebinarView] 팝업 표시 실행:', { id: newForm.id, title: newForm.title || newForm.name })
+              // 약간의 지연을 두어 상태 업데이트가 완료된 후 팝업 표시
+              requestAnimationFrame(() => {
+                setPopupContent({
+                  type: 'form',
+                  id: newForm.id,
+                  title: newForm.title || newForm.name || '설문',
                 })
-              }
+              })
             }
             
             // 닫힌 폼은 shownPopups에서 제거하여 다시 오픈될 때 팝업이 뜨도록 함
@@ -482,6 +617,7 @@ export default function WebinarView({ webinar, isAdminMode = false }: WebinarVie
               })
             
             if (closedForms.length > 0) {
+              console.log('[WebinarView] 닫힌 폼 감지:', closedForms.map(([formId]) => formId))
               setShownPopups((prev) => {
                 const next = new Set(prev)
                 closedForms.forEach(([formId]) => {
@@ -519,6 +655,9 @@ export default function WebinarView({ webinar, isAdminMode = false }: WebinarVie
             (g: any) => g.status === 'open' || g.status === 'drawn'
           )
           const currentGiveawayIds = new Set<string>(loadedGiveaways.map((g: any) => g.id))
+          
+          // 오픈된 추첨(status === 'open')에 자동 참가
+          await autoEnterGiveaways(loadedGiveaways)
           
           // 새로 오픈된 추첨 찾기 (이전에 없던 것)
           if (!isInitialLoadRef.current) {
@@ -602,6 +741,9 @@ export default function WebinarView({ webinar, isAdminMode = false }: WebinarVie
       }
     }
 
+    // loadOpenItems 함수를 ref에 저장하여 다른 곳에서도 호출 가능하도록 함
+    loadOpenItemsRef.current = loadOpenItems
+    
     loadOpenItems()
 
     // 실시간 업데이트 구독
@@ -647,6 +789,119 @@ export default function WebinarView({ webinar, isAdminMode = false }: WebinarVie
 
     return () => {
       supabase.removeChannel(channel)
+    }
+  }, [webinar.id, supabase])
+  
+  // Broadcast 이벤트 구독 (설문/퀴즈 오픈 시 팝업 표시)
+  useEffect(() => {
+    const broadcastChannel = supabase
+      .channel(`webinar:${webinar.id}`, {
+        config: {
+          broadcast: { self: false },
+        },
+      })
+      .on(
+        'broadcast',
+        { event: '*' },
+        (payload: any) => {
+          const env = (payload?.payload || payload) as BroadcastEnvelope | undefined
+          
+          if (!isValidBroadcastEnvelope(env)) {
+            return
+          }
+          
+          console.log('실시간 Broadcast 이벤트:', env.t, env)
+          
+          // 설문/퀴즈 오픈 이벤트 처리
+          if (env.t === 'poll:open' || env.t === 'quiz:open') {
+            const formData = env.payload as any
+            if (formData && formData.id) {
+              console.log('[WebinarView] 설문/퀴즈 오픈 이벤트 수신, 팝업 표시:', formData)
+              const popupKey = `form-${formData.id}`
+              
+              // openForms 상태 즉시 업데이트 (버튼 활성화를 위해)
+              setOpenForms((prev) => {
+                // 이미 있는지 확인
+                const exists = prev.find((f) => f.id === formData.id)
+                if (exists) {
+                  // 있으면 상태만 업데이트
+                  return prev.map((f) => 
+                    f.id === formData.id 
+                      ? { ...f, status: 'open', ...formData }
+                      : f
+                  )
+                } else {
+                  // 없으면 추가
+                  return [...prev, { ...formData, status: 'open' }]
+                }
+              })
+              
+              // previousItemsRef도 업데이트
+              previousItemsRef.current.forms.set(formData.id, 'open')
+              
+              // shownPopups에 추가
+              setShownPopups((prev) => {
+                const next = new Set(prev)
+                next.add(popupKey)
+                return next
+              })
+              
+              // 팝업 표시
+              requestAnimationFrame(() => {
+                setPopupContent({
+                  type: 'form',
+                  id: formData.id,
+                  title: formData.title || formData.name || (env.t === 'quiz:open' ? '퀴즈' : '설문'),
+                })
+              })
+              
+              // openForms 상태도 업데이트 (loadOpenItems 호출로 전체 동기화)
+              if (loadOpenItemsRef.current) {
+                loadOpenItemsRef.current()
+              }
+            }
+          }
+          // 설문/퀴즈 마감 이벤트 처리
+          else if (env.t === 'poll:close' || env.t === 'quiz:close') {
+            const formData = env.payload as any
+            if (formData && formData.id) {
+              console.log('[WebinarView] 설문/퀴즈 마감 이벤트 수신:', formData)
+              
+              // openForms 상태 즉시 업데이트 (버튼 비활성화를 위해)
+              setOpenForms((prev) => {
+                return prev.filter((f) => f.id !== formData.id)
+              })
+              
+              // previousItemsRef도 업데이트
+              previousItemsRef.current.forms.set(formData.id, 'closed')
+              
+              // shownPopups에서 제거하여 다시 오픈될 때 팝업이 뜨도록 함
+              setShownPopups((prev) => {
+                const next = new Set(prev)
+                next.delete(`form-${formData.id}`)
+                return next
+              })
+              
+              // 팝업이 열려있으면 닫기
+              setPopupContent((prev) => {
+                if (prev && prev.type === 'form' && prev.id === formData.id) {
+                  return null
+                }
+                return prev
+              })
+              
+              // 전체 동기화
+              if (loadOpenItemsRef.current) {
+                loadOpenItemsRef.current()
+              }
+            }
+          }
+        }
+      )
+      .subscribe()
+    
+    return () => {
+      supabase.removeChannel(broadcastChannel)
     }
   }, [webinar.id, supabase])
   
@@ -999,9 +1254,17 @@ export default function WebinarView({ webinar, isAdminMode = false }: WebinarVie
                 ? 'rounded-lg border border-gray-200' 
                 : 'rounded-lg sm:rounded-xl shadow-lg'
             }`}>
-              <button
+              <div
                 onClick={() => setIsSessionIntroExpanded(!isSessionIntroExpanded)}
-                className="w-full flex items-center justify-between mb-3 sm:mb-3 lg:mb-4 lg:hidden"
+                className="w-full flex items-center justify-between mb-3 sm:mb-3 lg:mb-4 lg:hidden cursor-pointer"
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault()
+                    setIsSessionIntroExpanded(!isSessionIntroExpanded)
+                  }
+                }}
               >
                 <div className="flex items-center gap-2">
                   <h3 className="text-base sm:text-base font-semibold text-gray-900">세션 소개</h3>
@@ -1066,7 +1329,7 @@ export default function WebinarView({ webinar, isAdminMode = false }: WebinarVie
                 >
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
-              </button>
+              </div>
               {/* PC: 제목과 설문/경품추첨 버튼 표시 */}
               <div className="hidden lg:flex lg:items-center lg:justify-between lg:mb-3 lg:mb-4">
                 <h3 className="text-base sm:text-base lg:text-lg font-semibold text-gray-900">세션 소개</h3>
@@ -1549,12 +1812,26 @@ export default function WebinarView({ webinar, isAdminMode = false }: WebinarVie
                   >
                     ❓ Q&A
                   </button>
-                  {/* 모바일에서는 접속중 탭 숨김 */}
+                  {/* 관리자 모드일 때만 모바일에서도 접속중 탭 표시 */}
+                  {isAdminMode && (
+                    <button
+                      onClick={() => setActiveTab('participants')}
+                      className={`flex-1 px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-medium transition-colors ${
+                        activeTab === 'participants'
+                          ? 'bg-blue-50 text-blue-600 border-b-2 border-blue-600'
+                          : 'text-gray-600'
+                      }`}
+                    >
+                      👥 접속중
+                    </button>
+                  )}
                 </div>
                 
                 {/* 탭 컨텐츠 - 모바일 전용 (단일 인스턴스 사용) */}
                 <div className="flex-1 overflow-hidden">
-                  {activeTab === 'chat' ? chatComponent : qaComponent}
+                  {activeTab === 'chat' ? chatComponent : activeTab === 'qa' ? qaComponent : activeTab === 'participants' ? (
+                    <AdminParticipantsList webinarId={webinar.id} />
+                  ) : chatComponent}
                 </div>
               </div>
             </div>
@@ -1605,7 +1882,9 @@ export default function WebinarView({ webinar, isAdminMode = false }: WebinarVie
               
               {/* 탭 컨텐츠 - 데스크톱 전용 (단일 인스턴스 사용) */}
               <div className="flex-1 overflow-hidden">
-                {activeTab === 'chat' ? chatComponent : activeTab === 'qa' ? qaComponent : (
+                {activeTab === 'chat' ? chatComponent : activeTab === 'qa' ? qaComponent : activeTab === 'participants' ? (
+                  <AdminParticipantsList webinarId={webinar.id} />
+                ) : (
                   <div className="h-full overflow-y-auto p-4">
                     <PresenceBar
                       webinarId={webinar.id}

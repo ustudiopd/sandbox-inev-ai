@@ -658,12 +658,20 @@ export default function FormManagement({ webinarId }: FormManagementProps) {
                     </>
                   )}
                   {form.status === 'closed' && (
-                    <button
-                      onClick={() => handleViewResults(form.id)}
-                      className="text-xs px-3 py-1 bg-blue-100 text-blue-800 rounded hover:bg-blue-200 transition-colors"
-                    >
-                      결과 보기
-                    </button>
+                    <>
+                      <button
+                        onClick={() => handleStatusChange(form.id, 'open')}
+                        className="text-xs px-3 py-1 bg-green-100 text-green-800 rounded hover:bg-green-200 transition-colors"
+                      >
+                        다시 오픈
+                      </button>
+                      <button
+                        onClick={() => handleViewResults(form.id)}
+                        className="text-xs px-3 py-1 bg-blue-100 text-blue-800 rounded hover:bg-blue-200 transition-colors"
+                      >
+                        결과 보기
+                      </button>
+                    </>
                   )}
                   <button
                     onClick={() => handleDelete(form.id)}

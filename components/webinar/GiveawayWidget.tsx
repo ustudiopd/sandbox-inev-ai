@@ -111,9 +111,10 @@ export default function GiveawayWidget({
 
         setGiveaway(found)
 
-        // 참여 여부 확인
+        // 참여 여부 확인 및 자동 참가
         const { data: { user } } = await supabase.auth.getUser()
         if (user) {
+          // 참여 여부 확인
           const { data: entry } = await supabase
             .from('giveaway_entries')
             .select('id')
@@ -121,7 +122,32 @@ export default function GiveawayWidget({
             .eq('participant_id', user.id)
             .maybeSingle()
           
-          setEntered(!!entry)
+          // 이미 참가한 경우
+          if (entry) {
+            setEntered(true)
+          } else if (found.status === 'open') {
+            // 오픈된 추첨이고 아직 참가하지 않은 경우 자동 참가 시도
+            try {
+              const enterResponse = await fetch(
+                `/api/webinars/${webinarId}/giveaways/${giveawayId}/enter`,
+                {
+                  method: 'POST',
+                  credentials: 'include',
+                }
+              )
+              
+              if (enterResponse.ok) {
+                setEntered(true)
+                setEntryCount((prev) => prev + 1)
+              } else if (enterResponse.status === 409) {
+                // 이미 참가한 경우 (동시성 문제)
+                setEntered(true)
+              }
+            } catch (error) {
+              console.warn('[GiveawayWidget] 자동 참가 실패:', error)
+              // 자동 참가 실패해도 계속 진행
+            }
+          }
         }
 
         // 참여자 수 조회
@@ -176,16 +202,30 @@ export default function GiveawayWidget({
           table: 'giveaway_entries',
           filter: `giveaway_id=eq.${giveawayId}`,
         },
-        () => {
+        async () => {
           // 참여자 수 업데이트
-          supabase
+          const { count } = await supabase
             .from('giveaway_entries')
             .select('*', { count: 'exact', head: true })
             .eq('giveaway_id', giveawayId)
             .eq('eligible', true)
-            .then(({ count }) => {
-              setEntryCount(count || 0)
-            })
+          
+          setEntryCount(count || 0)
+          
+          // 현재 사용자의 참여 여부도 확인
+          const { data: { user } } = await supabase.auth.getUser()
+          if (user) {
+            const { data: entry } = await supabase
+              .from('giveaway_entries')
+              .select('id')
+              .eq('giveaway_id', giveawayId)
+              .eq('participant_id', user.id)
+              .maybeSingle()
+            
+            if (entry) {
+              setEntered(true)
+            }
+          }
         }
       )
       .subscribe()

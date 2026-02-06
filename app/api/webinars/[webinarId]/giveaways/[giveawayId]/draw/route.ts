@@ -3,6 +3,7 @@ import { createAdminSupabase } from '@/lib/supabase/admin'
 import { createServerSupabase } from '@/lib/supabase/server'
 import { requireAuth } from '@/lib/auth/guards'
 import { broadcastRaffleDraw } from '@/lib/webinar/broadcast'
+import { sendEmailViaResend } from '@/lib/email/resend'
 
 export const runtime = 'nodejs'
 
@@ -168,6 +169,85 @@ export async function POST(
       winners: formattedWinners,
     }, user.id)
       .catch((error) => console.error('Broadcast 전파 실패:', error))
+    
+    // 당첨자 이메일로 결과 전송
+    try {
+      const winnerEmails = formattedWinners
+        .map((w: any) => w.user?.email)
+        .filter((email: any): email is string => !!email)
+      
+      if (winnerEmails.length > 0) {
+        // 당첨자 리스트 HTML 생성 (이메일만 표시)
+        const winnersListHtml = formattedWinners
+          .sort((a: any, b: any) => a.rank - b.rank)
+          .map((w: any) => {
+            const email = w.user?.email || w.participant_id.substring(0, 8) + '...'
+            return `<tr>
+              <td style="padding: 8px; border: 1px solid #ddd;">${w.rank}등</td>
+              <td style="padding: 8px; border: 1px solid #ddd;">${email}</td>
+            </tr>`
+          })
+          .join('')
+
+        const emailHtml = `
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <meta charset="utf-8">
+            <style>
+              body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+              .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+              h1 { color: #7c3aed; }
+              table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+              th { background-color: #7c3aed; color: white; padding: 12px; text-align: left; }
+              td { padding: 8px; border: 1px solid #ddd; }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <h1>🎉 경품 추첨 결과</h1>
+              <p>안녕하세요,</p>
+              <p><strong>${updatedGiveaway.name}</strong> 추첨이 완료되었습니다.</p>
+              <h2>당첨자 목록</h2>
+              <table>
+                <thead>
+                  <tr>
+                    <th>순위</th>
+                    <th>이메일</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${winnersListHtml}
+                </tbody>
+              </table>
+              <p>축하합니다!</p>
+            </div>
+          </body>
+          </html>
+        `
+
+        // 관리자에게 당첨자 리스트 이메일 전송
+        const { data: adminProfile } = await supabase
+          .from('profiles')
+          .select('email')
+          .eq('id', user.id)
+          .single()
+
+        if (adminProfile?.email) {
+          await sendEmailViaResend({
+            from: 'EventFlow <notify@eventflow.kr>',
+            to: adminProfile.email,
+            subject: `[${updatedGiveaway.name}] 추첨 결과 - 당첨자 ${formattedWinners.length}명`,
+            html: emailHtml,
+          }).catch((error) => {
+            console.error('당첨자 결과 이메일 전송 실패:', error)
+          })
+        }
+      }
+    } catch (emailError) {
+      console.error('이메일 전송 중 오류:', emailError)
+      // 이메일 전송 실패해도 추첨 결과는 반환
+    }
     
     return NextResponse.json({
       success: true,

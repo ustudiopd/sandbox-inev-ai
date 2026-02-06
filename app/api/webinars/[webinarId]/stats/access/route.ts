@@ -32,7 +32,7 @@ export async function GET(
     // 웨비나 정보 조회
     const { data: webinarInfo } = await admin
       .from('webinars')
-      .select('start_time, end_time')
+      .select('start_time, webinar_start_time, end_time')
       .eq('id', actualWebinarId)
       .single()
 
@@ -147,8 +147,14 @@ export async function GET(
     let from: Date
     let to: Date
     
-    if (webinarInfo?.start_time) {
-      const startTime = new Date(webinarInfo.start_time)
+    // webinar_start_time을 우선 사용, 없으면 start_time 사용
+    const webinarStartTime = webinarInfo?.webinar_start_time || webinarInfo?.start_time
+    
+    if (webinarStartTime) {
+      const startTime = new Date(webinarStartTime)
+      // 웨비나 시작 시간 1시간 전부터 시작
+      from = new Date(startTime.getTime() - 60 * 60 * 1000)
+      
       // 시작 시간을 기준으로 해당 날짜의 자정 계산
       const startDate = new Date(startTime.getFullYear(), startTime.getMonth(), startTime.getDate())
       const endOfDay = new Date(startDate)
@@ -169,13 +175,11 @@ export async function GET(
         // 해당 날짜가 지났으면 자정까지
         to = endOfDay
       }
-      
-      from = startTime
     } else {
       // 웨비나 시작 시간이 없으면 쿼리 파라미터 사용
       const parsed = parseStatsParams(
         searchParams,
-        webinarInfo?.start_time,
+        webinarStartTime,
         webinarInfo?.end_time
       )
       from = parsed.from

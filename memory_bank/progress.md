@@ -785,6 +785,30 @@
   - settings/profile/page.tsx (프로필 설정 입력)
   - signup/client/page.tsx (클라이언트 회원가입 입력)
 
+## [2026-02-06] Q&A 모더레이션 중계화면 기능 추가
+- ✅ Q&A 모더레이션에 중계화면 기능 추가
+  - "새창에서 전체 리스트 보기" 버튼 제거
+  - 각 질문 옆에 "중계화면으로 보기" 버튼 추가
+  - 중계화면 페이지 생성 (`/webinar/[id]/console/qa/display/[questionId]`)
+  - 배경색 #038D7C, 흰 글씨로 질문만 크게 표시 (답변 제외)
+  - 질문 텍스트 크기: text-5xl (모바일), text-6xl (데스크톱)
+- ✅ 중계화면 성능 최적화
+  - postMessage를 사용하여 페이지 리로드 없이 질문 전환
+  - 기존 창이 열려있으면 그 창에서 내용만 업데이트
+  - 질문 데이터가 이미 로드되어 있으면 즉시 전달
+- ✅ 설문 오픈/마감 기능 개선
+  - 설문을 오픈-마감-다시 오픈할 때마다 팝업 표시
+  - 설문 상태 변경 시 버튼 활성화/비활성화 실시간 반영
+  - Broadcast 이벤트 구독으로 즉시 상태 업데이트
+- ✅ API 엔드포인트 추가
+  - `GET /api/questions/[questionId]` 추가 (질문 단일 조회)
+- ✅ 수정된 파일
+  - `app/(admin)/webinar/[id]/console/components/QAModeration.tsx`
+  - `app/(webinar)/webinar/[id]/console/components/QAModeration.tsx`
+  - `app/(admin)/webinar/[id]/console/qa/display/[questionId]/page.tsx`
+  - `app/api/questions/[questionId]/route.ts`
+  - `app/(webinar)/webinar/[id]/components/WebinarView.tsx`
+
 ## [2025-01-XX] 클라이언트별 초대 기능 구현
 - ✅ 데이터베이스 마이그레이션 (`029_add_client_id_to_invitations.sql`)
   - `client_invitations` 테이블에 `client_id` 컬럼 추가
