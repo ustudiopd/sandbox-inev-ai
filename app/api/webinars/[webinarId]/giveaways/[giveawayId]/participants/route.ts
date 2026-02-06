@@ -19,7 +19,7 @@ export async function GET(
     // 추첨 존재 확인
     const { data: giveaway, error: giveawayError } = await admin
       .from('giveaways')
-      .select('id')
+      .select('id, draw_type')
       .eq('id', giveawayId)
       .eq('webinar_id', webinarId)
       .single()
@@ -29,6 +29,52 @@ export async function GET(
         { error: 'Giveaway not found' },
         { status: 404 }
       )
+    }
+    
+    // 사용자 지정 방식이고 참여자가 없으면 웨비나 등록자 목록 반환
+    if (giveaway.draw_type === 'manual') {
+      const { data: entries } = await admin
+        .from('giveaway_entries')
+        .select('participant_id')
+        .eq('giveaway_id', giveawayId)
+        .limit(1)
+      
+      // 참여자가 없으면 웨비나 등록자 목록 조회
+      if (!entries || entries.length === 0) {
+        const { data: registrations, error: regError } = await admin
+          .from('registrations')
+          .select(`
+            user_id,
+            created_at,
+            profiles:user_id (
+              display_name,
+              email
+            )
+          `)
+          .eq('webinar_id', webinarId)
+          .order('created_at', { ascending: false })
+        
+        if (regError) {
+          return NextResponse.json(
+            { error: regError.message },
+            { status: 500 }
+          )
+        }
+        
+        // 데이터 포맷팅
+        const participants = (registrations || []).map((reg: any) => ({
+          participant_id: reg.user_id,
+          name: reg.profiles?.display_name || '익명',
+          email: reg.profiles?.email || null,
+          created_at: reg.created_at,
+          eligible: true, // 기본값 true
+        }))
+        
+        return NextResponse.json({
+          success: true,
+          participants,
+        })
+      }
     }
     
     // 참여자 목록 조회 (프로필 정보 포함, eligible 필드 포함)

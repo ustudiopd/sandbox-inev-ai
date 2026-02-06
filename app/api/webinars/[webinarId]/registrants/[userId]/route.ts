@@ -5,21 +5,12 @@ import { requireAuth } from '@/lib/auth/guards'
 
 export const runtime = 'nodejs'
 
-export async function POST(
+export async function GET(
   req: Request,
-  { params }: { params: Promise<{ webinarId: string }> }
+  { params }: { params: Promise<{ webinarId: string; userId: string }> }
 ) {
   try {
-    const { webinarId } = await params
-    const { name, description, winnersCount, drawType = 'random', manualWinners } = await req.json()
-    
-    if (!name || !winnersCount || winnersCount < 1) {
-      return NextResponse.json(
-        { error: 'name and winnersCount (>= 1) are required' },
-        { status: 400 }
-      )
-    }
-
+    const { webinarId, userId } = await params
     
     const { user } = await requireAuth()
     const supabase = await createServerSupabase()
@@ -62,7 +53,7 @@ export async function POST(
       if (clientMember && ['owner', 'admin', 'operator', 'member'].includes(clientMember.role)) {
         hasPermission = true
       } else {
-        // 에이전시 멤버십 확인 (owner/admin만 추첨 생성 가능)
+        // 에이전시 멤버십 확인
         if (webinar.agency_id) {
           const { data: agencyMember } = await supabase
             .from('agency_members')
@@ -85,43 +76,25 @@ export async function POST(
       )
     }
     
-    // 추첨 생성
-    const { data: giveaway, error: giveawayError } = await admin
-      .from('giveaways')
-      .insert({
-        webinar_id: webinarId,
-        agency_id: webinar.agency_id,
-        client_id: webinar.client_id,
-        name: name.trim(),
-        description: description?.trim() || null,
-        winners_count: winnersCount,
-        draw_type: drawType,
-        status: 'draft',
-        created_by: user.id,
-      })
-      .select()
-      .single()
+    // 등록정보 조회
+    const { data: registration, error: regError } = await admin
+      .from('registrations')
+      .select('nickname, registration_data')
+      .eq('webinar_id', webinarId)
+      .eq('user_id', userId)
+      .maybeSingle()
     
-    if (giveawayError) {
-      return NextResponse.json(
-        { error: giveawayError.message },
-        { status: 500 }
-      )
-    }
+    // 프로필 정보 조회
+    const { data: profileData, error: profileError } = await admin
+      .from('profiles')
+      .select('id, display_name, email')
+      .eq('id', userId)
+      .maybeSingle()
     
-    // 감사 로그
-    await admin
-      .from('audit_logs')
-      .insert({
-        actor_user_id: user.id,
-        agency_id: webinar.agency_id,
-        client_id: webinar.client_id,
-        webinar_id: webinarId,
-        action: 'GIVEAWAY_CREATE',
-        payload: { giveaway_id: giveaway.id },
-      })
-    
-    return NextResponse.json({ success: true, giveaway })
+    return NextResponse.json({
+      registration: registration || null,
+      profile: profileData || null,
+    })
   } catch (error: any) {
     return NextResponse.json(
       { error: error.message || 'Internal server error' },
@@ -129,4 +102,3 @@ export async function POST(
     )
   }
 }
-

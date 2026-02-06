@@ -23,6 +23,13 @@ interface QAModerationProps {
   webinarId: string
 }
 
+interface RegistrationInfo {
+  name: string | null
+  email: string | null
+  phone: string | null
+  company: string | null
+}
+
 export default function QAModeration({ webinarId }: QAModerationProps) {
   const [questions, setQuestions] = useState<Question[]>([])
   const [loading, setLoading] = useState(false)
@@ -31,6 +38,9 @@ export default function QAModeration({ webinarId }: QAModerationProps) {
   const [answerText, setAnswerText] = useState<Record<number, string>>({})
   const [answering, setAnswering] = useState(false)
   const [expandedAnswers, setExpandedAnswers] = useState<Set<number>>(new Set())
+  const [showRegistrationModal, setShowRegistrationModal] = useState(false)
+  const [registrationInfo, setRegistrationInfo] = useState<RegistrationInfo | null>(null)
+  const [loadingRegistration, setLoadingRegistration] = useState(false)
   const displayWindowRef = useRef<Window | null>(null)
   const supabase = createClientSupabase()
   
@@ -206,6 +216,48 @@ export default function QAModeration({ webinarId }: QAModerationProps) {
       return next
     })
   }
+
+  const handleUserClick = async (userId: string) => {
+    setLoadingRegistration(true)
+    setShowRegistrationModal(true)
+    setRegistrationInfo(null)
+    
+    try {
+      // 등록정보 조회 API 호출
+      const response = await fetch(`/api/webinars/${webinarId}/registrants/${userId}`)
+      
+      if (!response.ok) {
+        throw new Error('등록정보를 불러올 수 없습니다')
+      }
+      
+      const result = await response.json()
+      const registration = result.registration
+      
+      if (registration) {
+        const regData = registration.registration_data || {}
+        setRegistrationInfo({
+          name: regData.name || registration.nickname || null,
+          email: result.profile?.email || null,
+          phone: regData.phone || regData.phone_norm || null,
+          company: regData.company || regData.organization || null,
+        })
+      } else {
+        // 등록정보가 없으면 프로필 정보만 표시
+        setRegistrationInfo({
+          name: result.profile?.display_name || null,
+          email: result.profile?.email || null,
+          phone: null,
+          company: null,
+        })
+      }
+    } catch (error: any) {
+      console.error('등록정보 로드 실패:', error)
+      alert(error.message || '등록정보를 불러오는데 실패했습니다')
+      setShowRegistrationModal(false)
+    } finally {
+      setLoadingRegistration(false)
+    }
+  }
   
   const handleDisplayQuestion = async (questionId: number) => {
     // 질문 데이터를 먼저 찾기
@@ -330,7 +382,12 @@ export default function QAModeration({ webinarId }: QAModerationProps) {
               <div className="flex items-start justify-between mb-2">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="font-semibold text-sm">{question.user?.display_name || '익명'}</span>
+                    <button
+                      onClick={() => handleUserClick(question.user_id)}
+                      className="font-semibold text-sm text-blue-600 hover:text-blue-800 hover:underline cursor-pointer"
+                    >
+                      {question.user?.display_name || '익명'}
+                    </button>
                     {question.status === 'pinned' && (
                       <span className="text-xs bg-yellow-400 text-yellow-900 px-2 py-0.5 rounded">고정</span>
                     )}
@@ -475,6 +532,65 @@ export default function QAModeration({ webinarId }: QAModerationProps) {
           ))
         )}
       </div>
+
+      {/* 등록정보 모달 */}
+      {showRegistrationModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold">등록정보</h3>
+              <button
+                onClick={() => setShowRegistrationModal(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                ✕
+              </button>
+            </div>
+            
+            {loadingRegistration ? (
+              <div className="text-center py-8 text-gray-500">등록정보를 불러오는 중...</div>
+            ) : registrationInfo ? (
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">이름</label>
+                  <div className="px-3 py-2 bg-gray-50 rounded-lg text-sm">
+                    {registrationInfo.name || '정보 없음'}
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">이메일</label>
+                  <div className="px-3 py-2 bg-gray-50 rounded-lg text-sm">
+                    {registrationInfo.email || '정보 없음'}
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">전화번호</label>
+                  <div className="px-3 py-2 bg-gray-50 rounded-lg text-sm">
+                    {registrationInfo.phone || '정보 없음'}
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">회사명</label>
+                  <div className="px-3 py-2 bg-gray-50 rounded-lg text-sm">
+                    {registrationInfo.company || '정보 없음'}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-8 text-gray-500">등록정보를 불러올 수 없습니다</div>
+            )}
+            
+            <div className="flex justify-end mt-6">
+              <button
+                onClick={() => setShowRegistrationModal(false)}
+                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+              >
+                닫기
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

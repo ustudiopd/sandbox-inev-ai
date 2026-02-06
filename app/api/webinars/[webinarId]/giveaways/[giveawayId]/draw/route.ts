@@ -13,6 +13,7 @@ export async function POST(
 ) {
   try {
     const { webinarId, giveawayId } = await params
+    const { manualWinners } = await req.json().catch(() => ({}))
     
     const { user } = await requireAuth()
     const supabase = await createServerSupabase()
@@ -86,30 +87,82 @@ export async function POST(
       )
     }
     
-    // 자동 seed 생성 (현재 시간 + 추첨 ID 기반)
-    const autoSeed = `${giveawayId}-${Date.now()}-${Math.random().toString(36).substring(2, 15)}`
+    // 사용자 지정 방식인지 확인
+    const isManualDraw = giveaway.draw_type === 'manual' && manualWinners && Array.isArray(manualWinners) && manualWinners.length > 0
     
-    // 추첨 실행 (SQL 함수 사용)
-    const { data: winners, error: drawError } = await admin.rpc('draw_giveaway', {
-      p_giveaway_id: giveawayId,
-      p_seed: autoSeed,
-    })
+    let winners: any[] = []
     
-    if (drawError) {
-      return NextResponse.json(
-        { error: drawError.message },
-        { status: 500 }
-      )
+    if (isManualDraw) {
+      // 사용자 지정 방식: 선택된 당첨자를 그대로 사용
+      // 기존 당첨자 삭제
+      await admin
+        .from('giveaway_winners')
+        .delete()
+        .eq('giveaway_id', giveawayId)
+      
+      // 선택된 당첨자를 giveaway_winners에 삽입
+      const insertData = (manualWinners as string[]).map((participantId: string, index: number) => ({
+        giveaway_id: giveawayId,
+        participant_id: participantId,
+        rank: index + 1,
+        proof_json: {
+          draw_type: 'manual',
+          selected_at: new Date().toISOString(),
+        },
+      }))
+      
+      const { data: insertedWinners, error: insertError } = await admin
+        .from('giveaway_winners')
+        .insert(insertData)
+        .select()
+      
+      if (insertError) {
+        return NextResponse.json(
+          { error: insertError.message },
+          { status: 500 }
+        )
+      }
+      
+      // winners 포맷팅
+      winners = (insertedWinners || []).map((w: any) => ({
+        participant_id: w.participant_id,
+        rank: w.rank,
+        proof: w.proof_json,
+      }))
+    } else {
+      // 랜덤 추첨 방식: 기존 SQL 함수 사용
+      const autoSeed = `${giveawayId}-${Date.now()}-${Math.random().toString(36).substring(2, 15)}`
+      
+      const { data: drawnWinners, error: drawError } = await admin.rpc('draw_giveaway', {
+        p_giveaway_id: giveawayId,
+        p_seed: autoSeed,
+      })
+      
+      if (drawError) {
+        return NextResponse.json(
+          { error: drawError.message },
+          { status: 500 }
+        )
+      }
+      
+      winners = drawnWinners || []
     }
     
     // 추첨 상태 업데이트
+    const updateData: any = {
+      status: 'drawn',
+      drawn_at: new Date().toISOString(),
+    }
+    
+    // 랜덤 추첨 방식일 때만 seed_reveal 설정
+    if (!isManualDraw) {
+      const autoSeed = `${giveawayId}-${Date.now()}-${Math.random().toString(36).substring(2, 15)}`
+      updateData.seed_reveal = autoSeed
+    }
+    
     const { data: updatedGiveaway, error: updateError } = await admin
       .from('giveaways')
-      .update({
-        status: 'drawn',
-        seed_reveal: autoSeed,
-        drawn_at: new Date().toISOString(),
-      })
+      .update(updateData)
       .eq('id', giveawayId)
       .select()
       .single()
