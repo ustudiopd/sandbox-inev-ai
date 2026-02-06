@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { createClientSupabase } from '@/lib/supabase/client'
+import { createBroadcastEnvelope } from '@/lib/webinar/realtime'
 
 interface Question {
   id: number
@@ -207,42 +208,58 @@ export default function QAModeration({ webinarId }: QAModerationProps) {
   }
   
   const handleDisplayQuestion = async (questionId: number) => {
-    // 질문 데이터를 먼저 로드
-    const question = questions.find((q) => q.id === questionId)
+    // 질문 데이터를 먼저 찾기
+    let question = questions.find((q) => q.id === questionId)
     
-    // 기존 중계화면 창이 있고 닫히지 않았으면 postMessage로 데이터 전달
-    if (displayWindowRef.current && !displayWindowRef.current.closed) {
-      // 질문 데이터가 있으면 즉시 전달, 없으면 API로 조회
-      if (question) {
-        displayWindowRef.current.postMessage({
-          type: 'UPDATE_QUESTION',
-          question: question,
-        }, '*')
-      } else {
-        try {
-          const response = await fetch(`/api/questions/${questionId}`)
-          if (response.ok) {
-            const result = await response.json()
-            displayWindowRef.current.postMessage({
-              type: 'UPDATE_QUESTION',
-              question: result.question,
-            }, '*')
-          }
-        } catch (error) {
-          console.error('질문 로드 실패:', error)
+    // 질문 데이터가 없으면 API로 조회
+    if (!question) {
+      try {
+        const response = await fetch(`/api/questions/${questionId}`)
+        if (response.ok) {
+          const result = await response.json()
+          question = result.question
+        } else {
+          alert('질문을 찾을 수 없습니다')
+          return
         }
+      } catch (error) {
+        console.error('질문 로드 실패:', error)
+        alert('질문을 불러오는데 실패했습니다')
+        return
       }
-      // URL도 업데이트 (히스토리만 변경, 리로드 없음)
-      displayWindowRef.current.history?.pushState?.(
-        null,
-        '',
-        `/webinar/${webinarId}/console/qa/display/${questionId}`
-      )
-      displayWindowRef.current.focus()
-    } else {
-      // 기존 창이 없거나 닫혔으면 새 창 열기
+    }
+    
+    if (!question) return
+    
+    // Broadcast 이벤트로 질문 데이터 전체 전송 (모든 중계화면 동기화, 즉시 표시)
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      alert('로그인이 필요합니다')
+      return
+    }
+    
+    const channel = supabase.channel(`webinar:${webinarId}`)
+    const envelope = createBroadcastEnvelope(
+      'qa:display',
+      {
+        questionId: question.id,
+        question: question, // 질문 데이터 전체 전송 (API 호출 없이 즉시 표시)
+      },
+      user.id
+    )
+    
+    await channel.send({
+      type: 'broadcast',
+      event: 'qa:display',
+      payload: envelope,
+    })
+    
+    // 중계화면 창 열기 (없으면 새로 열고, 있으면 포커스)
+    if (!displayWindowRef.current || displayWindowRef.current.closed) {
       const url = `/webinar/${webinarId}/console/qa/display/${questionId}`
       displayWindowRef.current = window.open(url, 'qa-display', 'width=1920,height=1080')
+    } else {
+      displayWindowRef.current.focus()
     }
   }
   

@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import { createClientSupabase } from '@/lib/supabase/client'
+import type { BroadcastEnvelope } from '@/lib/webinar/realtime'
+import { isValidBroadcastEnvelope } from '@/lib/webinar/realtime'
 
 interface Question {
   id: number
@@ -30,26 +32,52 @@ export default function QADisplayPage() {
   useEffect(() => {
     loadQuestion()
     
-    // postMessage로 질문 업데이트 받기 (페이지 리로드 없이 빠른 전환)
-    const handleMessage = (event: MessageEvent) => {
-      if (event.data?.type === 'UPDATE_QUESTION' && event.data?.question) {
-        setQuestion(event.data.question)
-        setLoading(false)
-        // URL도 업데이트
-        if (window.history && event.data.question.id) {
-          window.history.pushState(
-            null,
-            '',
-            `/webinar/${webinarId}/console/qa/display/${event.data.question.id}`
-          )
+    // Broadcast 이벤트 구독 (다른 관리자가 클릭한 질문도 모든 중계화면에 동기화)
+    const broadcastChannel = supabase
+      .channel(`webinar:${webinarId}`, {
+        config: {
+          broadcast: { self: false },
+        },
+      })
+      .on(
+        'broadcast',
+        { event: 'qa:display' },
+        (payload: any) => {
+          const env = (payload?.payload || payload) as BroadcastEnvelope | undefined
+          
+          if (!isValidBroadcastEnvelope(env) || env.t !== 'qa:display') {
+            return
+          }
+          
+          const data = env.payload as { questionId: number; question?: Question }
+          if (data && data.questionId) {
+            // 질문 데이터가 함께 전송되었으면 즉시 표시 (API 호출 없이 빠른 전환)
+            if (data.question) {
+              const newQuestionId = data.questionId
+              window.history.pushState(
+                null,
+                '',
+                `/webinar/${webinarId}/console/qa/display/${newQuestionId}`
+              )
+              setQuestion(data.question)
+              setLoading(false)
+            } else {
+              // 질문 데이터가 없으면 API로 조회
+              const newQuestionId = data.questionId
+              window.history.pushState(
+                null,
+                '',
+                `/webinar/${webinarId}/console/qa/display/${newQuestionId}`
+              )
+              loadQuestionById(newQuestionId, false)
+            }
+          }
         }
-      }
-    }
+      )
+      .subscribe()
     
-    window.addEventListener('message', handleMessage)
-    
-    // 실시간 구독
-    const channel = supabase
+    // 현재 질문의 실시간 구독
+    const questionChannel = supabase
       .channel(`webinar-${webinarId}-question-${questionId}`)
       .on(
         'postgres_changes',
@@ -66,15 +94,17 @@ export default function QADisplayPage() {
       .subscribe()
     
     return () => {
-      window.removeEventListener('message', handleMessage)
-      channel.unsubscribe()
+      broadcastChannel.unsubscribe()
+      questionChannel.unsubscribe()
     }
   }, [webinarId, questionId])
   
-  const loadQuestion = async () => {
+  const loadQuestionById = async (id: number, showLoading: boolean = true) => {
     try {
-      setLoading(true)
-      const response = await fetch(`/api/questions/${questionId}`)
+      if (showLoading) {
+        setLoading(true)
+      }
+      const response = await fetch(`/api/questions/${id}`)
       
       if (!response.ok) {
         throw new Error('질문 조회 실패')
@@ -82,12 +112,16 @@ export default function QADisplayPage() {
       
       const result = await response.json()
       setQuestion(result.question)
+      setLoading(false)
     } catch (error: any) {
       console.error('질문 로드 실패:', error)
       setQuestion(null)
-    } finally {
       setLoading(false)
     }
+  }
+  
+  const loadQuestion = async () => {
+    await loadQuestionById(questionId)
   }
   
   if (loading) {
