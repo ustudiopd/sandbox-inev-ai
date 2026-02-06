@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import { useRouter, useSearchParams } from 'next/navigation'
+import Link from 'next/link'
 
 interface OnDemandWebinar {
   id: string
@@ -354,36 +355,38 @@ export default function OnDemandRegisterPage({ webinar }: OnDemandRegisterPagePr
               />
             </div>
             
+            {/* Top Line */}
+            <div className="h-px bg-gray-300 w-full mt-6"></div>
+            
             {/* Privacy Policy - 태블릿: 텍스트 크기 조정 */}
-            <div className="mb-4" style={{ marginTop: '23px' }}>
-              <div className="text-[11px] md:text-[10px] lg:text-[11px] leading-tight text-gray-600">
-                <p className="font-semibold mb-2 text-xs sm:text-sm md:text-xs lg:text-sm">※ 개인정보 제3자 제공 동의</p>
-                <p className="break-words mb-0.5" style={{ marginBottom: '2px' }}>1) 개인정보를 제공 받는 자: HPE</p>
-                <p className="break-words mb-0.5" style={{ marginBottom: '2px' }}>2) 개인정보를 제공 받는자의 개인정보 이용 목적: 뉴스레터와 행사/세미나, 제품정보, 특별 판매, 교육 관련 정보 등의 email 제공, 기타 새로운 서비스 안내 및 마케팅 활동</p>
-                <p className="break-words mb-0.5" style={{ marginBottom: '2px' }}>3) 제공하는 개인정보 항목: 성 함, 회사명, 직급, 이메일 주소, 휴대폰 번호</p>
-                <p className="break-words mb-0" style={{ marginBottom: '0' }}>4) 개인정보를 제공 받는 자의 개인정보 보유 및 이용 기간: 정보 주체의 탈퇴 요청 혹은 개인정보 활용 거부 의사 표현시까지 해당 정보를 보유</p>
+            <div className="mt-6">
+              <div className="text-[11px] md:text-[10px] lg:text-[11px] leading-relaxed text-gray-600">
+                <p className="break-words mb-0">
+                  HPE에서 귀하의 정보를 관리, 사용, 보호하는 방법에 대해 자세히 알아보려면 HPE 개인정보 취급방침을 참조하시기 바랍니다. 동의한 사항에 대해 언제든지 취소 또는 수정하여 HPE의 마케팅 커뮤니케이션 서비스를 받을 수 있습니다. 이 작업을 수행하려면 HPE 이메일 마케팅 커뮤니케이션 페이지 하단의 옵트아웃 및 환경설정 메커니즘을 사용하거나 여기를 클릭하세요.
+                </p>
               </div>
             </div>
             
             {/* Agreement Checkbox - 태블릿: 텍스트 크기 조정 */}
-            <div className="flex items-center gap-2 mb-4">
+            <div className="flex items-center gap-2 mt-6">
               <input
                 type="checkbox"
                 id="agreement"
                 checked={agreed}
                 onChange={(e) => setAgreed(e.target.checked)}
                 className="w-4 h-4 text-[#00B388] border-gray-300 rounded focus:ring-[#00B388] bg-white"
+                required
               />
               <label htmlFor="agreement" className="text-sm md:text-xs lg:text-sm text-gray-700">
-                상기 내용에 동의합니다.
+                개인정보 취급방침에 동의합니다 <span className="text-red-500">*</span>
               </label>
             </div>
             
             {/* Bottom Line */}
-            <div className="h-1 bg-[#00B388] w-full"></div>
+            <div className="h-1 bg-[#00B388] w-full mt-6"></div>
             
             {/* Submit Button - 모바일: 터치 영역 확대, 상단 간격 확대 / 태블릿: 크기 조정 */}
-            <div className="flex justify-center max-sm:!mt-8" style={{ marginTop: '34px' }}>
+            <div className="flex flex-col items-center gap-3 md:gap-2.5 lg:gap-3 max-sm:!mt-8" style={{ marginTop: '34px' }}>
               <button
                 type="submit"
                 disabled={isSubmitting}
@@ -391,6 +394,14 @@ export default function OnDemandRegisterPage({ webinar }: OnDemandRegisterPagePr
               >
                 {isSubmitting ? '처리 중...' : '등록하기'}
               </button>
+              
+              {/* 로그인 링크 */}
+              <Link 
+                href={`/ondemand/${webinarPath}/login`}
+                className="text-sm md:text-xs lg:text-sm text-gray-600 hover:text-[#00B388] underline transition-colors"
+              >
+                로그인
+              </Link>
             </div>
           </form>
         </div>

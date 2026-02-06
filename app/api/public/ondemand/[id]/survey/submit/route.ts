@@ -21,20 +21,8 @@ export async function POST(
       answers?: Array<{ questionKey: string; choiceKey: string }>
     }
 
-    if (!name || !phone) {
-      return NextResponse.json(
-        { error: '이름과 휴대폰 번호는 필수입니다.' },
-        { status: 400 }
-      )
-    }
-
-    const phoneNorm = phone.replace(/\D/g, '')
-    if (!phoneNorm) {
-      return NextResponse.json(
-        { error: '올바른 휴대폰 번호를 입력해 주세요.' },
-        { status: 400 }
-      )
-    }
+    // 이름과 휴대폰 번호는 선택적 (설문 문항만 필수)
+    const phoneNorm = phone ? phone.replace(/\D/g, '') : null
 
     const admin = createAdminSupabase()
     const query = getOnDemandQuery(id)
@@ -56,13 +44,17 @@ export async function POST(
 
     const webinarId = ondemand.id
 
-    // 이미 제출한 전화번호인지 확인
-    const { data: existing } = await admin
-      .from('ondemand_survey_responses')
-      .select('survey_no, code6')
-      .eq('webinar_id', webinarId)
-      .eq('phone_norm', phoneNorm)
-      .maybeSingle()
+    // 전화번호가 있는 경우에만 중복 확인 (전화번호 없이도 제출 가능)
+    let existing = null
+    if (phoneNorm) {
+      const { data: existingData } = await admin
+        .from('ondemand_survey_responses')
+        .select('survey_no, code6')
+        .eq('webinar_id', webinarId)
+        .eq('phone_norm', phoneNorm)
+        .maybeSingle()
+      existing = existingData
+    }
 
     if (existing) {
       return NextResponse.json({
@@ -113,9 +105,9 @@ export async function POST(
       .from('ondemand_survey_responses')
       .insert({
         webinar_id: webinarId,
-        name: name.trim() || null,
+        name: name?.trim() || null,
         company: company?.trim() || null,
-        phone_norm: phoneNorm,
+        phone_norm: phoneNorm || null,
         answers: Array.isArray(answers) ? answers : [],
         survey_no: surveyNo,
         code6,

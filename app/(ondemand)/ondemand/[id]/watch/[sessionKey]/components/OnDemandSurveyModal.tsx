@@ -2,32 +2,28 @@
 
 import { useState } from 'react'
 
-/** 설문 문항 정의 (HPE 데이터센터 설문) */
+/** 설문 문항 정의 (HPE 네트워크 설문) */
 const SURVEY_QUESTIONS = [
   {
     key: 'q1',
-    body: '행사 전 HPE 데이터센터 솔루션에 대한 인지도는 어느 정도 였습니까?',
+    body: '현재 네트워크 프로젝트 계획이 있으시다면 언제입니까?',
+    type: 'radio' as const,
     options: [
-      { key: 'none', text: '전혀 모름' },
-      { key: 'heard', text: '들어본 적 있는 정도' },
-      { key: 'interested', text: '관심 있는 정도' },
-      { key: 'well_known', text: '매우 잘 알고 있는 정도' },
+      { key: '1week', text: '1주일 이내' },
+      { key: '1month', text: '1개월 이내' },
+      { key: '1_3months', text: '1개월 - 3개월' },
+      { key: '3_6months', text: '3개월 - 6개월' },
+      { key: '6_12months', text: '6개월 - 12개월' },
+      { key: '1year_plus', text: '1년 이후' },
+      { key: 'no_plan', text: '계획없음' },
     ],
   },
   {
     key: 'q2',
-    body: '현재 데이터센터 네트워크 프로젝트 계획이 있으시다면 언제입니까?',
+    body: '향후 네트워크 프로젝트 계획이 있으시다면, 다음 중 어떤 영역에 해당합니까?',
+    type: 'checkbox' as const,
     options: [
-      { key: '6m', text: '계획 있음 (6개월 내)' },
-      { key: '6m_1y', text: '계획 있음 (6개월 ~ 1년 이내)' },
-      { key: '1y_plus', text: '계획 있음 (1년 이후)' },
-      { key: 'no', text: '계획 없음' },
-    ],
-  },
-  {
-    key: 'q3',
-    body: '데이터센터 외 네트워크 프로젝트 계획이 있으시다면 어떤 것입니까?',
-    options: [
+      { key: 'datacenter', text: '데이터 센터 (AI 데이터 센터, 데이터 센터 자동화 등)' },
       { key: 'campus', text: '유무선 캠퍼스 & 브랜치 네트워크' },
       { key: 'routing', text: '엔터프라이즈 라우팅 (SD-WAN 포함)' },
       { key: 'security', text: '네트워크 보안' },
@@ -35,25 +31,32 @@ const SURVEY_QUESTIONS = [
     ],
   },
   {
-    key: 'q4',
-    body: '다음 중 데이터센터 네트워크 중 특별히 관심 있으신 분야는 어디입니까?',
+    key: 'q3',
+    body: '해당 프로젝트에 대한 예산은 이미 확보되어 있습니까?',
+    type: 'radio' as const,
     options: [
-      { key: 'ai_fabric', text: 'AI 데이터센터 (RoCEv2 지원 패브릭)' },
-      { key: 'aiops', text: '데이터센터를 위한 AIOps' },
-      { key: 'automation', text: '데이터센터 네트워크 자동화' },
-      { key: 'hardware', text: '데이터센터용 고성능 하드웨어 (스위칭, 라우팅)' },
-      { key: 'zero_trust', text: '제로 트러스트 데이터센터 (보안)' },
-      { key: 'none', text: '관심 없음' },
+      { key: 'yes', text: '예' },
+      { key: 'no', text: '아니오' },
+    ],
+  },
+  {
+    key: 'q4',
+    body: '예정된 프로젝트에서 귀하의 역할은 의사결정 권한이 있는 구매 담당자(Authorized Buyer)입니까?',
+    type: 'radio' as const,
+    options: [
+      { key: 'yes', text: '예' },
+      { key: 'no', text: '아니오' },
     ],
   },
   {
     key: 'q5',
-    body: 'HPE의 데이터센터 네트워크 솔루션에 대해 보다 더 자세한 내용을 들어 보실 의향이 있으십니까?',
+    body: 'HPE의 네트워크 솔루션에 대해 보다 더 자세한 내용을 들어 보실 의향이 있으십니까?',
+    type: 'radio' as const,
     options: [
-      { key: 'visit', text: 'HPE 혹은 HPE 파트너의 방문 요청' },
-      { key: 'online', text: 'HPE 혹은 HPE 파트너의 온라인 미팅 요청' },
-      { key: 'phone', text: 'HPE 혹은 HPE 파트너의 전화 상담 요청' },
-      { key: 'none', text: '관심 없음' },
+      { key: 'visit', text: 'HPE 네트워크 전문가의 방문 요청' },
+      { key: 'online', text: 'HPE 네트워크 전문가의 온라인 미팅 요청' },
+      { key: 'phone', text: 'HPE 네트워크 전문가의 전화 상담 요청' },
+      { key: 'no_interest', text: '관심 없음' },
     ],
   },
 ] as const
@@ -69,39 +72,40 @@ export default function OnDemandSurveyModal({
   onClose,
   webinarIdOrSlug,
 }: OnDemandSurveyModalProps) {
-  const [name, setName] = useState('')
-  const [company, setCompany] = useState('')
-  const [phone1, setPhone1] = useState('010')
-  const [phone2, setPhone2] = useState('')
-  const [phone3, setPhone3] = useState('')
-  const [answers, setAnswers] = useState<Record<string, string>>({})
+  // 체크박스는 배열로, 라디오는 문자열로 저장
+  const [answers, setAnswers] = useState<Record<string, string | string[]>>({})
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<{ survey_no: number; code6: string } | null>(null)
 
-  const handlePhoneChange = (part: 'phone1' | 'phone2' | 'phone3', value: string) => {
-    const num = value.replace(/[^0-9]/g, '')
-    if (part === 'phone1') setPhone1(num)
-    else if (part === 'phone2' && num.length <= 4) setPhone2(num)
-    else if (part === 'phone3' && num.length <= 4) setPhone3(num)
+  const handleAnswerChange = (questionKey: string, optionKey: string, isCheckbox: boolean) => {
+    if (isCheckbox) {
+      setAnswers((prev) => {
+        const current = (prev[questionKey] as string[]) || []
+        const newValue = current.includes(optionKey)
+          ? current.filter((k) => k !== optionKey)
+          : [...current, optionKey]
+        return { ...prev, [questionKey]: newValue }
+      })
+    } else {
+      setAnswers((prev) => ({ ...prev, [questionKey]: optionKey }))
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
-    if (!name.trim()) {
-      setError('이름을 입력해 주세요.')
-      return
-    }
-    if (!company.trim()) {
-      setError('회사명을 입력해 주세요.')
-      return
-    }
-    if (!phone2.trim() || !phone3.trim()) {
-      setError('휴대폰 번호를 모두 입력해 주세요.')
-      return
-    }
-    const missing = SURVEY_QUESTIONS.filter((q) => !answers[q.key])
+    
+    // 모든 문항 답변 확인
+    const missing = SURVEY_QUESTIONS.filter((q) => {
+      const answer = answers[q.key]
+      if (q.type === 'checkbox') {
+        return !answer || (Array.isArray(answer) && answer.length === 0)
+      } else {
+        return !answer || answer === ''
+      }
+    })
+    
     if (missing.length > 0) {
       setError('모든 설문 문항에 답해 주세요.')
       return
@@ -109,18 +113,29 @@ export default function OnDemandSurveyModal({
 
     setSubmitting(true)
     try {
-      const phone = `${phone1}-${phone2}-${phone3}`
+      // 체크박스는 배열을 문자열로 변환 (쉼표로 구분)
+      const formattedAnswers = SURVEY_QUESTIONS.map((q) => {
+        const answer = answers[q.key]
+        if (q.type === 'checkbox' && Array.isArray(answer)) {
+          return {
+            questionKey: q.key,
+            choiceKey: answer.join(','), // 다중 선택을 쉼표로 구분
+          }
+        } else {
+          return {
+            questionKey: q.key,
+            choiceKey: answer as string,
+          }
+        }
+      })
+
       const res = await fetch(`/api/public/ondemand/${webinarIdOrSlug}/survey/submit`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name: name.trim(),
-          company: company.trim() || undefined,
-          phone,
-          answers: SURVEY_QUESTIONS.map((q) => ({
-            questionKey: q.key,
-            choiceKey: answers[q.key],
-          })),
+          name: '', // 빈 문자열로 전송 (API에서 선택적으로 처리)
+          phone: '', // 빈 문자열로 전송 (API에서 선택적으로 처리)
+          answers: formattedAnswers,
         }),
       })
       const data = await res.json()
@@ -141,11 +156,6 @@ export default function OnDemandSurveyModal({
   }
 
   const handleClose = () => {
-    setName('')
-    setCompany('')
-    setPhone1('010')
-    setPhone2('')
-    setPhone3('')
     setAnswers({})
     setError(null)
     setSuccess(null)
@@ -191,75 +201,32 @@ export default function OnDemandSurveyModal({
             <form onSubmit={handleSubmit} className="space-y-5">
               <p className="text-sm text-gray-500"><span className="text-red-500">*</span> 필수 항목</p>
 
-              <div>
-                <label className="block text-sm font-medium mb-1 text-gray-900">이름 <span className="text-red-500">*</span></label>
-                <input
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder-gray-400"
-                  placeholder="이름"
-                  style={{ backgroundColor: '#ffffff', color: '#111827' }}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1 text-gray-900">회사명 <span className="text-red-500">*</span></label>
-                <input
-                  type="text"
-                  value={company}
-                  onChange={(e) => setCompany(e.target.value)}
-                  className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder-gray-400"
-                  placeholder="회사명"
-                  style={{ backgroundColor: '#ffffff', color: '#111827' }}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1 text-gray-900">휴대폰 번호 <span className="text-red-500">*</span></label>
-                <div className="flex gap-1">
-                  <input
-                    type="tel"
-                    value={phone1}
-                    onChange={(e) => handlePhoneChange('phone1', e.target.value)}
-                    className="w-14 rounded-lg border border-gray-300 bg-white px-2 py-2 text-gray-900 text-center"
-                    style={{ backgroundColor: '#ffffff', color: '#111827' }}
-                  />
-                  <span className="self-center text-gray-400">-</span>
-                  <input
-                    type="tel"
-                    value={phone2}
-                    onChange={(e) => handlePhoneChange('phone2', e.target.value)}
-                    className="flex-1 max-w-20 rounded-lg border border-gray-300 bg-white px-2 py-2 text-gray-900 text-center"
-                    maxLength={4}
-                    style={{ backgroundColor: '#ffffff', color: '#111827' }}
-                  />
-                  <span className="self-center text-gray-400">-</span>
-                  <input
-                    type="tel"
-                    value={phone3}
-                    onChange={(e) => handlePhoneChange('phone3', e.target.value)}
-                    className="flex-1 max-w-20 rounded-lg border border-gray-300 bg-white px-2 py-2 text-gray-900 text-center"
-                    maxLength={4}
-                    style={{ backgroundColor: '#ffffff', color: '#111827' }}
-                  />
-                </div>
-              </div>
-
               {SURVEY_QUESTIONS.map((q) => (
                 <div key={q.key}>
                   <p className="text-sm font-medium mb-2 text-gray-900">{q.body} <span className="text-red-500">*</span></p>
                   <div className="space-y-1.5">
-                    {q.options.map((opt) => (
-                      <label key={opt.key} className="flex items-center gap-2 cursor-pointer text-gray-700">
-                        <input
-                          type="radio"
-                          name={q.key}
-                          checked={answers[q.key] === opt.key}
-                          onChange={() => setAnswers((prev) => ({ ...prev, [q.key]: opt.key }))}
-                          className="rounded-full border-gray-400 text-emerald-500 focus:ring-emerald-500"
-                        />
-                        <span className="text-sm">{opt.text}</span>
-                      </label>
-                    ))}
+                    {q.options.map((opt) => {
+                      const isCheckbox = q.type === 'checkbox'
+                      const isChecked = isCheckbox
+                        ? (answers[q.key] as string[])?.includes(opt.key) || false
+                        : answers[q.key] === opt.key
+                      
+                      return (
+                        <label key={opt.key} className="flex items-center gap-2 cursor-pointer text-gray-700">
+                          <input
+                            type={isCheckbox ? 'checkbox' : 'radio'}
+                            name={q.key}
+                            checked={isChecked}
+                            onChange={() => handleAnswerChange(q.key, opt.key, isCheckbox)}
+                            className={isCheckbox 
+                              ? "rounded border-gray-400 text-emerald-500 focus:ring-emerald-500"
+                              : "rounded-full border-gray-400 text-emerald-500 focus:ring-emerald-500"
+                            }
+                          />
+                          <span className="text-sm">{opt.text}</span>
+                        </label>
+                      )
+                    })}
                   </div>
                 </div>
               ))}

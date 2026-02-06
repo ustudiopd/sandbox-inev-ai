@@ -167,7 +167,7 @@ export default function OnDemandWatchPage({ webinar }: OnDemandWatchPageProps) {
               <div className="text-left max-w-3xl md:w-full md:max-w-[750px] md:mx-auto lg:w-full lg:max-w-[847px] lg:mx-auto xl:max-w-[802px] xl:ml-[430px] max-sm:mx-auto max-sm:max-w-full max-sm:px-2 sm:ml-[430px]">
                 {/* Description - 모바일: 텍스트 크기 및 간격 조정 / 태블릿: 왼쪽 정렬, Info Box 왼쪽 라인 맞춤, 반응형 */}
                 <p className="text-white/90 text-[17px] md:text-[16px] lg:text-[16.5px] xl:text-[17px] leading-relaxed mb-4 sm:mb-6 md:mb-5 lg:mb-5.5 xl:mb-6 max-sm:text-sm max-sm:leading-relaxed max-sm:mb-3" style={{ letterSpacing: '-0.1px' }}>
-                  지난 Discover More AI Seoul 행사에서 큰 관심을 받았던 HPE Networking 발표 내용을 온디멘드 웨비나로 다시 확인하실 수 있도록 준비했습니다. AI 시대를 대비한 HPE Networking의 기술 비전과 전략을 온디멘드 웨비나로 언제 어디서나 확인하실 수 있습니다. AI 네이티브 네트워킹 플랫폼, 데이터 센터 및 캠퍼스 & 브랜치 까지 주요 세션의 핵심 인사이트를 한 번에 만나보시기 바랍니다.
+                  지난 Discover More AI Seoul 행사에서 큰 관심을 받았던 HPE Networking 주요 발표 내용을 온디맨드 웨비나로 준비했습니다. AI 네이티브 네트워킹 플랫폼, 데이터 센터부터 캠퍼스 & 브랜치 영역까지 핵심 세션의 인사이트를 한 번에 만나보실 수 있습니다. 지금 온디맨드 웨비나를 통해 AI 시대를 대비한 HPE Networking의 기술 비전과 전략을 확인해 보세요.
                 </p>
               </div>
             </div>
@@ -269,10 +269,10 @@ export default function OnDemandWatchPage({ webinar }: OnDemandWatchPageProps) {
             <div key={session.session_key} className="w-full flex flex-col items-center max-sm:items-start max-sm:w-full max-sm:max-w-[calc(100vw-2rem)]">
               {/* Category Name - 모바일: 전체 너비, 썸네일과 정렬 / 태블릿: 크기 조정 */}
               {session.category_label && (
-                <h3 className="text-xl sm:text-2xl md:text-[1.75rem] lg:text-[2rem] font-medium text-emerald-500 mb-2 sm:mb-3 text-left w-[495px] md:w-full lg:w-[495px] pl-0 max-sm:w-full max-sm:max-w-[calc(100vw-2rem)] max-sm:text-lg max-sm:mb-3">
-                  <div className="leading-tight">{session.category_label}</div>
+                <h3 className="text-xl sm:text-2xl md:text-[1.5rem] lg:text-[1.75rem] font-bold text-emerald-500 mb-2 sm:mb-3 text-left w-[495px] md:w-full lg:w-[495px] pl-0 max-sm:w-full max-sm:max-w-[calc(100vw-2rem)] max-sm:text-lg max-sm:mb-3">
+                  <div className="leading-tight font-bold">{session.category_label}</div>
                   {session.product_label && (
-                    <div className="leading-tight">{session.product_label}</div>
+                    <div className="leading-tight font-bold">{session.product_label}</div>
                   )}
                 </h3>
               )}

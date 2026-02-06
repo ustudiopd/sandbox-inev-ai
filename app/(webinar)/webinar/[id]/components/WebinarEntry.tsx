@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { createClientSupabase } from '@/lib/supabase/client'
 import { extractUTMParams, appendUTMToURL } from '@/lib/utils/utm'
 import { getOrCreateSessionId } from '@/lib/utils/session'
+import { getWebinarStatus } from '@/lib/webinar/utils'
 
 interface Webinar {
   id: string
@@ -24,6 +25,7 @@ interface Webinar {
     public_path: string
     title: string
   } | null
+  settings?: any
   clients?: {
     id: string
     name: string
@@ -77,6 +79,14 @@ export default function WebinarEntry({ webinar, isWertPage: serverIsWertPage }: 
     seconds: number
   } | null>(null)
   const [isWebinarStarted, setIsWebinarStarted] = useState(false)
+  
+  // 웨비나 상태 확인
+  const webinarStatus = getWebinarStatus({
+    start_time: webinar.start_time,
+    end_time: webinar.end_time,
+    settings: webinar.settings,
+  })
+  const isWebinarEnded = webinarStatus === 'ended'
   
   // 카운트다운 계산
   useEffect(() => {
@@ -613,6 +623,13 @@ export default function WebinarEntry({ webinar, isWertPage: serverIsWertPage }: 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
+    
+    // 종료된 웨비나 체크
+    if (isWebinarEnded) {
+      setError('이 웨비나는 이미 종료되었습니다.')
+      return
+    }
+    
     setLoading(true)
     
     try {
@@ -663,6 +680,12 @@ export default function WebinarEntry({ webinar, isWertPage: serverIsWertPage }: 
   const handleGuestEntry = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
+    
+    // 종료된 웨비나 체크
+    if (isWebinarEnded) {
+      setError('이 웨비나는 이미 종료되었습니다.')
+      return
+    }
     
     if (!nickname || !nickname.trim()) {
       setError('닉네임을 입력해주세요')
@@ -850,6 +873,12 @@ export default function WebinarEntry({ webinar, isWertPage: serverIsWertPage }: 
   const handleNameEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
+    
+    // 종료된 웨비나 체크
+    if (isWebinarEnded) {
+      setError('이 웨비나는 이미 종료되었습니다.')
+      return
+    }
     
     if (!email || !email.trim()) {
       setError('이메일을 입력해주세요')
@@ -2094,18 +2123,60 @@ export default function WebinarEntry({ webinar, isWertPage: serverIsWertPage }: 
                   
                   <div style={{ marginBottom: '32px' }}>
                     <h1 className="registration-form-title" style={{ marginBottom: '8px', marginTop: '0' }}>웨비나 입장</h1>
-                    {/* 안내 문구 */}
-                    <p style={{ 
-                      marginTop: '0',
-                      marginBottom: '0',
-                      textAlign: 'center',
-                      fontSize: '14px',
-                      color: '#666',
-                      lineHeight: '20px',
-                      fontFamily: 'Pretendard, sans-serif'
-                    }} className="entry-notice-text">
-                      웨비나 등록 시 입력했던 이름과 이메일 주소를<span className="sm:hidden"><br /></span><span className="hidden sm:inline"> </span>작성하시면 입장됩니다.
-                    </p>
+                    {/* 종료된 웨비나 안내 */}
+                    {isWebinarEnded ? (
+                      <div style={{ 
+                        marginTop: '0',
+                        marginBottom: '0',
+                        padding: '16px',
+                        backgroundColor: '#fff3cd',
+                        border: '1px solid #ffc107',
+                        borderRadius: '16px',
+                        textAlign: 'center'
+                      }}>
+                        <p style={{ 
+                          fontSize: '16px',
+                          color: '#856404',
+                          lineHeight: '24px',
+                          fontFamily: 'Pretendard, sans-serif',
+                          fontWeight: '600',
+                          margin: '0'
+                        }}>
+                          이 웨비나는 이미 종료되었습니다.
+                        </p>
+                        {webinar.end_time && (
+                          <p style={{ 
+                            fontSize: '14px',
+                            color: '#856404',
+                            lineHeight: '20px',
+                            fontFamily: 'Pretendard, sans-serif',
+                            marginTop: '8px',
+                            marginBottom: '0'
+                          }}>
+                            종료 시간: {new Date(webinar.end_time).toLocaleString('ko-KR', { 
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </p>
+                        )}
+                      </div>
+                    ) : (
+                      /* 안내 문구 */
+                      <p style={{ 
+                        marginTop: '0',
+                        marginBottom: '0',
+                        textAlign: 'center',
+                        fontSize: '14px',
+                        color: '#666',
+                        lineHeight: '20px',
+                        fontFamily: 'Pretendard, sans-serif'
+                      }} className="entry-notice-text">
+                        웨비나 등록 시 입력했던 이름과 이메일 주소를<span className="sm:hidden"><br /></span><span className="hidden sm:inline"> </span>작성하시면 입장됩니다.
+                      </p>
+                    )}
                   </div>
                   
                   {autoEntering ? (
@@ -2149,7 +2220,7 @@ export default function WebinarEntry({ webinar, isWertPage: serverIsWertPage }: 
                         className="registration-form-input"
                         placeholder="이름을 입력하세요"
                         required
-                        disabled={loading}
+                        disabled={loading || isWebinarEnded}
                       />
                     </div>
                     
@@ -2165,7 +2236,7 @@ export default function WebinarEntry({ webinar, isWertPage: serverIsWertPage }: 
                         className="registration-form-input"
                         placeholder="이메일을 입력하세요"
                         required
-                        disabled={loading}
+                        disabled={loading || isWebinarEnded}
                       />
                     </div>
                     
@@ -2173,10 +2244,15 @@ export default function WebinarEntry({ webinar, isWertPage: serverIsWertPage }: 
                     <div style={{ marginTop: '32px' }} className="login-button-container">
                       <button
                         type="submit"
-                        disabled={loading}
+                        disabled={loading || isWebinarEnded}
                         className="registration-form-button"
+                        style={isWebinarEnded ? { 
+                          opacity: 0.5, 
+                          cursor: 'not-allowed',
+                          backgroundColor: '#ccc'
+                        } : {}}
                       >
-                        {loading ? '입장 중...' : '웨비나 입장'}
+                        {loading ? '입장 중...' : isWebinarEnded ? '종료된 웨비나' : '웨비나 입장'}
                         <img
                           src={`${supabaseUrl}/storage/v1/object/public/webinar-thumbnails/wert/symbol1.png`}
                           alt=""
@@ -2333,10 +2409,15 @@ export default function WebinarEntry({ webinar, isWertPage: serverIsWertPage }: 
                   <div className="login-button-container">
                     <button
                       type="submit"
-                      disabled={loading}
+                      disabled={loading || isWebinarEnded}
                       className="login-form-button"
+                      style={isWebinarEnded ? { 
+                        opacity: 0.5, 
+                        cursor: 'not-allowed',
+                        backgroundColor: '#ccc'
+                      } : {}}
                     >
-                    {loading ? '입장 중...' : '웨비나 입장'}
+                    {loading ? '입장 중...' : isWebinarEnded ? '종료된 웨비나' : '웨비나 입장'}
                     <img
                       src={`${supabaseUrl}/storage/v1/object/public/webinar-thumbnails/wert/symbol1.png`}
                       alt=""

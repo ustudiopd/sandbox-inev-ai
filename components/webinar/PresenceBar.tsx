@@ -216,26 +216,45 @@ export default function PresenceBar({
                 console.warn('프로필 정보 조회 실패:', apiError)
               }
               
-              // 프로필 정보가 없는 사용자들의 프로필 정보를 개별적으로 조회 (API 사용)
-              usersWithoutProfile.forEach((user) => {
-                // API를 통해 프로필 정보 조회 (RLS 우회)
-                fetch(`/api/profiles/${user.id}`)
-                  .then((res) => res.json())
-                  .then(({ profile }) => {
-                    if (profile) {
-                      setParticipants((prev) =>
-                        prev.map((p) =>
-                          p.id === user.id
-                            ? { ...p, display_name: profile.display_name, email: profile.email }
-                            : p
-                        )
-                      )
-                    }
+              // 프로필 정보가 없는 사용자들의 프로필 정보를 배치 조회 (성능 최적화)
+              // 기존: 개별 API 호출 = N번의 HTTP 요청 → 개선: 1번의 배치 호출
+              if (usersWithoutProfile.length > 0) {
+                const userIdsToFetch = usersWithoutProfile.map(u => u.id)
+                try {
+                  const response = await fetch('/api/profiles/batch', {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ userIds: userIdsToFetch }),
                   })
-                  .catch(() => {
-                    // 프로필 조회 실패는 무시
-                  })
-              })
+                  
+                  if (response.ok) {
+                    const result = await response.json()
+                    const profilesMap = new Map(
+                      (result.profiles || []).map((profile: any) => [profile.id, profile])
+                    )
+                    
+                    // 프로필 정보 업데이트
+                    setParticipants((prev) =>
+                      prev.map((p) => {
+                        const profile = profilesMap.get(p.id) as { display_name?: string; email?: string } | undefined
+                        if (profile && (!p.display_name || !p.email)) {
+                          return {
+                            ...p,
+                            display_name: profile.display_name || p.display_name,
+                            email: profile.email || p.email,
+                          }
+                        }
+                        return p
+                      })
+                    )
+                  }
+                } catch (error) {
+                  console.warn('[PresenceBar] 배치 프로필 조회 실패:', error)
+                  // 실패해도 계속 진행
+                }
+              }
             }
             
             // 디버깅: 중복 확인
@@ -249,28 +268,49 @@ export default function PresenceBar({
           })
           .on('presence', { event: 'join' }, ({ key, newPresences }) => {
             console.log('User joined:', key, newPresences)
-            // 새 사용자가 참여할 때 프로필 정보 조회
+            // 새 사용자가 참여할 때 프로필 정보 배치 조회 (성능 최적화)
             if (newPresences && Array.isArray(newPresences)) {
-              newPresences.forEach((presence: any) => {
-                if (presence && presence.user && presence.user.id && (!presence.user.display_name && !presence.user.email)) {
-                  fetch(`/api/profiles/${presence.user.id}`)
-                    .then((res) => res.json())
-                    .then(({ profile }) => {
-                      if (profile) {
-                        setParticipants((prev) =>
-                          prev.map((p) =>
-                            p.id === presence.user.id
-                              ? { ...p, display_name: profile.display_name, email: profile.email }
-                              : p
-                          )
-                        )
-                      }
-                    })
-                    .catch(() => {
-                      // 프로필 조회 실패는 무시
-                    })
-                }
-              })
+              const usersNeedingProfile = newPresences
+                .filter((presence: any) => 
+                  presence && presence.user && presence.user.id && 
+                  (!presence.user.display_name && !presence.user.email)
+                )
+                .map((presence: any) => presence.user.id)
+              
+              if (usersNeedingProfile.length > 0) {
+                // 배치 조회로 한 번에 가져오기
+                fetch('/api/profiles/batch', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify({ userIds: usersNeedingProfile }),
+                })
+                  .then((res) => res.json())
+                  .then((result) => {
+                    const profilesMap = new Map(
+                      (result.profiles || []).map((profile: any) => [profile.id, profile])
+                    )
+                    
+                    // 프로필 정보 업데이트
+                    setParticipants((prev) =>
+                      prev.map((p) => {
+                        const profile = profilesMap.get(p.id) as { display_name?: string; email?: string } | undefined
+                        if (profile && (!p.display_name || !p.email)) {
+                          return {
+                            ...p,
+                            display_name: profile.display_name || p.display_name,
+                            email: profile.email || p.email,
+                          }
+                        }
+                        return p
+                      })
+                    )
+                  })
+                  .catch(() => {
+                    // 프로필 조회 실패는 무시
+                  })
+              }
             }
           })
           .on('presence', { event: 'leave' }, ({ key, leftPresences }) => {

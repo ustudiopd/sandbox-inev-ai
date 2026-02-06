@@ -168,16 +168,16 @@ export default function OnDemandPlayerPage({ webinar, session }: OnDemandPlayerP
                   priority
                 />
               </Link>
-              {session.category_label && (
+              {session.title && (
                 <span className="text-white text-lg sm:text-xl md:text-xl lg:text-2xl xl:text-3xl font-medium max-sm:text-base">
-                  {session.category_label}
+                  {session.title}
                 </span>
               )}
             </div>
           </div>
           
-          {/* Video Player / 태블릿: 양옆 마진 / PC: 자연스러운 전환 / 1600px에서 줄어들 때 크기 유지 / 1257px 부드러운 전환 */}
-          <div className="absolute top-[127px] md:top-[120px] lg:top-[121px] xl:top-[123px] 2xl:top-[127px] z-20 w-full max-sm:relative max-sm:top-0">
+          {/* Video Player / 태블릿: 양옆 마진 / PC: 자연스러운 전환 / 1600px에서 줄어들 때 크기 유지 / 1257px 부드러운 전환 / 홈 버튼과 겹치지 않도록 여백 확보 */}
+          <div className="absolute top-[180px] md:top-[170px] lg:top-[175px] xl:top-[180px] 2xl:top-[185px] z-20 w-full max-sm:relative max-sm:top-0">
             <div className="w-full max-w-[1200px] md:w-full md:px-4 lg:w-full lg:px-2 xl:w-full xl:px-6 2xl:max-w-[1200px] 2xl:px-8 mx-auto px-4 sm:px-6 max-sm:px-4 max-sm:pt-28">
               <div className="flex flex-col gap-4 sm:gap-6 md:gap-4 lg:gap-5 xl:gap-5.5 2xl:gap-6 w-full max-w-[1070px] md:w-full md:max-w-[calc(100vw-4rem)] lg:w-full lg:max-w-[900px] xl:w-full xl:max-w-[1070px] 2xl:max-w-[1070px] mx-auto pb-0 lg:pb-0 max-sm:gap-4">
                 

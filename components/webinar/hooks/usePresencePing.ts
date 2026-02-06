@@ -79,9 +79,17 @@ export function usePresencePing(webinarId: string | null) {
   }, [webinarId, getSessionId])
 
   // 지터가 포함된 간격 계산 (120초 ± 10초)
+  // 성능 최적화: 하트비트 주기 조정 가이드
+  // - 현재: 120초 (2분) - 네트워크 요청 수 최소화, 부하 감소
+  // - 권장 범위: 30초~120초 (명세서 기준)
+  //   * 30초: 정확도 높지만 비용/부하 증가 (요청 수 4배 증가)
+  //   * 60초: 정확도와 부하의 균형 (요청 수 2배 증가)
+  //   * 120초: 부하 최소화, ±2분 오차 허용 가능 (운영 KPI 목적)
+  // - 조정 필요 시: baseInterval 값을 변경하거나 환경 변수로 관리
+  //   예: process.env.NEXT_PUBLIC_HEARTBEAT_INTERVAL_SECONDS || 120
   const getIntervalWithJitter = useCallback(() => {
-    const baseInterval = 120000 // 120초
-    const jitter = (Math.random() - 0.5) * 20000 // ±10초
+    const baseInterval = 120000 // 120초 (현재 최적값: 부하 최소화)
+    const jitter = (Math.random() - 0.5) * 20000 // ±10초 (동시 폭주 방지)
     return baseInterval + jitter
   }, [])
 

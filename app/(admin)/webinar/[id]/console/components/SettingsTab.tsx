@@ -24,6 +24,7 @@ interface SettingsTabProps {
     meta_description?: string | null
     meta_thumbnail_url?: string | null
     dashboard_code?: string | null
+    settings?: any
   }
   onWebinarUpdate?: (webinar: any) => void
 }
@@ -47,6 +48,7 @@ export default function SettingsTab({ webinar, onWebinarUpdate }: SettingsTabPro
     metaTitle: '',
     metaDescription: '',
     metaThumbnailUrl: '',
+    isEnded: false,
   })
   const [loading, setLoading] = useState(false)
   const [savingMeta, setSavingMeta] = useState(false)
@@ -87,6 +89,7 @@ export default function SettingsTab({ webinar, onWebinarUpdate }: SettingsTabPro
       
       const initializeFormData = async () => {
         const emails = await loadAllowedEmails()
+        const settings = webinar.settings as any || {}
         setFormData({
           projectName: webinar.project_name || '',
           title: webinar.title || '',
@@ -104,6 +107,7 @@ export default function SettingsTab({ webinar, onWebinarUpdate }: SettingsTabPro
           metaTitle: webinar.meta_title || '',
           metaDescription: webinar.meta_description || '',
           metaThumbnailUrl: webinar.meta_thumbnail_url || '',
+          isEnded: settings.ended === true || false,
         })
       }
       
@@ -125,6 +129,15 @@ export default function SettingsTab({ webinar, onWebinarUpdate }: SettingsTabPro
         return localDate.toISOString()
       }
 
+      // 기존 settings 가져오기
+      const currentSettings = (webinar.settings as any) || {}
+      
+      // 종료 설정을 settings에 추가
+      const updatedSettings = {
+        ...currentSettings,
+        ended: formData.isEnded,
+      }
+      
       const requestBody = {
         projectName: formData.projectName || null,
         title: formData.title,
@@ -139,6 +152,7 @@ export default function SettingsTab({ webinar, onWebinarUpdate }: SettingsTabPro
         allowedEmails: formData.accessPolicy === 'email_auth' ? formData.allowedEmails : undefined,
         emailTemplateText: formData.emailTemplateText || null,
         emailThumbnailUrl: formData.emailThumbnailUrl || null,
+        settings: updatedSettings,
       }
 
       const response = await fetch(`/api/webinars/${webinar.id}`, {
@@ -695,17 +709,35 @@ ${webinar.title}
           )}
         </div>
 
-        <div className="flex items-center">
-          <input
-            type="checkbox"
-            id="isPublic"
-            checked={formData.isPublic}
-            onChange={(e) => setFormData({ ...formData, isPublic: e.target.checked })}
-            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-          />
-          <label htmlFor="isPublic" className="ml-2 block text-sm text-gray-700">
-            공개 웨비나 (검색 가능)
-          </label>
+        <div className="space-y-4">
+          <div className="flex items-center">
+            <input
+              type="checkbox"
+              id="isPublic"
+              checked={formData.isPublic}
+              onChange={(e) => setFormData({ ...formData, isPublic: e.target.checked })}
+              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+            />
+            <label htmlFor="isPublic" className="ml-2 block text-sm text-gray-700">
+              공개 웨비나 (검색 가능)
+            </label>
+          </div>
+          
+          <div className="flex items-center">
+            <input
+              type="checkbox"
+              id="isEnded"
+              checked={formData.isEnded ?? false}
+              onChange={(e) => setFormData({ ...formData, isEnded: e.target.checked })}
+              className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded"
+            />
+            <label htmlFor="isEnded" className="ml-2 block text-sm text-gray-700">
+              웨비나 종료 (종료된 웨비나로 표시)
+            </label>
+          </div>
+          <p className="ml-6 text-sm text-gray-500">
+            체크하면 웨비나가 종료된 것으로 표시되며, 참가자 입장이 제한됩니다.
+          </p>
         </div>
 
         <div className="flex gap-3 justify-end pt-4 border-t">

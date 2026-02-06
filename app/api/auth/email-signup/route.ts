@@ -111,7 +111,7 @@ export async function POST(req: Request) {
     // 임시 비밀번호 생성
     const tempPassword = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
     
-    let userId: string
+    let userId: string | undefined
     
     // 먼저 사용자 생성 시도 (더 효율적)
     const { data: newUser, error: createError } = await admin.auth.admin.createUser({
@@ -129,44 +129,64 @@ export async function POST(req: Request) {
     if (createError) {
       // 이미 등록된 이메일인 경우
       if (createError.message.includes('already been registered') || createError.message.includes('User already registered')) {
-        // 페이지네이션을 고려하여 사용자 찾기
-        let foundUser = null
-        let page = 1
-        const perPage = 1000
+        // profiles 테이블에서 먼저 찾기 (인덱스 활용, 훨씬 빠름)
+        const { data: profile, error: profileError } = await admin
+          .from('profiles')
+          .select('id, email')
+          .eq('email', emailLower)
+          .maybeSingle()
         
-        while (!foundUser && page <= 10) { // 최대 10페이지까지 검색
-          const { data: usersData, error: listError } = await admin.auth.admin.listUsers({
-            page,
-            perPage,
-          })
+        if (profile && profile.id) {
+          userId = profile.id
+        } else {
+          // profiles에 없으면 auth.users에서 찾기 (최대 3페이지까지만, 성능 고려)
+          let foundUser = null
+          let page = 1
+          const perPage = 1000
+          const maxPages = 3 // 최대 3페이지까지만 검색 (성능 개선)
           
-          if (listError) {
-            console.error('사용자 목록 조회 실패:', listError)
-            break
+          while (!foundUser && page <= maxPages) {
+            const { data: usersData, error: listError } = await admin.auth.admin.listUsers({
+              page,
+              perPage,
+            })
+            
+            if (listError) {
+              console.error('사용자 목록 조회 실패:', listError)
+              break
+            }
+            
+            foundUser = usersData?.users.find(u => u.email?.toLowerCase() === emailLower)
+            
+            if (foundUser) {
+              userId = foundUser.id
+              break
+            }
+            
+            // 더 이상 사용자가 없으면 중단
+            if (!usersData?.users || usersData.users.length < perPage) {
+              break
+            }
+            
+            page++
           }
           
-          foundUser = usersData?.users.find(u => u.email?.toLowerCase() === emailLower)
-          
-          if (foundUser) {
-            break
+          if (!userId) {
+            // 사용자를 찾을 수 없으면 에러 반환 (타임아웃 방지)
+            return NextResponse.json(
+              { error: '이미 등록된 이메일입니다. 로그인 페이지에서 로그인해주세요.' },
+              { status: 400 }
+            )
           }
-          
-          // 더 이상 사용자가 없으면 중단
-          if (!usersData?.users || usersData.users.length < perPage) {
-            break
-          }
-          
-          page++
         }
         
-        if (!foundUser) {
+        // userId가 확실히 할당되었는지 확인
+        if (!userId) {
           return NextResponse.json(
-            { error: '이미 등록된 이메일이지만 사용자 계정을 찾을 수 없습니다' },
-            { status: 500 }
+            { error: '사용자를 찾을 수 없습니다.' },
+            { status: 400 }
           )
         }
-        
-        userId = foundUser.id
         
         // 비밀번호 재설정
         const { error: updateError } = await admin.auth.admin.updateUserById(

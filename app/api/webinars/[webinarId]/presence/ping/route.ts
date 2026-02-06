@@ -14,6 +14,14 @@ import { NextRequest, NextResponse } from 'next/server'
  * - 응답: 204 No Content
  * 
  * 하위호환성: session_id가 없어도 기존처럼 동작 (presence만 업데이트)
+ * 
+ * 성능 최적화:
+ * - 하트비트 주기: 120초 (2분) ± 10초 지터
+ *   * 네트워크 요청 수 최소화로 DB 부하 감소
+ *   * ±2분 오차는 운영 KPI 목적으로 충분
+ *   * 30초~60초로 줄이면 정확도 증가하지만 요청 수 2~4배 증가
+ * - Throttle: 최소 60초 간격 (중복 업데이트 방지)
+ * - Upsert 방식: SELECT 없이 UPDATE로 성능 최적화
  */
 export async function POST(
   request: NextRequest,

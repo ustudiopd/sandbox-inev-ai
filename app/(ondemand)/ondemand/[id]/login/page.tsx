@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation'
 import { createAdminSupabase } from '@/lib/supabase/admin'
 import { getOnDemandQuery } from '@/lib/utils/ondemand'
-import OnDemandRegisterPage from './components/OnDemandRegisterPage'
+import OnDemandLandingPage from '../components/OnDemandLandingPage'
 import type { Metadata } from 'next'
 
 /**
@@ -37,13 +37,13 @@ export async function generateMetadata({
       const metaDescription = ondemand.meta_description || ondemand.description || metaTitle
       const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://eventflow.kr'
       const ondemandPath = ondemand.slug || ondemand.id
-      const canonicalUrl = `${appUrl}/ondemand/${ondemandPath}`
+      const canonicalUrl = `${appUrl}/ondemand/${ondemandPath}/login`
       
       // 썸네일 우선순위: meta_thumbnail_url > email_thumbnail_url > 기본 이미지 (thumb_mo.png)
       const thumbnailUrl = ondemand.meta_thumbnail_url || ondemand.email_thumbnail_url || `${appUrl}/img/hpe/thumb_mo.png`
       
       return {
-        title: `${metaTitle} | 온디맨드`,
+        title: `${metaTitle} | 로그인`,
         description: metaDescription,
         metadataBase: new URL(appUrl),
         openGraph: {
@@ -73,19 +73,19 @@ export async function generateMetadata({
     }
     
     return {
-      title: '온디맨드 웨비나',
-      description: '온디맨드 웨비나를 시청하세요',
+      title: '온디맨드 웨비나 로그인',
+      description: '온디맨드 웨비나에 로그인하세요',
     }
   } catch (error) {
-    console.error('[OnDemandPage] 메타데이터 생성 오류:', error)
+    console.error('[OnDemandLoginPage] 메타데이터 생성 오류:', error)
     return {
-      title: '온디맨드 웨비나',
-      description: '온디맨드 웨비나를 시청하세요',
+      title: '온디맨드 웨비나 로그인',
+      description: '온디맨드 웨비나에 로그인하세요',
     }
   }
 }
 
-export default async function OnDemandPage({
+export default async function OnDemandLoginPage({
   params,
 }: {
   params: Promise<{ id: string }>
@@ -112,7 +112,7 @@ export default async function OnDemandPage({
     const { data: ondemand, error: ondemandError } = await queryBuilder.maybeSingle()
     
     if (ondemandError) {
-      console.error('[OnDemandPage] 온디맨드 조회 오류:', ondemandError)
+      console.error('[OnDemandLoginPage] 온디맨드 조회 오류:', ondemandError)
       notFound()
     }
     
@@ -142,9 +142,9 @@ export default async function OnDemandPage({
       clients: clientData || undefined,
     }
     
-    return <OnDemandRegisterPage webinar={ondemandData} />
+    return <OnDemandLandingPage webinar={ondemandData} />
   } catch (error) {
-    console.error('[OnDemandPage] 페이지 로드 오류:', error)
+    console.error('[OnDemandLoginPage] 페이지 로드 오류:', error)
     notFound()
   }
 }

@@ -80,7 +80,8 @@ export async function PUT(
       emailThumbnailUrl,
       metaTitle,
       metaDescription,
-      metaThumbnailUrl
+      metaThumbnailUrl,
+      settings
     } = await req.json()
     
     const admin = createAdminSupabase()
@@ -91,7 +92,7 @@ export async function PUT(
     // 웨비나 정보 조회
     let queryBuilder = admin
       .from('webinars')
-      .select('client_id, agency_id, id')
+      .select('client_id, agency_id, id, settings')
     
     if (query.column === 'slug') {
       queryBuilder = queryBuilder.eq('slug', String(query.value)).not('slug', 'is', null)
@@ -176,6 +177,11 @@ export async function PUT(
     if (metaTitle !== undefined) updateData.meta_title = metaTitle || null
     if (metaDescription !== undefined) updateData.meta_description = metaDescription || null
     if (metaThumbnailUrl !== undefined) updateData.meta_thumbnail_url = metaThumbnailUrl || null
+    if (settings !== undefined) {
+      // 기존 settings와 병합
+      const currentSettings = (webinar.settings as any) || {}
+      updateData.settings = { ...currentSettings, ...settings }
+    }
     
     const { data: updatedWebinar, error: updateError } = await admin
       .from('webinars')

@@ -50,7 +50,14 @@ export function createYouTubeEmbedUrl(
 export function getWebinarStatus(webinar: {
   start_time?: string | null
   end_time?: string | null
+  settings?: any
 }): 'scheduled' | 'live' | 'ended' {
+  // settings에서 종료 설정 확인 (최우선)
+  const settings = webinar.settings as any || {}
+  if (settings.ended === true) {
+    return 'ended'
+  }
+  
   if (!webinar.start_time) return 'scheduled'
   
   const now = new Date()

@@ -324,7 +324,7 @@ export default function OnDemandLandingPage({ webinar }: OnDemandLandingPageProp
               
               {/* 등록하기 링크 */}
               <Link 
-                href={`/ondemand/${webinarPath}/register`}
+                href={`/ondemand/${webinarPath}`}
                 className="text-sm md:text-xs lg:text-sm text-gray-600 hover:text-[#00B388] underline transition-colors"
               >
                 등록하기

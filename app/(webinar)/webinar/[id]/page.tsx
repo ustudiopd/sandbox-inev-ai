@@ -199,7 +199,7 @@ export default async function WebinarPage({
     // email_thumbnail_url은 마이그레이션 054에서 추가되므로 선택적으로 처리
     let queryBuilder = admin
       .from('webinars')
-      .select('id, slug, title, description, meta_title, meta_description, meta_thumbnail_url, youtube_url, start_time, end_time, webinar_start_time, access_policy, client_id, is_public, registration_campaign_id, email_template_text, email_thumbnail_url')
+      .select('id, slug, title, description, meta_title, meta_description, meta_thumbnail_url, youtube_url, start_time, end_time, webinar_start_time, access_policy, client_id, is_public, registration_campaign_id, email_template_text, email_thumbnail_url, settings')
     
     if (query.column === 'slug') {
       // slug는 문자열로 비교
