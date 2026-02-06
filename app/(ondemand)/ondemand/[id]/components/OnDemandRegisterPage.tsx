@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
+import { createClient } from '@supabase/supabase-js'
 
 interface OnDemandWebinar {
   id: string
@@ -99,6 +100,32 @@ export default function OnDemandRegisterPage({ webinar }: OnDemandRegisterPagePr
       
       if (!response.ok) {
         throw new Error(data.error || '등록에 실패했습니다.')
+      }
+      
+      // 자동 로그인 처리
+      if (data.email && data.password) {
+        try {
+          const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+          const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+          const supabase = createClient(supabaseUrl, supabaseAnonKey)
+          
+          const { error: signInError } = await supabase.auth.signInWithPassword({
+            email: data.email,
+            password: data.password,
+          })
+          
+          if (signInError) {
+            console.error('자동 로그인 실패:', signInError)
+            // 로그인 실패해도 등록은 완료되었으므로 계속 진행
+          } else {
+            console.log('자동 로그인 성공')
+            // 세션이 설정될 때까지 잠시 대기
+            await new Promise(resolve => setTimeout(resolve, 300))
+          }
+        } catch (loginError) {
+          console.error('자동 로그인 처리 중 오류:', loginError)
+          // 로그인 실패해도 등록은 완료되었으므로 계속 진행
+        }
       }
       
       // 등록 성공 시 세션 목록 페이지로 이동

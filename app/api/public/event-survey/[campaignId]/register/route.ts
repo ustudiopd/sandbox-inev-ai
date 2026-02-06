@@ -170,6 +170,9 @@ export async function POST(
         
         const emailLower = registration_data.email.trim().toLowerCase()
         
+        // 임시 비밀번호 생성 (자동 로그인용)
+        const tempPassword = `Temp${Math.random().toString(36).slice(-12)}!`
+        
         // 이메일로 사용자 찾기 (profiles 테이블)
         let { data: profile } = await admin
           .from('profiles')
@@ -216,9 +219,6 @@ export async function POST(
             userId = existingAuthUser.id
           } else {
             // auth.users에도 없는 경우 새로 생성
-            // 임시 비밀번호 생성 (나중에 비밀번호 재설정 필요)
-            const tempPassword = `Temp${Math.random().toString(36).slice(-12)}!`
-            
             const { data: newUser, error: createError } = await admin.auth.admin.createUser({
               email: emailLower,
               password: tempPassword,
@@ -294,6 +294,22 @@ export async function POST(
             profile = newProfile
             console.log('[register] 프로필 자동 생성 완료:', profile.id)
           }
+        } else {
+          // 프로필이 이미 있는 경우: 비밀번호 재설정 (자동 로그인용)
+          const { error: updateError } = await admin.auth.admin.updateUserById(
+            profile.id,
+            {
+              password: tempPassword,
+              email_confirm: true,
+            }
+          )
+          
+          if (updateError) {
+            console.error('[register] 기존 사용자 비밀번호 재설정 실패:', updateError)
+            // 비밀번호 재설정 실패해도 등록은 계속 진행
+          } else {
+            console.log('[register] 기존 사용자 비밀번호 재설정 완료:', profile.id)
+          }
         }
         
         // 이미 등록한 경우 확인 (이메일 기반 중복 체크)
@@ -329,10 +345,29 @@ export async function POST(
             }
           }
           
+          // 이미 등록한 경우에도 비밀번호 재설정 (자동 로그인용)
+          const { error: updatePasswordError } = await admin.auth.admin.updateUserById(
+            profile.id,
+            {
+              password: tempPassword,
+              email_confirm: true,
+            }
+          )
+          
+          if (updatePasswordError) {
+            console.error('[register] 이미 등록된 사용자 비밀번호 재설정 실패:', updatePasswordError)
+            // 비밀번호 재설정 실패해도 계속 진행
+          } else {
+            console.log('[register] 이미 등록된 사용자 비밀번호 재설정 완료:', profile.id)
+          }
+          
+          // 이미 등록한 경우에도 자동 로그인을 위해 이메일과 비밀번호 반환
           return NextResponse.json({
             success: true,
             alreadySubmitted: true,
             message: '이미 등록하셨습니다.',
+            email: emailLower,
+            password: tempPassword, // 자동 로그인용 임시 비밀번호
           })
         }
         
@@ -423,9 +458,12 @@ export async function POST(
           timestamp: new Date().toISOString()
         })
         
+        // 자동 로그인을 위해 이메일과 비밀번호 반환
         return NextResponse.json({
           success: true,
           message: '등록이 완료되었습니다.',
+          email: emailLower,
+          password: tempPassword, // 자동 로그인용 임시 비밀번호
         })
       } catch (error: any) {
         console.error('[register] 웨비나 등록 오류:', {
