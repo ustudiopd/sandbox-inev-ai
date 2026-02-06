@@ -45,7 +45,7 @@ export async function POST(
       .from('profiles')
       .select('is_super_admin')
       .eq('id', user.id)
-      .single()
+      .maybeSingle()
     
     let hasPermission = false
     
@@ -231,7 +231,7 @@ export async function POST(
           .from('profiles')
           .select('email')
           .eq('id', user.id)
-          .single()
+          .maybeSingle()
 
         if (adminProfile?.email) {
           await sendEmailViaResend({
