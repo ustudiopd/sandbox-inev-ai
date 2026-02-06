@@ -49,7 +49,8 @@ export async function GET(
     
     // 오늘 00:00:00 ~ 23:59:59 (KST)를 UTC로 변환
     const todayStartUTC = getKSTDate(year, month, date, 0, 0)
-    const todayEndUTC = getKSTDate(year, month, date, 23, 59, 59)
+    // 23:59:59는 다음날 00:00:00 전까지로 처리
+    const todayEndUTC = getKSTDate(year, month, date + 1, 0, 0)
     
     // 실제 웨비나 UUID 사용 (slug가 아닌)
     const actualWebinarId = webinar.id
