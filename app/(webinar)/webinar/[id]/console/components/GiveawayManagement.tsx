@@ -159,6 +159,138 @@ interface GiveawayWinner {
   }
 }
 
+interface Participant {
+  participant_id: string
+  name: string
+  email: string | null
+  created_at: string
+}
+
+// 참여자 목록 모달 컴포넌트
+function ParticipantsModal({
+  webinarId,
+  giveawayId,
+  giveawayName,
+  onClose,
+}: {
+  webinarId: string
+  giveawayId: string
+  giveawayName: string
+  onClose: () => void
+}) {
+  const [participants, setParticipants] = useState<Participant[]>([])
+  const [loading, setLoading] = useState(true)
+  const supabase = createClientSupabase()
+  
+  useEffect(() => {
+    loadParticipants()
+    
+    // 실시간 구독
+    const channel = supabase
+      .channel(`giveaway-${giveawayId}-participants`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'giveaway_entries',
+          filter: `giveaway_id=eq.${giveawayId}`,
+        },
+        () => {
+          loadParticipants()
+        }
+      )
+      .subscribe()
+    
+    return () => {
+      channel.unsubscribe()
+    }
+  }, [giveawayId])
+  
+  const loadParticipants = async () => {
+    try {
+      setLoading(true)
+      const response = await fetch(`/api/webinars/${webinarId}/giveaways/${giveawayId}/participants`)
+      
+      if (!response.ok) {
+        throw new Error('참여자 목록 조회 실패')
+      }
+      
+      const result = await response.json()
+      setParticipants(result.participants || [])
+    } catch (error: any) {
+      console.error('참여자 목록 로드 실패:', error)
+      setParticipants([])
+    } finally {
+      setLoading(false)
+    }
+  }
+  
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[80vh] flex flex-col">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold">{giveawayName} - 참여자 목록</h3>
+          <button
+            onClick={onClose}
+            className="text-gray-500 hover:text-gray-700"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        
+        <div className="flex-1 overflow-y-auto">
+          {loading ? (
+            <div className="text-center text-gray-500 py-8">참여자 목록을 불러오는 중...</div>
+          ) : participants.length === 0 ? (
+            <div className="text-center text-gray-500 py-8">참여자가 없습니다</div>
+          ) : (
+            <div className="border border-gray-200 rounded-lg overflow-hidden">
+              <table className="w-full text-sm">
+                <thead className="bg-gray-50 sticky top-0">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">이름</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">이메일</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">참여 시간</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {participants.map((participant) => (
+                    <tr key={participant.participant_id} className="hover:bg-gray-50">
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <div className="text-sm font-medium text-gray-900">{participant.name}</div>
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <div className="text-sm text-gray-500">{participant.email || '-'}</div>
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <div className="text-sm text-gray-500">
+                          {new Date(participant.created_at).toLocaleString('ko-KR')}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+        
+        <div className="mt-4 flex justify-end">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+          >
+            닫기
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 interface GiveawayManagementProps {
   webinarId: string
 }
@@ -173,6 +305,8 @@ export default function GiveawayManagement({ webinarId }: GiveawayManagementProp
   const [showDrawAnimation, setShowDrawAnimation] = useState(false)
   const [drawingWinners, setDrawingWinners] = useState<GiveawayWinner[]>([])
   const [selectedGiveaway, setSelectedGiveaway] = useState<Giveaway | null>(null)
+  const [showParticipantsModal, setShowParticipantsModal] = useState(false)
+  const [selectedGiveawayForParticipants, setSelectedGiveawayForParticipants] = useState<Giveaway | null>(null)
   const supabase = createClientSupabase()
   
   useEffect(() => {
@@ -423,6 +557,17 @@ export default function GiveawayManagement({ webinarId }: GiveawayManagementProp
                     <span className="text-xs text-gray-600">
                       참여: {entryCounts[giveaway.id] ?? 0}명
                     </span>
+                    {entryCounts[giveaway.id] > 0 && (
+                      <button
+                        onClick={() => {
+                          setSelectedGiveawayForParticipants(giveaway)
+                          setShowParticipantsModal(true)
+                        }}
+                        className="text-xs px-2 py-0.5 bg-blue-100 text-blue-800 rounded hover:bg-blue-200 transition-colors"
+                      >
+                        참여자 보기
+                      </button>
+                    )}
                   </div>
                   {giveaway.drawn_at && (
                     <div className="text-xs text-gray-500">
@@ -522,6 +667,17 @@ export default function GiveawayManagement({ webinarId }: GiveawayManagementProp
           onSuccess={() => {
             setShowCreateModal(false)
             loadGiveaways()
+          }}
+        />
+      )}
+      {showParticipantsModal && selectedGiveawayForParticipants && (
+        <ParticipantsModal
+          webinarId={webinarId}
+          giveawayId={selectedGiveawayForParticipants.id}
+          giveawayName={selectedGiveawayForParticipants.name}
+          onClose={() => {
+            setShowParticipantsModal(false)
+            setSelectedGiveawayForParticipants(null)
           }}
         />
       )}

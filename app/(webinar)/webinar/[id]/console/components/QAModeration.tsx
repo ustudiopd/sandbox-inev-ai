@@ -407,53 +407,51 @@ export default function QAModeration({ webinarId }: QAModerationProps) {
                     </div>
                   )}
                 </div>
-                <div className="flex flex-col gap-2 ml-4">
+                <div className="flex gap-2 ml-4 flex-wrap">
                   <button
                     onClick={() => handleDisplayQuestion(question.id)}
                     className="text-xs px-3 py-1 bg-purple-100 text-purple-800 rounded hover:bg-purple-200 transition-colors whitespace-nowrap"
                   >
                     중계화면으로 보기
                   </button>
-                  <div className="flex gap-2 flex-wrap">
-                    {question.status !== 'pinned' && (
-                      <button
-                        onClick={() => handleStatusChange(question.id, 'pinned')}
-                        className="text-xs px-3 py-1 bg-yellow-100 text-yellow-800 rounded hover:bg-yellow-200 transition-colors"
-                      >
-                        고정
-                      </button>
-                    )}
-                    {question.status === 'pinned' && (
-                      <button
-                        onClick={() => handleStatusChange(question.id, 'published')}
-                        className="text-xs px-3 py-1 bg-gray-100 text-gray-800 rounded hover:bg-gray-200 transition-colors"
-                      >
-                        고정 해제
-                      </button>
-                    )}
-                    {question.status !== 'answered' && (
-                      <button
-                        onClick={() => handleStatusChange(question.id, 'answered')}
-                        className="text-xs px-3 py-1 bg-green-100 text-green-800 rounded hover:bg-green-200 transition-colors"
-                      >
-                        답변 완료
-                      </button>
-                    )}
-                    {question.status === 'answered' && (
-                      <button
-                        onClick={() => handleStatusChange(question.id, 'published')}
-                        className="text-xs px-3 py-1 bg-gray-100 text-gray-800 rounded hover:bg-gray-200 transition-colors"
-                      >
-                        답변 취소
-                      </button>
-                    )}
+                  {question.status !== 'pinned' && (
                     <button
-                      onClick={() => handleDelete(question.id)}
-                      className="text-xs px-3 py-1 bg-red-100 text-red-800 rounded hover:bg-red-200 transition-colors"
+                      onClick={() => handleStatusChange(question.id, 'pinned')}
+                      className="text-xs px-3 py-1 bg-yellow-100 text-yellow-800 rounded hover:bg-yellow-200 transition-colors"
                     >
-                      숨김
+                      고정
                     </button>
-                  </div>
+                  )}
+                  {question.status === 'pinned' && (
+                    <button
+                      onClick={() => handleStatusChange(question.id, 'published')}
+                      className="text-xs px-3 py-1 bg-gray-100 text-gray-800 rounded hover:bg-gray-200 transition-colors"
+                    >
+                      고정 해제
+                    </button>
+                  )}
+                  {question.status !== 'answered' && (
+                    <button
+                      onClick={() => handleStatusChange(question.id, 'answered')}
+                      className="text-xs px-3 py-1 bg-green-100 text-green-800 rounded hover:bg-green-200 transition-colors"
+                    >
+                      답변 완료
+                    </button>
+                  )}
+                  {question.status === 'answered' && (
+                    <button
+                      onClick={() => handleStatusChange(question.id, 'published')}
+                      className="text-xs px-3 py-1 bg-gray-100 text-gray-800 rounded hover:bg-gray-200 transition-colors"
+                    >
+                      답변 취소
+                    </button>
+                  )}
+                  <button
+                    onClick={() => handleDelete(question.id)}
+                    className="text-xs px-3 py-1 bg-red-100 text-red-800 rounded hover:bg-red-200 transition-colors"
+                  >
+                    숨김
+                  </button>
                 </div>
               </div>
             </div>

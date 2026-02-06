@@ -21,6 +21,7 @@ export type BroadcastEventType =
   | 'raffle:draw'
   | 'raffle:done'
   | 'typing'
+  | 'qa:display'
 
 /**
  * Broadcast Envelope 구조

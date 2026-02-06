@@ -73,6 +73,7 @@ export default function QADisplayPage() {
   
   const loadQuestion = async () => {
     try {
+      setLoading(true)
       const response = await fetch(`/api/questions/${questionId}`)
       
       if (!response.ok) {
@@ -83,6 +84,7 @@ export default function QADisplayPage() {
       setQuestion(result.question)
     } catch (error: any) {
       console.error('질문 로드 실패:', error)
+      setQuestion(null)
     } finally {
       setLoading(false)
     }
