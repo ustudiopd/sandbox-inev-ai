@@ -7,6 +7,7 @@ interface Giveaway {
   id: string
   webinar_id: string
   name: string  // title 대신 name 사용
+  description?: string  // 소개 문구
   status: 'draft' | 'open' | 'closed' | 'drawn'
   winners_count: number  // winner_count 대신 winners_count 사용
   seed_commit?: string
@@ -322,6 +323,15 @@ export default function GiveawayWidget({
               </p>
             )}
           </div>
+          
+          {/* 소개 문구 표시 */}
+          {giveaway.description && (
+            <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+              <p className="text-sm text-gray-700 whitespace-pre-line">
+                {giveaway.description}
+              </p>
+            </div>
+          )}
 
           {entered ? (
             <div className="text-center py-6">
@@ -372,6 +382,15 @@ export default function GiveawayWidget({
               </p>
             )}
           </div>
+          
+          {/* 소개 문구 표시 */}
+          {giveaway.description && (
+            <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+              <p className="text-sm text-gray-700 whitespace-pre-line">
+                {giveaway.description}
+              </p>
+            </div>
+          )}
 
           {winners.length > 0 ? (
             <div>

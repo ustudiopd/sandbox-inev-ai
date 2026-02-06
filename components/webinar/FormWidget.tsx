@@ -272,15 +272,8 @@ export default function FormWidget({
         // 퀴즈는 제출 완료 후 바로 정답 표시 (showSuccess는 false로 설정)
         setShowSuccess(false)
       } else {
-        // 설문의 경우 제출 완료 메시지 표시
-        setShowSuccess(true)
-        // 2초 후 성공 메시지 숨기고 위젯 제거
-        setTimeout(() => {
-          setShowSuccess(false)
-          if (onSubmitted) {
-            onSubmitted()
-          }
-        }, 2000)
+        // 설문의 경우 제출 완료 메시지 표시하지 않고 위젯 유지
+        setShowSuccess(false)
       }
     } catch (err: any) {
       setError(err.message || '제출 중 오류가 발생했습니다')
@@ -326,18 +319,7 @@ export default function FormWidget({
     )
   }
 
-  // 설문 제출 완료 화면 (showSuccess가 true일 때만 표시)
-  if (submitted && showSuccess && form.kind === 'survey') {
-    return (
-      <div className={`bg-white rounded-lg shadow p-6 ${className}`}>
-        <div className="text-center py-8">
-          <div className="text-green-600 text-4xl mb-4">✓</div>
-          <h3 className="text-xl font-semibold mb-2">제출 완료</h3>
-          <p className="text-gray-600 mt-4">감사합니다!</p>
-        </div>
-      </div>
-    )
-  }
+  // 설문 제출 완료 화면은 더 이상 표시하지 않음 (위젯 유지)
 
   return (
     <div className={`bg-white rounded-lg shadow p-4 sm:p-6 ${className}`}>
@@ -599,8 +581,17 @@ export default function FormWidget({
       )}
 
       {/* 제출 버튼 */}
-      {!submitted && (
-        <div className="flex justify-end">
+      <div className="flex justify-end">
+        {submitted && form.kind === 'survey' ? (
+          <button
+            onClick={() => {
+              alert('제출완료되었습니다')
+            }}
+            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors cursor-pointer"
+          >
+            제출하기
+          </button>
+        ) : (
           <button
             onClick={handleSubmit}
             disabled={submitting || timeRemaining === 0}
@@ -608,8 +599,8 @@ export default function FormWidget({
           >
             {submitting ? '제출 중...' : '제출하기'}
           </button>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   )
 }
