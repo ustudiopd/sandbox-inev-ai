@@ -13,11 +13,22 @@ import { usePathname } from 'next/navigation'
  * - 탭이 hidden이면 중지
  * - 페이지 언로드 시 마지막 ping 전송 (sendBeacon 사용)
  * - 클라이언트 측 중복 호출 방지 (60초)
+ * - 세션 heartbeat 추적 지원 (session_id 전송)
  */
 export function usePresencePing(webinarId: string | null) {
   const intervalRef = useRef<NodeJS.Timeout | null>(null)
   const lastPingRef = useRef<number>(0)
   const pathname = usePathname()
+
+  // 세션 ID 가져오기 (localStorage에서)
+  const getSessionId = useCallback((): string | null => {
+    if (!webinarId) return null
+    try {
+      return localStorage.getItem(`webinar_session_${webinarId}`)
+    } catch {
+      return null
+    }
+  }, [webinarId])
 
   // ping 전송 함수
   const sendPing = useCallback(async () => {
@@ -30,8 +41,14 @@ export function usePresencePing(webinarId: string | null) {
     }
 
     try {
+      // session_id가 있으면 함께 전송 (옵션)
+      const sessionId = getSessionId()
+      const body = sessionId ? JSON.stringify({ session_id: sessionId }) : undefined
+
       const response = await fetch(`/api/webinars/${webinarId}/presence/ping`, {
         method: 'POST',
+        headers: body ? { 'Content-Type': 'application/json' } : undefined,
+        body: body,
         credentials: 'include',
       })
 
@@ -42,7 +59,7 @@ export function usePresencePing(webinarId: string | null) {
       // 네트워크 오류는 조용히 무시 (재시도는 다음 주기에서)
       console.debug('[Presence Ping] 전송 실패:', error)
     }
-  }, [webinarId])
+  }, [webinarId, getSessionId])
 
   // 지터가 포함된 간격 계산 (120초 ± 10초)
   const getIntervalWithJitter = useCallback(() => {
@@ -78,8 +95,11 @@ export function usePresencePing(webinarId: string | null) {
     const handleBeforeUnload = () => {
       if (navigator.sendBeacon && webinarId) {
         // sendBeacon 사용 (비동기, 브라우저가 페이지를 닫아도 전송 보장)
+        const sessionId = getSessionId()
+        const body = sessionId ? JSON.stringify({ session_id: sessionId }) : ''
+        const blob = new Blob([body], { type: 'application/json' })
         const url = `/api/webinars/${webinarId}/presence/ping`
-        navigator.sendBeacon(url, '')
+        navigator.sendBeacon(url, blob)
       } else {
         // sendBeacon 미지원 시 동기 요청 (느리지만 전송 보장)
         sendPing()

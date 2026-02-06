@@ -97,6 +97,34 @@ interface StatsData {
     totalVerified: number
     totalPrizeRecorded: number
   }
+  sessions?: {
+    totalSessions: number
+    uniqueUsers: number
+    totalWatchSeconds: number
+    totalWatchedSecondsRaw: number
+    avgWatchSeconds: number
+    avgWatchedSecondsRaw: number
+    avgWatchMinutes: number
+    avgWatchedMinutesRaw: number
+    returningUsers: number
+    returningRate: number
+    avgVisitsPerUser: number
+    watchTimeDistribution: Array<{ range: string; count: number; percentage: number }>
+    completionRate: number | null
+    timeline: Array<{ time: string; entryCount: number }>
+    topUsers: Array<{
+      userId: string
+      displayName: string
+      email: string | null
+      visitCount: number
+      totalWatchMinutes: number
+      totalWatchedMinutesRaw: number
+      avgWatchMinutes: number
+      avgWatchedMinutesRaw: number
+      firstEnteredAt: string
+      lastExitedAt: string
+    }>
+  }
 }
 
 const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899']
@@ -124,6 +152,7 @@ export default function StatsTab({ webinar }: StatsTabProps) {
       // 웨비나의 webinar_start_time(또는 start_time)부터 해당 날짜 자정까지(또는 end_time까지)의 통계 조회
       const params = new URLSearchParams()
       params.set('interval', '5m')
+      params.set('sections', 'chat,qa,forms,giveaways,files,registrants,access,survey,sessions')
       
       // webinar_start_time을 우선 사용, 없으면 start_time 사용
       const webinarStartTime = webinar.webinar_start_time || webinar.start_time
@@ -777,6 +806,186 @@ export default function StatsTab({ webinar }: StatsTabProps) {
               <div className="text-2xl font-bold text-purple-600">{stats.survey.totalPrizeRecorded}</div>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* 시청시간 통계 */}
+      {stats.sessions && (
+        <div className="bg-white rounded-xl shadow-lg p-6">
+          <h3 className="text-lg font-semibold mb-4">시청시간 통계</h3>
+          
+          {/* 기본 통계 */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div>
+              <div className="text-sm text-gray-600 mb-1">총 세션 수</div>
+              <div className="text-2xl font-bold text-gray-900">{stats.sessions.totalSessions}</div>
+            </div>
+            <div>
+              <div className="text-sm text-gray-600 mb-1">고유 참여자</div>
+              <div className="text-2xl font-bold text-blue-600">{stats.sessions.uniqueUsers}</div>
+            </div>
+            <div>
+              <div className="text-sm text-gray-600 mb-1">평균 시청시간</div>
+              <div className="text-2xl font-bold text-green-600">
+                {stats.sessions.avgWatchedMinutesRaw}분
+              </div>
+            </div>
+            <div>
+              <div className="text-sm text-gray-600 mb-1">재입장 비율</div>
+              <div className="text-2xl font-bold text-purple-600">
+                {stats.sessions.returningRate}%
+              </div>
+            </div>
+          </div>
+
+          {/* 재입장 통계 */}
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
+            <div>
+              <div className="text-sm text-gray-600 mb-1">재입장 사용자</div>
+              <div className="text-xl font-bold text-orange-600">{stats.sessions.returningUsers}명</div>
+            </div>
+            <div>
+              <div className="text-sm text-gray-600 mb-1">평균 입장 횟수</div>
+              <div className="text-xl font-bold text-gray-900">
+                {stats.sessions.avgVisitsPerUser.toFixed(1)}회
+              </div>
+            </div>
+            {stats.sessions.completionRate !== null && (
+              <div>
+                <div className="text-sm text-gray-600 mb-1">시청 완료율</div>
+                <div className="text-xl font-bold text-indigo-600">
+                  {stats.sessions.completionRate}%
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* 시청시간 분포 */}
+          {stats.sessions.watchTimeDistribution && stats.sessions.watchTimeDistribution.length > 0 && (
+            <div className="mb-6">
+              <h4 className="text-md font-semibold mb-4">시청시간 분포</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  {stats.sessions.watchTimeDistribution.map((dist) => (
+                    <div key={dist.range} className="flex items-center justify-between">
+                      <span className="text-sm text-gray-700">{dist.range}</span>
+                      <div className="flex items-center gap-3">
+                        <div className="w-32 bg-gray-200 rounded-full h-2">
+                          <div
+                            className="bg-blue-600 h-2 rounded-full"
+                            style={{ width: `${dist.percentage}%` }}
+                          />
+                        </div>
+                        <span className="text-sm font-medium text-gray-900 w-16 text-right">
+                          {dist.count}명 ({dist.percentage}%)
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div>
+                  <ResponsiveContainer width="100%" height={200}>
+                    <PieChart>
+                      <Pie
+                        data={stats.sessions.watchTimeDistribution.filter((d) => d.count > 0)}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        label={({ payload, percent }) => {
+                          const range = payload?.range || ''
+                          const percentage = percent ? Math.round(percent * 100) : 0
+                          return `${range} ${percentage}%`
+                        }}
+                        outerRadius={80}
+                        fill="#8884d8"
+                        dataKey="count"
+                      >
+                        {stats.sessions.watchTimeDistribution
+                          .filter((d) => d.count > 0)
+                          .map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                          ))}
+                      </Pie>
+                      <Tooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* 시간대별 입장 분포 */}
+          {stats.sessions.timeline && stats.sessions.timeline.length > 0 && (
+            <div className="mb-6">
+              <h4 className="text-md font-semibold mb-4">시간대별 입장 분포</h4>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={stats.sessions.timeline}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis
+                    dataKey="time"
+                    tickFormatter={(value) => {
+                      const date = new Date(value)
+                      return `${date.getHours()}:${String(date.getMinutes()).padStart(2, '0')}`
+                    }}
+                  />
+                  <YAxis />
+                  <Tooltip
+                    labelFormatter={(value) => {
+                      const date = new Date(value)
+                      return `${date.toLocaleDateString()} ${date.getHours()}:${String(date.getMinutes()).padStart(2, '0')}`
+                    }}
+                  />
+                  <Legend />
+                  <Bar dataKey="entryCount" fill="#3B82F6" name="입장 횟수" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+
+          {/* 상위 참여자 */}
+          {stats.sessions.topUsers && stats.sessions.topUsers.length > 0 && (
+            <div>
+              <h4 className="text-md font-semibold mb-4">상위 참여자 (시청시간 기준)</h4>
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        이름
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        입장 횟수
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        총 시청시간
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        평균 시청시간
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {stats.sessions.topUsers.map((user) => (
+                      <tr key={user.userId}>
+                        <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+                          {user.displayName}
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                          {user.visitCount}회
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                          {user.totalWatchedMinutesRaw}분
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                          {user.avgWatchedMinutesRaw}분
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

@@ -39,6 +39,11 @@ export async function POST(
       )
     }
 
+    // IP 주소 추출 (프록시 헤더 고려)
+    const forwardedFor = request.headers.get('x-forwarded-for')
+    const realIp = request.headers.get('x-real-ip')
+    const ipAddress = forwardedFor?.split(',')[0]?.trim() || realIp || null
+
     // 로그인한 사용자인 경우 webinar_live_presence에 기록
     if (user) {
       // 웨비나 등록 확인 (자동 등록)
@@ -86,6 +91,22 @@ export async function POST(
           onConflict: 'webinar_id,user_id',
         })
     }
+
+    // 모든 사용자(로그인/게스트)의 접속 세션 기록 (webinar_user_sessions)
+    const enteredAt = new Date().toISOString()
+    await admin
+      .from('webinar_user_sessions')
+      .insert({
+        webinar_id: webinarId,
+        user_id: user?.id || null,
+        session_id: sessionId,
+        entered_at: enteredAt,
+        user_agent: request.headers.get('user-agent') || null,
+        referrer: request.headers.get('referer') || null,
+        ip_address: ipAddress,
+        agency_id: webinar.agency_id,
+        client_id: webinar.client_id,
+      })
 
     // 세션 정보 반환
     return NextResponse.json({

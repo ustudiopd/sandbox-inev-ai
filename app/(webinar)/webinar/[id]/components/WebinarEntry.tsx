@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import Link from 'next/link'
 import { createClientSupabase } from '@/lib/supabase/client'
 import { extractUTMParams, appendUTMToURL } from '@/lib/utils/utm'
@@ -38,6 +38,7 @@ interface WebinarEntryProps {
 
 export default function WebinarEntry({ webinar, isWertPage: serverIsWertPage }: WebinarEntryProps) {
   const router = useRouter()
+  const pathname = usePathname()
   const supabase = createClientSupabase()
   // slug가 있으면 slug를 사용하고, 없으면 id를 사용 (URL용)
   const webinarSlug = webinar.slug || webinar.id
@@ -319,13 +320,73 @@ export default function WebinarEntry({ webinar, isWertPage: serverIsWertPage }: 
 
     trackAccess()
 
+    // 퇴장 기록 함수
+    const trackExit = async (sessionId: string) => {
+      try {
+        // navigator.sendBeacon을 사용하여 페이지 언로드 시에도 전송 보장
+        const exitData = JSON.stringify({ sessionId })
+        const blob = new Blob([exitData], { type: 'application/json' })
+        
+        if (navigator.sendBeacon) {
+          navigator.sendBeacon(`/api/webinars/${webinar.id}/access/exit`, blob)
+        } else {
+          // sendBeacon이 지원되지 않으면 fetch 사용 (keepalive 옵션)
+          await fetch(`/api/webinars/${webinar.id}/access/exit`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: exitData,
+            keepalive: true,
+          })
+        }
+      } catch (error) {
+        console.debug('[WebinarEntry] 퇴장 기록 실패:', error)
+      }
+    }
+
+    // 페이지 언로드 시 퇴장 기록
+    const handleBeforeUnload = () => {
+      const sessionId = localStorage.getItem(`webinar_session_${webinar.id}`)
+      if (sessionId) {
+        trackExit(sessionId)
+      }
+    }
+
+    window.addEventListener('beforeunload', handleBeforeUnload)
+
     // cleanup
     return () => {
       if (intervalId) {
         clearInterval(intervalId)
       }
+      window.removeEventListener('beforeunload', handleBeforeUnload)
+      
+      // 컴포넌트 언마운트 시에도 퇴장 기록 시도
+      const sessionId = localStorage.getItem(`webinar_session_${webinar.id}`)
+      if (sessionId) {
+        trackExit(sessionId)
+      }
     }
   }, [webinar.id])
+
+  // 경로 변경 감지 (다른 페이지로 이동 시 퇴장 기록)
+  useEffect(() => {
+    const currentPath = pathname
+    return () => {
+      // 경로가 변경되면 (웨비나 페이지를 벗어나면) 퇴장 기록
+      if (pathname !== currentPath) {
+        const sessionId = localStorage.getItem(`webinar_session_${webinar.id}`)
+        if (sessionId) {
+          fetch(`/api/webinars/${webinar.id}/access/exit`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ sessionId }),
+          }).catch((error) => {
+            console.debug('[WebinarEntry] 경로 변경 시 퇴장 기록 실패:', error)
+          })
+        }
+      }
+    }
+  }, [pathname, webinar.id])
   
   useEffect(() => {
     // URL에서 이메일 인증 확인 파라미터 체크
@@ -2003,7 +2064,7 @@ export default function WebinarEntry({ webinar, isWertPage: serverIsWertPage }: 
               <section className="registration-form-section">
                 <div className="registration-form-container">
                   <Link 
-                    href="/event/149403"
+                    href={isSlug149400 ? '/event/149400' : '/event/149403'}
                     className="back-to-main-link"
                     style={{ 
                       color: '#666', 

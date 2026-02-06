@@ -1390,27 +1390,27 @@ export default function WebinarView({ webinar, isAdminMode = false }: WebinarVie
               {/* registration_campaign_id가 있으면 세션 카드 표시 */}
               {isWertWebinar && (
                 <>
-                  {/* PC: 4개 카드를 1줄로 나란히 표시 - 항상 표시 */}
-                  <div className="hidden lg:grid lg:grid-cols-4 gap-4 mb-4">
+                  {/* PC: 반응형 그리드 - 중간 화면에서는 2개, 큰 화면에서는 4개 표시 */}
+                  <div className="hidden lg:grid lg:grid-cols-2 xl:grid-cols-4 gap-3 xl:gap-4 mb-4">
                     {wertSessions.map((session, index) => (
                       <button
                         key={session.label}
                         onClick={() => setExpandedSession(expandedSession === session.label ? null : session.label)}
-                        className="p-4 bg-gray-50 rounded-lg border border-gray-200 hover:border-teal-500 hover:shadow-md transition-all text-left flex flex-col items-start h-full"
+                        className="p-3 xl:p-4 bg-gray-50 rounded-lg border border-gray-200 hover:border-teal-500 hover:shadow-md transition-all text-left flex flex-col items-start h-full"
                         style={{ fontFamily: 'Pretendard, sans-serif' }}
                       >
-                        <div className="flex items-center gap-2 mb-2">
-                          <div className="px-2 py-1 bg-teal-500 rounded-lg">
+                        <div className="flex items-center gap-1.5 xl:gap-2 mb-2 flex-wrap">
+                          <div className="px-2 py-1 bg-teal-500 rounded-lg flex-shrink-0">
                             <span className="text-white font-bold text-xs">{session.label}</span>
                           </div>
-                          <div className="px-2 py-1 bg-teal-500/10 rounded-lg">
+                          <div className="px-2 py-1 bg-teal-500/10 rounded-lg flex-shrink-0">
                             <span className="text-teal-500 font-bold text-xs">{session.duration}</span>
                           </div>
                         </div>
-                        <h4 className="text-sm font-bold text-gray-900 mb-2 line-clamp-2">{session.title}</h4>
+                        <h4 className="text-xs xl:text-sm font-bold text-gray-900 mb-2 line-clamp-2 leading-tight">{session.title}</h4>
                         {session.speaker && (
-                          <div className="mt-3 pt-3 border-t border-gray-200">
-                            <div className="text-xs font-semibold text-gray-900">{session.speaker.name}</div>
+                          <div className="mt-auto pt-3 border-t border-gray-200 w-full">
+                            <div className="text-xs font-semibold text-gray-900 truncate">{session.speaker.name}</div>
                             <div className="text-xs text-gray-600 mt-1 line-clamp-1">{session.speaker.role.split('\n')[0]}</div>
                           </div>
                         )}

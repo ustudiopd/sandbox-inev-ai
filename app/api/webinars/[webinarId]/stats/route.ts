@@ -38,7 +38,7 @@ export async function GET(
     console.log('[Stats] 권한 확인 완료:', { webinarId, webinar })
 
     // sections 파라미터 파싱
-    const sectionsParam = searchParams.get('sections') || 'chat,qa,forms,giveaways,files,registrants,access,survey'
+    const sectionsParam = searchParams.get('sections') || 'chat,qa,forms,giveaways,files,registrants,access,survey,sessions'
     const sections = sectionsParam.split(',').map((s) => s.trim())
 
     // 각 섹션별 API 호출 - 인증 헤더 전달
@@ -210,6 +210,25 @@ export async function GET(
         })
         .catch((err) => {
           console.error('[Stats] survey API 호출 실패:', err)
+          return { success: false, error: err.message }
+        })
+    }
+
+    if (sections.includes('sessions')) {
+      statsPromises.sessions = fetch(
+        `${baseUrl}/api/webinars/${webinarId}/stats/sessions?${searchParams.toString()}`,
+        fetchOptions
+      )
+        .then(async (res) => {
+          if (!res.ok) {
+            const text = await res.text()
+            console.error(`[Stats] sessions API 오류 (${res.status}):`, text)
+            throw new Error(`sessions API 오류: ${res.status}`)
+          }
+          return res.json()
+        })
+        .catch((err) => {
+          console.error('[Stats] sessions API 호출 실패:', err)
           return { success: false, error: err.message }
         })
     }

@@ -8,6 +8,10 @@
     {
       "path": "/api/cron/aggregate-marketing-stats",
       "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/cron/webinar-session-sweeper",
+      "schedule": "*/10 * * * *"
     }
   ]
 }
