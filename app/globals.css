@@ -13,30 +13,81 @@
   --background-end-rgb: 255, 255, 255;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --foreground-rgb: 255, 255, 255;
-    --background-start-rgb: 0, 0, 0;
-    --background-end-rgb: 0, 0, 0;
-  }
-}
+/* 다크테마 미디어 쿼리 제거 - 관리자 대시보드는 항상 라이트 테마 */
 
 body {
   color: rgb(var(--foreground-rgb));
   /* 기본 배경을 흰색으로 변경 - 플래시 방지 */
-  background: #fff;
-  background-color: #fff;
+  background: #fff !important;
+  background-color: #fff !important;
   font-family: 'Noto Sans KR', sans-serif;
 }
 
-/* 관리 페이지용 그라데이션 (필요한 곳에서만 적용) */
+/* 관리자 대시보드는 항상 라이트 테마 유지 */
 body[data-theme="admin"] {
-  background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
+  color: #111827 !important;
+  background-color: #fff !important;
+}
+
+/* 관리자 대시보드의 기본 요소들만 색상 설정 (카드 배경은 제외) */
+body[data-theme="admin"] > * {
+  color: #111827;
+}
+
+/* 관리자 대시보드에서 다크테마가 적용되어도 텍스트가 보이도록 */
+@media (prefers-color-scheme: dark) {
+  body[data-theme="admin"] {
+    color: #111827 !important;
+    background-color: #fff !important;
+  }
+  
+  /* 관리자 대시보드 내부 요소들도 명시적으로 색상 설정 */
+  body[data-theme="admin"] .text-gray-600,
+  body[data-theme="admin"] .text-gray-700,
+  body[data-theme="admin"] .text-gray-800,
+  body[data-theme="admin"] .text-gray-900 {
+    color: #111827 !important;
+  }
+  
+  body[data-theme="admin"] .bg-white {
+    background-color: #fff !important;
+  }
+  
+  body[data-theme="admin"] .bg-gray-50,
+  body[data-theme="admin"] .bg-gray-100 {
+    background-color: #f9fafb !important;
+  }
+  
+  body[data-theme="admin"] .border-gray-200,
+  body[data-theme="admin"] .border-gray-300 {
+    border-color: #e5e7eb !important;
+  }
+  
+  /* 관리자 대시보드에서 다크테마 클래스 무시 */
+  body[data-theme="admin"] .dark\:bg-slate-900,
+  body[data-theme="admin"] .dark\:bg-slate-800,
+  body[data-theme="admin"] .dark\:bg-slate-700,
+  body[data-theme="admin"] .dark\:border-slate-700,
+  body[data-theme="admin"] .dark\:border-slate-600,
+  body[data-theme="admin"] .dark\:border-blue-800\/70,
+  body[data-theme="admin"] .dark\:bg-amber-900\/15,
+  body[data-theme="admin"] .dark\:bg-purple-900\/15 {
+    background-color: transparent !important;
+    border-color: transparent !important;
+  }
+  
+  /* 관리자 대시보드에서 텍스트 색상 강제 설정 */
+  body[data-theme="admin"] .dark\:text-white,
+  body[data-theme="admin"] .dark\:text-gray-300,
+  body[data-theme="admin"] .dark\:text-gray-400 {
+    color: #111827 !important;
+  }
+}
+
+/* 관리 페이지용 그라데이션 제거 - 항상 흰색 배경 */
+body[data-theme="admin"] {
+  background: #fff !important;
+  background-color: #fff !important;
 }
 
 @keyframes loading-dots {

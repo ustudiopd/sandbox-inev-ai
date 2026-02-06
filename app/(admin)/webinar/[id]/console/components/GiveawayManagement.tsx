@@ -164,6 +164,7 @@ interface Participant {
   name: string
   email: string | null
   created_at: string
+  eligible: boolean
 }
 
 // 참여자 목록 모달 컴포넌트
@@ -179,7 +180,10 @@ function ParticipantsModal({
   onClose: () => void
 }) {
   const [participants, setParticipants] = useState<Participant[]>([])
+  const [filteredParticipants, setFilteredParticipants] = useState<Participant[]>([])
+  const [searchQuery, setSearchQuery] = useState('')
   const [loading, setLoading] = useState(true)
+  const [updating, setUpdating] = useState<Record<string, boolean>>({})
   const supabase = createClientSupabase()
   
   useEffect(() => {
@@ -207,6 +211,22 @@ function ParticipantsModal({
     }
   }, [giveawayId])
   
+  useEffect(() => {
+    // 검색 필터링
+    if (!searchQuery.trim()) {
+      setFilteredParticipants(participants)
+    } else {
+      const query = searchQuery.toLowerCase()
+      setFilteredParticipants(
+        participants.filter(
+          (p) =>
+            p.name.toLowerCase().includes(query) ||
+            (p.email && p.email.toLowerCase().includes(query))
+        )
+      )
+    }
+  }, [participants, searchQuery])
+  
   const loadParticipants = async () => {
     try {
       setLoading(true)
@@ -226,9 +246,46 @@ function ParticipantsModal({
     }
   }
   
+  const handleToggleEligible = async (participantId: string, currentEligible: boolean) => {
+    try {
+      setUpdating((prev) => ({ ...prev, [participantId]: true }))
+      
+      const response = await fetch(
+        `/api/webinars/${webinarId}/giveaways/${giveawayId}/participants/${participantId}/eligible`,
+        {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ eligible: !currentEligible }),
+        }
+      )
+      
+      if (!response.ok) {
+        throw new Error('상태 업데이트 실패')
+      }
+      
+      // 로컬 상태 업데이트
+      setParticipants((prev) =>
+        prev.map((p) =>
+          p.participant_id === participantId
+            ? { ...p, eligible: !currentEligible }
+            : p
+        )
+      )
+    } catch (error: any) {
+      console.error('상태 업데이트 실패:', error)
+      alert('상태 업데이트에 실패했습니다: ' + error.message)
+    } finally {
+      setUpdating((prev) => {
+        const next = { ...prev }
+        delete next[participantId]
+        return next
+      })
+    }
+  }
+  
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[80vh] flex flex-col">
+      <div className="bg-white rounded-lg p-6 max-w-4xl w-full mx-4 max-h-[80vh] flex flex-col">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold">{giveawayName} - 참여자 목록</h3>
           <button
@@ -241,24 +298,65 @@ function ParticipantsModal({
           </button>
         </div>
         
+        {/* 검색 입력 */}
+        <div className="mb-4">
+          <input
+            type="text"
+            placeholder="이름 또는 이메일로 검색..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          />
+        </div>
+        
         <div className="flex-1 overflow-y-auto">
           {loading ? (
             <div className="text-center text-gray-500 py-8">참여자 목록을 불러오는 중...</div>
-          ) : participants.length === 0 ? (
-            <div className="text-center text-gray-500 py-8">참여자가 없습니다</div>
+          ) : filteredParticipants.length === 0 ? (
+            <div className="text-center text-gray-500 py-8">
+              {searchQuery ? '검색 결과가 없습니다' : '참여자가 없습니다'}
+            </div>
           ) : (
             <div className="border border-gray-200 rounded-lg overflow-hidden">
               <table className="w-full text-sm">
                 <thead className="bg-gray-50 sticky top-0">
                   <tr>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase w-12">
+                      <input
+                        type="checkbox"
+                        checked={filteredParticipants.every((p) => p.eligible)}
+                        onChange={(e) => {
+                          // 전체 선택/해제
+                          filteredParticipants.forEach((p) => {
+                            if (p.eligible !== e.target.checked) {
+                              handleToggleEligible(p.participant_id, p.eligible)
+                            }
+                          })
+                        }}
+                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      />
+                    </th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">이름</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">이메일</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">참여 시간</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">상태</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {participants.map((participant) => (
-                    <tr key={participant.participant_id} className="hover:bg-gray-50">
+                  {filteredParticipants.map((participant) => (
+                    <tr
+                      key={participant.participant_id}
+                      className={`hover:bg-gray-50 ${!participant.eligible ? 'opacity-60' : ''}`}
+                    >
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <input
+                          type="checkbox"
+                          checked={participant.eligible}
+                          onChange={() => handleToggleEligible(participant.participant_id, participant.eligible)}
+                          disabled={updating[participant.participant_id]}
+                          className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 disabled:opacity-50"
+                        />
+                      </td>
                       <td className="px-4 py-3 whitespace-nowrap">
                         <div className="text-sm font-medium text-gray-900">{participant.name}</div>
                       </td>
@@ -270,6 +368,17 @@ function ParticipantsModal({
                           {new Date(participant.created_at).toLocaleString('ko-KR')}
                         </div>
                       </td>
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <span
+                          className={`text-xs px-2 py-1 rounded ${
+                            participant.eligible
+                              ? 'bg-green-100 text-green-800'
+                              : 'bg-red-100 text-red-800'
+                          }`}
+                        >
+                          {participant.eligible ? '추첨 참여' : '추첨 제외'}
+                        </span>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -278,7 +387,10 @@ function ParticipantsModal({
           )}
         </div>
         
-        <div className="mt-4 flex justify-end">
+        <div className="mt-4 flex justify-between items-center">
+          <div className="text-sm text-gray-600">
+            총 {participants.length}명 중 {participants.filter((p) => p.eligible).length}명 추첨 참여
+          </div>
           <button
             onClick={onClose}
             className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
@@ -299,6 +411,8 @@ export default function GiveawayManagement({ webinarId }: GiveawayManagementProp
   const [giveaways, setGiveaways] = useState<Giveaway[]>([])
   const [loading, setLoading] = useState(false)
   const [entryCounts, setEntryCounts] = useState<Record<string, number>>({})
+  const [eligibleCounts, setEligibleCounts] = useState<Record<string, number>>({})
+  const [excludedCounts, setExcludedCounts] = useState<Record<string, number>>({})
   const [winners, setWinners] = useState<Record<string, GiveawayWinner[]>>({})
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [showDrawModal, setShowDrawModal] = useState(false)
@@ -371,7 +485,13 @@ export default function GiveawayManagement({ webinarId }: GiveawayManagementProp
         throw new Error(result.error || '추첨 목록 로드 실패')
       }
       
-      setGiveaways(result.giveaways || [])
+      const giveawaysList = result.giveaways || []
+      setGiveaways(giveawaysList)
+      
+      // giveaways가 설정된 후 즉시 참여자 수 로드
+      if (giveawaysList.length > 0) {
+        await loadEntryCountsForGiveaways(giveawaysList)
+      }
     } catch (error) {
       console.error('추첨 로드 실패:', error)
     } finally {
@@ -379,24 +499,51 @@ export default function GiveawayManagement({ webinarId }: GiveawayManagementProp
     }
   }
   
-  const loadEntryCounts = async () => {
-    if (giveaways.length === 0) return
+  const loadEntryCountsForGiveaways = async (giveawaysList: Giveaway[]) => {
+    const totalCounts: Record<string, number> = {}
+    const eligibleCountsMap: Record<string, number> = {}
+    const excludedCountsMap: Record<string, number> = {}
     
-    const counts: Record<string, number> = {}
-    for (const giveaway of giveaways) {
+    for (const giveaway of giveawaysList) {
       try {
-        const { count } = await supabase
+        // 총 참여자 수
+        const { count: totalCount } = await supabase
+          .from('giveaway_entries')
+          .select('*', { count: 'exact', head: true })
+          .eq('giveaway_id', giveaway.id)
+        
+        // 추첨 참여자 수 (eligible = true)
+        const { count: eligibleCount } = await supabase
           .from('giveaway_entries')
           .select('*', { count: 'exact', head: true })
           .eq('giveaway_id', giveaway.id)
           .eq('eligible', true)
-        counts[giveaway.id] = count || 0
+        
+        // 추첨 제외자 수 (eligible = false)
+        const { count: excludedCount } = await supabase
+          .from('giveaway_entries')
+          .select('*', { count: 'exact', head: true })
+          .eq('giveaway_id', giveaway.id)
+          .eq('eligible', false)
+        
+        totalCounts[giveaway.id] = totalCount || 0
+        eligibleCountsMap[giveaway.id] = eligibleCount || 0
+        excludedCountsMap[giveaway.id] = excludedCount || 0
       } catch (error) {
         console.error(`참여자 수 조회 실패 (${giveaway.id}):`, error)
-        counts[giveaway.id] = 0
+        totalCounts[giveaway.id] = 0
+        eligibleCountsMap[giveaway.id] = 0
+        excludedCountsMap[giveaway.id] = 0
       }
     }
-    setEntryCounts(counts)
+    setEntryCounts(totalCounts)
+    setEligibleCounts(eligibleCountsMap)
+    setExcludedCounts(excludedCountsMap)
+  }
+  
+  const loadEntryCounts = async () => {
+    if (giveaways.length === 0) return
+    await loadEntryCountsForGiveaways(giveaways)
   }
   
   const loadWinners = async () => {
@@ -555,7 +702,10 @@ export default function GiveawayManagement({ webinarId }: GiveawayManagementProp
                       당첨자: {giveaway.winners_count}명
                     </span>
                     <span className="text-xs text-gray-600">
-                      참여: {entryCounts[giveaway.id] ?? 0}명
+                      참여 {eligibleCounts[giveaway.id] ?? 0}명
+                      {excludedCounts[giveaway.id] > 0 && (
+                        <span className="text-red-600"> (제외 {excludedCounts[giveaway.id]}명)</span>
+                      )}
                     </span>
                     {entryCounts[giveaway.id] > 0 && (
                       <button
@@ -673,7 +823,10 @@ export default function GiveawayManagement({ webinarId }: GiveawayManagementProp
             {entryCounts[selectedGiveaway.id] !== undefined && (
               <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                 <p className="text-sm text-gray-700">
-                  참여자 수: <strong>{entryCounts[selectedGiveaway.id]}명</strong>
+                  총 <strong>{entryCounts[selectedGiveaway.id]}명</strong> 중 <strong>{eligibleCounts[selectedGiveaway.id] ?? 0}명</strong> 추첨 참여
+                  {excludedCounts[selectedGiveaway.id] > 0 && (
+                    <span className="text-red-600"> (제외 {excludedCounts[selectedGiveaway.id]}명)</span>
+                  )}
                 </p>
                 <p className="text-sm text-gray-700 mt-1">
                   당첨자 수: <strong>{selectedGiveaway.winners_count}명</strong>
@@ -699,6 +852,19 @@ export default function GiveawayManagement({ webinarId }: GiveawayManagementProp
             </div>
           </div>
         </div>
+      )}
+      
+      {/* 참여자 보기 모달 */}
+      {showParticipantsModal && selectedGiveawayForParticipants && (
+        <ParticipantsModal
+          webinarId={webinarId}
+          giveawayId={selectedGiveawayForParticipants.id}
+          giveawayName={selectedGiveawayForParticipants.name}
+          onClose={() => {
+            setShowParticipantsModal(false)
+            setSelectedGiveawayForParticipants(null)
+          }}
+        />
       )}
       
       {/* 추첨 애니메이션 모달 */}

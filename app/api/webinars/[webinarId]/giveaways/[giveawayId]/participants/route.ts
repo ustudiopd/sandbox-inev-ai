@@ -31,11 +31,12 @@ export async function GET(
       )
     }
     
-    // 참여자 목록 조회 (프로필 정보 포함)
+    // 참여자 목록 조회 (프로필 정보 포함, eligible 필드 포함)
     const { data: entries, error: entriesError } = await admin
       .from('giveaway_entries')
       .select(`
         participant_id,
+        eligible,
         created_at,
         profiles:participant_id (
           display_name,
@@ -43,7 +44,6 @@ export async function GET(
         )
       `)
       .eq('giveaway_id', giveawayId)
-      .eq('eligible', true)
       .order('created_at', { ascending: false })
     
     if (entriesError) {
@@ -59,6 +59,7 @@ export async function GET(
       name: entry.profiles?.display_name || '익명',
       email: entry.profiles?.email || null,
       created_at: entry.created_at,
+      eligible: entry.eligible !== false, // 기본값 true
     }))
     
     return NextResponse.json({

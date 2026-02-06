@@ -569,15 +569,15 @@ export default function DashboardTab({ webinarId, webinarSlug, webinar }: Dashbo
 
       {/* 1줄: 실시간 상태 요약 - "지금 이 웨비나가 살아있는가?" */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <div className="bg-white p-6 rounded-xl shadow-md border border-gray-200">
-          <div className="text-sm text-gray-600 mb-2">총 등록자</div>
-          <div className="text-3xl font-bold text-gray-700">{stats.registrants?.totalRegistrants || 0}</div>
+        <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-xl border-2 border-blue-300">
+          <div className="text-sm text-gray-700 mb-2 font-medium">총 등록자</div>
+          <div className="text-3xl font-bold text-blue-600">{stats.registrants?.totalRegistrants || 0}</div>
         </div>
-        <div className="bg-white p-6 rounded-xl shadow-md border border-gray-200">
-          <div className="text-sm text-gray-600 mb-2">입장한 사람</div>
-          <div className="text-3xl font-bold text-gray-700">{stats.access?.totalAttendees || 0}</div>
+        <div className="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-xl border-2 border-green-300">
+          <div className="text-sm text-gray-700 mb-2 font-medium">입장한 사람</div>
+          <div className="text-3xl font-bold text-green-600">{stats.access?.totalAttendees || 0}</div>
         </div>
-        <div className="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-xl shadow-md border-2 border-green-300">
+        <div className="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-xl border-2 border-green-300">
           <div className="flex items-center gap-2 mb-2">
             <div className="text-sm text-gray-700 font-medium">현재 접속자</div>
             <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
@@ -586,9 +586,9 @@ export default function DashboardTab({ webinarId, webinarSlug, webinar }: Dashbo
             {realtimeParticipants.length > 0 ? realtimeParticipants.length : (stats.access?.currentParticipants !== undefined ? stats.access.currentParticipants : 0)}
           </div>
         </div>
-        <div className="bg-white p-6 rounded-xl shadow-md border border-gray-200">
-          <div className="text-sm text-gray-600 mb-2">평균 동시 접속자</div>
-          <div className="text-3xl font-bold text-gray-700">
+        <div className="bg-gradient-to-br from-orange-50 to-orange-100 p-6 rounded-xl border-2 border-orange-300">
+          <div className="text-sm text-gray-700 mb-2 font-medium">평균 동시 접속자</div>
+          <div className="text-3xl font-bold text-orange-600">
             {stats.access?.avgConcurrentParticipants ? Math.round(stats.access.avgConcurrentParticipants) : 0}
           </div>
         </div>
@@ -597,62 +597,62 @@ export default function DashboardTab({ webinarId, webinarSlug, webinar }: Dashbo
       {/* 2줄: 참여도 / 인터랙션 - "사람들이 얼마나 반응했는가?" */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
         {stats.chat ? (
-          <div className="bg-white rounded-xl shadow-md p-4 border border-gray-200">
-            <div className="text-sm text-gray-600 mb-1">채팅 참여율</div>
-            <div className="text-2xl font-bold text-gray-700">{stats.chat.participationRate.toFixed(1)}%</div>
+          <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-xl p-4 border-2 border-indigo-300">
+            <div className="text-sm text-gray-700 mb-1 font-medium">채팅 참여율</div>
+            <div className="text-2xl font-bold text-indigo-600">{stats.chat.participationRate.toFixed(1)}%</div>
           </div>
         ) : (
-          <div className="bg-white rounded-xl shadow-md p-4 border border-gray-200">
-            <div className="text-sm text-gray-600 mb-1">채팅 참여율</div>
-            <div className="text-2xl font-bold text-gray-400">0.0%</div>
+          <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-xl p-4 border-2 border-indigo-300">
+            <div className="text-sm text-gray-700 mb-1 font-medium">채팅 참여율</div>
+            <div className="text-2xl font-bold text-indigo-400">0.0%</div>
           </div>
         )}
         {stats.chat ? (
-          <div className="bg-white rounded-xl shadow-md p-4 border border-gray-200">
-            <div className="text-sm text-gray-600 mb-1">총 메시지</div>
-            <div className="text-2xl font-bold text-gray-700">{stats.chat.totalMessages}</div>
+          <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-xl p-4 border-2 border-indigo-300">
+            <div className="text-sm text-gray-700 mb-1 font-medium">총 메시지</div>
+            <div className="text-2xl font-bold text-indigo-600">{stats.chat.totalMessages}</div>
           </div>
         ) : (
-          <div className="bg-white rounded-xl shadow-md p-4 border border-gray-200">
-            <div className="text-sm text-gray-600 mb-1">총 메시지</div>
-            <div className="text-2xl font-bold text-gray-400">0</div>
+          <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-xl p-4 border-2 border-indigo-300">
+            <div className="text-sm text-gray-700 mb-1 font-medium">총 메시지</div>
+            <div className="text-2xl font-bold text-indigo-400">0</div>
           </div>
         )}
         {stats.qa ? (
-          <div className="bg-white rounded-xl shadow-md p-4 border border-gray-200">
-            <div className="text-sm text-gray-600 mb-1">총 질문</div>
-            <div className="text-2xl font-bold text-gray-700">{stats.qa.totalQuestions}</div>
+          <div className="bg-gradient-to-br from-amber-50 to-amber-100 rounded-xl p-4 border-2 border-amber-300">
+            <div className="text-sm text-gray-700 mb-1 font-medium">총 질문</div>
+            <div className="text-2xl font-bold text-amber-600">{stats.qa.totalQuestions}</div>
           </div>
         ) : (
-          <div className="bg-white rounded-xl shadow-md p-4 border border-gray-200">
-            <div className="text-sm text-gray-600 mb-1">총 질문</div>
-            <div className="text-2xl font-bold text-gray-400">0</div>
+          <div className="bg-gradient-to-br from-amber-50 to-amber-100 rounded-xl p-4 border-2 border-amber-300">
+            <div className="text-sm text-gray-700 mb-1 font-medium">총 질문</div>
+            <div className="text-2xl font-bold text-amber-400">0</div>
           </div>
         )}
         {stats.qa ? (
-          <div className="bg-white rounded-xl shadow-md p-4 border border-gray-200">
-            <div className="text-sm text-gray-600 mb-1">답변율</div>
-            <div className="text-2xl font-bold text-gray-700">
+          <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-4 border-2 border-purple-300">
+            <div className="text-sm text-gray-700 mb-1 font-medium">답변율</div>
+            <div className="text-2xl font-bold text-purple-600">
               {stats.qa.totalQuestions > 0
                 ? ((stats.qa.answeredQuestions / stats.qa.totalQuestions) * 100).toFixed(1)
                 : 0}%
             </div>
           </div>
         ) : (
-          <div className="bg-white rounded-xl shadow-md p-4 border border-gray-200">
-            <div className="text-sm text-gray-600 mb-1">답변율</div>
-            <div className="text-2xl font-bold text-gray-400">0%</div>
+          <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-4 border-2 border-purple-300">
+            <div className="text-sm text-gray-700 mb-1 font-medium">답변율</div>
+            <div className="text-2xl font-bold text-purple-400">0%</div>
           </div>
         )}
         {stats.forms ? (
-          <div className="bg-white rounded-xl shadow-md p-4 border border-gray-200">
-            <div className="text-sm text-gray-600 mb-1">설문 응답</div>
-            <div className="text-2xl font-bold text-gray-700">{stats.forms.survey.totalSubmissions}</div>
+          <div className="bg-gradient-to-br from-cyan-50 to-cyan-100 rounded-xl p-4 border-2 border-cyan-300">
+            <div className="text-sm text-gray-700 mb-1 font-medium">설문 응답</div>
+            <div className="text-2xl font-bold text-cyan-600">{stats.forms.survey.totalSubmissions}</div>
           </div>
         ) : (
-          <div className="bg-white rounded-xl shadow-md p-4 border border-gray-200">
-            <div className="text-sm text-gray-600 mb-1">설문 응답</div>
-            <div className="text-2xl font-bold text-gray-400">0</div>
+          <div className="bg-gradient-to-br from-cyan-50 to-cyan-100 rounded-xl p-4 border-2 border-cyan-300">
+            <div className="text-sm text-gray-700 mb-1 font-medium">설문 응답</div>
+            <div className="text-2xl font-bold text-cyan-400">0</div>
           </div>
         )}
       </div>

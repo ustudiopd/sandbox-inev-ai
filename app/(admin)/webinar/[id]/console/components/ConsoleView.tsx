@@ -65,6 +65,14 @@ export default function ConsoleView({ webinar, userRole }: ConsoleViewProps) {
     }
   }, [tabParam])
   
+  // 관리자 대시보드 테마 설정
+  useEffect(() => {
+    document.body.setAttribute('data-theme', 'admin')
+    return () => {
+      document.body.removeAttribute('data-theme')
+    }
+  }, [])
+  
   const handleWebinarUpdate = (updatedWebinar: any) => {
     setWebinarData(updatedWebinar)
   }
@@ -78,106 +86,126 @@ export default function ConsoleView({ webinar, userRole }: ConsoleViewProps) {
         <div className="max-w-7xl mx-auto">
           {/* 탭 네비게이션 */}
           <div className="bg-white rounded-xl shadow-lg mb-6 overflow-hidden">
-          <div className="border-b border-gray-200 flex">
+          <div className="border-b border-gray-200 flex flex-wrap gap-0 overflow-x-auto">
             <button
               onClick={() => setActiveTab('dashboard')}
-              className={`px-6 py-4 text-sm font-medium transition-colors ${
+              className={`flex flex-col sm:flex-row items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-3 sm:py-4 min-w-[60px] sm:min-w-auto transition-colors flex-shrink-0 ${
                 activeTab === 'dashboard'
                   ? 'bg-blue-50 text-blue-600 border-b-2 border-blue-600'
                   : 'text-gray-600 hover:bg-gray-50'
               }`}
+              title="대시보드"
             >
-              📊 대시보드
+              <span className="text-2xl sm:text-xl">📊</span>
+              <span className="text-xs sm:text-sm whitespace-nowrap font-medium">메인</span>
             </button>
             <button
               onClick={() => setActiveTab('qa')}
-              className={`px-6 py-4 text-sm font-medium transition-colors ${
+              className={`flex flex-col sm:flex-row items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-3 sm:py-4 min-w-[60px] sm:min-w-auto transition-colors flex-shrink-0 ${
                 activeTab === 'qa'
                   ? 'bg-blue-50 text-blue-600 border-b-2 border-blue-600'
                   : 'text-gray-600 hover:bg-gray-50'
               }`}
+              title="Q&A 모더레이션"
             >
-              ❓ Q&A 모더레이션
+              <span className="text-2xl sm:text-xl">❓</span>
+              <span className="text-xs sm:text-sm whitespace-nowrap font-medium">Q&A</span>
             </button>
             <button
               onClick={() => setActiveTab('chat')}
-              className={`px-6 py-4 text-sm font-medium transition-colors ${
+              className={`flex flex-col sm:flex-row items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-3 sm:py-4 min-w-[60px] sm:min-w-auto transition-colors flex-shrink-0 ${
                 activeTab === 'chat'
                   ? 'bg-blue-50 text-blue-600 border-b-2 border-blue-600'
                   : 'text-gray-600 hover:bg-gray-50'
               }`}
+              title="채팅 관리"
             >
-              💬 채팅 관리
+              <span className="text-2xl sm:text-xl">💬</span>
+              <span className="text-xs sm:text-sm whitespace-nowrap font-medium">채팅</span>
             </button>
             <button
               onClick={() => setActiveTab('forms')}
-              className={`px-6 py-4 text-sm font-medium transition-colors ${
+              className={`flex flex-col sm:flex-row items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-3 sm:py-4 min-w-[60px] sm:min-w-auto transition-colors flex-shrink-0 ${
                 activeTab === 'forms'
                   ? 'bg-blue-50 text-blue-600 border-b-2 border-blue-600'
                   : 'text-gray-600 hover:bg-gray-50'
               }`}
+              title="설문/퀴즈"
             >
-              📋 설문/퀴즈
+              <span className="text-2xl sm:text-xl">📋</span>
+              <span className="text-xs sm:text-sm whitespace-nowrap font-medium">설문</span>
             </button>
             <button
               onClick={() => setActiveTab('files')}
-              className={`px-6 py-4 text-sm font-medium transition-colors ${
+              className={`flex flex-col sm:flex-row items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-3 sm:py-4 min-w-[60px] sm:min-w-auto transition-colors flex-shrink-0 ${
                 activeTab === 'files'
                   ? 'bg-blue-50 text-blue-600 border-b-2 border-blue-600'
                   : 'text-gray-600 hover:bg-gray-50'
               }`}
+              title="발표자료"
             >
-              📎 발표자료
+              <span className="text-2xl sm:text-xl">📎</span>
+              <span className="text-xs sm:text-sm whitespace-nowrap font-medium">자료</span>
             </button>
             <button
               onClick={() => setActiveTab('giveaways')}
-              className={`px-6 py-4 text-sm font-medium transition-colors ${
+              className={`flex flex-col sm:flex-row items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-3 sm:py-4 min-w-[60px] sm:min-w-auto transition-colors flex-shrink-0 ${
                 activeTab === 'giveaways'
                   ? 'bg-blue-50 text-blue-600 border-b-2 border-blue-600'
                   : 'text-gray-600 hover:bg-gray-50'
               }`}
+              title="추첨"
             >
-              🎁 추첨
+              <span className="text-2xl sm:text-xl">🎁</span>
+              <span className="text-xs sm:text-sm whitespace-nowrap font-medium">추첨</span>
             </button>
             <button
               onClick={() => setActiveTab('participants')}
-              className={`px-6 py-4 text-sm font-medium transition-colors ${
+              className={`flex flex-col sm:flex-row items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-3 sm:py-4 min-w-[60px] sm:min-w-auto transition-colors flex-shrink-0 ${
                 activeTab === 'participants'
                   ? 'bg-blue-50 text-blue-600 border-b-2 border-blue-600'
                   : 'text-gray-600 hover:bg-gray-50'
               }`}
+              title="참여자 관리"
             >
-              👥 참여자 관리
+              <span className="text-2xl sm:text-xl">👥</span>
+              <span className="text-xs sm:text-sm whitespace-nowrap font-medium">참여</span>
             </button>
             <button
               onClick={() => setActiveTab('stats')}
-              className={`px-6 py-4 text-sm font-medium transition-colors ${
+              className={`flex flex-col sm:flex-row items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-3 sm:py-4 min-w-[60px] sm:min-w-auto transition-colors flex-shrink-0 ${
                 activeTab === 'stats'
                   ? 'bg-blue-50 text-blue-600 border-b-2 border-blue-600'
                   : 'text-gray-600 hover:bg-gray-50'
               }`}
+              title="통계"
             >
-              📊 통계
+              <span className="text-2xl sm:text-xl">📊</span>
+              <span className="text-xs sm:text-sm whitespace-nowrap font-medium">통계</span>
             </button>
             <button
               onClick={() => setActiveTab('emails')}
-              className={`px-6 py-4 text-sm font-medium transition-colors ${
+              className={`flex flex-col sm:flex-row items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-3 sm:py-4 min-w-[60px] sm:min-w-auto transition-colors flex-shrink-0 ${
                 activeTab === 'emails'
                   ? 'bg-blue-50 text-blue-600 border-b-2 border-blue-600'
                   : 'text-gray-600 hover:bg-gray-50'
               }`}
+              title="이메일 발송"
             >
-              📧 이메일 발송
+              <span className="text-2xl sm:text-xl">📧</span>
+              <span className="text-xs sm:text-sm whitespace-nowrap font-medium">이메일</span>
             </button>
             <button
               onClick={() => setActiveTab('settings')}
-              className={`px-6 py-4 text-sm font-medium transition-colors ${
+              className={`flex flex-col sm:flex-row items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-3 sm:py-4 min-w-[60px] sm:min-w-auto transition-colors flex-shrink-0 ${
                 activeTab === 'settings'
                   ? 'bg-blue-50 text-blue-600 border-b-2 border-blue-600'
                   : 'text-gray-600 hover:bg-gray-50'
               }`}
+              title="설정"
             >
-              ⚙️ 설정
+              <span className="text-2xl sm:text-xl">⚙️</span>
+              <span className="text-xs sm:text-sm whitespace-nowrap font-medium">설정</span>
             </button>
           </div>
         </div>
