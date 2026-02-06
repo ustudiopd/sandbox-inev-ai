@@ -1467,7 +1467,8 @@ export default function Chat({
       if (container) {
         const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 100
         if (isNearBottom) {
-          messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+          // scrollIntoView 대신 scrollTop을 직접 설정하여 전체 페이지 스크롤 방지
+          container.scrollTop = container.scrollHeight
         }
       }
     }
