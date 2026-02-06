@@ -107,7 +107,7 @@ export async function GET(
     if (userIds.length > 0) {
       const { data: profiles } = await admin
         .from('profiles')
-        .select('id, display_name, email, last_login_at')
+        .select('id, display_name, email, nickname, last_seen_at')
         .in('id', userIds)
       
       if (profiles) {
@@ -117,44 +117,61 @@ export async function GET(
       }
     }
     
+    // 접속 정보 조회 (webinar_user_sessions)
+    const userFirstAccessMap = new Map()
+    const actualWebinarId = webinar.id // UUID 사용
+    const { data: sessions } = await admin
+      .from('webinar_user_sessions')
+      .select('user_id, entered_at')
+      .eq('webinar_id', actualWebinarId)
+      .in('user_id', userIds)
+      .not('user_id', 'is', null)
+    
+    if (sessions) {
+      sessions.forEach((session: any) => {
+        const userId = session.user_id
+        if (!userFirstAccessMap.has(userId) || new Date(session.entered_at) < new Date(userFirstAccessMap.get(userId))) {
+          userFirstAccessMap.set(userId, session.entered_at)
+        }
+      })
+    }
+    
     // 등록 정보 조회 (registration_campaign_id가 있으면 event_survey_entries, 없으면 registrations)
     const registrationsMap = new Map()
     const registrationEntriesMap = new Map()
     
     if (webinar.registration_campaign_id) {
-      // event_survey_entries에서 이메일로 매칭
-      const emails = Array.from(profilesMap.values())
-        .map((p: any) => p.email)
-        .filter(Boolean)
+      // event_survey_entries에서 모든 entries를 가져온 후 이메일로 매칭 (today-access와 동일한 방식)
+      const { data: allEntries } = await admin
+        .from('event_survey_entries')
+        .select('registration_data, survey_no, code6, utm_source, utm_medium, utm_campaign, utm_term, utm_content, marketing_campaign_link_id, completed_at, created_at')
+        .eq('campaign_id', webinar.registration_campaign_id)
       
-      if (emails.length > 0) {
-        const { data: entries } = await admin
-          .from('event_survey_entries')
-          .select('registration_data, survey_no, code6, utm_source, utm_medium, utm_campaign, utm_term, utm_content, marketing_campaign_link_id, completed_at, created_at')
-          .eq('campaign_id', webinar.registration_campaign_id)
-          .in('registration_data->>email', emails.map(e => e.toLowerCase()))
-        
-        if (entries) {
-          entries.forEach((entry: any) => {
-            const email = entry.registration_data?.email?.toLowerCase()?.trim()
-            if (email) {
-              registrationEntriesMap.set(email, entry)
-            }
-          })
-        }
+      if (allEntries) {
+        allEntries.forEach((entry: any) => {
+          const entryEmail = entry.registration_data?.email
+          if (entryEmail) {
+            const normalizedEmail = entryEmail.toLowerCase().trim()
+            registrationEntriesMap.set(normalizedEmail, entry)
+          }
+        })
       }
     } else {
-      // registrations 테이블 조회
-      const { data: registrations } = await admin
-        .from('registrations')
-        .select('user_id, nickname, role, registered_via, created_at, registration_data, survey_no, code6')
-        .eq('webinar_id', webinarId)
-        .in('user_id', userIds)
-      
-      if (registrations) {
-        registrations.forEach((r: any) => {
-          registrationsMap.set(r.user_id, r)
-        })
+      // registrations 테이블 조회 (배치로 처리)
+      const BATCH_SIZE = 1000
+      for (let i = 0; i < userIds.length; i += BATCH_SIZE) {
+        const batch = userIds.slice(i, i + BATCH_SIZE)
+        const { data: registrations } = await admin
+          .from('registrations')
+          .select('user_id, nickname, role, registered_via, created_at, registration_data, survey_no, code6')
+          .eq('webinar_id', actualWebinarId)
+          .in('user_id', batch)
+        
+        if (registrations) {
+          registrations.forEach((r: any) => {
+            registrationsMap.set(r.user_id, r)
+          })
+        }
       }
     }
     
@@ -199,7 +216,8 @@ export async function GET(
       '역할',
       '등록일시',
       '등록출처',
-      '마지막로그인',
+      '마지막접속',
+      '첫접속일시',
       '제출일시',
     ]
     
@@ -234,7 +252,10 @@ export async function GET(
       }
       
       const regData = registration?.registration_data || registrationEntry?.registration_data || {}
+      
+      // 이름 결정: registrations.nickname > registration_data.name > profiles.display_name > email (today-access와 동일)
       const name = registration?.nickname || regData?.name || profile.display_name || email || '익명'
+      
       const company = regData?.company || regData?.organization || ''
       const position = regData?.position || regData?.jobTitle || ''
       const phone = regData?.phone || regData?.phone_norm || ''
@@ -243,7 +264,8 @@ export async function GET(
       const registeredAt = registration?.created_at || registrationEntry?.completed_at || registrationEntry?.created_at || ''
       const surveyNo = registration?.survey_no || registrationEntry?.survey_no || ''
       const code6 = registration?.code6 || registrationEntry?.code6 || ''
-      const lastLogin = profile.last_login_at || ''
+      const lastSeen = profile.last_seen_at || ''
+      const firstAccess = userFirstAccessMap.get(userId) || ''
       const submittedAt = submission.submitted_at || ''
       
       const utmSource = registrationEntry?.utm_source || ''
@@ -321,7 +343,8 @@ export async function GET(
         escapeCsv(role),
         escapeCsv(formatDate(registeredAt)),
         escapeCsv(registeredVia),
-        escapeCsv(formatDate(lastLogin)),
+        escapeCsv(formatDate(lastSeen)),
+        escapeCsv(formatDate(firstAccess)),
         escapeCsv(formatDate(submittedAt)),
         escapeCsv(utmSource),
         escapeCsv(utmMedium),
