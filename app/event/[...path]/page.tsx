@@ -208,6 +208,22 @@ export default async function SurveyPublicPage({
   const subPath = isSubPath ? lastPath : null
   const publicPath = '/' + (isSubPath ? path.slice(0, -1) : path).join('/')
   
+  // 149403, 149400은 하드코딩된 경로이므로 캠페인 조회를 건너뛰고 바로 렌더링
+  // (데이터베이스 쿼리 부하 방지 및 타임아웃 방지)
+  if (!subPath && (publicPath === '/149403' || publicPath === '149403' || publicPath === '/149400' || publicPath === '149400')) {
+    return (
+      <Suspense fallback={
+        <div className="min-h-screen bg-white flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#4da8da] mx-auto mb-4"></div>
+            <p className="text-gray-600">로딩 중...</p>
+          </div>
+        </div>
+      }>
+        <WebinarFormWertPage />
+      </Suspense>
+    )
+  }
   
   const admin = createAdminSupabase()
   
@@ -390,21 +406,7 @@ export default async function SurveyPublicPage({
   
   // subPath에 따라 다른 페이지 렌더링
   if (!subPath) {
-    // 149403, 149400은 WebinarFormWertPage를 보여줌 (캠페인 조회 실패해도 표시)
-    if (publicPath === '/149403' || publicPath === '149403' || publicPath === '/149400' || publicPath === '149400') {
-      return (
-        <Suspense fallback={
-          <div className="min-h-screen bg-white flex items-center justify-center">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#4da8da] mx-auto mb-4"></div>
-              <p className="text-gray-600">로딩 중...</p>
-            </div>
-          </div>
-        }>
-          <WebinarFormWertPage />
-        </Suspense>
-      )
-    }
+    // 149403, 149400은 이미 위에서 처리되었으므로 여기서는 제외
     
     // 426307은 /register로 리다이렉트
     if (publicPath === '/426307' || publicPath === '426307') {
