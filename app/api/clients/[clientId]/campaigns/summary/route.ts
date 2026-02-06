@@ -266,17 +266,47 @@ async function getSummaryFromAggregated(
     })
   }
   
-  // Source별 집계 (링크 메타데이터에서 UTM 복원)
+  // Source별 집계: Raw 데이터에서 CID 기준으로 집계 (집계 테이블 대신)
   const sourceMap = new Map<string | null, number>()
-  stats.forEach(s => {
-    let source = s.utm_source || null
-    // UTM이 없지만 링크가 있으면 링크 메타데이터에서 UTM 가져오기
-    if (!source && s.marketing_campaign_link_id) {
-      const linkMeta = linkMetaMap.get(s.marketing_campaign_link_id)
-      source = linkMeta?.utm_source || null
+  
+  // Raw 데이터에서 CID가 있는 전환만 가져와서 Source별 집계
+  if (clientId) {
+    const admin = createAdminSupabase()
+    const { data: campaigns } = await admin
+      .from('event_survey_campaigns')
+      .select('id')
+      .eq('client_id', clientId)
+    
+    if (campaigns && campaigns.length > 0) {
+      const campaignIds = campaigns.map(c => c.id)
+      const fromDateUTC = new Date(new Date(`${from}T00:00:00+09:00`).getTime() - 9 * 60 * 60 * 1000)
+      const toDateUTC = new Date(new Date(`${to}T23:59:59+09:00`).getTime() - 9 * 60 * 60 * 1000)
+      
+      const { data: rawEntries } = await admin
+        .from('event_survey_entries')
+        .select('utm_source, utm_medium, utm_campaign, marketing_campaign_link_id, registration_data')
+        .in('campaign_id', campaignIds)
+        .gte('created_at', fromDateUTC.toISOString())
+        .lte('created_at', toDateUTC.toISOString())
+      
+      // CID가 있는 전환만 필터링
+      const entriesWithCid = rawEntries?.filter(entry => {
+        const entryCid = entry.registration_data?.cid
+        return !!entryCid
+      }) || []
+      
+      // Source별 집계
+      entriesWithCid.forEach(entry => {
+        let source = entry.utm_source || null
+        // UTM이 없지만 링크가 있으면 링크 메타데이터에서 UTM 가져오기
+        if (!source && entry.marketing_campaign_link_id) {
+          const linkMeta = linkMetaMap.get(entry.marketing_campaign_link_id)
+          source = linkMeta?.utm_source || null
+        }
+        sourceMap.set(source, (sourceMap.get(source) || 0) + 1)
+      })
     }
-    sourceMap.set(source, (sourceMap.get(source) || 0) + (s.conversions || 0))
-  })
+  }
   const conversions_by_source = Array.from(sourceMap.entries())
     .map(([source, count]) => ({ 
       source, 
@@ -285,69 +315,96 @@ async function getSummaryFromAggregated(
     }))
     .sort((a, b) => b.count - a.count)
   
-  // Medium별 집계 (링크 메타데이터에서 UTM 복원)
+  // Medium별 집계: Raw 데이터에서 CID 기준으로 집계
   const mediumMap = new Map<string | null, number>()
-  stats.forEach(s => {
-    let medium = s.utm_medium || null
-    // UTM이 없지만 링크가 있으면 링크 메타데이터에서 UTM 가져오기
-    if (!medium && s.marketing_campaign_link_id) {
-      const linkMeta = linkMetaMap.get(s.marketing_campaign_link_id)
-      medium = linkMeta?.utm_medium || null
+  
+  if (clientId) {
+    const admin = createAdminSupabase()
+    const { data: campaigns } = await admin
+      .from('event_survey_campaigns')
+      .select('id')
+      .eq('client_id', clientId)
+    
+    if (campaigns && campaigns.length > 0) {
+      const campaignIds = campaigns.map(c => c.id)
+      const fromDateUTC = new Date(new Date(`${from}T00:00:00+09:00`).getTime() - 9 * 60 * 60 * 1000)
+      const toDateUTC = new Date(new Date(`${to}T23:59:59+09:00`).getTime() - 9 * 60 * 60 * 1000)
+      
+      const { data: rawEntries } = await admin
+        .from('event_survey_entries')
+        .select('utm_source, utm_medium, utm_campaign, marketing_campaign_link_id, registration_data')
+        .in('campaign_id', campaignIds)
+        .gte('created_at', fromDateUTC.toISOString())
+        .lte('created_at', toDateUTC.toISOString())
+      
+      const entriesWithCid = rawEntries?.filter(entry => {
+        const entryCid = entry.registration_data?.cid
+        return !!entryCid
+      }) || []
+      
+      entriesWithCid.forEach(entry => {
+        let medium = entry.utm_medium || null
+        if (!medium && entry.marketing_campaign_link_id) {
+          const linkMeta = linkMetaMap.get(entry.marketing_campaign_link_id)
+          medium = linkMeta?.utm_medium || null
+        }
+        mediumMap.set(medium, (mediumMap.get(medium) || 0) + 1)
+      })
     }
-    mediumMap.set(medium, (mediumMap.get(medium) || 0) + (s.conversions || 0))
-  })
+  }
   const conversions_by_medium = Array.from(mediumMap.entries())
     .map(([medium, count]) => ({ medium, count }))
     .sort((a, b) => b.count - a.count)
   
-  // Campaign별 집계 (링크 메타데이터에서 UTM 복원)
+  // Campaign별 집계: Raw 데이터에서 CID 기준으로 집계
   const campaignMap = new Map<string | null, number>()
-  stats.forEach(s => {
-    let campaign = s.utm_campaign || null
-    // UTM이 없지만 링크가 있으면 링크 메타데이터에서 UTM 가져오기
-    if (!campaign && s.marketing_campaign_link_id) {
-      const linkMeta = linkMetaMap.get(s.marketing_campaign_link_id)
-      campaign = linkMeta?.utm_campaign || null
+  
+  if (clientId) {
+    const admin = createAdminSupabase()
+    const { data: campaigns } = await admin
+      .from('event_survey_campaigns')
+      .select('id')
+      .eq('client_id', clientId)
+    
+    if (campaigns && campaigns.length > 0) {
+      const campaignIds = campaigns.map(c => c.id)
+      const fromDateUTC = new Date(new Date(`${from}T00:00:00+09:00`).getTime() - 9 * 60 * 60 * 1000)
+      const toDateUTC = new Date(new Date(`${to}T23:59:59+09:00`).getTime() - 9 * 60 * 60 * 1000)
+      
+      const { data: rawEntries } = await admin
+        .from('event_survey_entries')
+        .select('utm_source, utm_medium, utm_campaign, marketing_campaign_link_id, registration_data')
+        .in('campaign_id', campaignIds)
+        .gte('created_at', fromDateUTC.toISOString())
+        .lte('created_at', toDateUTC.toISOString())
+      
+      const entriesWithCid = rawEntries?.filter(entry => {
+        const entryCid = entry.registration_data?.cid
+        return !!entryCid
+      }) || []
+      
+      entriesWithCid.forEach(entry => {
+        let campaign = entry.utm_campaign || null
+        if (!campaign && entry.marketing_campaign_link_id) {
+          const linkMeta = linkMetaMap.get(entry.marketing_campaign_link_id)
+          campaign = linkMeta?.utm_campaign || null
+        }
+        campaignMap.set(campaign, (campaignMap.get(campaign) || 0) + 1)
+      })
     }
-    campaignMap.set(campaign, (campaignMap.get(campaign) || 0) + (s.conversions || 0))
-  })
+  }
   const conversions_by_campaign = Array.from(campaignMap.entries())
     .map(([campaign, count]) => ({ campaign, count }))
     .sort((a, b) => b.count - a.count)
   
-  // 조합별 집계 (conversions와 visits 모두 집계)
-  // 집계 테이블의 데이터를 기준으로 사용 (중복 방지)
-  // 링크 메타데이터에서 UTM 복원
+  // 조합별 집계: Raw 데이터에서 CID 기준으로 집계
   const comboMap = new Map<string, { conversions: number; visits: number }>()
-  stats.forEach(s => {
-    let source = s.utm_source || null
-    let medium = s.utm_medium || null
-    let campaign = s.utm_campaign || null
-    
-    // UTM이 없지만 링크가 있으면 링크 메타데이터에서 UTM 가져오기
-    if ((!source || !medium || !campaign) && s.marketing_campaign_link_id) {
-      const linkMeta = linkMetaMap.get(s.marketing_campaign_link_id)
-      if (linkMeta) {
-        source = source || linkMeta.utm_source || null
-        medium = medium || linkMeta.utm_medium || null
-        campaign = campaign || linkMeta.utm_campaign || null
-      }
-    }
-    
-    const key = `${source}|${medium}|${campaign}`
-    const existing = comboMap.get(key) || { conversions: 0, visits: 0 }
-    comboMap.set(key, {
-      conversions: existing.conversions + (s.conversions || 0),
-      visits: existing.visits + (s.visits || 0),
-    })
-  })
   
-  // 집계 테이블에 있는 조합 키 수집 (중복 방지용)
-  const aggregatedComboKeys = new Set(comboMap.keys())
-  
-  // Raw 데이터에서 UTM 조합별 집계 보완 (집계 테이블에 없는 조합만 추가)
+  // campaignIds를 상위 스코프에서 선언
   let campaignIds: string[] = []
+  
   if (clientId) {
+    const admin = createAdminSupabase()
     const { data: campaigns } = await admin
       .from('event_survey_campaigns')
       .select('id')
@@ -360,29 +417,49 @@ async function getSummaryFromAggregated(
       
       const { data: rawEntries } = await admin
         .from('event_survey_entries')
-        .select('utm_source, utm_medium, utm_campaign')
+        .select('utm_source, utm_medium, utm_campaign, marketing_campaign_link_id, registration_data')
         .in('campaign_id', campaignIds)
         .gte('created_at', fromDateUTC.toISOString())
         .lte('created_at', toDateUTC.toISOString())
       
-      // Raw 데이터에서 UTM 조합별 집계 (집계 테이블에 없는 조합만 추가)
-      rawEntries?.forEach(entry => {
-        const source = entry.utm_source || null
-        const medium = entry.utm_medium || null
-        const campaign = entry.utm_campaign || null
-        const key = `${source}|${medium}|${campaign}`
+      // CID가 있는 전환만 필터링
+      const entriesWithCid = rawEntries?.filter(entry => {
+        const entryCid = entry.registration_data?.cid
+        return !!entryCid
+      }) || []
+      
+      // UTM 조합별 집계
+      entriesWithCid.forEach(entry => {
+        let source = entry.utm_source || null
+        let medium = entry.utm_medium || null
+        let campaign = entry.utm_campaign || null
         
-        // 집계 테이블에 이미 있는 조합은 건너뛰기 (중복 방지)
-        if (aggregatedComboKeys.has(key)) {
-          return
+        // UTM이 없지만 링크가 있으면 링크 메타데이터에서 UTM 가져오기
+        if ((!source || !medium || !campaign) && entry.marketing_campaign_link_id) {
+          const linkMeta = linkMetaMap.get(entry.marketing_campaign_link_id)
+          if (linkMeta) {
+            source = source || linkMeta.utm_source || null
+            medium = medium || linkMeta.utm_medium || null
+            campaign = campaign || linkMeta.utm_campaign || null
+          }
         }
         
+        const key = `${source}|${medium}|${campaign}`
         const existing = comboMap.get(key) || { conversions: 0, visits: 0 }
         comboMap.set(key, {
           conversions: existing.conversions + 1,
-          visits: existing.visits, // visits는 집계 테이블에서만 가져옴
+          visits: existing.visits, // visits는 나중에 배분
         })
       })
+      
+      // Visits 배분: 조합별 전환 비율로 배분
+      const totalConversionsForVisits = entriesWithCid.length
+      if (totalConversionsForVisits > 0 && totalVisits > 0) {
+        comboMap.forEach((data, key) => {
+          const conversionRatio = data.conversions / totalConversionsForVisits
+          data.visits = Math.round(totalVisits * conversionRatio)
+        })
+      }
     }
   }
   const conversions_by_combo = Array.from(comboMap.entries())
@@ -589,16 +666,22 @@ async function getSummaryFromRaw(
   
   const campaignIds = campaigns.map(c => c.id)
   
-  // 모든 엔트리 가져오기
+  // 모든 엔트리 가져오기 (CID 기준으로 필터링)
   // created_at은 UTC로 저장되어 있으므로, KST 기준 날짜를 UTC로 변환하여 필터링
-  const { data: entries } = await admin
+  const { data: allEntries } = await admin
     .from('event_survey_entries')
-    .select('utm_source, utm_medium, utm_campaign, marketing_campaign_link_id')
+    .select('utm_source, utm_medium, utm_campaign, marketing_campaign_link_id, registration_data')
     .in('campaign_id', campaignIds)
     .gte('created_at', fromDate.toISOString())
     .lte('created_at', toDate.toISOString())
   
-  const totalConversions = entries?.length || 0
+  // CID가 있는 전환만 필터링 (캠페인 링크와 동일한 기준)
+  const entries = allEntries?.filter(entry => {
+    const entryCid = entry.registration_data?.cid
+    return !!entryCid // CID가 있는 전환만 포함
+  }) || []
+  
+  const totalConversions = entries.length
   
   // 링크 메타데이터 조회 (UTM 복원용)
   const linkIdsForUTM = new Set<string>()

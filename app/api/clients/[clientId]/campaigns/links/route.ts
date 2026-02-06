@@ -40,141 +40,128 @@ export async function GET(
       )
     }
     
-    // Phase 1: 집계 테이블에서 링크 통계 조회 (날짜 범위 필터링)
-    // 1) 링크 ID로 직접 매칭되는 데이터
-    const linkIds = (links || []).map(l => l.id).filter(Boolean)
-    
-    // 링크 ID로 매칭되는 데이터 조회
-    let linkStatsQuery = admin
-      .from('marketing_stats_daily')
-      .select('*')
-      .eq('client_id', clientId)
-    
-    if (linkIds.length > 0) {
-      linkStatsQuery = linkStatsQuery.in('marketing_campaign_link_id', linkIds)
-    } else {
-      // 링크가 없으면 빈 결과
-      linkStatsQuery = linkStatsQuery.eq('marketing_campaign_link_id', '00000000-0000-0000-0000-000000000000') // 존재하지 않는 ID로 필터링
-    }
-    
-    // 날짜 범위가 있으면 필터링
-    if (fromDate) {
-      linkStatsQuery = linkStatsQuery.gte('bucket_date', fromDate)
-    }
-    if (toDate) {
-      linkStatsQuery = linkStatsQuery.lte('bucket_date', toDate)
-    }
-    
-    const { data: linkStats, error: linkStatsError } = await linkStatsQuery
-    
-    // 2) 보정 데이터 (marketing_campaign_link_id가 null인 데이터) 조회
-    let backfillStatsQuery = admin
-      .from('marketing_stats_daily')
-      .select('*')
-      .eq('client_id', clientId)
-      .is('marketing_campaign_link_id', null)
-    
-    if (fromDate) {
-      backfillStatsQuery = backfillStatsQuery.gte('bucket_date', fromDate)
-    }
-    if (toDate) {
-      backfillStatsQuery = backfillStatsQuery.lte('bucket_date', toDate)
-    }
-    
-    const { data: backfillStats, error: backfillStatsError } = await backfillStatsQuery
-    
-    // 두 결과 합치기
-    const allAggregatedStats = [
-      ...(linkStats || []),
-      ...(backfillStats || [])
-    ]
-    const statsError = linkStatsError || backfillStatsError
-    
-    // 링크별로 집계 테이블 데이터 그룹화
-    const linkStatsMap = new Map<string, { visits: number; conversions: number }>()
-    
-    if (linkStats && !linkStatsError) {
-      linkStats.forEach(stat => {
-        if (stat.marketing_campaign_link_id) {
-          // 링크 ID로 직접 매칭
-          const existing = linkStatsMap.get(stat.marketing_campaign_link_id) || { visits: 0, conversions: 0 }
-          linkStatsMap.set(stat.marketing_campaign_link_id, {
-            visits: existing.visits + (stat.visits || 0),
-            conversions: existing.conversions + (stat.conversions || 0)
-          })
-        }
-      })
-    }
-    
-    // 보정 데이터를 UTM 파라미터로 링크와 매칭
-    if (backfillStats && !backfillStatsError) {
-      backfillStats.forEach(backfill => {
-        // UTM 파라미터로 매칭되는 링크 찾기
-        const matchingLink = (links || []).find(link => 
-          link.utm_source === backfill.utm_source &&
-          link.utm_medium === backfill.utm_medium &&
-          link.utm_campaign === backfill.utm_campaign
-        )
-        
-        if (matchingLink) {
-          const existing = linkStatsMap.get(matchingLink.id) || { visits: 0, conversions: 0 }
-          linkStatsMap.set(matchingLink.id, {
-            visits: existing.visits + (backfill.visits || 0),
-            conversions: existing.conversions + (backfill.conversions || 0)
-          })
-        }
-      })
-    }
-    
     // 각 링크의 전환 수 및 Visits 집계 및 URL 생성
+    // 변경사항:
+    // - conversions: CID 기준 전환 count 유지
+    // - visits: event_survey_entries에서 해당 CID의 DISTINCT(session_id)로 계산
+    // - event_access_logs 기반 visits 사용 중단
     const linksWithStats = await Promise.all(
       (links || []).map(async (link) => {
-        // Phase 1: 집계 테이블에서 통계 가져오기
-        const aggregatedStat = linkStatsMap.get(link.id)
-        let conversionCount: number | null = null
-        let visitsCount: number | null = null
+        // 날짜 범위 설정
+        const fromDateTime = fromDate ? new Date(fromDate) : null
+        const toDateTime = toDate ? new Date(toDate) : null
+        if (fromDateTime) {
+          fromDateTime.setHours(0, 0, 0, 0)
+        }
+        if (toDateTime) {
+          toDateTime.setHours(23, 59, 59, 999)
+        }
         
-        if (aggregatedStat) {
-          // 집계 테이블에 데이터가 있으면 사용
-          conversionCount = aggregatedStat.conversions
-          visitsCount = aggregatedStat.visits
-        } else {
-          // Fallback: Raw 데이터에서 집계 (날짜 범위 필터링)
-          let conversionsQuery = admin
+        // Conversions: CID 기준 전환 count (registration_data->cid에서 직접 조회)
+        // CID 기준으로 모든 전환을 가져온 후 메모리에서 필터링 (JSONB 필드 직접 조회 제한)
+        let conversionCount = 0
+        let entries: any[] = []
+        
+        if (link.cid) {
+          // CID 기준으로 조회: campaign_id로 먼저 필터링한 후 registration_data에서 CID 확인
+          let entriesQuery = admin
             .from('event_survey_entries')
-            .select('*', { count: 'exact', head: true })
+            .select('id, registration_data')
+            .eq('campaign_id', link.target_campaign_id)
+          
+          if (fromDateTime) {
+            entriesQuery = entriesQuery.gte('created_at', fromDateTime.toISOString())
+          }
+          if (toDateTime) {
+            entriesQuery = entriesQuery.lte('created_at', toDateTime.toISOString())
+          }
+          
+          const { data: entriesData, error: entriesError } = await entriesQuery
+          
+          if (!entriesError && entriesData) {
+            // 메모리에서 CID로 필터링
+            entries = entriesData.filter(entry => {
+              const entryCid = entry.registration_data?.cid
+              return entryCid === link.cid
+            })
+            conversionCount = entries.length
+          }
+        } else {
+          // CID가 없는 링크는 marketing_campaign_link_id로 조회
+          let entriesQuery = admin
+            .from('event_survey_entries')
+            .select('id')
             .eq('marketing_campaign_link_id', link.id)
           
+          if (fromDateTime) {
+            entriesQuery = entriesQuery.gte('created_at', fromDateTime.toISOString())
+          }
+          if (toDateTime) {
+            entriesQuery = entriesQuery.lte('created_at', toDateTime.toISOString())
+          }
+          
+          const { count, data: entriesData, error: entriesError } = await entriesQuery
+          
+          if (!entriesError) {
+            conversionCount = count || 0
+            entries = entriesData || []
+          }
+        }
+        
+        // Visits: event_access_logs에서 해당 CID의 DISTINCT(session_id)로 계산
+        // 전환 여부와 관계없이 해당 CID로 방문한 모든 세션 카운트
+        let visitsCount = 0
+        
+        if (link.cid) {
+          // event_access_logs에서 해당 CID를 가진 모든 방문 기록 조회 (전환 여부 무관)
           let visitsQuery = admin
             .from('event_access_logs')
-            .select('*', { count: 'exact', head: true })
+            .select('session_id')
+            .eq('cid', link.cid)
             .eq('campaign_id', link.target_campaign_id)
-            .eq('marketing_campaign_link_id', link.id)
+            .not('session_id', 'is', null)
           
-          // 날짜 범위가 있으면 필터링
-          if (fromDate) {
-            const fromDateTime = new Date(fromDate)
-            fromDateTime.setHours(0, 0, 0, 0)
-            conversionsQuery = conversionsQuery.gte('created_at', fromDateTime.toISOString())
+          if (fromDateTime) {
             visitsQuery = visitsQuery.gte('accessed_at', fromDateTime.toISOString())
           }
-          if (toDate) {
-            const toDateTime = new Date(toDate)
-            toDateTime.setHours(23, 59, 59, 999)
-            conversionsQuery = conversionsQuery.lte('created_at', toDateTime.toISOString())
+          if (toDateTime) {
             visitsQuery = visitsQuery.lte('accessed_at', toDateTime.toISOString())
           }
           
-          const { count: conversionCountRaw } = await conversionsQuery
-          const { count: visitsCountRaw } = await visitsQuery
+          const { data: visitLogs, error: visitsError } = await visitsQuery
           
-          conversionCount = conversionCountRaw || 0
-          visitsCount = visitsCountRaw || 0
+          if (!visitsError && visitLogs) {
+            // DISTINCT session_id 카운트 (전환 여부 무관, 모든 방문 포함)
+            const uniqueSessionIds = new Set(visitLogs.map(log => log.session_id).filter(Boolean))
+            visitsCount = uniqueSessionIds.size
+          }
+        } else {
+          // CID가 없는 링크는 marketing_campaign_link_id로 조회
+          let visitsQuery = admin
+            .from('event_access_logs')
+            .select('session_id')
+            .eq('campaign_id', link.target_campaign_id)
+            .eq('marketing_campaign_link_id', link.id)
+            .not('session_id', 'is', null)
+          
+          if (fromDateTime) {
+            visitsQuery = visitsQuery.gte('accessed_at', fromDateTime.toISOString())
+          }
+          if (toDateTime) {
+            visitsQuery = visitsQuery.lte('accessed_at', toDateTime.toISOString())
+          }
+          
+          const { data: visitLogs, error: visitsError } = await visitsQuery
+          
+          if (!visitsError && visitLogs) {
+            const uniqueSessionIds = new Set(visitLogs.map(log => log.session_id).filter(Boolean))
+            visitsCount = uniqueSessionIds.size
+          }
         }
         
         // CVR 계산
-        const cvr = visitsCount && visitsCount > 0
-          ? ((conversionCount || 0) / visitsCount * 100).toFixed(2)
+        const cvr = visitsCount > 0
+          ? ((conversionCount / visitsCount) * 100).toFixed(2)
           : '0.00'
         
         // 타겟 캠페인 정보 조회
