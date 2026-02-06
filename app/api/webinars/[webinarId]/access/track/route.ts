@@ -93,20 +93,56 @@ export async function POST(
     }
 
     // 모든 사용자(로그인/게스트)의 접속 세션 기록 (webinar_user_sessions)
-    const enteredAt = new Date().toISOString()
-    await admin
+    // 같은 sessionId로 이미 세션이 있으면 새로 생성하지 않음 (중복 방지)
+    const { data: existingSession, error: findSessionError } = await admin
       .from('webinar_user_sessions')
-      .insert({
-        webinar_id: webinarId,
-        user_id: user?.id || null,
-        session_id: sessionId,
-        entered_at: enteredAt,
-        user_agent: request.headers.get('user-agent') || null,
-        referrer: request.headers.get('referer') || null,
-        ip_address: ipAddress,
-        agency_id: webinar.agency_id,
-        client_id: webinar.client_id,
-      })
+      .select('id, entered_at, last_heartbeat_at')
+      .eq('webinar_id', webinarId)
+      .eq('session_id', sessionId)
+      .is('exited_at', null) // 진행 중인 세션만 확인
+      .order('entered_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+
+    if (findSessionError) {
+      console.error('[Access Track] 세션 조회 오류:', findSessionError)
+    }
+
+    if (!existingSession) {
+      // 진행 중인 세션이 없으면 새로 생성
+      const enteredAt = new Date().toISOString()
+      const { error: insertError } = await admin
+        .from('webinar_user_sessions')
+        .insert({
+          webinar_id: webinarId,
+          user_id: user?.id || null,
+          session_id: sessionId,
+          entered_at: enteredAt,
+          user_agent: request.headers.get('user-agent') || null,
+          referrer: request.headers.get('referer') || null,
+          ip_address: ipAddress,
+          agency_id: webinar.agency_id,
+          client_id: webinar.client_id,
+        })
+      
+      if (insertError) {
+        console.error('[Access Track] 세션 생성 오류:', insertError)
+      }
+    } else {
+      // 기존 세션이 있으면 last_heartbeat_at만 업데이트 (세션 갱신)
+      // 단, access/track은 단순 접속 기록이므로 heartbeat는 presence/ping에서 처리
+      // 여기서는 세션이 살아있음을 확인만 함
+      const { error: updateError } = await admin
+        .from('webinar_user_sessions')
+        .update({
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', existingSession.id)
+      
+      if (updateError) {
+        console.error('[Access Track] 세션 업데이트 오류:', updateError)
+      }
+    }
 
     // 세션 정보 반환
     return NextResponse.json({

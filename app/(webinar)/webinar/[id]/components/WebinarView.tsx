@@ -271,6 +271,96 @@ export default function WebinarView({ webinar, isAdminMode = false }: WebinarVie
   // Presence ping (접속 통계 수집)
   usePresencePing(webinar.id)
   
+  // 세션 추적 (Live 페이지에서도 세션 ID 생성 및 추적)
+  useEffect(() => {
+    let intervalId: NodeJS.Timeout | null = null
+
+    const trackAccess = async () => {
+      try {
+        // 세션 ID 가져오기 또는 생성
+        let sessionId = localStorage.getItem(`webinar_session_${webinar.id}`)
+        if (!sessionId) {
+          sessionId = `session_${Date.now()}_${Math.random().toString(36).substring(7)}`
+          localStorage.setItem(`webinar_session_${webinar.id}`, sessionId)
+        }
+
+        // 접속 기록 API 호출
+        await fetch(`/api/webinars/${webinar.id}/access/track`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ sessionId }),
+        })
+
+        // 주기적으로 세션 갱신 (5분마다)
+        intervalId = setInterval(async () => {
+          try {
+            await fetch(`/api/webinars/${webinar.id}/access/track`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              credentials: 'include',
+              body: JSON.stringify({ sessionId }),
+            })
+          } catch (error) {
+            console.debug('[WebinarView] 세션 갱신 실패:', error)
+          }
+        }, 5 * 60 * 1000) // 5분
+      } catch (error) {
+        console.debug('[WebinarView] 접속 기록 실패:', error)
+      }
+    }
+
+    trackAccess()
+
+    // 퇴장 기록 함수
+    const trackExit = async (sessionId: string) => {
+      try {
+        const exitData = JSON.stringify({ sessionId })
+        const blob = new Blob([exitData], { type: 'application/json' })
+        
+        if (navigator.sendBeacon) {
+          navigator.sendBeacon(`/api/webinars/${webinar.id}/access/exit`, blob)
+        } else {
+          await fetch(`/api/webinars/${webinar.id}/access/exit`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: exitData,
+            keepalive: true,
+          })
+        }
+      } catch (error) {
+        console.debug('[WebinarView] 퇴장 기록 실패:', error)
+      }
+    }
+
+    // 페이지 언로드 시 퇴장 기록
+    const handlePageHide = (e: PageTransitionEvent) => {
+      // 페이지가 새로고침/탭 전환으로 숨겨질 때만 퇴장 기록
+      // persisted가 true면 페이지가 bfcache에 저장된 것 (뒤로가기 등)
+      if (!e.persisted) {
+        const sessionId = localStorage.getItem(`webinar_session_${webinar.id}`)
+        if (sessionId) {
+          trackExit(sessionId)
+        }
+      }
+    }
+
+    window.addEventListener('pagehide', handlePageHide)
+
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId)
+      }
+      window.removeEventListener('pagehide', handlePageHide)
+      
+      // 컴포넌트 언마운트 시 퇴장 기록
+      const sessionId = localStorage.getItem(`webinar_session_${webinar.id}`)
+      if (sessionId) {
+        trackExit(sessionId)
+      }
+    }
+  }, [webinar.id])
+  
   // 중복 로그인 방지: 세션 관리 (관리자 제외)
   useEffect(() => {
     // 관리자는 중복 로그인 방지 제외

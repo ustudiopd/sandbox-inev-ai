@@ -321,6 +321,7 @@ export default function WebinarEntry({ webinar, isWertPage: serverIsWertPage }: 
         await fetch(`/api/webinars/${webinar.id}/access/track`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
+          credentials: 'include', // 쿠키 포함하여 인증 정보 전달
           body: JSON.stringify({ sessionId }),
         })
 
@@ -330,6 +331,7 @@ export default function WebinarEntry({ webinar, isWertPage: serverIsWertPage }: 
             await fetch(`/api/webinars/${webinar.id}/access/track`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
+              credentials: 'include', // 쿠키 포함하여 인증 정보 전달
               body: JSON.stringify({ sessionId }),
             })
           } catch (error) {
@@ -367,49 +369,36 @@ export default function WebinarEntry({ webinar, isWertPage: serverIsWertPage }: 
     }
 
     // 페이지 언로드 시 퇴장 기록
-    const handleBeforeUnload = () => {
-      const sessionId = localStorage.getItem(`webinar_session_${webinar.id}`)
-      if (sessionId) {
-        trackExit(sessionId)
+    // pagehide 이벤트 사용: 실제로 페이지를 떠날 때만 퇴장 기록
+    // persisted가 true면 bfcache에 저장 (리로드 가능성), false면 실제 퇴장
+    const handlePageHide = (e: PageTransitionEvent) => {
+      // persisted가 false인 경우에만 퇴장 기록 (실제로 페이지를 떠나는 경우)
+      // persisted가 true면 리로드 가능성이 있으므로 퇴장 기록하지 않음
+      // (리로드 후 재접속 시 새 세션이 생성됨)
+      if (!e.persisted) {
+        const sessionId = localStorage.getItem(`webinar_session_${webinar.id}`)
+        if (sessionId) {
+          trackExit(sessionId)
+        }
       }
     }
 
-    window.addEventListener('beforeunload', handleBeforeUnload)
+    // beforeunload는 경고 표시용으로만 사용, 퇴장 기록은 pagehide에서 처리
+    window.addEventListener('pagehide', handlePageHide)
 
     // cleanup
     return () => {
       if (intervalId) {
         clearInterval(intervalId)
       }
-      window.removeEventListener('beforeunload', handleBeforeUnload)
-      
-      // 컴포넌트 언마운트 시에도 퇴장 기록 시도
-      const sessionId = localStorage.getItem(`webinar_session_${webinar.id}`)
-      if (sessionId) {
-        trackExit(sessionId)
-      }
+      window.removeEventListener('pagehide', handlePageHide)
+      // cleanup에서는 퇴장 기록하지 않음 (pagehide 이벤트에서만 처리)
+      // 페이지 리로드 시에도 cleanup이 실행되므로 중복 퇴장 기록 방지
     }
   }, [webinar.id])
 
-  // 경로 변경 감지 (다른 페이지로 이동 시 퇴장 기록)
-  useEffect(() => {
-    const currentPath = pathname
-    return () => {
-      // 경로가 변경되면 (웨비나 페이지를 벗어나면) 퇴장 기록
-      if (pathname !== currentPath) {
-        const sessionId = localStorage.getItem(`webinar_session_${webinar.id}`)
-        if (sessionId) {
-          fetch(`/api/webinars/${webinar.id}/access/exit`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ sessionId }),
-          }).catch((error) => {
-            console.debug('[WebinarEntry] 경로 변경 시 퇴장 기록 실패:', error)
-          })
-        }
-      }
-    }
-  }, [pathname, webinar.id])
+  // 경로 변경 감지 제거: App Router에서는 pathname 변경 감지가 불안정함
+  // 실제 퇴장은 pagehide 이벤트에서만 처리
   
   useEffect(() => {
     // URL에서 이메일 인증 확인 파라미터 체크
