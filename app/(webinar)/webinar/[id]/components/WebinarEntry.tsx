@@ -245,6 +245,29 @@ export default function WebinarEntry({ webinar, isWertPage: serverIsWertPage }: 
     }
     }, [searchParams, webinar.id, webinar.registration_campaign_id, webinarPath, isSlug149402Or149400, autoEntering, loading, supabase])
 
+  // URL 해시 확인 및 로그인 폼으로 스크롤
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    
+    const hash = window.location.hash
+    if (hash === '#login') {
+      // 약간의 지연 후 스크롤 (페이지 렌더링 완료 대기)
+      setTimeout(() => {
+        const loginSection = document.getElementById('login-section')
+        if (loginSection) {
+          loginSection.scrollIntoView({ behavior: 'smooth', block: 'start' })
+          // 포커스를 첫 번째 입력 필드로 이동
+          setTimeout(() => {
+            const firstInput = loginSection.querySelector('input[type="text"], input[type="email"]') as HTMLInputElement
+            if (firstInput) {
+              firstInput.focus()
+            }
+          }, 500)
+        }
+      }, 100)
+    }
+  }, [])
+
   // Visit 수집 (웨비나 입장 페이지 진입 시 — 통계 시스템 연동)
   useEffect(() => {
     if (!webinar.id) return
@@ -2061,10 +2084,10 @@ export default function WebinarEntry({ webinar, isWertPage: serverIsWertPage }: 
               </section>
               
               {/* Form Section - 이름+이메일 로그인 */}
-              <section className="registration-form-section">
+              <section id="login-section" className="registration-form-section">
                 <div className="registration-form-container">
                   <Link 
-                    href={isSlug149400 ? '/event/149400' : '/event/149403'}
+                    href="/event/149403"
                     className="back-to-main-link"
                     style={{ 
                       color: '#666', 

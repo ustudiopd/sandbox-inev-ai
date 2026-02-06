@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, usePathname } from "next/navigation";
 import { extractUTMParams } from "@/lib/utils/utm";
 import { getOrCreateSessionId } from "@/lib/utils/session";
 
@@ -246,6 +246,10 @@ function OrganizationCarousel() {
 
 export function WebinarFormWertPageContent() {
   const searchParams = useSearchParams()
+  const pathname = usePathname()
+  
+  // 현재 경로에 따라 웨비나 링크 결정
+  const webinarLink = pathname?.includes('/149400') ? '/webinar/149400' : '/webinar/149402'
   
   // URL에서 UTM 파라미터 추출
   const utmParams = extractUTMParams(searchParams)
@@ -438,7 +442,7 @@ export function WebinarFormWertPageContent() {
               />
             </Link>
             <Link
-              href="/webinar/149402"
+              href={`${webinarLink}#login`}
               className="w-auto sm:self-stretch px-4 sm:px-8 lg:pl-16 lg:pr-10 py-2.5 sm:py-3 lg:py-6 bg-[#000000] rounded-full lg:rounded-[200px] inline-flex justify-center items-center gap-2 sm:gap-3 lg:gap-6 overflow-hidden min-h-[44px] sm:min-h-[48px]"
             >
               <div className="text-center justify-start text-[#ffffff] font-bold text-sm sm:text-lg lg:text-[36px] leading-tight" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>

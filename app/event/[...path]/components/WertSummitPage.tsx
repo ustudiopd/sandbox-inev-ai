@@ -2,8 +2,14 @@
 
 import { useEffect } from 'react'
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 
 export default function WertSummitPage() {
+  const pathname = usePathname()
+  
+  // 현재 경로에 따라 웨비나 링크 결정
+  const webinarLink = pathname?.includes('/149400') ? '/webinar/149400' : '/webinar/149402'
+  
   useEffect(() => {
     // 스크롤 부드럽게
     document.documentElement.style.scrollBehavior = 'smooth'
@@ -354,7 +360,7 @@ export default function WertSummitPage() {
           <Link href="/event/149403/register" className="register-button">
             등록하기
           </Link>
-          <Link href="/webinar/149402" className="webinar-button">
+          <Link href={`${webinarLink}#login`} className="webinar-button">
             웨비나 시청
           </Link>
         </div>
