@@ -19,19 +19,22 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ webinarId: string }> }
 ) {
-  try {
+try {
     const { webinarId } = await params
+    console.log(`[Presence Ping API] 요청 받음: webinarId=${webinarId}`)
     const supabase = await createServerSupabase()
     const admin = createAdminSupabase()
 
     // 인증 확인
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) {
+      console.log(`[Presence Ping API] 인증 실패: webinarId=${webinarId}, error=${authError?.message || 'user 없음'}`)
       return NextResponse.json(
         { success: false, error: '인증이 필요합니다.' },
         { status: 401 }
       )
     }
+    console.log(`[Presence Ping API] 인증 성공: webinarId=${webinarId}, user_id=${user.id}`)
 
     // Body에서 session_id 옵션 필드 읽기 (하위호환: 없어도 됨)
     let sessionId: string | undefined
@@ -169,7 +172,7 @@ export async function POST(
       // 최적화: SELECT 제거, RPC 함수로 조건부 UPDATE 1번만 실행
       if (sessionId) {
         const now = new Date().toISOString()
-        console.log(`[Presence Ping] session_id 받음: ${sessionId}, webinar_id: ${actualWebinarId}`)
+        console.log(`[Presence Ping] 받은 값: webinarId=${actualWebinarId}, sessionId=${sessionId}, userId=${user.id}`)
         
         // 서버측 throttle 체크 (최소 갱신 간격 60초)
         const { data: throttleCheck, error: throttleError } = await admin.rpc('check_heartbeat_throttle', {
@@ -198,13 +201,15 @@ export async function POST(
             // 세션 업데이트 실패해도 presence ping은 성공했으므로 계속 진행
           } else if (heartbeatResult && !heartbeatResult.success) {
             // 세션이 없거나 이미 종료됨 (정상적인 경우일 수 있음)
-            console.log(`[Presence Ping] 활성 세션 없음: ${heartbeatResult.reason}`)
+            const updatedRows = heartbeatResult.updated_rows || 0
+            console.log(`[Presence Ping] DB 업데이트 실패: updatedRows=${updatedRows}, reason=${heartbeatResult.reason}`)
           } else if (heartbeatResult && heartbeatResult.success) {
-            console.log(`[Presence Ping] Heartbeat 업데이트 성공: watched_seconds_raw=${heartbeatResult.watched_seconds_raw}`)
+            const updatedRows = heartbeatResult.updated_rows || 1
+            console.log(`[Presence Ping] DB 업데이트 성공: updatedRows=${updatedRows}, watched_seconds_raw=${heartbeatResult.watched_seconds_raw}`)
           }
         } else {
           // throttle: 최소 간격 이내이므로 업데이트 스킵
-          console.log('[Presence Ping] Throttle: 최소 간격 이내, 업데이트 스킵')
+          console.log('[Presence Ping] Throttle: 최소 간격 이내, 업데이트 스킵 (updatedRows=0)')
         }
       } else {
         console.log('[Presence Ping] session_id가 없어 heartbeat 업데이트 스킵')
@@ -216,8 +221,9 @@ export async function POST(
 
     // 등록이 없어도 session_id가 있으면 heartbeat만 업데이트 (하위 호환성)
     if (sessionId) {
-      console.log(`[Presence Ping] 등록 없지만 heartbeat 업데이트 진행: user_id=${user.id}, session_id=${sessionId}`)
       const now = new Date().toISOString()
+      console.log(`[Presence Ping] 받은 값: webinarId=${actualWebinarId}, sessionId=${sessionId}, userId=${user.id}`)
+      console.log(`[Presence Ping] 등록 없지만 heartbeat 업데이트 진행`)
       
       // 서버측 throttle 체크 (최소 갱신 간격 60초)
       const { data: throttleCheck, error: throttleError } = await admin.rpc('check_heartbeat_throttle', {
@@ -244,12 +250,14 @@ export async function POST(
         if (heartbeatError) {
           console.error('[Presence Ping] 세션 heartbeat 업데이트 오류:', heartbeatError)
         } else if (heartbeatResult && !heartbeatResult.success) {
-          console.log(`[Presence Ping] 활성 세션 없음: ${heartbeatResult.reason}`)
+          const updatedRows = heartbeatResult.updated_rows || 0
+          console.log(`[Presence Ping] DB 업데이트 실패: updatedRows=${updatedRows}, reason=${heartbeatResult.reason}`)
         } else if (heartbeatResult && heartbeatResult.success) {
-          console.log(`[Presence Ping] Heartbeat 업데이트 성공: watched_seconds_raw=${heartbeatResult.watched_seconds_raw}`)
+          const updatedRows = heartbeatResult.updated_rows || 1
+          console.log(`[Presence Ping] DB 업데이트 성공: updatedRows=${updatedRows}, watched_seconds_raw=${heartbeatResult.watched_seconds_raw}`)
         }
       } else {
-        console.log('[Presence Ping] Throttle: 최소 간격 이내, 업데이트 스킵')
+        console.log('[Presence Ping] Throttle: 최소 간격 이내, 업데이트 스킵 (updatedRows=0)')
       }
 
       // heartbeat 업데이트 완료, 204 반환
@@ -331,7 +339,7 @@ export async function POST(
     // 최적화: SELECT 제거, RPC 함수로 조건부 UPDATE 1번만 실행
     if (sessionId) {
       const now = new Date().toISOString()
-      console.log(`[Presence Ping] 관리자 - session_id 받음: ${sessionId}, webinar_id: ${actualWebinarId}`)
+      console.log(`[Presence Ping] 받은 값: webinarId=${actualWebinarId}, sessionId=${sessionId}, userId=${user.id} (관리자)`)
       
       // 서버측 throttle 체크 (최소 갱신 간격 60초)
       const { data: throttleCheck, error: throttleError } = await admin.rpc('check_heartbeat_throttle', {
@@ -360,13 +368,15 @@ export async function POST(
           // 세션 업데이트 실패해도 계속 진행
         } else if (heartbeatResult && !heartbeatResult.success) {
           // 세션이 없거나 이미 종료됨 (정상적인 경우일 수 있음)
-          console.log(`[Presence Ping] 관리자 - 활성 세션 없음: ${heartbeatResult.reason}`)
+          const updatedRows = heartbeatResult.updated_rows || 0
+          console.log(`[Presence Ping] 관리자 - DB 업데이트 실패: updatedRows=${updatedRows}, reason=${heartbeatResult.reason}`)
         } else if (heartbeatResult && heartbeatResult.success) {
-          console.log(`[Presence Ping] 관리자 - Heartbeat 업데이트 성공: watched_seconds_raw=${heartbeatResult.watched_seconds_raw}`)
+          const updatedRows = heartbeatResult.updated_rows || 1
+          console.log(`[Presence Ping] 관리자 - DB 업데이트 성공: updatedRows=${updatedRows}, watched_seconds_raw=${heartbeatResult.watched_seconds_raw}`)
         }
       } else {
         // throttle: 최소 간격 이내이므로 업데이트 스킵
-        console.log('[Presence Ping] 관리자 - Throttle: 최소 간격 이내, 업데이트 스킵')
+        console.log('[Presence Ping] 관리자 - Throttle: 최소 간격 이내, 업데이트 스킵 (updatedRows=0)')
       }
     } else {
       console.log('[Presence Ping] 관리자 - session_id가 없어 heartbeat 업데이트 스킵')

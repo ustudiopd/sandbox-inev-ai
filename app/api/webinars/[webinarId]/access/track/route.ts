@@ -93,54 +93,32 @@ export async function POST(
     }
 
     // 모든 사용자(로그인/게스트)의 접속 세션 기록 (webinar_user_sessions)
-    // 같은 sessionId로 이미 세션이 있으면 새로 생성하지 않음 (중복 방지)
-    const { data: existingSession, error: findSessionError } = await admin
+    // UPSERT 사용: (webinar_id, session_id) UNIQUE 제약으로 중복 row 생성 방지
+    const enteredAt = new Date().toISOString()
+    const { error: upsertError } = await admin
       .from('webinar_user_sessions')
-      .select('id, entered_at, last_heartbeat_at')
-      .eq('webinar_id', webinarId)
-      .eq('session_id', sessionId)
-      .is('exited_at', null) // 진행 중인 세션만 확인
-      .order('entered_at', { ascending: false })
-      .limit(1)
-      .maybeSingle()
-
-    if (findSessionError) {
-      console.error('[Access Track] 세션 조회 오류:', findSessionError)
-    }
-
-    if (!existingSession) {
-      // 진행 중인 세션이 없으면 새로 생성
-      const enteredAt = new Date().toISOString()
-      const { error: insertError } = await admin
-        .from('webinar_user_sessions')
-        .insert({
-          webinar_id: webinarId,
-          user_id: user?.id || null,
-          session_id: sessionId,
-          entered_at: enteredAt,
-          user_agent: request.headers.get('user-agent') || null,
-          referrer: request.headers.get('referer') || null,
-          ip_address: ipAddress,
-          agency_id: webinar.agency_id,
-          client_id: webinar.client_id,
-        })
-      
-      if (insertError) {
-        console.error('[Access Track] 세션 생성 오류:', insertError)
-      }
-    } else {
-      // 기존 세션이 있으면 last_heartbeat_at만 업데이트 (세션 갱신)
-      // 단, access/track은 단순 접속 기록이므로 heartbeat는 presence/ping에서 처리
-      // 여기서는 세션이 살아있음을 확인만 함
-      const { error: updateError } = await admin
-        .from('webinar_user_sessions')
-        .update({
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', existingSession.id)
-      
-      if (updateError) {
-        console.error('[Access Track] 세션 업데이트 오류:', updateError)
+      .upsert({
+        webinar_id: webinarId,
+        user_id: user?.id || null,
+        session_id: sessionId,
+        entered_at: enteredAt,
+        exited_at: null, // 재입장 시 exited_at을 null로 리셋
+        user_agent: request.headers.get('user-agent') || null,
+        referrer: request.headers.get('referer') || null,
+        ip_address: ipAddress,
+        agency_id: webinar.agency_id,
+        client_id: webinar.client_id,
+        updated_at: enteredAt,
+      }, {
+        onConflict: 'webinar_id,session_id',
+      })
+    
+    if (upsertError) {
+      console.error('[Access Track] 세션 UPSERT 오류:', upsertError)
+      // UNIQUE 제약 위반은 정상적인 경우일 수 있음 (동시 요청)
+      // 하지만 다른 오류는 로그로 기록
+      if (upsertError.code !== '23505') {
+        console.error('[Access Track] UPSERT 실패 상세:', JSON.stringify(upsertError, null, 2))
       }
     }
 

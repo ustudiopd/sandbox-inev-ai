@@ -32,11 +32,15 @@ export function usePresencePing(webinarId: string | null) {
 
   // ping 전송 함수
   const sendPing = useCallback(async () => {
-    if (!webinarId) return
+    if (!webinarId) {
+      console.log('[Presence Ping] webinarId가 없어 스킵')
+      return
+    }
 
     // 클라이언트 측 중복 방지: 60초 이내 재호출 방지
     const now = Date.now()
     if (now - lastPingRef.current < 60000) {
+      console.log('[Presence Ping] 중복 호출 방지 (60초 이내)')
       return
     }
 
@@ -44,6 +48,14 @@ export function usePresencePing(webinarId: string | null) {
       // session_id가 있으면 함께 전송 (옵션)
       const sessionId = getSessionId()
       const body = sessionId ? JSON.stringify({ session_id: sessionId }) : undefined
+
+      // localStorage에서 직접 확인 (디버깅용)
+      let debugSessionId = null
+      try {
+        debugSessionId = localStorage.getItem(`webinar_session_${webinarId}`)
+      } catch {}
+
+      console.log(`[Presence Ping] 전송 시작: webinarId=${webinarId}, sessionId=${sessionId || '없음'}, localStorage=${debugSessionId || '없음'}`)
 
       const response = await fetch(`/api/webinars/${webinarId}/presence/ping`, {
         method: 'POST',
@@ -54,10 +66,15 @@ export function usePresencePing(webinarId: string | null) {
 
       if (response.ok) {
         lastPingRef.current = now
+        console.log(`[Presence Ping] 전송 성공: ${response.status}`)
+      } else {
+        console.error(`[Presence Ping] 전송 실패: ${response.status} ${response.statusText}`)
+        const errorText = await response.text().catch(() => '')
+        console.error(`[Presence Ping] 오류 내용:`, errorText)
       }
     } catch (error) {
       // 네트워크 오류는 조용히 무시 (재시도는 다음 주기에서)
-      console.debug('[Presence Ping] 전송 실패:', error)
+      console.error('[Presence Ping] 전송 실패:', error)
     }
   }, [webinarId, getSessionId])
 
@@ -69,7 +86,12 @@ export function usePresencePing(webinarId: string | null) {
   }, [])
 
   useEffect(() => {
-    if (!webinarId) return
+    if (!webinarId) {
+      console.log('[Presence Ping] webinarId가 없어 초기화 스킵', { webinarId, type: typeof webinarId })
+      return
+    }
+
+    console.log(`[Presence Ping] 초기화: webinarId=${webinarId}`, { webinarId, type: typeof webinarId, pathname })
 
     // 초기 ping 전송
     sendPing()
