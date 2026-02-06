@@ -234,6 +234,7 @@ export default function WebinarView({ webinar, isAdminMode = false }: WebinarVie
   // 중복 로그인 방지: 세션 관리 (관리자 제외)
   const sessionKeyRef = useRef<string | null>(null)
   const sessionChannelRef = useRef<any>(null)
+  const notifiedSessionsRef = useRef<Set<string>>(new Set()) // 이미 알림을 보낸 세션 추적
   
   // Chat 컴포넌트를 한 번만 렌더링하여 중복 구독 방지 (해결책.md 권장사항)
   const chatComponent = useMemo(() => (
@@ -477,22 +478,32 @@ export default function WebinarView({ webinar, isAdminMode = false }: WebinarVie
         })
         
         if (otherSessions.length > 0 && isActive) {
-          // 다른 세션이 있으면 이전 세션들에 종료 알림
-          console.log('[WebinarView] 다른 세션 발견, 이전 세션 종료 알림 전송:', otherSessions.length, '개')
-          
-          // 가장 최근 세션(현재 세션)이 이전 세션들을 종료
-          otherSessions.forEach((otherSession: any) => {
-            ch.send({
-              type: 'broadcast',
-              event: 'session_conflict',
-              payload: {
-                userId: userId,
-                newSessionKey: currentSessionKey,
-                oldSessionKey: otherSession.sessionKey,
-                timestamp: Date.now(),
-              },
-            })
+          // 아직 알림을 보내지 않은 새 세션만 필터링
+          const newSessions = otherSessions.filter((otherSession: any) => {
+            return !notifiedSessionsRef.current.has(otherSession.sessionKey)
           })
+          
+          if (newSessions.length > 0) {
+            // 새로운 세션에만 종료 알림 전송
+            console.log('[WebinarView] 다른 세션 발견, 이전 세션 종료 알림 전송:', newSessions.length, '개')
+            
+            newSessions.forEach((otherSession: any) => {
+              // 알림 전송
+              ch.send({
+                type: 'broadcast',
+                event: 'session_conflict',
+                payload: {
+                  userId: userId,
+                  newSessionKey: currentSessionKey,
+                  oldSessionKey: otherSession.sessionKey,
+                  timestamp: Date.now(),
+                },
+              })
+              
+              // 알림 전송 기록
+              notifiedSessionsRef.current.add(otherSession.sessionKey)
+            })
+          }
         }
       } catch (error) {
         console.error('[WebinarView] 중복 세션 체크 오류:', error)

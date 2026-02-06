@@ -250,6 +250,7 @@ function DrawModal({
   const [participants, setParticipants] = useState<Array<{ participant_id: string; name: string; email: string | null; eligible: boolean }>>([])
   const [filteredParticipants, setFilteredParticipants] = useState<Array<{ participant_id: string; name: string; email: string | null; eligible: boolean }>>([])
   const [searchQuery, setSearchQuery] = useState('')
+  const [showOnlySelected, setShowOnlySelected] = useState(false) // 체크된 사람만 보기 필터
   const [loading, setLoading] = useState(true)
   const [selectedWinners, setSelectedWinners] = useState<string[]>([])
   const [updating, setUpdating] = useState<Record<string, boolean>>({})
@@ -262,20 +263,32 @@ function DrawModal({
   }, [giveaway.id])
 
   useEffect(() => {
+    // 검색 및 체크 필터링
+    let filtered = participants
+
     // 검색 필터링
-    if (!searchQuery.trim()) {
-      setFilteredParticipants(participants)
-    } else {
+    if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase()
-      setFilteredParticipants(
-        participants.filter(
-          (p) =>
-            p.name.toLowerCase().includes(query) ||
-            (p.email && p.email.toLowerCase().includes(query))
-        )
+      filtered = filtered.filter(
+        (p) =>
+          p.name.toLowerCase().includes(query) ||
+          (p.email && p.email.toLowerCase().includes(query))
       )
     }
-  }, [searchQuery, participants])
+
+    // 체크된 사람만 보기 필터
+    if (showOnlySelected) {
+      if (isManual) {
+        // 수동 모드: selectedWinners에 포함된 사람만
+        filtered = filtered.filter((p) => selectedWinners.includes(p.participant_id))
+      } else {
+        // 랜덤 모드: eligible이 true인 사람만
+        filtered = filtered.filter((p) => p.eligible)
+      }
+    }
+
+    setFilteredParticipants(filtered)
+  }, [searchQuery, participants, showOnlySelected, selectedWinners, isManual])
 
   const loadParticipants = async () => {
     try {
@@ -461,8 +474,8 @@ function DrawModal({
           </div>
         )}
 
-        {/* 검색 입력 */}
-        <div className="mb-4">
+        {/* 검색 입력 및 필터 */}
+        <div className="mb-4 space-y-2">
           <input
             type="text"
             placeholder="이름 또는 이메일로 검색..."
@@ -470,6 +483,24 @@ function DrawModal({
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           />
+          <div className="flex items-center gap-2">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={showOnlySelected}
+                onChange={(e) => setShowOnlySelected(e.target.checked)}
+                className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+              />
+              <span className="text-sm text-gray-700">
+                {isManual ? '체크된 사람만 보기' : '추첨 참여자만 보기'}
+              </span>
+            </label>
+            {showOnlySelected && (
+              <span className="text-xs text-gray-500">
+                ({filteredParticipants.length}명 표시 중)
+              </span>
+            )}
+          </div>
         </div>
 
         <div className="flex-1 overflow-y-auto border border-gray-200 rounded-lg">
