@@ -1498,6 +1498,23 @@ export default function WebinarView({ webinar, isAdminMode = false }: WebinarVie
                           </div>
                         </div>
                         <h4 className="text-xs xl:text-sm font-bold text-gray-900 mb-2 line-clamp-2 leading-tight">{session.title}</h4>
+                        {/* SESSION 4일 때 스타벅스 기프티콘 정보 표시 - PC 카드 */}
+                        {session.label === "SESSION 4" && (
+                          <div className="mt-2 mb-2 w-full">
+                            <div className="bg-teal-500 rounded-lg p-1.5 flex flex-row justify-start items-center gap-1.5 min-h-[2rem]">
+                              <div className="text-white font-bold text-[10px] xl:text-xs leading-tight text-left flex-1" style={{ fontFamily: 'Pretendard, sans-serif' }}>
+                                스타벅스 기프티콘 증정
+                              </div>
+                              <Image
+                                src="https://yqsayphssjznthrxpgfb.supabase.co/storage/v1/object/public/webinar-thumbnails/wert/image_2.png"
+                                alt="스타벅스 커피"
+                                width={16}
+                                height={16}
+                                className="w-4 h-4 xl:w-5 xl:h-5 object-contain flex-shrink-0"
+                              />
+                            </div>
+                          </div>
+                        )}
                         {session.speaker && (
                           <div className="mt-auto pt-3 border-t border-gray-200 w-full">
                             <div className="text-xs font-semibold text-gray-900 truncate">{session.speaker.name}</div>
@@ -1557,6 +1574,23 @@ export default function WebinarView({ webinar, isAdminMode = false }: WebinarVie
                         </ul>
                         {session.note && (
                           <p className="text-xs text-gray-500 mt-2">{session.note}</p>
+                        )}
+                        {/* SESSION 4일 때 스타벅스 기프티콘 정보 표시 - 모바일 */}
+                        {session.label === "SESSION 4" && (
+                          <div className="mt-4">
+                            <div className="bg-teal-500 rounded-lg p-2 sm:p-2.5 flex flex-row justify-start items-center gap-2 min-h-[2.5rem] sm:min-h-[2.75rem]">
+                              <div className="text-white font-bold text-xs sm:text-sm leading-tight text-left flex-1" style={{ fontFamily: 'Pretendard, sans-serif' }}>
+                                스타벅스 아메리카노 Tall 기프티콘 증정
+                              </div>
+                              <Image
+                                src="https://yqsayphssjznthrxpgfb.supabase.co/storage/v1/object/public/webinar-thumbnails/wert/image_2.png"
+                                alt="스타벅스 커피"
+                                width={24}
+                                height={24}
+                                className="w-5 h-5 sm:w-6 sm:h-6 object-contain flex-shrink-0"
+                              />
+                            </div>
+                          </div>
                         )}
                         {session.speaker && (
                           <div className="mt-4 pt-4 border-t border-gray-200 flex items-center gap-4">
@@ -1647,16 +1681,16 @@ export default function WebinarView({ webinar, isAdminMode = false }: WebinarVie
                               {/* SESSION 4일 때 스타벅스 기프티콘 정보 표시 */}
                               {session.label === "SESSION 4" && (
                                 <div className="mt-4">
-                                  <div className="bg-black rounded-lg p-2 flex flex-row justify-start items-center gap-2 h-5">
-                                    <div className="text-white font-bold text-xs leading-tight text-left flex-1" style={{ fontFamily: 'Pretendard, sans-serif' }}>
+                                  <div className="bg-teal-500 rounded-lg p-2.5 sm:p-3 flex flex-row justify-start items-center gap-2.5 sm:gap-3 min-h-[3rem] sm:min-h-[3.5rem]">
+                                    <div className="text-white font-bold text-sm sm:text-base leading-tight text-left flex-1" style={{ fontFamily: 'Pretendard, sans-serif' }}>
                                       스타벅스 아메리카노 Tall 기프티콘 증정
                                     </div>
                                     <Image
                                       src="https://yqsayphssjznthrxpgfb.supabase.co/storage/v1/object/public/webinar-thumbnails/wert/image_2.png"
                                       alt="스타벅스 커피"
-                                      width={20}
-                                      height={20}
-                                      className="w-5 h-5 object-contain flex-shrink-0"
+                                      width={28}
+                                      height={28}
+                                      className="w-6 h-6 sm:w-7 sm:h-7 object-contain flex-shrink-0"
                                     />
                                   </div>
                                 </div>
