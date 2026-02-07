@@ -67,6 +67,7 @@ export default function QA({
   const [currentUserProfile, setCurrentUserProfile] = useState<{ display_name?: string; email?: string } | null>(null)
   const supabase = createClientSupabase()
   const filterRef = useRef<'all' | 'mine'>('all')
+  const manualCloseRef = useRef<boolean>(false) // 수동 종료 플래그 (Chat.tsx와 동일)
   
   // filter 상태 변경 시 ref 업데이트
   useEffect(() => {
@@ -230,7 +231,37 @@ export default function QA({
             clearInterval(fallbackInterval)
             fallbackInterval = null
           }
-        } else if (['CHANNEL_ERROR', 'TIMED_OUT', 'CLOSED'].includes(status)) {
+        } else if (status === 'CLOSED') {
+          // A번 수정안: 수동 종료인 경우 실패로 카운팅하지 않음 (Chat.tsx와 동일)
+          if (manualCloseRef.current || !err) {
+            // 정상/수동 종료: 실패로 간주하지 않음
+            console.log('✅ 질문 채널 정상 종료 (수동 해제 또는 에러 없음)')
+            return
+          }
+          // 에러가 있는 CLOSED는 실패로 처리
+          console.warn(`⚠️ 질문 실시간 구독 실패 (${status})`)
+          
+          if (reconnectTries < MAX_RECONNECT_TRIES) {
+            reconnectTries++
+            const delay = Math.min(1000 * Math.pow(2, reconnectTries - 1), 10000) // 지수 백오프
+            console.log(`${delay}ms 후 재연결 시도 (${reconnectTries}/${MAX_RECONNECT_TRIES})...`)
+            const timeout = setTimeout(() => {
+              // 채널 재구독
+              channel.unsubscribe().then(() => {
+                channel.subscribe()
+              })
+            }, delay)
+            reconnectTimeouts.push(timeout)
+          } else {
+            console.warn('질문 실시간 구독 최대 재시도 횟수 초과, 폴백 폴링 활성화')
+            // 폴백: 주기적으로 질문 새로고침 (현재 필터 유지)
+            if (!fallbackInterval) {
+              fallbackInterval = setInterval(() => {
+                loadQuestions(filterRef.current)
+              }, 5000) // 5초마다 폴링
+            }
+          }
+        } else if (['CHANNEL_ERROR', 'TIMED_OUT'].includes(status)) {
           console.warn(`⚠️ 질문 실시간 구독 실패 (${status})`)
           
           if (reconnectTries < MAX_RECONNECT_TRIES) {
@@ -257,6 +288,9 @@ export default function QA({
       })
     
     return () => {
+      // 수동 종료 플래그 설정 (cleanup 시 CLOSED가 실패로 처리되지 않도록)
+      manualCloseRef.current = true
+      
       // 모든 재연결 타임아웃 정리
       reconnectTimeouts.forEach(timeout => clearTimeout(timeout))
       // 폴백 폴링 정리
@@ -266,8 +300,16 @@ export default function QA({
       // 채널 구독 해제
       channel.unsubscribe().then(() => {
         supabase.removeChannel(channel)
+        // cleanup 완료 후 플래그 리셋 (다음 마운트를 위해)
+        setTimeout(() => {
+          manualCloseRef.current = false
+        }, 100)
       }).catch((err) => {
         console.warn('질문 채널 구독 해제 오류:', err)
+        // 에러 발생 시에도 플래그 리셋
+        setTimeout(() => {
+          manualCloseRef.current = false
+        }, 100)
       })
     }
   }, [webinarId, showOnlyMine, filter, isAdminMode, supabase, loadQuestions])
