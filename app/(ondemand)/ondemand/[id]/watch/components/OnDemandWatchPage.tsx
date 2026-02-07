@@ -464,6 +464,11 @@ function getThumbnailUrl(session: Session, order: number): string | null {
     return session.thumbnail_url
   }
   
+  // Use thumb_se1.jpg for first session (order 1)
+  if (order === 1) {
+    return `/img/hpe/thumb_se1.jpg`
+  }
+  
   // Use thumb1.png, thumb2.png, thumb3.png, thumb4.png based on order
   if (order >= 1 && order <= 4) {
     return `/img/hpe/thumb${order}.png`
