@@ -1511,9 +1511,10 @@ export default function Chat({
     }
   }, [messages.length, loading]) // messages.length만 감지 (내용 변경은 무시)
   
-  const handleSend = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!newMessage.trim() || sending || !canSend) return
+  const handleSend = async (e?: React.FormEvent, messageOverride?: string) => {
+    e?.preventDefault()
+    const messageToSend = messageOverride || newMessage
+    if (!messageToSend.trim() || sending || !canSend) return
     
     if (!currentUser) {
       alert('로그인이 필요합니다')
@@ -1529,7 +1530,7 @@ export default function Chat({
     }
     
     const tempId = `temp-${clientMsgId}`
-    const messageContent = newMessage.trim()
+    const messageContent = messageToSend.trim()
     const now = new Date().toISOString()
     
     // 전송 시작 표시
@@ -1818,7 +1819,9 @@ export default function Chat({
             {/* 인사 버튼 (테스트용) */}
             <button
               type="button"
-              onClick={() => {
+              onClick={async () => {
+                if (sending || !canSend) return
+                
                 const greetings = [
                   '안녕하세요!',
                   '반갑습니다!',
@@ -1827,11 +1830,13 @@ export default function Chat({
                   '반가워요!'
                 ]
                 const randomGreeting = greetings[Math.floor(Math.random() * greetings.length)]
-                setNewMessage(randomGreeting)
+                
+                // 메시지를 바로 전송 (파라미터로 전달)
+                handleSend(undefined, randomGreeting)
               }}
               disabled={sending}
               className="px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              title="인사말 자동 입력"
+              title="인사말 자동 입력 및 전송"
             >
               👋
             </button>
