@@ -47,14 +47,25 @@ export async function POST(
     // 로그인한 사용자인 경우 webinar_live_presence에 기록
     if (user) {
       // 웨비나 등록 확인 (자동 등록)
-      const { data: registration } = await admin
+      // P0-PR1: registrations.id 제거 - 복합 PK이므로 webinar_id, user_id로 확인
+      const { data: registration, error: regError } = await admin
         .from('registrations')
-        .select('id')
+        .select('webinar_id, user_id')
         .eq('webinar_id', webinarId)
         .eq('user_id', user.id)
         .maybeSingle()
+      
+      // P0-PR1: 에러 발생 시 즉시 종료 (Fail-fast)
+      if (regError) {
+        console.error('[Access Track] 등록 조회 실패:', regError)
+        return NextResponse.json(
+          { success: false, error: '등록 정보를 확인할 수 없습니다.' },
+          { status: 500 }
+        )
+      }
 
       // 등록되어 있지 않으면 자동 등록 (manual 등록)
+      // P0-PR3: 409를 정상 흐름으로 흡수 - upsert 사용으로 멱등성 보장
       if (!registration) {
         // 사용자 이메일 확인
         const { data: profile } = await admin
@@ -67,14 +78,24 @@ export async function POST(
         const isPdAccount = profile?.email?.toLowerCase() === 'pd@ustudio.co.kr'
         const role = isPdAccount ? '관리자' : 'attendee'
         
-        await admin
+        // P0-PR3: upsert 사용 - 동시 요청 시 409 에러 대신 정상 흐름으로 수렴
+        const { error: upsertRegError } = await admin
           .from('registrations')
-          .insert({
+          .upsert({
             webinar_id: webinarId,
             user_id: user.id,
             role: role,
             registered_via: 'manual',
+          }, {
+            onConflict: 'webinar_id,user_id',
+            ignoreDuplicates: false, // 중복 시 UPDATE 수행 (멱등성 보장)
           })
+        
+        // P0-PR3: upsert는 409를 발생시키지 않으므로 에러는 다른 원인만 처리
+        if (upsertRegError && upsertRegError.code !== '23505') {
+          // 409가 아닌 다른 에러만 로깅 (409는 정상 흐름으로 처리됨)
+          console.error('[Access Track] 등록 upsert 실패 (409 제외):', upsertRegError)
+        }
       }
 
       // 접속 기록 저장 (webinar_live_presence)
