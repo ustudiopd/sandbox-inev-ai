@@ -246,6 +246,8 @@ export default function QA({
             const delay = Math.min(1000 * Math.pow(2, reconnectTries - 1), 10000) // 지수 백오프
             console.log(`${delay}ms 후 재연결 시도 (${reconnectTries}/${MAX_RECONNECT_TRIES})...`)
             const timeout = setTimeout(() => {
+              // 재연결 시도 전에 수동 종료 플래그 해제 (재연결 중 CLOSED가 정상 종료로 처리되지 않도록)
+              manualCloseRef.current = false
               // 채널 재구독
               channel.unsubscribe().then(() => {
                 channel.subscribe()
@@ -269,6 +271,8 @@ export default function QA({
             const delay = Math.min(1000 * Math.pow(2, reconnectTries - 1), 10000) // 지수 백오프
             console.log(`${delay}ms 후 재연결 시도 (${reconnectTries}/${MAX_RECONNECT_TRIES})...`)
             const timeout = setTimeout(() => {
+              // 재연결 시도 전에 수동 종료 플래그 해제 (재연결 중 CLOSED가 정상 종료로 처리되지 않도록)
+              manualCloseRef.current = false
               // 채널 재구독
               channel.unsubscribe().then(() => {
                 channel.subscribe()
