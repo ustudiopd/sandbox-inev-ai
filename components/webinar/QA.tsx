@@ -371,7 +371,15 @@ export default function QA({
       },
     }
     
-    setQuestions((prev) => [...prev, optimisticQuestion])
+    // 일반 사용자 모드: 채팅처럼 아래에서 위로 올라가는 순서 (맨 뒤에 추가)
+    // 관리자 모드: 위에서 아래로 내려오는 순서 (맨 앞에 추가)
+    setQuestions((prev) => {
+      if (isAdminMode) {
+        return [optimisticQuestion, ...prev]
+      } else {
+        return [...prev, optimisticQuestion]
+      }
+    })
     setNewQuestion('')
     setSending(true)
     

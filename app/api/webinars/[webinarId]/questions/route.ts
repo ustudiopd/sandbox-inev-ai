@@ -75,9 +75,11 @@ export async function GET(
       query = query.neq('status', 'hidden')
     }
     
-    // 정렬 방식: 관리자 모드는 최신이 위(DESC), 일반 사용자는 오래된 것이 위(ASC)
+    // 정렬 방식: 모두 DESC로 받고, 클라이언트에서 렌더링 순서 조정
+    // 관리자 모드: 최신이 위 (그대로 사용)
+    // 일반 사용자: 최신이 아래 (렌더링 시 역순)
     const { data: questions, error: questionsError } = await query
-      .order('created_at', { ascending: !isAdminMode }) // 관리자: DESC, 일반: ASC
+      .order('created_at', { ascending: false }) // 모두 DESC로 받음 (최신이 위)
       .limit(100) // 최대 100개로 제한 (성능 향상)
     
     if (questionsError) {
