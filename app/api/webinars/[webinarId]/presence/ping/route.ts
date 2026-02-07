@@ -64,116 +64,37 @@ try {
 
     // 웨비나 등록 확인 (admin 클라이언트 사용 - RLS 우회)
     // actualWebinarId를 사용하여 등록 확인
-    let { data: registration } = await admin
+    // P0-PR1: registrations.id 제거 - 복합 PK이므로 webinar_id, user_id로 확인
+    const { data: registration, error: regError } = await admin
       .from('registrations')
-      .select('id')
+      .select('webinar_id, user_id')
       .eq('webinar_id', actualWebinarId)
       .eq('user_id', user.id)
       .maybeSingle()
-
-    // 등록되어 있지 않으면 자동 등록 시도 (access/track과 동일한 로직)
-    if (!registration) {
-      console.log(`[Presence Ping] 등록 없음, 자동 등록 시도: user_id=${user.id}, webinar_id=${actualWebinarId}`)
-      
-      // 웨비나 정보 조회 (agency_id, client_id 필요)
-      const { data: webinar } = await admin
-        .from('webinars')
-        .select('agency_id, client_id')
-        .eq('id', actualWebinarId)
-        .single()
-
-      if (webinar) {
-        // 사용자 이메일 확인
-        const { data: profile } = await admin
-          .from('profiles')
-          .select('email')
-          .eq('id', user.id)
-          .single()
-        
-        // pd@ustudio.co.kr 계정만 관리자로 설정, 나머지는 참여자
-        const isPdAccount = profile?.email?.toLowerCase() === 'pd@ustudio.co.kr'
-        const role = isPdAccount ? '관리자' : 'attendee'
-        
-        // 자동 등록 시도
-        const { error: registerError } = await admin
-          .from('registrations')
-          .insert({
-            webinar_id: actualWebinarId,
-            user_id: user.id,
-            role: role,
-            registered_via: 'manual',
-          })
-        
-        if (!registerError) {
-          console.log(`[Presence Ping] 자동 등록 성공: user_id=${user.id}, webinar_id=${actualWebinarId}`)
-          registration = { id: 'auto-registered' } // 등록 완료 표시
-        } else {
-          // 중복 키 에러는 무시 (동시 요청 시 발생 가능)
-          if (registerError.code === '23505') {
-            console.log(`[Presence Ping] 중복 등록 (정상): user_id=${user.id}, webinar_id=${actualWebinarId}`)
-            // 중복이면 등록이 이미 있다는 뜻이므로 다시 조회 (admin 클라이언트 사용)
-            const { data: existingReg } = await admin
-              .from('registrations')
-              .select('id')
-              .eq('webinar_id', actualWebinarId)
-              .eq('user_id', user.id)
-              .maybeSingle()
-            if (existingReg) {
-              registration = existingReg
-            }
-          } else {
-            console.error('[Presence Ping] 자동 등록 실패:', registerError)
-            console.error('[Presence Ping] 등록 실패 상세:', JSON.stringify(registerError, null, 2))
-            // 자동 등록 실패해도 일단 presence ping은 허용 (하위 호환성)
-            // 등록은 WebinarView의 자동 등록 로직에서 처리될 수 있음
-            console.log(`[Presence Ping] 자동 등록 실패했지만 presence ping 허용 (하위 호환): user_id=${user.id}`)
-            registration = { id: 'auto-register-failed' } // 임시로 등록된 것으로 표시
-          }
-        }
-      } else {
-        console.error(`[Presence Ping] 웨비나 정보 조회 실패: webinar_id=${actualWebinarId}`)
-        // 웨비나 정보 조회 실패해도 heartbeat는 허용 (하위 호환성)
-        registration = { id: 'webinar-info-failed' } // 임시로 등록된 것으로 표시
-      }
+    
+    // P0-PR1: 에러 발생 시 즉시 종료 (Fail-fast)
+    if (regError) {
+      console.error('[Presence Ping] 등록 조회 실패:', regError)
+      return NextResponse.json(
+        { success: false, error: '등록 정보를 확인할 수 없습니다.' },
+        { status: 500 }
+      )
     }
 
-    // 등록이 있으면 presence ping RPC 호출, 없어도 heartbeat는 업데이트 가능
-    // session_id가 있으면 heartbeat 업데이트는 항상 진행
+    // P0-PR2: 자동 등록 제거 - 등록이 없으면 관리자 권한 확인으로 진행
+    // 등록 생성 책임은 access/track 또는 register 엔드포인트에만 있음
+
+    // P0-PR2: 등록이 있으면 presence ping RPC 호출
+    // 자동 등록 제거로 인해 registration은 실제 등록만 포함
     if (registration) {
-      // 실제 등록이 있는지 다시 확인 (임시 등록 표시가 아닌 경우)
-      if (registration.id === 'auto-register-failed' || registration.id === 'auto-registered') {
-        // 실제 등록이 있는지 다시 확인
-        const { data: actualRegistration } = await admin
-          .from('registrations')
-          .select('id')
-          .eq('webinar_id', actualWebinarId)
-          .eq('user_id', user.id)
-          .maybeSingle()
-        
-        if (!actualRegistration) {
-          console.log(`[Presence Ping] 실제 등록 없음, RPC 호출 스킵: user_id=${user.id}`)
-          // 등록이 없어도 heartbeat만 업데이트 (presence는 스킵)
-        } else {
-          // 실제 등록이 있으면 presence ping RPC 호출
-          const { error: rpcError } = await supabase.rpc('webinar_presence_ping', {
-            _webinar_id: actualWebinarId,
-          })
+      // 등록이 있으면 presence ping RPC 호출
+      const { error: rpcError } = await supabase.rpc('webinar_presence_ping', {
+        _webinar_id: actualWebinarId,
+      })
 
-          if (rpcError) {
-            console.error('[Presence Ping] RPC 오류:', rpcError)
-            // RPC 실패해도 heartbeat는 계속 진행
-          }
-        }
-      } else {
-        // 실제 등록이 있으면 presence ping RPC 호출
-        const { error: rpcError } = await supabase.rpc('webinar_presence_ping', {
-          _webinar_id: actualWebinarId,
-        })
-
-        if (rpcError) {
-          console.error('[Presence Ping] RPC 오류:', rpcError)
-          // RPC 실패해도 heartbeat는 계속 진행
-        }
+      if (rpcError) {
+        console.error('[Presence Ping] RPC 오류:', rpcError)
+        // RPC 실패해도 heartbeat는 계속 진행
       }
 
       // 2. session_id가 있으면 세션 heartbeat 업데이트 (옵션)
