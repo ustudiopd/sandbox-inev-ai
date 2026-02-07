@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createAdminSupabase } from '@/lib/supabase/admin'
 import { getOnDemandQuery } from '@/lib/utils/ondemand'
+import { getOnDemandAuth } from '@/lib/utils/ondemand-auth'
 
 /**
  * 온디맨드 설문 제출 API (웨비나 설문 로직과 동일)
@@ -44,16 +45,54 @@ export async function POST(
 
     const webinarId = ondemand.id
 
-    // 전화번호가 있는 경우에만 중복 확인 (전화번호 없이도 제출 가능)
+    // 인증 확인 (설문 제출은 인증된 사용자만 가능)
+    console.log('[survey-submit] 인증 확인 시작:', { webinarId, id })
+    const authData = await getOnDemandAuth(webinarId)
+    
+    if (!authData) {
+      console.log('[survey-submit] 인증 실패:', { webinarId, id })
+      return NextResponse.json(
+        { error: '인증이 필요합니다. 로그인 후 다시 시도해주세요.' },
+        { status: 401 }
+      )
+    }
+    
+    console.log('[survey-submit] 인증 성공:', { email: authData.email, name: authData.name })
+    
+    // 등록 여부 재확인 제거 - 이미 인증된 사용자만 접근 가능하므로 불필요
+    // (인증 쿠키는 등록 확인 후에만 설정되므로)
+
+    // 인증된 사용자의 이메일과 이름 사용
+    const userEmail = authData.email.toLowerCase().trim()
+    const userName = authData.name.trim()
+
+    // 이메일 또는 전화번호로 중복 확인
     let existing = null
-    if (phoneNorm) {
-      const { data: existingData } = await admin
+    
+    // 1순위: 이메일로 중복 확인
+    const { data: existingByEmail } = await admin
+      .from('ondemand_survey_responses')
+      .select('survey_no, code6')
+      .eq('webinar_id', webinarId)
+      .eq('email', userEmail)
+      .maybeSingle()
+    
+    if (existingByEmail) {
+      existing = existingByEmail
+    }
+    
+    // 2순위: 전화번호로 중복 확인 (이메일이 없을 경우)
+    if (!existing && phoneNorm) {
+      const { data: existingByPhone } = await admin
         .from('ondemand_survey_responses')
         .select('survey_no, code6')
         .eq('webinar_id', webinarId)
         .eq('phone_norm', phoneNorm)
         .maybeSingle()
-      existing = existingData
+      
+      if (existingByPhone) {
+        existing = existingByPhone
+      }
     }
 
     if (existing) {
@@ -105,7 +144,8 @@ export async function POST(
       .from('ondemand_survey_responses')
       .insert({
         webinar_id: webinarId,
-        name: name?.trim() || null,
+        email: userEmail, // 인증된 사용자의 이메일 저장
+        name: userName || name?.trim() || null, // 인증된 사용자의 이름 우선 사용
         company: company?.trim() || null,
         phone_norm: phoneNorm || null,
         answers: Array.isArray(answers) ? answers : [],

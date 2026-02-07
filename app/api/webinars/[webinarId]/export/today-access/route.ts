@@ -115,29 +115,27 @@ export async function GET(
     const registrationEntriesMap = new Map()
     
     if (webinar.registration_campaign_id) {
-      // event_survey_entries에서 이메일로 매칭 (설문/QnA와 동일한 방식)
+      // event_survey_entries에서 모든 entries를 가져온 후 이메일로 매칭 (설문조사 export와 동일한 방식)
+      const { data: allEntries } = await admin
+        .from('event_survey_entries')
+        .select('registration_data, survey_no, code6, utm_source, utm_medium, utm_campaign, utm_term, utm_content, marketing_campaign_link_id, completed_at, created_at')
+        .eq('campaign_id', webinar.registration_campaign_id)
+      
+      if (allEntries) {
+        allEntries.forEach((entry: any) => {
+          const entryEmail = entry.registration_data?.email
+          if (entryEmail) {
+            const normalizedEmail = entryEmail.toLowerCase().trim()
+            registrationEntriesMap.set(normalizedEmail, entry)
+          }
+        })
+      }
+      
       const emails = Array.from(profilesMap.values())
         .map((p: any) => p.email)
         .filter(Boolean)
       
-      if (emails.length > 0) {
-        const { data: entries } = await admin
-          .from('event_survey_entries')
-          .select('registration_data, survey_no, code6, utm_source, utm_medium, utm_campaign, utm_term, utm_content, marketing_campaign_link_id, completed_at, created_at')
-          .eq('campaign_id', webinar.registration_campaign_id)
-          .in('registration_data->>email', emails.map(e => e.toLowerCase()))
-        
-        if (entries) {
-          entries.forEach((entry: any) => {
-            const email = entry.registration_data?.email?.toLowerCase()?.trim()
-            if (email) {
-              registrationEntriesMap.set(email, entry)
-            }
-          })
-        }
-        
-        console.log(`[Today Access Export] 등록 정보 매칭 완료: ${registrationEntriesMap.size}개 / ${emails.length}개 이메일`)
-      }
+      console.log(`[Today Access Export] 등록 정보 매칭 완료: ${registrationEntriesMap.size}개 entries / ${emails.length}개 이메일`)
     } else {
       // registrations 테이블 조회 (배치로 처리)
       const BATCH_SIZE = 1000

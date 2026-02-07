@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation'
 import { createAdminSupabase } from '@/lib/supabase/admin'
 import { getOnDemandQuery } from '@/lib/utils/ondemand'
+import { requireOnDemandAuth, getOnDemandAuth } from '@/lib/utils/ondemand-auth'
 import OnDemandWatchPage from './components/OnDemandWatchPage'
 
 /**
@@ -37,6 +38,41 @@ export default async function OnDemandWatchHubPage({
       notFound()
     }
     
+    // 인증 확인 (인증되지 않은 경우 자동으로 로그인 페이지로 리다이렉트)
+    // 등록 여부 재확인은 건너뛰어 성능 최적화 (인증 쿠키는 등록 확인 후에만 설정되므로 안전)
+    const authData = await requireOnDemandAuth(ondemand.id, ondemand.slug, true)
+    
+    // 페이지 로딩 시 설문 제출 여부 미리 확인 (인덱스 활용하여 빠른 조회)
+    let surveyStatus: { submitted: boolean; survey_no?: number; code6?: string } | null = null
+    if (authData) {
+      try {
+        const userEmail = authData.email.toLowerCase().trim()
+        const { data: existing } = await admin
+          .from('ondemand_survey_responses')
+          .select('survey_no, code6')
+          .eq('webinar_id', ondemand.id)
+          .eq('email', userEmail)
+          .limit(1)
+          .maybeSingle()
+        
+        if (existing) {
+          surveyStatus = {
+            submitted: true,
+            survey_no: existing.survey_no,
+            code6: existing.code6,
+          }
+        } else {
+          surveyStatus = {
+            submitted: false,
+          }
+        }
+      } catch (error) {
+        // 설문 확인 실패해도 페이지는 정상 동작하도록
+        console.error('[OnDemandWatchHubPage] 설문 제출 여부 확인 오류:', error)
+        surveyStatus = { submitted: false }
+      }
+    }
+    
     // settings에서 세션 정보 추출
     const settings = ondemand.settings as any
     const sessions = settings?.ondemand?.sessions || []
@@ -59,7 +95,7 @@ export default async function OnDemandWatchHubPage({
       clients: clientData || undefined,
     }
     
-    return <OnDemandWatchPage webinar={ondemandData} />
+    return <OnDemandWatchPage webinar={ondemandData} initialSurveyStatus={surveyStatus} />
   } catch (error) {
     console.error('[OnDemandWatchHubPage] 페이지 로드 오류:', error)
     notFound()

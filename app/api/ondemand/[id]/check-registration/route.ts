@@ -1,6 +1,7 @@
 import { createAdminSupabase } from '@/lib/supabase/admin'
 import { getOnDemandQuery } from '@/lib/utils/ondemand'
 import { NextResponse } from 'next/server'
+import { cookies } from 'next/headers'
 
 /**
  * 온디맨드 등록 여부 확인 API
@@ -144,9 +145,30 @@ export async function POST(
         }
         
         if (foundEntry) {
-          return NextResponse.json({
+          // 로그인 성공 시 인증 쿠키 설정
+          const cookieStore = await cookies()
+          const authCookieValue = JSON.stringify({
+            webinarId: ondemand.id,
+            email: emailLower,
+            name: nameTrimmed,
+            verifiedAt: Date.now(),
+          })
+          
+          const response = NextResponse.json({
             registered: true,
           })
+          
+          // httpOnly 쿠키로 설정하여 XSS 공격 방지
+          // path를 '/'로 설정하여 모든 경로에서 접근 가능 (쿠키 이름에 웨비나 ID 포함으로 구분)
+          response.cookies.set(`ondemand_auth_${ondemand.id}`, authCookieValue, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+            maxAge: 7 * 24 * 60 * 60, // 7일
+            path: '/', // 모든 경로에서 접근 가능
+          })
+          
+          return response
         }
       }
       
@@ -182,16 +204,58 @@ export async function POST(
                 regNameNormalized.includes(inputNameNormalized) || 
                 inputNameNormalized.includes(regNameNormalized)) {
               console.log('[check-registration] registrations에서 이름 매칭 성공')
-              return NextResponse.json({
+              
+              // 로그인 성공 시 인증 쿠키 설정
+              const authCookieValue = JSON.stringify({
+                webinarId: ondemand.id,
+                email: emailLower,
+                name: nameTrimmed,
+                verifiedAt: Date.now(),
+              })
+              
+              const response = NextResponse.json({
                 registered: true,
               })
+              
+              // httpOnly 쿠키로 설정하여 XSS 공격 방지
+              // path를 '/'로 설정하여 모든 경로에서 접근 가능 (쿠키 이름에 웨비나 ID 포함으로 구분)
+              response.cookies.set(`ondemand_auth_${ondemand.id}`, authCookieValue, {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'lax',
+                maxAge: 7 * 24 * 60 * 60, // 7일
+                path: '/', // 모든 경로에서 접근 가능
+              })
+              
+              return response
             }
           } else {
             // 이름이 없으면 이메일만으로 인정
             console.log('[check-registration] registrations에서 이메일만으로 인정')
-            return NextResponse.json({
+            
+            // 로그인 성공 시 인증 쿠키 설정
+            const authCookieValue = JSON.stringify({
+              webinarId: ondemand.id,
+              email: emailLower,
+              name: nameTrimmed,
+              verifiedAt: Date.now(),
+            })
+            
+            const response = NextResponse.json({
               registered: true,
             })
+            
+            // httpOnly 쿠키로 설정하여 XSS 공격 방지
+            // path를 '/'로 설정하여 모든 경로에서 접근 가능 (쿠키 이름에 웨비나 ID 포함으로 구분)
+            response.cookies.set(`ondemand_auth_${ondemand.id}`, authCookieValue, {
+              httpOnly: true,
+              secure: process.env.NODE_ENV === 'production',
+              sameSite: 'lax',
+              maxAge: 7 * 24 * 60 * 60, // 7일
+              path: '/', // 모든 경로에서 접근 가능
+            })
+            
+            return response
           }
         }
       }

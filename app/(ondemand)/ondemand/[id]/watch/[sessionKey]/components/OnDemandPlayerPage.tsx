@@ -37,6 +37,7 @@ interface OnDemandWebinar {
 interface OnDemandPlayerPageProps {
   webinar: OnDemandWebinar
   session: Session
+  initialSurveyStatus?: { submitted: boolean; survey_no?: number; code6?: string } | null
 }
 
 /**
@@ -66,14 +67,37 @@ function getThumbnailUrl(session: Session): string | null {
   return null
 }
 
-export default function OnDemandPlayerPage({ webinar, session }: OnDemandPlayerPageProps) {
+export default function OnDemandPlayerPage({ webinar, session, initialSurveyStatus }: OnDemandPlayerPageProps) {
   const [showQnA, setShowQnA] = useState(false)
   const [showSurveyModal, setShowSurveyModal] = useState(false)
+  const [showSuccessAlert, setShowSuccessAlert] = useState(false)
+  const [successData, setSuccessData] = useState<{ survey_no: number; code6: string } | null>(null)
+  const [surveyStatus, setSurveyStatus] = useState(initialSurveyStatus)
   const webinarPath = webinar.slug || webinar.id
+
+  // 설문 버튼 클릭 시 처리
+  const handleSurveyClick = () => {
+    // 이미 제출된 경우 팝업만 표시
+    if (surveyStatus?.submitted && surveyStatus.survey_no && surveyStatus.code6) {
+      setSuccessData({ survey_no: surveyStatus.survey_no, code6: surveyStatus.code6 })
+      setShowSuccessAlert(true)
+      setTimeout(() => {
+        setShowSuccessAlert(false)
+      }, 5000)
+    } else {
+      // 제출되지 않은 경우 모달 열기
+      setShowSurveyModal(true)
+    }
+  }
   
   // Supabase Storage URL 생성
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
-  const hpeVideoBgImageUrl = `${supabaseUrl}/storage/v1/object/public/webinar-thumbnails/hpe/webinar_video_bg.png`
+  const hpeVideoBgImageUrl = supabaseUrl
+    ? `${supabaseUrl}/storage/v1/object/public/webinar-thumbnails/hpe/webinar_video_bg.png`
+    : '/img/hpe/webinar_video_bg.png'
+  const hpeTicketImageUrl = supabaseUrl
+    ? `${supabaseUrl}/storage/v1/object/public/webinar-thumbnails/hpe/ticket.png`
+    : '/img/hpe/ticket.png'
   
   // 비디오 URL 생성
   const videoUrl = session.provider === 'youtube' 
@@ -164,12 +188,12 @@ export default function OnDemandPlayerPage({ webinar, session }: OnDemandPlayerP
                   alt="홈으로"
                   width={48}
                   height={48}
-                  className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 lg:w-[60px] lg:h-[60px] xl:w-16 xl:h-16 object-contain cursor-pointer hover:opacity-80 transition-opacity max-sm:w-8 max-sm:h-8"
+                  className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 lg:w-[60px] lg:h-[60px] xl:w-16 xl:h-16 object-contain cursor-pointer hover:opacity-80 transition-opacity max-sm:w-8 max-sm:h-8 flex-shrink-0"
                   priority
                 />
               </Link>
               {session.title && (
-                <span className="text-white text-lg sm:text-xl md:text-xl lg:text-2xl xl:text-3xl font-medium max-sm:text-base">
+                <span className="text-white text-sm sm:text-base md:text-base lg:text-lg xl:text-[23px] font-medium max-sm:whitespace-normal md:whitespace-nowrap flex-1 min-w-0">
                   {session.title}
                 </span>
               )}
@@ -264,7 +288,7 @@ export default function OnDemandPlayerPage({ webinar, session }: OnDemandPlayerP
               </div>
               
               {/* Ticket Image / 태블릿: 위치 조정 / PC: 자연스러운 전환 / 태블릿: 정렬 / 996px 구간 수정 */}
-              <img className="w-32 h-20 md:left-[285px] lg:left-[314px] xl:left-[354.80px] top-[48.37px] absolute z-10" src="/img/hpe/ticket.png" alt="Movie Ticket" />
+              <img className="w-32 h-20 md:left-[285px] lg:left-[314px] xl:left-[354.80px] top-[48.37px] absolute z-10" src={hpeTicketImageUrl} alt="Movie Ticket" style={{ background: 'transparent' }} />
               
               {/* Divider 1 - 구분선 간격 183px / 태블릿: 위치 조정 / PC: 자연스러운 전환 / 태블릿: 정렬 / 996px 구간 수정 */}
               <div className="w-[0.76px] h-28 md:left-[calc(100%-312px-0.76px)] lg:left-[443px] xl:left-[704px] top-[30.08px] absolute opacity-25 bg-gray-400 z-10"></div>
@@ -289,7 +313,7 @@ export default function OnDemandPlayerPage({ webinar, session }: OnDemandPlayerP
               {/* Survey - 구분선 887~1070 (183px) 가운데, 클릭 시 인페이지 팝업 / 태블릿: 위치 조정 / PC: 자연스러운 전환 / 태블릿: 정렬 / 996px 구간 수정 */}
               <button
                 type="button"
-                onClick={() => setShowSurveyModal(true)}
+                onClick={handleSurveyClick}
                 className="absolute md:left-[calc(100%-156px-0.76px)] lg:left-[599px] xl:left-[887px] md:w-[156px] lg:w-[156px] xl:w-[183px] top-[30.08px] flex flex-col items-center gap-5 hover:opacity-90 transition-opacity cursor-pointer bg-transparent border-0 p-0 text-left z-20"
               >
                 <img className="w-16 h-16" src="/img/hpe/ic_2.png" alt="설문조사" />
@@ -312,9 +336,9 @@ export default function OnDemandPlayerPage({ webinar, session }: OnDemandPlayerP
                   {/* Ticket Image - 모바일: 텍스트 옆에 표시, 높이 맞춤 */}
                   <img 
                     className="w-20 h-auto flex-shrink-0 self-center" 
-                    src="/img/hpe/ticket.png" 
+                    src={hpeTicketImageUrl} 
                     alt="Movie Ticket" 
-                    style={{ height: 'fit-content', maxHeight: '72px' }}
+                    style={{ height: 'fit-content', maxHeight: '72px', background: 'transparent' }}
                   />
                 </div>
                 
@@ -333,7 +357,7 @@ export default function OnDemandPlayerPage({ webinar, session }: OnDemandPlayerP
                   <div className="w-[0.76px] h-16 opacity-25 bg-gray-400 max-sm:hidden"></div>
                   <button
                     type="button"
-                    onClick={() => setShowSurveyModal(true)}
+                    onClick={handleSurveyClick}
                     className="flex flex-col items-center gap-1 hover:opacity-90 transition-opacity bg-transparent border-0 p-0 text-left max-sm:flex-1 max-sm:min-w-0"
                   >
                     <img className="w-12 h-12 max-sm:w-10 max-sm:h-10" src="/img/hpe/ic_2.png" alt="설문조사" />
@@ -362,7 +386,51 @@ export default function OnDemandPlayerPage({ webinar, session }: OnDemandPlayerP
         open={showSurveyModal}
         onClose={() => setShowSurveyModal(false)}
         webinarIdOrSlug={webinarPath}
+        onSuccess={(data) => {
+          // 설문 제출 상태 업데이트
+          setSurveyStatus({
+            submitted: true,
+            survey_no: data.survey_no,
+            code6: data.code6,
+          })
+          setSuccessData(data)
+          setShowSuccessAlert(true)
+          setShowSurveyModal(false)
+          // 5초 후 자동으로 알림 닫기
+          setTimeout(() => {
+            setShowSuccessAlert(false)
+          }, 5000)
+        }}
       />
+
+      {/* 설문 제출 성공 알림 팝업 */}
+      {showSuccessAlert && successData && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 pointer-events-none">
+          <div className="bg-white rounded-xl shadow-xl p-4 pb-6 max-w-lg w-full pointer-events-auto animate-in fade-in slide-in-from-bottom-4 duration-300 min-h-[400px]">
+            <div className="sticky top-0 z-10 flex items-center justify-between border-b border-gray-200 px-4 py-3 bg-white -mx-4 -mt-4 mb-4">
+              <h2 className="text-lg font-semibold text-gray-900">설문조사</h2>
+              <button
+                onClick={() => setShowSuccessAlert(false)}
+                className="rounded p-1 text-gray-600 hover:bg-gray-100 transition-colors"
+                aria-label="닫기"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="text-center py-8 h-full flex flex-col items-center justify-center min-h-[300px]">
+              <p className="text-emerald-600 font-medium mb-4">설문이 제출되었습니다.</p>
+              <button
+                onClick={() => setShowSuccessAlert(false)}
+                className="rounded-lg bg-emerald-500 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-600 transition-colors"
+              >
+                닫기
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

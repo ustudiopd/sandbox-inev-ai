@@ -698,6 +698,14 @@ export default function DashboardTab({ webinarId, webinarSlug, webinar }: Dashbo
             <span className="hidden sm:inline">QnA 다운로드</span>
           </button>
           <button
+            onClick={handleDownloadTodayAccess}
+            className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2"
+            title="오늘 참석자 CSV 다운로드 (오늘 한 번이라도 접속한 사람)"
+          >
+            <span>📥</span>
+            <span className="hidden sm:inline">오늘 참석자</span>
+          </button>
+          <button
             onClick={handleDownloadSurvey}
             className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors flex items-center gap-2"
             title="설문조사 CSV 다운로드 (제출한 사람만)"

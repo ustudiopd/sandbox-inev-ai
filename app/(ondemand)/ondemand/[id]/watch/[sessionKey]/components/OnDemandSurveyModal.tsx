@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 /** 설문 문항 정의 (HPE 네트워크 설문) */
 const SURVEY_QUESTIONS = [
@@ -65,18 +65,20 @@ interface OnDemandSurveyModalProps {
   open: boolean
   onClose: () => void
   webinarIdOrSlug: string
+  onSuccess?: (data: { survey_no: number; code6: string }) => void
 }
 
 export default function OnDemandSurveyModal({
   open,
   onClose,
   webinarIdOrSlug,
+  onSuccess,
 }: OnDemandSurveyModalProps) {
   // 체크박스는 배열로, 라디오는 문자열로 저장
   const [answers, setAnswers] = useState<Record<string, string | string[]>>({})
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [success, setSuccess] = useState<{ survey_no: number; code6: string } | null>(null)
+  const [checking, setChecking] = useState(false)
 
   const handleAnswerChange = (questionKey: string, optionKey: string, isCheckbox: boolean) => {
     if (isCheckbox) {
@@ -144,10 +146,18 @@ export default function OnDemandSurveyModal({
         return
       }
       if (data.alreadySubmitted) {
-        setSuccess({ survey_no: data.survey_no, code6: data.code6 })
+        // 이미 제출된 경우 모달 닫고 팝업만 표시
+        if (onSuccess) {
+          onSuccess({ survey_no: data.survey_no, code6: data.code6 })
+          onClose()
+        }
         return
       }
-      setSuccess({ survey_no: data.survey_no, code6: data.code6 })
+      // 새로 제출한 경우 모달 닫고 팝업만 표시
+      if (onSuccess) {
+        onSuccess({ survey_no: data.survey_no, code6: data.code6 })
+        onClose()
+      }
     } catch (err: any) {
       setError(err.message || '네트워크 오류가 발생했습니다.')
     } finally {
@@ -155,10 +165,38 @@ export default function OnDemandSurveyModal({
     }
   }
 
+  // 모달이 열릴 때 설문 제출 여부 확인 (페이지 로딩 시 이미 확인했지만, 혹시 모를 경우를 대비)
+  useEffect(() => {
+    if (open) {
+      checkSubmissionStatus()
+    }
+  }, [open])
+
+  const checkSubmissionStatus = async () => {
+    setChecking(true)
+    try {
+      const res = await fetch(`/api/public/ondemand/${webinarIdOrSlug}/survey/check`)
+      const data = await res.json()
+      
+      if (data.submitted && data.survey_no && data.code6) {
+        // 이미 제출된 경우 모달 닫고 팝업만 표시
+        if (onSuccess) {
+          onSuccess({ survey_no: data.survey_no, code6: data.code6 })
+          // 모달 즉시 닫기
+          onClose()
+        }
+      }
+    } catch (err) {
+      // 확인 실패해도 설문 제출은 가능하도록 에러 무시
+      console.error('설문 제출 여부 확인 오류:', err)
+    } finally {
+      setChecking(false)
+    }
+  }
+
   const handleClose = () => {
     setAnswers({})
     setError(null)
-    setSuccess(null)
     onClose()
   }
 
@@ -182,20 +220,11 @@ export default function OnDemandSurveyModal({
           </button>
         </div>
 
-        <div className="p-4 pb-6">
-          {success ? (
-            <div className="text-center py-8">
-              <p className="text-emerald-600 font-medium mb-2">설문이 제출되었습니다.</p>
-              <p className="text-sm text-gray-600 mb-4">
-                참여 번호: {success.survey_no} / 코드: {success.code6}
-              </p>
-              <button
-                type="button"
-                onClick={handleClose}
-                className="rounded-lg bg-emerald-500 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-600"
-              >
-                닫기
-              </button>
+        <div className="p-4 pb-6 min-h-[400px]">
+          {checking ? (
+            <div className="text-center py-8 h-full flex flex-col items-center justify-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500 mx-auto mb-4"></div>
+              <p className="text-gray-600">확인 중...</p>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-5">
