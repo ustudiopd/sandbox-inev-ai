@@ -17,6 +17,7 @@ export async function GET(
     const { searchParams } = new URL(req.url)
     const showOnlyMine = searchParams.get('onlyMine') === 'true'
     const filter = searchParams.get('filter') || 'all'
+    const isAdminMode = searchParams.get('isAdminMode') === 'true' // 관리자 모드 여부
     
     const supabase = await createServerSupabase()
     const { data: { user } } = await supabase.auth.getUser()
@@ -74,9 +75,9 @@ export async function GET(
       query = query.neq('status', 'hidden')
     }
     
-    // 성능 최적화: 인덱스 활용을 위해 created_at DESC로 정렬
+    // 정렬 방식: 관리자 모드는 최신이 위(DESC), 일반 사용자는 오래된 것이 위(ASC)
     const { data: questions, error: questionsError } = await query
-      .order('created_at', { ascending: false })
+      .order('created_at', { ascending: !isAdminMode }) // 관리자: DESC, 일반: ASC
       .limit(100) // 최대 100개로 제한 (성능 향상)
     
     if (questionsError) {
@@ -117,12 +118,16 @@ export async function GET(
       user: profilesMap.get(q.user_id) || null,
     }))
     
-    // 고정된 질문을 맨 위로
-    const sorted = formattedQuestions.sort((a, b) => {
-      if (a.status === 'pinned' && b.status !== 'pinned') return -1
-      if (a.status !== 'pinned' && b.status === 'pinned') return 1
-      return 0
-    })
+    // 관리자 모드일 때만 고정된 질문을 맨 위로 정렬
+    // 일반 사용자 모드에서는 고정 기능 무시하고 시간 순서만 유지
+    const sorted = isAdminMode 
+      ? formattedQuestions.sort((a, b) => {
+          // 관리자: 고정된 질문을 맨 위로, 그 다음 시간 순서 (최신이 위)
+          if (a.status === 'pinned' && b.status !== 'pinned') return -1
+          if (a.status !== 'pinned' && b.status === 'pinned') return 1
+          return 0 // 시간 순서는 이미 쿼리에서 정렬됨
+        })
+      : formattedQuestions // 일반 사용자: 시간 순서만 유지 (오래된 것부터)
     
     return NextResponse.json({ questions: sorted })
   } catch (error: any) {

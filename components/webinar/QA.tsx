@@ -95,6 +95,7 @@ export default function QA({
       const params = new URLSearchParams({
         onlyMine: isAdminMode ? 'false' : (activeFilter === 'mine' ? 'true' : (showOnlyMine ? 'true' : 'false')),
         filter: 'all', // 필터는 클라이언트에서 처리하지 않고 서버에서는 항상 'all'
+        isAdminMode: isAdminMode ? 'true' : 'false', // 관리자 모드 여부 전달
       })
       
       const response = await fetch(`/api/webinars/${webinarId}/questions?${params}`)
@@ -210,8 +211,13 @@ export default function QA({
               if (prev.some(q => q.id === newQuestion.id)) {
                 return prev
               }
-              // 프로필 정보는 나중에 loadQuestions에서 채워질 것
-              return [{ ...newQuestion, user: null }, ...prev]
+              // 일반 사용자 모드: 채팅처럼 아래에서 위로 올라가는 순서 (맨 뒤에 추가)
+              // 관리자 모드: 위에서 아래로 내려오는 순서 (맨 앞에 추가)
+              if (isAdminMode) {
+                return [{ ...newQuestion, user: null }, ...prev]
+              } else {
+                return [...prev, { ...newQuestion, user: null }]
+              }
             })
             // 프로필 정보를 위해 나중에 전체 새로고침 (선택적)
             // loadQuestions()
@@ -510,7 +516,9 @@ export default function QA({
         ) : questions.length === 0 ? (
           <div className="text-center text-gray-500 py-8">아직 질문이 없습니다</div>
         ) : (
-          questions.map((question) => {
+          // 일반 사용자 모드: 채팅처럼 아래에서 위로 올라가는 순서 (배열 역순)
+          // 관리자 모드: 위에서 아래로 내려오는 순서 (배열 그대로)
+          (isAdminMode ? questions : [...questions].reverse()).map((question) => {
             if (renderQuestion) {
               return (
                 <div key={question.id} onClick={() => onQuestionClick?.(question)}>
@@ -525,7 +533,8 @@ export default function QA({
               <div
                 key={question.id}
                 className={`p-4 rounded-lg border-2 transition-colors ${
-                  question.status === 'pinned' 
+                  // 일반 사용자 모드에서는 고정 스타일 무시
+                  (isAdminMode && question.status === 'pinned')
                     ? 'border-yellow-400 bg-yellow-50' 
                     : question.status === 'answered'
                     ? 'border-green-200 bg-green-50'
@@ -537,7 +546,8 @@ export default function QA({
                     <span className="text-sm font-semibold text-gray-800">
                       {question.user?.display_name || question.user?.email || '익명'}
                     </span>
-                    {question.status === 'pinned' && (
+                    {/* 관리자 모드에서만 고정 표시, 일반 사용자 모드에서는 고정 기능 무시 */}
+                    {isAdminMode && question.status === 'pinned' && (
                       <span className="text-xs bg-yellow-400 text-yellow-900 px-2 py-0.5 rounded">고정</span>
                     )}
                     {question.status === 'answered' && (

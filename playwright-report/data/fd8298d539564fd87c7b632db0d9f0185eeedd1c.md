@@ -1,0 +1,141 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e4]:
+    - banner [ref=e5]:
+      - img "keywert Insight" [ref=e10]
+    - generic [ref=e12]:
+      - generic [ref=e13]:
+        - generic [ref=e14]:
+          - iframe [ref=e18]:
+            - generic "YouTube Video Player" [ref=f1e3]:
+              - generic [ref=f1e6]:
+                - generic [ref=f1e7] [cursor=pointer]:
+                  - slider "Seek slider" [ref=f1e8]
+                  - generic:
+                    - generic:
+                      - generic:
+                        - slider "Click or scroll the panel for the precise seeking."
+                - generic [ref=f1e19]:
+                  - generic [ref=f1e20]:
+                    - button "Pause (k)" [ref=f1e21] [cursor=pointer]:
+                      - img
+                    - generic [ref=f1e22]:
+                      - button "Unmute (m)" [ref=f1e23] [cursor=pointer]:
+                        - generic [ref=f1e24]:
+                          - img
+                      - slider "Volume"
+                    - generic "0 Minutes 2 Seconds of 32 Minutes 49 Seconds" [ref=f1e28]: 0:02 / 32:49
+                  - generic [ref=f1e29]:
+                    - button "Subtitles/closed captions unavailable" [ref=f1e30] [cursor=pointer]:
+                      - img
+                    - button "Settings" [ref=f1e31] [cursor=pointer]:
+                      - img
+                    - link "Watch on YouTube" [ref=f1e32] [cursor=pointer]:
+                      - /url: https://www.youtube.com/watch?v=SCDULzGNyug
+                      - img
+                    - button "Full screen (f)" [ref=f1e33] [cursor=pointer]:
+                      - img
+          - button "전체화면" [ref=e19] [cursor=pointer]:
+            - img [ref=e20]
+        - generic [ref=e22]:
+          - generic [ref=e23]:
+            - heading "세션 소개" [level=3] [ref=e24]
+            - generic [ref=e25]:
+              - button "📝 설문" [ref=e26] [cursor=pointer]
+              - button "🎁 경품추첨" [disabled] [ref=e27]
+          - generic [ref=e28]:
+            - button "SESSION 1 약 15분 키워트 인사이트 소개 조경식 이사 워트인텔리전스" [ref=e29] [cursor=pointer]:
+              - generic [ref=e30]:
+                - generic [ref=e31]: SESSION 1
+                - generic [ref=e32]: 약 15분
+              - heading "키워트 인사이트 소개" [level=4] [ref=e33]
+              - generic [ref=e34]:
+                - generic [ref=e35]: 조경식 이사
+                - generic [ref=e36]: 워트인텔리전스
+            - button "SESSION 2 약 30분 고객사례로 알아보는 AI 특허리서치 활용법 조은비 책임 워트인텔리전스" [ref=e37] [cursor=pointer]:
+              - generic [ref=e38]:
+                - generic [ref=e39]: SESSION 2
+                - generic [ref=e40]: 약 30분
+              - heading "고객사례로 알아보는 AI 특허리서치 활용법" [level=4] [ref=e41]
+              - generic [ref=e42]:
+                - generic [ref=e43]: 조은비 책임
+                - generic [ref=e44]: 워트인텔리전스
+            - button "SESSION 3 약 20분 키워트 인사이트 바로 써보기" [ref=e45] [cursor=pointer]:
+              - generic [ref=e46]:
+                - generic [ref=e47]: SESSION 3
+                - generic [ref=e48]: 약 20분
+              - heading "키워트 인사이트 바로 써보기" [level=4] [ref=e49]
+            - button "SESSION 4 약 10분 QnA 스타벅스 기프티콘 증정 스타벅스 커피" [ref=e50] [cursor=pointer]:
+              - generic [ref=e51]:
+                - generic [ref=e52]: SESSION 4
+                - generic [ref=e53]: 약 10분
+              - heading "QnA" [level=4] [ref=e54]
+              - generic [ref=e56]:
+                - generic [ref=e57]: 스타벅스 기프티콘 증정
+                - img "스타벅스 커피" [ref=e58]
+      - generic [ref=e60]:
+        - generic [ref=e61]:
+          - button "💬 채팅" [ref=e62] [cursor=pointer]
+          - button "❓ Q&A" [ref=e63] [cursor=pointer]
+        - generic [ref=e65]:
+          - generic [ref=e66]:
+            - button "과거 메시지 더보기" [ref=e68] [cursor=pointer]
+            - generic [ref=e71]:
+              - generic [ref=e72]:
+                - generic [ref=e73]: 워트인텔리전스
+                - generic [ref=e74]: 오후 01:04
+              - paragraph [ref=e75]: 안녕하세요, 워트인텔리전스 입니다.
+            - generic [ref=e78]:
+              - generic [ref=e79]:
+                - generic [ref=e80]: 워트인텔리전스
+                - generic [ref=e81]: 오후 01:04
+              - paragraph [ref=e82]: 안녕하세요, 워트인텔리전스입니다.
+            - generic [ref=e85]:
+              - generic [ref=e86]:
+                - generic [ref=e87]: 워트인텔리전스
+                - generic [ref=e88]: 오후 01:25
+              - paragraph [ref=e89]: 웨비나 시작합니다:D 다양한 이벤트가 준비되어 있으니 끝까지 함께해주세요!
+            - generic [ref=e92]:
+              - generic [ref=e93]:
+                - generic [ref=e94]: 워트인텔리전스
+                - generic [ref=e95]: 오후 01:45
+              - paragraph [ref=e96]: 끝났습니다~~~
+            - generic [ref=e99]:
+              - generic [ref=e100]:
+                - generic [ref=e101]: saba20
+                - generic [ref=e102]: 오후 12:27
+              - paragraph [ref=e103]: 안녕하세요
+            - generic [ref=e106]:
+              - generic [ref=e107]:
+                - generic [ref=e108]: 양승철2
+                - generic [ref=e109]: 오후 12:28
+              - paragraph [ref=e110]: 안녕
+            - generic [ref=e113]:
+              - generic [ref=e114]:
+                - generic [ref=e115]: 김진식
+                - generic [ref=e116]: 오후 12:28
+              - paragraph [ref=e117]: 안녕
+            - generic [ref=e120]:
+              - generic [ref=e121]:
+                - generic [ref=e122]: psb1122
+                - generic [ref=e123]: 오후 12:28
+              - paragraph [ref=e124]: 안녕
+            - generic [ref=e127]:
+              - generic [ref=e128]:
+                - generic [ref=e129]: 김상혁
+                - generic [ref=e130]: 오후 12:28
+              - paragraph [ref=e131]: 안녕
+            - generic [ref=e134]:
+              - generic [ref=e135]:
+                - generic [ref=e136]: ynlee
+                - generic [ref=e137]: 오후 12:28
+              - paragraph [ref=e138]: 안녕
+          - generic [ref=e139]:
+            - generic [ref=e140]:
+              - textbox "메시지를 입력하세요..." [ref=e141]
+              - button "전송" [disabled] [ref=e142]
+            - paragraph [ref=e143]: 0/500
+  - alert [ref=e144]
+```

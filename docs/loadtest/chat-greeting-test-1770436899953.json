@@ -1,0 +1,82 @@
+{
+  "timestamp": "2026-02-07T04:01:39.953Z",
+  "webinarId": "c9c7d93a-d775-4f8e-9243-8fdbb3618e2a",
+  "webinarSlug": "149400",
+  "concurrentUsers": 5,
+  "totalTime": 94334,
+  "results": {
+    "loginSuccess": 5,
+    "greetingClickSuccess": 5,
+    "messageSendSuccess": 0,
+    "messageReceived": 0,
+    "avgTime": 18750.6,
+    "p95Time": 19357
+  },
+  "details": [
+    {
+      "userId": 1,
+      "userName": "임훈종",
+      "userEmail": "hjong.im@lge.com",
+      "loginSuccess": true,
+      "greetingClickSuccess": true,
+      "messageSendSuccess": false,
+      "messageReceived": false,
+      "totalTime": 19357,
+      "errors": [
+        "에러: page.waitForResponse: Timeout 10000ms exceeded while waiting for event \"response\""
+      ]
+    },
+    {
+      "userId": 2,
+      "userName": "이상윤",
+      "userEmail": "yunpha123@hyosung.com",
+      "loginSuccess": true,
+      "greetingClickSuccess": true,
+      "messageSendSuccess": false,
+      "messageReceived": false,
+      "totalTime": 18627,
+      "errors": [
+        "에러: page.waitForResponse: Timeout 10000ms exceeded while waiting for event \"response\""
+      ]
+    },
+    {
+      "userId": 3,
+      "userName": "문혜경",
+      "userEmail": "hkmoon@hyosung.com",
+      "loginSuccess": true,
+      "greetingClickSuccess": true,
+      "messageSendSuccess": false,
+      "messageReceived": false,
+      "totalTime": 17904,
+      "errors": [
+        "에러: page.waitForResponse: Timeout 10000ms exceeded while waiting for event \"response\""
+      ]
+    },
+    {
+      "userId": 4,
+      "userName": "정지원",
+      "userEmail": "jiwon.jeong@hscorp.com",
+      "loginSuccess": true,
+      "greetingClickSuccess": true,
+      "messageSendSuccess": false,
+      "messageReceived": false,
+      "totalTime": 19124,
+      "errors": [
+        "에러: page.waitForResponse: Timeout 10000ms exceeded while waiting for event \"response\""
+      ]
+    },
+    {
+      "userId": 5,
+      "userName": "음성원",
+      "userEmail": "sweum@lnspat.com",
+      "loginSuccess": true,
+      "greetingClickSuccess": true,
+      "messageSendSuccess": false,
+      "messageReceived": false,
+      "totalTime": 18741,
+      "errors": [
+        "에러: page.waitForResponse: Timeout 10000ms exceeded while waiting for event \"response\""
+      ]
+    }
+  ]
+}

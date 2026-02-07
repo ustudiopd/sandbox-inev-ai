@@ -66,6 +66,7 @@ export default function QAModeration({ webinarId }: QAModerationProps) {
       const params = new URLSearchParams({
         onlyMine: 'false', // 운영 콘솔에서는 전체 질문 조회
         filter: filter,
+        isAdminMode: 'true', // 관리자 모드로 전달 (고정 기능 활성화, 최신이 위로)
       })
       
       const response = await fetch(`/api/webinars/${webinarId}/questions?${params}`)

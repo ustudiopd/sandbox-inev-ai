@@ -60,6 +60,7 @@ export default function QAListPage() {
       const params = new URLSearchParams({
         onlyMine: 'false',
         filter: filter,
+        isAdminMode: 'true', // 관리자 모드로 전달 (고정 기능 활성화, 최신이 위로)
       })
       
       const response = await fetch(`/api/webinars/${webinarId}/questions?${params}`)

@@ -1,0 +1,56 @@
+{
+  "timestamp": "2026-02-07T04:04:17.264Z",
+  "webinarId": "c9c7d93a-d775-4f8e-9243-8fdbb3618e2a",
+  "webinarSlug": "149400",
+  "concurrentUsers": 3,
+  "totalTime": 114545,
+  "results": {
+    "loginSuccess": 3,
+    "greetingClickSuccess": 3,
+    "messageSendSuccess": 0,
+    "messageReceived": 0,
+    "avgTime": 38086.333333333336,
+    "p95Time": 38839
+  },
+  "details": [
+    {
+      "userId": 1,
+      "userName": "임훈종",
+      "userEmail": "hjong.im@lge.com",
+      "loginSuccess": true,
+      "greetingClickSuccess": true,
+      "messageSendSuccess": false,
+      "messageReceived": false,
+      "totalTime": 37812,
+      "errors": [
+        "에러: locator.click: Timeout 30000ms exceeded.\nCall log:\n  - waiting for locator('input[placeholder=\"메시지를 입력하세요...\"]').first()\n    - locator resolved to <input type=\"text\" maxlength=\"500\" value=\"좋은 하루 되세요!\" placeholder=\"메시지를 입력하세요...\" class=\"flex-1 px-2 sm:px-3 lg:px-4 py-1.5 sm:py-2 text-xs sm:text-sm bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent\"/>\n  - attempting click action\n    2 × waiting for element to be visible, enabled and stable\n      - element is not visible\n    - retrying click action\n    - waiting 20ms\n    2 × waiting for element to be visible, enabled and stable\n      - element is not visible\n    - retrying click action\n      - waiting 100ms\n    58 × waiting for element to be visible, enabled and stable\n       - element is not visible\n     - retrying click action\n       - waiting 500ms\n"
+      ]
+    },
+    {
+      "userId": 2,
+      "userName": "이상윤",
+      "userEmail": "yunpha123@hyosung.com",
+      "loginSuccess": true,
+      "greetingClickSuccess": true,
+      "messageSendSuccess": false,
+      "messageReceived": false,
+      "totalTime": 37608,
+      "errors": [
+        "에러: locator.click: Timeout 30000ms exceeded.\nCall log:\n  - waiting for locator('input[placeholder=\"메시지를 입력하세요...\"]').first()\n    - locator resolved to <input type=\"text\" maxlength=\"500\" value=\"좋은 하루 되세요!\" placeholder=\"메시지를 입력하세요...\" class=\"flex-1 px-2 sm:px-3 lg:px-4 py-1.5 sm:py-2 text-xs sm:text-sm bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent\"/>\n  - attempting click action\n    2 × waiting for element to be visible, enabled and stable\n      - element is not visible\n    - retrying click action\n    - waiting 20ms\n    2 × waiting for element to be visible, enabled and stable\n      - element is not visible\n    - retrying click action\n      - waiting 100ms\n    58 × waiting for element to be visible, enabled and stable\n       - element is not visible\n     - retrying click action\n       - waiting 500ms\n"
+      ]
+    },
+    {
+      "userId": 3,
+      "userName": "문혜경",
+      "userEmail": "hkmoon@hyosung.com",
+      "loginSuccess": true,
+      "greetingClickSuccess": true,
+      "messageSendSuccess": false,
+      "messageReceived": false,
+      "totalTime": 38839,
+      "errors": [
+        "에러: locator.click: Timeout 30000ms exceeded.\nCall log:\n  - waiting for locator('input[placeholder=\"메시지를 입력하세요...\"]').first()\n    - locator resolved to <input type=\"text\" maxlength=\"500\" value=\"좋은 하루 되세요!\" placeholder=\"메시지를 입력하세요...\" class=\"flex-1 px-2 sm:px-3 lg:px-4 py-1.5 sm:py-2 text-xs sm:text-sm bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent\"/>\n  - attempting click action\n    2 × waiting for element to be visible, enabled and stable\n      - element is not visible\n    - retrying click action\n    - waiting 20ms\n    2 × waiting for element to be visible, enabled and stable\n      - element is not visible\n    - retrying click action\n      - waiting 100ms\n    58 × waiting for element to be visible, enabled and stable\n       - element is not visible\n     - retrying click action\n       - waiting 500ms\n"
+      ]
+    }
+  ]
+}

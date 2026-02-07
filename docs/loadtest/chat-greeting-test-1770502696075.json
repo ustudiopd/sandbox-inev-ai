@@ -1,0 +1,205 @@
+{
+  "timestamp": "2026-02-07T22:18:16.075Z",
+  "webinarId": "c9c7d93a-d775-4f8e-9243-8fdbb3618e2a",
+  "webinarSlug": "149400",
+  "concurrentUsers": 10,
+  "totalTime": 6735,
+  "results": {
+    "loginSuccess": 10,
+    "greetingClickSuccess": 0,
+    "messageSendSuccess": 0,
+    "receiveStats": {
+      "totalExpectedReceive": 90,
+      "totalReceived": 0,
+      "receiveMissRate": 100,
+      "totalDuplicates": 0,
+      "duplicateRate": 0,
+      "avgLatency": 0,
+      "p95Latency": 0
+    },
+    "avgTime": 6179.2,
+    "p95Time": 6596
+  },
+  "details": [
+    {
+      "userId": 1,
+      "userName": "임훈종",
+      "userEmail": "hjong.im@lge.com",
+      "loginSuccess": true,
+      "greetingClickSuccess": false,
+      "messageSendSuccess": false,
+      "messageReceived": false,
+      "receivedMessageIds": {},
+      "receivedCount": 0,
+      "expectedReceiveCount": 9,
+      "duplicateReceiveCount": 0,
+      "receiveLatencies": [],
+      "totalTime": 5818,
+      "errors": [
+        "에러: Too many arguments. If you need to pass more than 1 argument to the function wrap them in an object."
+      ]
+    },
+    {
+      "userId": 2,
+      "userName": "이상윤",
+      "userEmail": "yunpha123@hyosung.com",
+      "loginSuccess": true,
+      "greetingClickSuccess": false,
+      "messageSendSuccess": false,
+      "messageReceived": false,
+      "receivedMessageIds": {},
+      "receivedCount": 0,
+      "expectedReceiveCount": 9,
+      "duplicateReceiveCount": 0,
+      "receiveLatencies": [],
+      "totalTime": 6352,
+      "errors": [
+        "에러: Too many arguments. If you need to pass more than 1 argument to the function wrap them in an object."
+      ]
+    },
+    {
+      "userId": 3,
+      "userName": "문혜경",
+      "userEmail": "hkmoon@hyosung.com",
+      "loginSuccess": true,
+      "greetingClickSuccess": false,
+      "messageSendSuccess": false,
+      "messageReceived": false,
+      "receivedMessageIds": {},
+      "receivedCount": 0,
+      "expectedReceiveCount": 9,
+      "duplicateReceiveCount": 0,
+      "receiveLatencies": [],
+      "totalTime": 6432,
+      "errors": [
+        "에러: Too many arguments. If you need to pass more than 1 argument to the function wrap them in an object."
+      ]
+    },
+    {
+      "userId": 4,
+      "userName": "정지원",
+      "userEmail": "jiwon.jeong@hscorp.com",
+      "loginSuccess": true,
+      "greetingClickSuccess": false,
+      "messageSendSuccess": false,
+      "messageReceived": false,
+      "receivedMessageIds": {},
+      "receivedCount": 0,
+      "expectedReceiveCount": 9,
+      "duplicateReceiveCount": 0,
+      "receiveLatencies": [],
+      "totalTime": 5451,
+      "errors": [
+        "에러: Too many arguments. If you need to pass more than 1 argument to the function wrap them in an object."
+      ]
+    },
+    {
+      "userId": 5,
+      "userName": "음성원",
+      "userEmail": "sweum@lnspat.com",
+      "loginSuccess": true,
+      "greetingClickSuccess": false,
+      "messageSendSuccess": false,
+      "messageReceived": false,
+      "receivedMessageIds": {},
+      "receivedCount": 0,
+      "expectedReceiveCount": 9,
+      "duplicateReceiveCount": 0,
+      "receiveLatencies": [],
+      "totalTime": 6596,
+      "errors": [
+        "에러: Too many arguments. If you need to pass more than 1 argument to the function wrap them in an object."
+      ]
+    },
+    {
+      "userId": 6,
+      "userName": "이유나",
+      "userEmail": "ynlee@wert.co.kr",
+      "loginSuccess": true,
+      "greetingClickSuccess": false,
+      "messageSendSuccess": false,
+      "messageReceived": false,
+      "receivedMessageIds": {},
+      "receivedCount": 0,
+      "expectedReceiveCount": 9,
+      "duplicateReceiveCount": 0,
+      "receiveLatencies": [],
+      "totalTime": 6439,
+      "errors": [
+        "에러: Too many arguments. If you need to pass more than 1 argument to the function wrap them in an object."
+      ]
+    },
+    {
+      "userId": 7,
+      "userName": "김상혁",
+      "userEmail": "shkim8886@homecc.com",
+      "loginSuccess": true,
+      "greetingClickSuccess": false,
+      "messageSendSuccess": false,
+      "messageReceived": false,
+      "receivedMessageIds": {},
+      "receivedCount": 0,
+      "expectedReceiveCount": 9,
+      "duplicateReceiveCount": 0,
+      "receiveLatencies": [],
+      "totalTime": 6517,
+      "errors": [
+        "에러: Too many arguments. If you need to pass more than 1 argument to the function wrap them in an object."
+      ]
+    },
+    {
+      "userId": 8,
+      "userName": "박성범",
+      "userEmail": "psb1122@hanwha.com",
+      "loginSuccess": true,
+      "greetingClickSuccess": false,
+      "messageSendSuccess": false,
+      "messageReceived": false,
+      "receivedMessageIds": {},
+      "receivedCount": 0,
+      "expectedReceiveCount": 9,
+      "duplicateReceiveCount": 0,
+      "receiveLatencies": [],
+      "totalTime": 5147,
+      "errors": [
+        "에러: Too many arguments. If you need to pass more than 1 argument to the function wrap them in an object."
+      ]
+    },
+    {
+      "userId": 9,
+      "userName": "양승철",
+      "userEmail": "jubileo@naver.com",
+      "loginSuccess": true,
+      "greetingClickSuccess": false,
+      "messageSendSuccess": false,
+      "messageReceived": false,
+      "receivedMessageIds": {},
+      "receivedCount": 0,
+      "expectedReceiveCount": 9,
+      "duplicateReceiveCount": 0,
+      "receiveLatencies": [],
+      "totalTime": 6591,
+      "errors": [
+        "에러: Too many arguments. If you need to pass more than 1 argument to the function wrap them in an object."
+      ]
+    },
+    {
+      "userId": 10,
+      "userName": "김진식",
+      "userEmail": "jskim@iae.re.kr",
+      "loginSuccess": true,
+      "greetingClickSuccess": false,
+      "messageSendSuccess": false,
+      "messageReceived": false,
+      "receivedMessageIds": {},
+      "receivedCount": 0,
+      "expectedReceiveCount": 9,
+      "duplicateReceiveCount": 0,
+      "receiveLatencies": [],
+      "totalTime": 6449,
+      "errors": [
+        "에러: Too many arguments. If you need to pass more than 1 argument to the function wrap them in an object."
+      ]
+    }
+  ]
+}

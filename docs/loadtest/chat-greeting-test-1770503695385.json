@@ -1,0 +1,205 @@
+{
+  "timestamp": "2026-02-07T22:34:55.385Z",
+  "webinarId": "c9c7d93a-d775-4f8e-9243-8fdbb3618e2a",
+  "webinarSlug": "149400",
+  "concurrentUsers": 10,
+  "totalTime": 43630,
+  "results": {
+    "loginSuccess": 10,
+    "greetingClickSuccess": 10,
+    "messageSendSuccess": 0,
+    "receiveStats": {
+      "totalExpectedReceive": 90,
+      "totalReceived": 0,
+      "receiveMissRate": 100,
+      "totalDuplicates": 0,
+      "duplicateRate": 0,
+      "avgLatency": 0,
+      "p95Latency": 0
+    },
+    "avgTime": 42242.3,
+    "p95Time": 43516
+  },
+  "details": [
+    {
+      "userId": 1,
+      "userName": "임훈종",
+      "userEmail": "hjong.im@lge.com",
+      "loginSuccess": true,
+      "greetingClickSuccess": true,
+      "messageSendSuccess": false,
+      "messageReceived": false,
+      "receivedMessageIds": {},
+      "receivedCount": 0,
+      "expectedReceiveCount": 9,
+      "duplicateReceiveCount": 0,
+      "receiveLatencies": [],
+      "totalTime": 42849,
+      "errors": [
+        "에러: locator.fill: Timeout 30000ms exceeded.\nCall log:\n  - waiting for locator('input[placeholder=\"메시지를 입력하세요...\"]').first()\n    - locator resolved to <input type=\"text\" value=\"반가워요!\" maxlength=\"500\" placeholder=\"메시지를 입력하세요...\" class=\"flex-1 px-2 sm:px-3 lg:px-4 py-1.5 sm:py-2 text-xs sm:text-sm bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent\"/>\n    - fill(\"\")\n  - attempting fill action\n    2 × waiting for element to be visible, enabled and editable\n      - element is not visible\n    - retrying fill action\n    - waiting 20ms\n    2 × waiting for element to be visible, enabled and editable\n      - element is not visible\n    - retrying fill action\n      - waiting 100ms\n    59 × waiting for element to be visible, enabled and editable\n       - element is not visible\n     - retrying fill action\n       - waiting 500ms\n"
+      ]
+    },
+    {
+      "userId": 2,
+      "userName": "이상윤",
+      "userEmail": "yunpha123@hyosung.com",
+      "loginSuccess": true,
+      "greetingClickSuccess": true,
+      "messageSendSuccess": false,
+      "messageReceived": false,
+      "receivedMessageIds": {},
+      "receivedCount": 0,
+      "expectedReceiveCount": 9,
+      "duplicateReceiveCount": 0,
+      "receiveLatencies": [],
+      "totalTime": 41888,
+      "errors": [
+        "에러: locator.fill: Timeout 30000ms exceeded.\nCall log:\n  - waiting for locator('input[placeholder=\"메시지를 입력하세요...\"]').first()\n    - locator resolved to <input type=\"text\" maxlength=\"500\" value=\"좋은 하루 되세요!\" placeholder=\"메시지를 입력하세요...\" class=\"flex-1 px-2 sm:px-3 lg:px-4 py-1.5 sm:py-2 text-xs sm:text-sm bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent\"/>\n    - fill(\"\")\n  - attempting fill action\n    2 × waiting for element to be visible, enabled and editable\n      - element is not visible\n    - retrying fill action\n    - waiting 20ms\n    2 × waiting for element to be visible, enabled and editable\n      - element is not visible\n    - retrying fill action\n      - waiting 100ms\n    59 × waiting for element to be visible, enabled and editable\n       - element is not visible\n     - retrying fill action\n       - waiting 500ms\n"
+      ]
+    },
+    {
+      "userId": 3,
+      "userName": "문혜경",
+      "userEmail": "hkmoon@hyosung.com",
+      "loginSuccess": true,
+      "greetingClickSuccess": true,
+      "messageSendSuccess": false,
+      "messageReceived": false,
+      "receivedMessageIds": {},
+      "receivedCount": 0,
+      "expectedReceiveCount": 9,
+      "duplicateReceiveCount": 0,
+      "receiveLatencies": [],
+      "totalTime": 43516,
+      "errors": [
+        "에러: locator.fill: Timeout 30000ms exceeded.\nCall log:\n  - waiting for locator('input[placeholder=\"메시지를 입력하세요...\"]').first()\n    - locator resolved to <input type=\"text\" value=\"반갑습니다!\" maxlength=\"500\" placeholder=\"메시지를 입력하세요...\" class=\"flex-1 px-2 sm:px-3 lg:px-4 py-1.5 sm:py-2 text-xs sm:text-sm bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent\"/>\n    - fill(\"\")\n  - attempting fill action\n    2 × waiting for element to be visible, enabled and editable\n      - element is not visible\n    - retrying fill action\n    - waiting 20ms\n    2 × waiting for element to be visible, enabled and editable\n      - element is not visible\n    - retrying fill action\n      - waiting 100ms\n    58 × waiting for element to be visible, enabled and editable\n       - element is not visible\n     - retrying fill action\n       - waiting 500ms\n"
+      ]
+    },
+    {
+      "userId": 4,
+      "userName": "정지원",
+      "userEmail": "jiwon.jeong@hscorp.com",
+      "loginSuccess": true,
+      "greetingClickSuccess": true,
+      "messageSendSuccess": false,
+      "messageReceived": false,
+      "receivedMessageIds": {},
+      "receivedCount": 0,
+      "expectedReceiveCount": 9,
+      "duplicateReceiveCount": 0,
+      "receiveLatencies": [],
+      "totalTime": 41874,
+      "errors": [
+        "에러: locator.fill: Timeout 30000ms exceeded.\nCall log:\n  - waiting for locator('input[placeholder=\"메시지를 입력하세요...\"]').first()\n    - locator resolved to <input type=\"text\" maxlength=\"500\" value=\"좋은 하루 되세요!\" placeholder=\"메시지를 입력하세요...\" class=\"flex-1 px-2 sm:px-3 lg:px-4 py-1.5 sm:py-2 text-xs sm:text-sm bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent\"/>\n    - fill(\"\")\n  - attempting fill action\n    2 × waiting for element to be visible, enabled and editable\n      - element is not visible\n    - retrying fill action\n    - waiting 20ms\n    2 × waiting for element to be visible, enabled and editable\n      - element is not visible\n    - retrying fill action\n      - waiting 100ms\n    59 × waiting for element to be visible, enabled and editable\n       - element is not visible\n     - retrying fill action\n       - waiting 500ms\n"
+      ]
+    },
+    {
+      "userId": 5,
+      "userName": "음성원",
+      "userEmail": "sweum@lnspat.com",
+      "loginSuccess": true,
+      "greetingClickSuccess": true,
+      "messageSendSuccess": false,
+      "messageReceived": false,
+      "receivedMessageIds": {},
+      "receivedCount": 0,
+      "expectedReceiveCount": 9,
+      "duplicateReceiveCount": 0,
+      "receiveLatencies": [],
+      "totalTime": 43272,
+      "errors": [
+        "에러: locator.fill: Timeout 30000ms exceeded.\nCall log:\n  - waiting for locator('input[placeholder=\"메시지를 입력하세요...\"]').first()\n    - locator resolved to <input type=\"text\" value=\"안녕하세요!\" maxlength=\"500\" placeholder=\"메시지를 입력하세요...\" class=\"flex-1 px-2 sm:px-3 lg:px-4 py-1.5 sm:py-2 text-xs sm:text-sm bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent\"/>\n    - fill(\"\")\n  - attempting fill action\n    2 × waiting for element to be visible, enabled and editable\n      - element is not visible\n    - retrying fill action\n    - waiting 20ms\n    2 × waiting for element to be visible, enabled and editable\n      - element is not visible\n    - retrying fill action\n      - waiting 100ms\n    59 × waiting for element to be visible, enabled and editable\n       - element is not visible\n     - retrying fill action\n       - waiting 500ms\n"
+      ]
+    },
+    {
+      "userId": 6,
+      "userName": "이유나",
+      "userEmail": "ynlee@wert.co.kr",
+      "loginSuccess": true,
+      "greetingClickSuccess": true,
+      "messageSendSuccess": false,
+      "messageReceived": false,
+      "receivedMessageIds": {},
+      "receivedCount": 0,
+      "expectedReceiveCount": 9,
+      "duplicateReceiveCount": 0,
+      "receiveLatencies": [],
+      "totalTime": 41874,
+      "errors": [
+        "에러: locator.fill: Timeout 30000ms exceeded.\nCall log:\n  - waiting for locator('input[placeholder=\"메시지를 입력하세요...\"]').first()\n    - locator resolved to <input type=\"text\" maxlength=\"500\" value=\"좋은 하루 되세요!\" placeholder=\"메시지를 입력하세요...\" class=\"flex-1 px-2 sm:px-3 lg:px-4 py-1.5 sm:py-2 text-xs sm:text-sm bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent\"/>\n    - fill(\"\")\n  - attempting fill action\n    2 × waiting for element to be visible, enabled and editable\n      - element is not visible\n    - retrying fill action\n    - waiting 20ms\n    2 × waiting for element to be visible, enabled and editable\n      - element is not visible\n    - retrying fill action\n      - waiting 100ms\n    59 × waiting for element to be visible, enabled and editable\n       - element is not visible\n     - retrying fill action\n       - waiting 500ms\n"
+      ]
+    },
+    {
+      "userId": 7,
+      "userName": "김상혁",
+      "userEmail": "shkim8886@homecc.com",
+      "loginSuccess": true,
+      "greetingClickSuccess": true,
+      "messageSendSuccess": false,
+      "messageReceived": false,
+      "receivedMessageIds": {},
+      "receivedCount": 0,
+      "expectedReceiveCount": 9,
+      "duplicateReceiveCount": 0,
+      "receiveLatencies": [],
+      "totalTime": 41874,
+      "errors": [
+        "에러: locator.fill: Timeout 30000ms exceeded.\nCall log:\n  - waiting for locator('input[placeholder=\"메시지를 입력하세요...\"]').first()\n    - locator resolved to <input type=\"text\" value=\"환영합니다!\" maxlength=\"500\" placeholder=\"메시지를 입력하세요...\" class=\"flex-1 px-2 sm:px-3 lg:px-4 py-1.5 sm:py-2 text-xs sm:text-sm bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent\"/>\n    - fill(\"\")\n  - attempting fill action\n    2 × waiting for element to be visible, enabled and editable\n      - element is not visible\n    - retrying fill action\n    - waiting 20ms\n    2 × waiting for element to be visible, enabled and editable\n      - element is not visible\n    - retrying fill action\n      - waiting 100ms\n    59 × waiting for element to be visible, enabled and editable\n       - element is not visible\n     - retrying fill action\n       - waiting 500ms\n"
+      ]
+    },
+    {
+      "userId": 8,
+      "userName": "박성범",
+      "userEmail": "psb1122@hanwha.com",
+      "loginSuccess": true,
+      "greetingClickSuccess": true,
+      "messageSendSuccess": false,
+      "messageReceived": false,
+      "receivedMessageIds": {},
+      "receivedCount": 0,
+      "expectedReceiveCount": 9,
+      "duplicateReceiveCount": 0,
+      "receiveLatencies": [],
+      "totalTime": 41874,
+      "errors": [
+        "에러: locator.fill: Timeout 30000ms exceeded.\nCall log:\n  - waiting for locator('input[placeholder=\"메시지를 입력하세요...\"]').first()\n    - locator resolved to <input type=\"text\" value=\"안녕하세요!\" maxlength=\"500\" placeholder=\"메시지를 입력하세요...\" class=\"flex-1 px-2 sm:px-3 lg:px-4 py-1.5 sm:py-2 text-xs sm:text-sm bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent\"/>\n    - fill(\"\")\n  - attempting fill action\n    2 × waiting for element to be visible, enabled and editable\n      - element is not visible\n    - retrying fill action\n    - waiting 20ms\n    2 × waiting for element to be visible, enabled and editable\n      - element is not visible\n    - retrying fill action\n      - waiting 100ms\n    59 × waiting for element to be visible, enabled and editable\n       - element is not visible\n     - retrying fill action\n       - waiting 500ms\n"
+      ]
+    },
+    {
+      "userId": 9,
+      "userName": "양승철",
+      "userEmail": "jubileo@naver.com",
+      "loginSuccess": true,
+      "greetingClickSuccess": true,
+      "messageSendSuccess": false,
+      "messageReceived": false,
+      "receivedMessageIds": {},
+      "receivedCount": 0,
+      "expectedReceiveCount": 9,
+      "duplicateReceiveCount": 0,
+      "receiveLatencies": [],
+      "totalTime": 43516,
+      "errors": [
+        "에러: locator.fill: Timeout 30000ms exceeded.\nCall log:\n  - waiting for locator('input[placeholder=\"메시지를 입력하세요...\"]').first()\n    - locator resolved to <input type=\"text\" maxlength=\"500\" value=\"좋은 하루 되세요!\" placeholder=\"메시지를 입력하세요...\" class=\"flex-1 px-2 sm:px-3 lg:px-4 py-1.5 sm:py-2 text-xs sm:text-sm bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent\"/>\n    - fill(\"\")\n  - attempting fill action\n    2 × waiting for element to be visible, enabled and editable\n      - element is not visible\n    - retrying fill action\n    - waiting 20ms\n    2 × waiting for element to be visible, enabled and editable\n      - element is not visible\n    - retrying fill action\n      - waiting 100ms\n    58 × waiting for element to be visible, enabled and editable\n       - element is not visible\n     - retrying fill action\n       - waiting 500ms\n"
+      ]
+    },
+    {
+      "userId": 10,
+      "userName": "김진식",
+      "userEmail": "jskim@iae.re.kr",
+      "loginSuccess": true,
+      "greetingClickSuccess": true,
+      "messageSendSuccess": false,
+      "messageReceived": false,
+      "receivedMessageIds": {},
+      "receivedCount": 0,
+      "expectedReceiveCount": 9,
+      "duplicateReceiveCount": 0,
+      "receiveLatencies": [],
+      "totalTime": 39886,
+      "errors": [
+        "에러: locator.fill: Target page, context or browser has been closed\nCall log:\n  - waiting for locator('input[placeholder=\"메시지를 입력하세요...\"]').first()\n    - locator resolved to <input type=\"text\" value=\"반가워요!\" maxlength=\"500\" placeholder=\"메시지를 입력하세요...\" class=\"flex-1 px-2 sm:px-3 lg:px-4 py-1.5 sm:py-2 text-xs sm:text-sm bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent\"/>\n    - fill(\"\")\n  - attempting fill action\n    2 × waiting for element to be visible, enabled and editable\n      - element is not visible\n    - retrying fill action\n    - waiting 20ms\n    2 × waiting for element to be visible, enabled and editable\n      - element is not visible\n    - retrying fill action\n      - waiting 100ms\n    52 × waiting for element to be visible, enabled and editable\n       - element is not visible\n     - retrying fill action\n       - waiting 500ms\n"
+      ]
+    }
+  ]
+}

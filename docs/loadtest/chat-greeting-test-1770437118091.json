@@ -1,0 +1,72 @@
+{
+  "timestamp": "2026-02-07T04:05:18.091Z",
+  "webinarId": "c9c7d93a-d775-4f8e-9243-8fdbb3618e2a",
+  "webinarSlug": "149400",
+  "concurrentUsers": 5,
+  "totalTime": 53559,
+  "results": {
+    "loginSuccess": 5,
+    "greetingClickSuccess": 5,
+    "messageSendSuccess": 5,
+    "messageReceived": 0,
+    "avgTime": 10600.6,
+    "p95Time": 11009
+  },
+  "details": [
+    {
+      "userId": 1,
+      "userName": "임훈종",
+      "userEmail": "hjong.im@lge.com",
+      "loginSuccess": true,
+      "greetingClickSuccess": true,
+      "messageSendSuccess": true,
+      "messageReceived": false,
+      "totalTime": 11009,
+      "errors": []
+    },
+    {
+      "userId": 2,
+      "userName": "이상윤",
+      "userEmail": "yunpha123@hyosung.com",
+      "loginSuccess": true,
+      "greetingClickSuccess": true,
+      "messageSendSuccess": true,
+      "messageReceived": false,
+      "totalTime": 9913,
+      "errors": []
+    },
+    {
+      "userId": 3,
+      "userName": "문혜경",
+      "userEmail": "hkmoon@hyosung.com",
+      "loginSuccess": true,
+      "greetingClickSuccess": true,
+      "messageSendSuccess": true,
+      "messageReceived": false,
+      "totalTime": 10670,
+      "errors": []
+    },
+    {
+      "userId": 4,
+      "userName": "정지원",
+      "userEmail": "jiwon.jeong@hscorp.com",
+      "loginSuccess": true,
+      "greetingClickSuccess": true,
+      "messageSendSuccess": true,
+      "messageReceived": false,
+      "totalTime": 10813,
+      "errors": []
+    },
+    {
+      "userId": 5,
+      "userName": "음성원",
+      "userEmail": "sweum@lnspat.com",
+      "loginSuccess": true,
+      "greetingClickSuccess": true,
+      "messageSendSuccess": true,
+      "messageReceived": false,
+      "totalTime": 10598,
+      "errors": []
+    }
+  ]
+}

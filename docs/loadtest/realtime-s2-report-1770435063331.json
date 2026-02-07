@@ -1,0 +1,32 @@
+{
+  "testRunId": "RUN_1770435029377",
+  "timestamp": "2026-02-07T03:31:03.330Z",
+  "webinarId": "c9c7d93a-d775-4f8e-9243-8fdbb3618e2a",
+  "metrics": {
+    "subscribe": {
+      "success": 2,
+      "fail": 1,
+      "successRate": 66.66666666666666,
+      "avgTime": 0,
+      "p95Time": 0,
+      "channelErrors": 0,
+      "closedEvents": 0
+    },
+    "messages": {
+      "sendSuccess": 0,
+      "sendFail": 0,
+      "sendSuccessRate": null,
+      "receivedCount": 0,
+      "avgLatency": 0,
+      "p95Latency": 0
+    },
+    "questions": {
+      "createSuccess": 0,
+      "createFail": 0,
+      "createSuccessRate": null,
+      "updateReceived": 0,
+      "avgUpdateLatency": 0,
+      "p95UpdateLatency": 0
+    }
+  }
+}

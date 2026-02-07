@@ -455,17 +455,38 @@ async function simulateUser(
     // 테스트 식별자 추가 (메시지 내용에 포함)
     const sendTimestamp = Date.now()
     const testMessageContent = `[${TEST_RUN_ID}_U${userId}_M1_ts:${sendTimestamp}] ${inputValue}`
-    await page.evaluate((content: string) => {
-      const input = document.querySelector('input[placeholder="메시지를 입력하세요..."]') as HTMLInputElement
-      if (input) {
-        input.value = content
-        // React 상태 업데이트를 위한 이벤트 트리거
-        const event = new Event('input', { bubbles: true })
-        input.dispatchEvent(event)
-        const changeEvent = new Event('change', { bubbles: true })
-        input.dispatchEvent(changeEvent)
-      }
-    }, testMessageContent)
+    
+    // input 필드를 보이게 하고 포커스
+    const inputElement = page.locator(chatInputSelector).first()
+    await inputElement.scrollIntoViewIfNeeded()
+    await inputElement.click({ force: true }) // 포커스
+    
+    // 기존 내용 선택 후 새 내용으로 교체
+    await inputElement.fill('', { force: true }) // 기존 내용 지우기
+    await page.waitForTimeout(100)
+    await inputElement.fill(testMessageContent, { force: true }) // 새 내용 입력
+    
+    // React 상태 업데이트 대기
+    await page.waitForTimeout(300)
+    
+    // 입력값 확인
+    const finalInputValue = await inputElement.inputValue()
+    if (!finalInputValue.includes(TEST_RUN_ID)) {
+      console.warn(`[${userId}] 경고: TEST_RUN_ID가 입력값에 포함되지 않음: ${finalInputValue}`)
+      // 폴백: page.evaluate로 직접 설정
+      await page.evaluate((content: string) => {
+        const input = document.querySelector('input[placeholder="메시지를 입력하세요..."]') as HTMLInputElement
+        if (input) {
+          const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')?.set
+          if (nativeInputValueSetter) {
+            nativeInputValueSetter.call(input, content)
+            const event = new Event('input', { bubbles: true })
+            input.dispatchEvent(event)
+          }
+        }
+      }, testMessageContent)
+      await page.waitForTimeout(200)
+    }
 
     // 7. API 응답 대기 리스너 먼저 설정
     let responseReceived = false
@@ -508,31 +529,34 @@ async function simulateUser(
       }
     })
 
-    // 8. JavaScript로 직접 form submit 트리거
+    // 8. 전송 버튼 클릭 또는 Enter 키 입력
     const sendStartTime = Date.now()
-    await page.evaluate(() => {
-      const input = document.querySelector('input[placeholder="메시지를 입력하세요..."]') as HTMLInputElement
-      if (input && input.value) {
-        // form 찾기
-        const form = input.closest('form')
-        if (form) {
-          // form submit 이벤트 트리거
-          const submitEvent = new Event('submit', { bubbles: true, cancelable: true })
-          form.dispatchEvent(submitEvent)
-        } else {
-          // form이 없으면 Enter 키 이벤트 트리거
-          const enterEvent = new KeyboardEvent('keydown', {
-            key: 'Enter',
-            code: 'Enter',
-            keyCode: 13,
-            which: 13,
-            bubbles: true,
-            cancelable: true
-          })
-          input.dispatchEvent(enterEvent)
-        }
+    try {
+      // input 필드에 포커스가 있는지 확인
+      await inputElement.focus({ force: true })
+      await page.waitForTimeout(100)
+      
+      // Enter 키 입력 (가장 확실한 방법)
+      await inputElement.press('Enter', { force: true })
+    } catch (error) {
+      // Enter 키 실패 시 전송 버튼 클릭 시도
+      try {
+        const sendButton = page.locator('button[type="submit"]:has-text("전송"), button:has-text("전송")').first()
+        await sendButton.scrollIntoViewIfNeeded()
+        await sendButton.click({ force: true, timeout: 5000 })
+      } catch (buttonError) {
+        // 최종 폴백: JavaScript로 직접 submit
+        await page.evaluate(() => {
+          const input = document.querySelector('input[placeholder="메시지를 입력하세요..."]') as HTMLInputElement
+          if (input) {
+            const form = input.closest('form')
+            if (form) {
+              form.requestSubmit()
+            }
+          }
+        })
       }
-    })
+    }
 
     // API 응답 대기 (최대 15초)
     for (let i = 0; i < 30; i++) {

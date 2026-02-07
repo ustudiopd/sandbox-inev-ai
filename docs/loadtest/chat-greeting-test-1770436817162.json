@@ -1,0 +1,277 @@
+{
+  "timestamp": "2026-02-07T04:00:17.162Z",
+  "webinarId": "c9c7d93a-d775-4f8e-9243-8fdbb3618e2a",
+  "webinarSlug": "149400",
+  "concurrentUsers": 20,
+  "totalTime": 323226,
+  "results": {
+    "loginSuccess": 20,
+    "greetingClickSuccess": 0,
+    "messageSendSuccess": 0,
+    "messageReceived": 0,
+    "avgTime": 16035.65,
+    "p95Time": 26089
+  },
+  "details": [
+    {
+      "userId": 1,
+      "userName": "임훈종",
+      "userEmail": "hjong.im@lge.com",
+      "loginSuccess": true,
+      "greetingClickSuccess": false,
+      "messageSendSuccess": false,
+      "messageReceived": false,
+      "totalTime": 12762,
+      "errors": [
+        "에러: locator.click: Element is not visible\nCall log:\n  - waiting for locator('button[title=\"인사말 자동 입력\"], button:has-text(\"👋\")').first()\n    - locator resolved to <button type=\"button\" title=\"인사말 자동 입력\" class=\"px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors\">👋</button>\n  - attempting click action\n    - scrolling into view if needed\n"
+      ]
+    },
+    {
+      "userId": 2,
+      "userName": "이상윤",
+      "userEmail": "yunpha123@hyosung.com",
+      "loginSuccess": true,
+      "greetingClickSuccess": false,
+      "messageSendSuccess": false,
+      "messageReceived": false,
+      "totalTime": 13392,
+      "errors": [
+        "에러: locator.click: Element is not visible\nCall log:\n  - waiting for locator('button[title=\"인사말 자동 입력\"], button:has-text(\"👋\")').first()\n    - locator resolved to <button type=\"button\" title=\"인사말 자동 입력\" class=\"px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors\">👋</button>\n  - attempting click action\n    - scrolling into view if needed\n"
+      ]
+    },
+    {
+      "userId": 3,
+      "userName": "문혜경",
+      "userEmail": "hkmoon@hyosung.com",
+      "loginSuccess": true,
+      "greetingClickSuccess": false,
+      "messageSendSuccess": false,
+      "messageReceived": false,
+      "totalTime": 12028,
+      "errors": [
+        "에러: locator.click: Element is not visible\nCall log:\n  - waiting for locator('button[title=\"인사말 자동 입력\"], button:has-text(\"👋\")').first()\n    - locator resolved to <button type=\"button\" title=\"인사말 자동 입력\" class=\"px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors\">👋</button>\n  - attempting click action\n    - scrolling into view if needed\n"
+      ]
+    },
+    {
+      "userId": 4,
+      "userName": "정지원",
+      "userEmail": "jiwon.jeong@hscorp.com",
+      "loginSuccess": true,
+      "greetingClickSuccess": false,
+      "messageSendSuccess": false,
+      "messageReceived": false,
+      "totalTime": 12583,
+      "errors": [
+        "에러: locator.click: Element is not visible\nCall log:\n  - waiting for locator('button[title=\"인사말 자동 입력\"], button:has-text(\"👋\")').first()\n    - locator resolved to <button type=\"button\" title=\"인사말 자동 입력\" class=\"px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors\">👋</button>\n  - attempting click action\n    - scrolling into view if needed\n"
+      ]
+    },
+    {
+      "userId": 5,
+      "userName": "음성원",
+      "userEmail": "sweum@lnspat.com",
+      "loginSuccess": true,
+      "greetingClickSuccess": false,
+      "messageSendSuccess": false,
+      "messageReceived": false,
+      "totalTime": 12642,
+      "errors": [
+        "에러: locator.click: Element is not visible\nCall log:\n  - waiting for locator('button[title=\"인사말 자동 입력\"], button:has-text(\"👋\")').first()\n    - locator resolved to <button type=\"button\" title=\"인사말 자동 입력\" class=\"px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors\">👋</button>\n  - attempting click action\n    - scrolling into view if needed\n"
+      ]
+    },
+    {
+      "userId": 6,
+      "userName": "이유나",
+      "userEmail": "ynlee@wert.co.kr",
+      "loginSuccess": true,
+      "greetingClickSuccess": false,
+      "messageSendSuccess": false,
+      "messageReceived": false,
+      "totalTime": 12752,
+      "errors": [
+        "에러: locator.click: Element is not visible\nCall log:\n  - waiting for locator('button[title=\"인사말 자동 입력\"], button:has-text(\"👋\")').first()\n    - locator resolved to <button type=\"button\" title=\"인사말 자동 입력\" class=\"px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors\">👋</button>\n  - attempting click action\n    - scrolling into view if needed\n"
+      ]
+    },
+    {
+      "userId": 7,
+      "userName": "김상혁",
+      "userEmail": "shkim8886@homecc.com",
+      "loginSuccess": true,
+      "greetingClickSuccess": false,
+      "messageSendSuccess": false,
+      "messageReceived": false,
+      "totalTime": 12708,
+      "errors": [
+        "에러: locator.click: Element is not visible\nCall log:\n  - waiting for locator('button[title=\"인사말 자동 입력\"], button:has-text(\"👋\")').first()\n    - locator resolved to <button type=\"button\" title=\"인사말 자동 입력\" class=\"px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors\">👋</button>\n  - attempting click action\n    - scrolling into view if needed\n"
+      ]
+    },
+    {
+      "userId": 8,
+      "userName": "박성범",
+      "userEmail": "psb1122@hanwha.com",
+      "loginSuccess": true,
+      "greetingClickSuccess": false,
+      "messageSendSuccess": false,
+      "messageReceived": false,
+      "totalTime": 12677,
+      "errors": [
+        "에러: locator.click: Element is not visible\nCall log:\n  - waiting for locator('button[title=\"인사말 자동 입력\"], button:has-text(\"👋\")').first()\n    - locator resolved to <button type=\"button\" title=\"인사말 자동 입력\" class=\"px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors\">👋</button>\n  - attempting click action\n    - scrolling into view if needed\n"
+      ]
+    },
+    {
+      "userId": 9,
+      "userName": "양승철",
+      "userEmail": "jubileo@naver.com",
+      "loginSuccess": true,
+      "greetingClickSuccess": false,
+      "messageSendSuccess": false,
+      "messageReceived": false,
+      "totalTime": 12121,
+      "errors": [
+        "에러: locator.click: Element is not visible\nCall log:\n  - waiting for locator('button[title=\"인사말 자동 입력\"], button:has-text(\"👋\")').first()\n    - locator resolved to <button type=\"button\" title=\"인사말 자동 입력\" class=\"px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors\">👋</button>\n  - attempting click action\n    - scrolling into view if needed\n"
+      ]
+    },
+    {
+      "userId": 10,
+      "userName": "김진식",
+      "userEmail": "jskim@iae.re.kr",
+      "loginSuccess": true,
+      "greetingClickSuccess": false,
+      "messageSendSuccess": false,
+      "messageReceived": false,
+      "totalTime": 12726,
+      "errors": [
+        "에러: locator.click: Element is not visible\nCall log:\n  - waiting for locator('button[title=\"인사말 자동 입력\"], button:has-text(\"👋\")').first()\n    - locator resolved to <button type=\"button\" title=\"인사말 자동 입력\" class=\"px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors\">👋</button>\n  - attempting click action\n    - scrolling into view if needed\n"
+      ]
+    },
+    {
+      "userId": 11,
+      "userName": "이여찬",
+      "userEmail": "yclee@wert.co.kr",
+      "loginSuccess": true,
+      "greetingClickSuccess": false,
+      "messageSendSuccess": false,
+      "messageReceived": false,
+      "totalTime": 13026,
+      "errors": [
+        "에러: locator.click: Element is not visible\nCall log:\n  - waiting for locator('button[title=\"인사말 자동 입력\"], button:has-text(\"👋\")').first()\n    - locator resolved to <button type=\"button\" title=\"인사말 자동 입력\" class=\"px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors\">👋</button>\n  - attempting click action\n    - scrolling into view if needed\n"
+      ]
+    },
+    {
+      "userId": 12,
+      "userName": "신애림",
+      "userEmail": "arshin@wert.co.kr",
+      "loginSuccess": true,
+      "greetingClickSuccess": false,
+      "messageSendSuccess": false,
+      "messageReceived": false,
+      "totalTime": 12940,
+      "errors": [
+        "에러: locator.click: Element is not visible\nCall log:\n  - waiting for locator('button[title=\"인사말 자동 입력\"], button:has-text(\"👋\")').first()\n    - locator resolved to <button type=\"button\" title=\"인사말 자동 입력\" class=\"px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors\">👋</button>\n  - attempting click action\n    - scrolling into view if needed\n"
+      ]
+    },
+    {
+      "userId": 13,
+      "userName": "정재윤",
+      "userEmail": "jy.joung@kohyoung.com",
+      "loginSuccess": true,
+      "greetingClickSuccess": false,
+      "messageSendSuccess": false,
+      "messageReceived": false,
+      "totalTime": 12699,
+      "errors": [
+        "에러: locator.click: Element is not visible\nCall log:\n  - waiting for locator('button[title=\"인사말 자동 입력\"], button:has-text(\"👋\")').first()\n    - locator resolved to <button type=\"button\" title=\"인사말 자동 입력\" class=\"px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors\">👋</button>\n  - attempting click action\n    - scrolling into view if needed\n"
+      ]
+    },
+    {
+      "userId": 14,
+      "userName": "워테테",
+      "userEmail": "cmkang@wert.co.kr",
+      "loginSuccess": true,
+      "greetingClickSuccess": false,
+      "messageSendSuccess": false,
+      "messageReceived": false,
+      "totalTime": 12578,
+      "errors": [
+        "에러: locator.click: Element is not visible\nCall log:\n  - waiting for locator('button[title=\"인사말 자동 입력\"], button:has-text(\"👋\")').first()\n    - locator resolved to <button type=\"button\" title=\"인사말 자동 입력\" class=\"px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors\">👋</button>\n  - attempting click action\n    - scrolling into view if needed\n"
+      ]
+    },
+    {
+      "userId": 15,
+      "userName": "이종한",
+      "userEmail": "hanijjong@lsmtron.com",
+      "loginSuccess": true,
+      "greetingClickSuccess": false,
+      "messageSendSuccess": false,
+      "messageReceived": false,
+      "totalTime": 12935,
+      "errors": [
+        "에러: locator.click: Element is not visible\nCall log:\n  - waiting for locator('button[title=\"인사말 자동 입력\"], button:has-text(\"👋\")').first()\n    - locator resolved to <button type=\"button\" title=\"인사말 자동 입력\" class=\"px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors\">👋</button>\n  - attempting click action\n    - scrolling into view if needed\n"
+      ]
+    },
+    {
+      "userId": 16,
+      "userName": "조하민",
+      "userEmail": "cho990924@naver.com",
+      "loginSuccess": true,
+      "greetingClickSuccess": false,
+      "messageSendSuccess": false,
+      "messageReceived": false,
+      "totalTime": 26065,
+      "errors": [
+        "에러: locator.click: Element is not visible\nCall log:\n  - waiting for locator('button[title=\"인사말 자동 입력\"], button:has-text(\"👋\")').first()\n    - locator resolved to <button type=\"button\" title=\"인사말 자동 입력\" class=\"px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors\">👋</button>\n  - attempting click action\n    - scrolling into view if needed\n"
+      ]
+    },
+    {
+      "userId": 17,
+      "userName": "김동환",
+      "userEmail": "dongwhan.kim@sapien-semicon.com",
+      "loginSuccess": true,
+      "greetingClickSuccess": false,
+      "messageSendSuccess": false,
+      "messageReceived": false,
+      "totalTime": 26005,
+      "errors": [
+        "에러: locator.click: Element is not visible\nCall log:\n  - waiting for locator('button[title=\"인사말 자동 입력\"], button:has-text(\"👋\")').first()\n    - locator resolved to <button type=\"button\" title=\"인사말 자동 입력\" class=\"px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors\">👋</button>\n  - attempting click action\n    - scrolling into view if needed\n"
+      ]
+    },
+    {
+      "userId": 18,
+      "userName": "박재성",
+      "userEmail": "jobspark@dwdcc.co.kr",
+      "loginSuccess": true,
+      "greetingClickSuccess": false,
+      "messageSendSuccess": false,
+      "messageReceived": false,
+      "totalTime": 26089,
+      "errors": [
+        "에러: locator.click: Element is not visible\nCall log:\n  - waiting for locator('button[title=\"인사말 자동 입력\"], button:has-text(\"👋\")').first()\n    - locator resolved to <button type=\"button\" title=\"인사말 자동 입력\" class=\"px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors\">👋</button>\n  - attempting click action\n    - scrolling into view if needed\n"
+      ]
+    },
+    {
+      "userId": 19,
+      "userName": "이노을",
+      "userEmail": "noheul@wonik.com",
+      "loginSuccess": true,
+      "greetingClickSuccess": false,
+      "messageSendSuccess": false,
+      "messageReceived": false,
+      "totalTime": 25925,
+      "errors": [
+        "에러: locator.click: Element is not visible\nCall log:\n  - waiting for locator('button[title=\"인사말 자동 입력\"], button:has-text(\"👋\")').first()\n    - locator resolved to <button type=\"button\" title=\"인사말 자동 입력\" class=\"px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors\">👋</button>\n  - attempting click action\n    - scrolling into view if needed\n"
+      ]
+    },
+    {
+      "userId": 20,
+      "userName": "안주현",
+      "userEmail": "saranggodqhr@naver.com",
+      "loginSuccess": true,
+      "greetingClickSuccess": false,
+      "messageSendSuccess": false,
+      "messageReceived": false,
+      "totalTime": 26060,
+      "errors": [
+        "에러: locator.click: Element is not visible\nCall log:\n  - waiting for locator('button[title=\"인사말 자동 입력\"], button:has-text(\"👋\")').first()\n    - locator resolved to <button type=\"button\" title=\"인사말 자동 입력\" class=\"px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors\">👋</button>\n  - attempting click action\n    - scrolling into view if needed\n"
+      ]
+    }
+  ]
+}

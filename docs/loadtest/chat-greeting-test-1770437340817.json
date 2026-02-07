@@ -1,0 +1,237 @@
+{
+  "timestamp": "2026-02-07T04:09:00.817Z",
+  "webinarId": "c9c7d93a-d775-4f8e-9243-8fdbb3618e2a",
+  "webinarSlug": "149400",
+  "concurrentUsers": 20,
+  "totalTime": 216955,
+  "results": {
+    "loginSuccess": 20,
+    "greetingClickSuccess": 20,
+    "messageSendSuccess": 20,
+    "messageReceived": 0,
+    "avgTime": 10718.75,
+    "p95Time": 11138
+  },
+  "details": [
+    {
+      "userId": 1,
+      "userName": "임훈종",
+      "userEmail": "hjong.im@lge.com",
+      "loginSuccess": true,
+      "greetingClickSuccess": true,
+      "messageSendSuccess": true,
+      "messageReceived": false,
+      "totalTime": 10001,
+      "errors": []
+    },
+    {
+      "userId": 2,
+      "userName": "이상윤",
+      "userEmail": "yunpha123@hyosung.com",
+      "loginSuccess": true,
+      "greetingClickSuccess": true,
+      "messageSendSuccess": true,
+      "messageReceived": false,
+      "totalTime": 10828,
+      "errors": []
+    },
+    {
+      "userId": 3,
+      "userName": "문혜경",
+      "userEmail": "hkmoon@hyosung.com",
+      "loginSuccess": true,
+      "greetingClickSuccess": true,
+      "messageSendSuccess": true,
+      "messageReceived": false,
+      "totalTime": 10510,
+      "errors": []
+    },
+    {
+      "userId": 4,
+      "userName": "정지원",
+      "userEmail": "jiwon.jeong@hscorp.com",
+      "loginSuccess": true,
+      "greetingClickSuccess": true,
+      "messageSendSuccess": true,
+      "messageReceived": false,
+      "totalTime": 10914,
+      "errors": []
+    },
+    {
+      "userId": 5,
+      "userName": "음성원",
+      "userEmail": "sweum@lnspat.com",
+      "loginSuccess": true,
+      "greetingClickSuccess": true,
+      "messageSendSuccess": true,
+      "messageReceived": false,
+      "totalTime": 10726,
+      "errors": []
+    },
+    {
+      "userId": 6,
+      "userName": "이유나",
+      "userEmail": "ynlee@wert.co.kr",
+      "loginSuccess": true,
+      "greetingClickSuccess": true,
+      "messageSendSuccess": true,
+      "messageReceived": false,
+      "totalTime": 11001,
+      "errors": []
+    },
+    {
+      "userId": 7,
+      "userName": "김상혁",
+      "userEmail": "shkim8886@homecc.com",
+      "loginSuccess": true,
+      "greetingClickSuccess": true,
+      "messageSendSuccess": true,
+      "messageReceived": false,
+      "totalTime": 10717,
+      "errors": []
+    },
+    {
+      "userId": 8,
+      "userName": "박성범",
+      "userEmail": "psb1122@hanwha.com",
+      "loginSuccess": true,
+      "greetingClickSuccess": true,
+      "messageSendSuccess": true,
+      "messageReceived": false,
+      "totalTime": 10762,
+      "errors": []
+    },
+    {
+      "userId": 9,
+      "userName": "양승철",
+      "userEmail": "jubileo@naver.com",
+      "loginSuccess": true,
+      "greetingClickSuccess": true,
+      "messageSendSuccess": true,
+      "messageReceived": false,
+      "totalTime": 10670,
+      "errors": []
+    },
+    {
+      "userId": 10,
+      "userName": "김진식",
+      "userEmail": "jskim@iae.re.kr",
+      "loginSuccess": true,
+      "greetingClickSuccess": true,
+      "messageSendSuccess": true,
+      "messageReceived": false,
+      "totalTime": 10142,
+      "errors": []
+    },
+    {
+      "userId": 11,
+      "userName": "이여찬",
+      "userEmail": "yclee@wert.co.kr",
+      "loginSuccess": true,
+      "greetingClickSuccess": true,
+      "messageSendSuccess": true,
+      "messageReceived": false,
+      "totalTime": 11052,
+      "errors": []
+    },
+    {
+      "userId": 12,
+      "userName": "신애림",
+      "userEmail": "arshin@wert.co.kr",
+      "loginSuccess": true,
+      "greetingClickSuccess": true,
+      "messageSendSuccess": true,
+      "messageReceived": false,
+      "totalTime": 10071,
+      "errors": []
+    },
+    {
+      "userId": 13,
+      "userName": "정재윤",
+      "userEmail": "jy.joung@kohyoung.com",
+      "loginSuccess": true,
+      "greetingClickSuccess": true,
+      "messageSendSuccess": true,
+      "messageReceived": false,
+      "totalTime": 10966,
+      "errors": []
+    },
+    {
+      "userId": 14,
+      "userName": "워테테",
+      "userEmail": "cmkang@wert.co.kr",
+      "loginSuccess": true,
+      "greetingClickSuccess": true,
+      "messageSendSuccess": true,
+      "messageReceived": false,
+      "totalTime": 10690,
+      "errors": []
+    },
+    {
+      "userId": 15,
+      "userName": "이종한",
+      "userEmail": "hanijjong@lsmtron.com",
+      "loginSuccess": true,
+      "greetingClickSuccess": true,
+      "messageSendSuccess": true,
+      "messageReceived": false,
+      "totalTime": 10717,
+      "errors": []
+    },
+    {
+      "userId": 16,
+      "userName": "조하민",
+      "userEmail": "cho990924@naver.com",
+      "loginSuccess": true,
+      "greetingClickSuccess": true,
+      "messageSendSuccess": true,
+      "messageReceived": false,
+      "totalTime": 10846,
+      "errors": []
+    },
+    {
+      "userId": 17,
+      "userName": "김동환",
+      "userEmail": "dongwhan.kim@sapien-semicon.com",
+      "loginSuccess": true,
+      "greetingClickSuccess": true,
+      "messageSendSuccess": true,
+      "messageReceived": false,
+      "totalTime": 10696,
+      "errors": []
+    },
+    {
+      "userId": 18,
+      "userName": "박재성",
+      "userEmail": "jobspark@dwdcc.co.kr",
+      "loginSuccess": true,
+      "greetingClickSuccess": true,
+      "messageSendSuccess": true,
+      "messageReceived": false,
+      "totalTime": 10932,
+      "errors": []
+    },
+    {
+      "userId": 19,
+      "userName": "이노을",
+      "userEmail": "noheul@wonik.com",
+      "loginSuccess": true,
+      "greetingClickSuccess": true,
+      "messageSendSuccess": true,
+      "messageReceived": false,
+      "totalTime": 10996,
+      "errors": []
+    },
+    {
+      "userId": 20,
+      "userName": "안주현",
+      "userEmail": "saranggodqhr@naver.com",
+      "loginSuccess": true,
+      "greetingClickSuccess": true,
+      "messageSendSuccess": true,
+      "messageReceived": false,
+      "totalTime": 11138,
+      "errors": []
+    }
+  ]
+}
