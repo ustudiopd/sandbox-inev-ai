@@ -1778,6 +1778,26 @@ export default function Chat({
               maxLength={500}
               disabled={sending}
             />
+            {/* 인사 버튼 (테스트용) */}
+            <button
+              type="button"
+              onClick={() => {
+                const greetings = [
+                  '안녕하세요!',
+                  '반갑습니다!',
+                  '좋은 하루 되세요!',
+                  '환영합니다!',
+                  '반가워요!'
+                ]
+                const randomGreeting = greetings[Math.floor(Math.random() * greetings.length)]
+                setNewMessage(randomGreeting)
+              }}
+              disabled={sending}
+              className="px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              title="인사말 자동 입력"
+            >
+              👋
+            </button>
             <button
               type="submit"
               disabled={!newMessage.trim() || sending}
