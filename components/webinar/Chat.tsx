@@ -637,6 +637,43 @@ export default function Chat({
             if (newMsg && !newMsg.hidden) {
               console.log('새 메시지 수신:', newMsg)
               
+              // 테스트 모드: 수신 카운터 업데이트 (테스트에서만 사용)
+              if (typeof window !== 'undefined') {
+                const win = window as any
+                if (!win.__TEST_RECEIVED_IDS) {
+                  win.__TEST_RECEIVED_IDS = new Set<string>()
+                }
+                if (win.__TEST_RECEIVED_COUNT === undefined) {
+                  win.__TEST_RECEIVED_COUNT = 0
+                }
+                
+                // 메시지 ID로 중복 체크
+                const msgId = newMsg.id?.toString() || newMsg.client_msg_id || `${newMsg.user_id}_${newMsg.created_at}`
+                if (msgId && !win.__TEST_RECEIVED_IDS.has(msgId)) {
+                  win.__TEST_RECEIVED_IDS.add(msgId)
+                  win.__TEST_RECEIVED_COUNT = (win.__TEST_RECEIVED_COUNT || 0) + 1
+                  
+                  // 테스트 메시지인지 확인 (TEST_RUN_ID 포함)
+                  if (newMsg.content && typeof newMsg.content === 'string' && newMsg.content.includes('TEST_')) {
+                    if (!win.__TEST_RECEIVED_TEST_IDS) {
+                      win.__TEST_RECEIVED_TEST_IDS = new Set<string>()
+                    }
+                    win.__TEST_RECEIVED_TEST_IDS.add(msgId)
+                    
+                    // 전송 시간 추출 (메시지 내용에서 ts: 타임스탬프)
+                    const timeMatch = newMsg.content.match(/ts:(\d+)/)
+                    if (timeMatch) {
+                      if (!win.__TEST_RECEIVE_LATENCIES) {
+                        win.__TEST_RECEIVE_LATENCIES = []
+                      }
+                      const sendTime = parseInt(timeMatch[1])
+                      const latency = Date.now() - sendTime
+                      win.__TEST_RECEIVE_LATENCIES.push(latency)
+                    }
+                  }
+                }
+              }
+              
               // 해결책.md A안: 초기 로드 중 이벤트 버퍼링
               if (initialLoadTimeRef.current === 0) {
                 console.log('초기 로드 전, 이벤트 버퍼링:', env.t)
