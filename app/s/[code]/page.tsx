@@ -313,8 +313,8 @@ export default async function ShortLinkRedirectPage({
     })
 
     // 307 리다이렉트 (Temporary Redirect)
-    // Next.js redirect()는 기본적으로 307을 사용하지만, 명시적으로 설정
-    redirect(redirectUrl, 'replace')
+    // Next.js redirect()는 기본적으로 307을 사용
+    redirect(redirectUrl)
   } catch (err: any) {
     console.error('[ShortLink] 예외 발생:', {
       error: err,

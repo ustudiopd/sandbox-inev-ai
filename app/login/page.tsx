@@ -1,13 +1,13 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { createClientSupabase } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 
 const ALLOWED_NEXT_PREFIXES = ['/inev-admin', '/agency/', '/client/', '/super/']
 
-export default function LoginPage() {
+function LoginForm() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
@@ -123,6 +123,22 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50">
+        <div className="w-full max-w-md p-8 bg-white rounded-2xl shadow-2xl">
+          <div className="text-center">
+            <p className="text-gray-600">로딩 중...</p>
+          </div>
+        </div>
+      </div>
+    }>
+      <LoginForm />
+    </Suspense>
   )
 }
 

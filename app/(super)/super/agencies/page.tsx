@@ -4,6 +4,8 @@ import Link from 'next/link'
 import AgencyCreateModal from './_components/AgencyCreateModal'
 import AgencyDeleteButton from './_components/AgencyDeleteButton'
 
+export const dynamic = 'force-dynamic'
+
 export default async function AgenciesPage() {
   await requireSuperAdmin()
   // 슈퍼어드민은 Admin Supabase 사용 (RLS 우회, 성능 향상)
