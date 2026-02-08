@@ -91,11 +91,11 @@ export default function QA({
       }
       
       // API를 통해 질문 조회 (프로필 정보 포함, RLS 우회)
-      // 관리자 모드일 때는 항상 전체 질문 조회
+      // 웨비나 시청 페이지는 항상 아래에서 위로 올라가는 순서 (채팅처럼)
       const params = new URLSearchParams({
         onlyMine: isAdminMode ? 'false' : (activeFilter === 'mine' ? 'true' : (showOnlyMine ? 'true' : 'false')),
         filter: 'all', // 필터는 클라이언트에서 처리하지 않고 서버에서는 항상 'all'
-        isAdminMode: isAdminMode ? 'true' : 'false', // 관리자 모드 여부 전달
+        isAdminMode: 'false', // 웨비나 시청 페이지는 항상 일반 사용자 모드로 처리 (아래에서 위로)
       })
       
       const response = await fetch(`/api/webinars/${webinarId}/questions?${params}`)
@@ -211,13 +211,8 @@ export default function QA({
               if (prev.some(q => q.id === newQuestion.id)) {
                 return prev
               }
-              // 일반 사용자 모드: 채팅처럼 아래에서 위로 올라가는 순서 (맨 뒤에 추가)
-              // 관리자 모드: 위에서 아래로 내려오는 순서 (맨 앞에 추가)
-              if (isAdminMode) {
-                return [{ ...newQuestion, user: null }, ...prev]
-              } else {
-                return [...prev, { ...newQuestion, user: null }]
-              }
+              // 웨비나 시청 페이지는 항상 채팅처럼 아래에서 위로 올라가는 순서 (맨 뒤에 추가)
+              return [...prev, { ...newQuestion, user: null }]
             })
             // 프로필 정보를 위해 나중에 전체 새로고침 (선택적)
             // loadQuestions()
@@ -371,15 +366,8 @@ export default function QA({
       },
     }
     
-    // 일반 사용자 모드: 채팅처럼 아래에서 위로 올라가는 순서 (맨 뒤에 추가)
-    // 관리자 모드: 위에서 아래로 내려오는 순서 (맨 앞에 추가)
-    setQuestions((prev) => {
-      if (isAdminMode) {
-        return [optimisticQuestion, ...prev]
-      } else {
-        return [...prev, optimisticQuestion]
-      }
-    })
+    // 웨비나 시청 페이지는 항상 채팅처럼 아래에서 위로 올라가는 순서 (맨 뒤에 추가)
+    setQuestions((prev) => [...prev, optimisticQuestion])
     setNewQuestion('')
     setSending(true)
     
@@ -524,9 +512,8 @@ export default function QA({
         ) : questions.length === 0 ? (
           <div className="text-center text-gray-500 py-8">아직 질문이 없습니다</div>
         ) : (
-          // 일반 사용자 모드: 채팅처럼 아래에서 위로 올라가는 순서 (배열 역순)
-          // 관리자 모드: 위에서 아래로 내려오는 순서 (배열 그대로)
-          (isAdminMode ? questions : [...questions].reverse()).map((question) => {
+          // 웨비나 시청 페이지는 항상 채팅처럼 아래에서 위로 올라가는 순서 (배열 역순)
+          [...questions].reverse().map((question) => {
             if (renderQuestion) {
               return (
                 <div key={question.id} onClick={() => onQuestionClick?.(question)}>

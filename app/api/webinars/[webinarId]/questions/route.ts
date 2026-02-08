@@ -121,15 +121,15 @@ export async function GET(
     }))
     
     // 관리자 모드일 때만 고정된 질문을 맨 위로 정렬
-    // 일반 사용자 모드에서는 고정 기능 무시하고 시간 순서만 유지
+    // 웨비나 시청 페이지(일반 사용자 모드)에서는 고정 기능 무시하고 시간 순서만 유지
     const sorted = isAdminMode 
       ? formattedQuestions.sort((a, b) => {
-          // 관리자: 고정된 질문을 맨 위로, 그 다음 시간 순서 (최신이 위)
+          // 관리자 대시보드: 고정된 질문을 맨 위로, 그 다음 시간 순서 (최신이 위)
           if (a.status === 'pinned' && b.status !== 'pinned') return -1
           if (a.status !== 'pinned' && b.status === 'pinned') return 1
-          return 0 // 시간 순서는 이미 쿼리에서 정렬됨
+          return 0 // 시간 순서는 이미 쿼리에서 정렬됨 (DESC)
         })
-      : formattedQuestions // 일반 사용자: 시간 순서만 유지 (오래된 것부터)
+      : formattedQuestions // 웨비나 시청 페이지: 시간 순서만 유지 (DESC, 클라이언트에서 역순 처리)
     
     return NextResponse.json({ questions: sorted })
   } catch (error: any) {
