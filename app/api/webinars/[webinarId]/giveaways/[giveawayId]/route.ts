@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createAdminSupabase } from '@/lib/supabase/admin'
 import { createServerSupabase } from '@/lib/supabase/server'
 import { requireAuth } from '@/lib/auth/guards'
+import { broadcastRaffleStart, broadcastRaffleDone } from '@/lib/webinar/broadcast'
 
 export const runtime = 'nodejs'
 
@@ -114,7 +115,18 @@ export async function PUT(
         action: 'GIVEAWAY_UPDATE',
         payload: { giveaway_id: giveawayId },
       })
-    
+
+    // 상태 변경 시 Broadcast로 참가자 UI 실시간 반영 (postgres_changes 대체)
+    if (status === 'open') {
+      broadcastRaffleStart(webinarId, updatedGiveaway, user.id).catch((e) =>
+        console.error('broadcastRaffleStart 실패:', e)
+      )
+    } else if (status === 'closed') {
+      broadcastRaffleDone(webinarId, updatedGiveaway, user.id).catch((e) =>
+        console.error('broadcastRaffleDone 실패:', e)
+      )
+    }
+
     return NextResponse.json({ success: true, giveaway: updatedGiveaway })
   } catch (error: any) {
     return NextResponse.json(

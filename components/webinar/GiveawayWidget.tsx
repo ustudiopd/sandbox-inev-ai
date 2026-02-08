@@ -1,7 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { createClientSupabase } from '@/lib/supabase/client'
+import type { BroadcastEnvelope } from '@/lib/webinar/realtime'
+import { isValidBroadcastEnvelope } from '@/lib/webinar/realtime'
 
 interface Giveaway {
   id: string
@@ -91,141 +93,118 @@ export default function GiveawayWidget({
   const [winners, setWinners] = useState<GiveawayWinner[]>([])
   const supabase = createClientSupabase()
 
-  // 추첨 정보 로드
-  useEffect(() => {
-    const loadGiveaway = async () => {
-      try {
-        setLoading(true)
-        
-        // 추첨 정보 조회
-        const response = await fetch(`/api/webinars/${webinarId}/giveaways`)
-        const result = await response.json()
+  const loadGiveawayRef = useRef<(() => Promise<void>) | undefined>(undefined)
 
-        if (!response.ok || result.error) {
-          throw new Error(result.error || '추첨 정보를 불러올 수 없습니다')
-        }
+  // 추첨 정보 로드 (1회 호출 또는 Broadcast 수신 시)
+  const loadGiveaway = async () => {
+    try {
+      setLoading(true)
+      const response = await fetch(`/api/webinars/${webinarId}/giveaways`)
+      const result = await response.json()
 
-        const found = result.giveaways?.find((g: Giveaway) => g.id === giveawayId)
-        if (!found) {
-          throw new Error('추첨을 찾을 수 없습니다')
-        }
-
-        setGiveaway(found)
-
-        // 참여 여부 확인 및 자동 참가
-        const { data: { user } } = await supabase.auth.getUser()
-        if (user) {
-          // 참여 여부 확인
-          const { data: entry } = await supabase
-            .from('giveaway_entries')
-            .select('id')
-            .eq('giveaway_id', giveawayId)
-            .eq('participant_id', user.id)
-            .maybeSingle()
-          
-          // 이미 참가한 경우
-          if (entry) {
-            setEntered(true)
-          } else if (found.status === 'open') {
-            // 오픈된 추첨이고 아직 참가하지 않은 경우 자동 참가 시도
-            try {
-              const enterResponse = await fetch(
-                `/api/webinars/${webinarId}/giveaways/${giveawayId}/enter`,
-                {
-                  method: 'POST',
-                  credentials: 'include',
-                }
-              )
-              
-              if (enterResponse.ok) {
-                setEntered(true)
-                setEntryCount((prev) => prev + 1)
-              } else if (enterResponse.status === 409) {
-                // 이미 참가한 경우 (동시성 문제)
-                setEntered(true)
-              }
-            } catch (error) {
-              console.warn('[GiveawayWidget] 자동 참가 실패:', error)
-              // 자동 참가 실패해도 계속 진행
-            }
-          }
-        }
-
-        // 참여자 수 조회
-        const { count } = await supabase
-          .from('giveaway_entries')
-          .select('*', { count: 'exact', head: true })
-          .eq('giveaway_id', giveawayId)
-          .eq('eligible', true)
-        
-        setEntryCount(count || 0)
-
-        // 당첨자 조회 (추첨 완료된 경우)
-        if (found.status === 'drawn') {
-          const resultsResponse = await fetch(
-            `/api/webinars/${webinarId}/giveaways/${giveawayId}/results`
-          )
-          const resultsResult = await resultsResponse.json()
-          
-          if (resultsResponse.ok && resultsResult.results?.winners) {
-            setWinners(resultsResult.results.winners)
-          }
-        }
-      } catch (err: any) {
-        setError(err.message || '추첨 정보를 불러오는 중 오류가 발생했습니다')
-      } finally {
-        setLoading(false)
+      if (!response.ok || result.error) {
+        throw new Error(result.error || '추첨 정보를 불러올 수 없습니다')
       }
-    }
 
+      const found = result.giveaways?.find((g: Giveaway) => g.id === giveawayId)
+      if (!found) {
+        throw new Error('추첨을 찾을 수 없습니다')
+      }
+
+      setGiveaway(found)
+
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        const { data: entry } = await supabase
+          .from('giveaway_entries')
+          .select('id')
+          .eq('giveaway_id', giveawayId)
+          .eq('participant_id', user.id)
+          .maybeSingle()
+
+        if (entry) {
+          setEntered(true)
+        } else if (found.status === 'open') {
+          try {
+            const enterResponse = await fetch(
+              `/api/webinars/${webinarId}/giveaways/${giveawayId}/enter`,
+              { method: 'POST', credentials: 'include' }
+            )
+            if (enterResponse.ok) setEntered(true)
+            else if (enterResponse.status === 409) setEntered(true)
+          } catch (e) {
+            console.warn('[GiveawayWidget] 자동 참가 실패:', e)
+          }
+        }
+      }
+
+      // 참여자 수: 초기 로드 시에만 조회 (실시간 카운트 제거로 부하 감소)
+      const { count } = await supabase
+        .from('giveaway_entries')
+        .select('*', { count: 'exact', head: true })
+        .eq('giveaway_id', giveawayId)
+        .eq('eligible', true)
+      setEntryCount(count || 0)
+
+      if (found.status === 'drawn') {
+        const resultsResponse = await fetch(
+          `/api/webinars/${webinarId}/giveaways/${giveawayId}/results`
+        )
+        const resultsResult = await resultsResponse.json()
+        if (resultsResponse.ok && resultsResult.results?.winners) {
+          setWinners(resultsResult.results.winners)
+        }
+      }
+    } catch (err: any) {
+      setError(err.message || '추첨 정보를 불러오는 중 오류가 발생했습니다')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  loadGiveawayRef.current = loadGiveaway
+
+  // 초기 로드 + Broadcast 구독만 (postgres_changes 제거)
+  useEffect(() => {
     loadGiveaway()
 
-    // 실시간 업데이트 구독
     const channel = supabase
-      .channel(`webinar:${webinarId}:giveaways`)
+      .channel(`webinar:${webinarId}`, {
+        config: { broadcast: { self: false } },
+      })
       .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'giveaways',
-          filter: `id=eq.${giveawayId}`,
-        },
-        () => {
-          loadGiveaway()
+        'broadcast',
+        { event: 'raffle:start' },
+        (payload: any) => {
+          const env = (payload?.payload || payload) as BroadcastEnvelope | undefined
+          if (!isValidBroadcastEnvelope(env)) return
+          const data = env.payload as any
+          if (data?.giveaway?.id === giveawayId || data?.id === giveawayId) {
+            loadGiveawayRef.current?.()
+          }
         }
       )
       .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'giveaway_entries',
-          filter: `giveaway_id=eq.${giveawayId}`,
-        },
-        async () => {
-          // 참여자 수 업데이트
-          const { count } = await supabase
-            .from('giveaway_entries')
-            .select('*', { count: 'exact', head: true })
-            .eq('giveaway_id', giveawayId)
-            .eq('eligible', true)
-          
-          setEntryCount(count || 0)
-          
-          // 현재 사용자의 참여 여부도 확인
-          const { data: { user } } = await supabase.auth.getUser()
-          if (user) {
-            const { data: entry } = await supabase
-              .from('giveaway_entries')
-              .select('id')
-              .eq('giveaway_id', giveawayId)
-              .eq('participant_id', user.id)
-              .maybeSingle()
-            
-            if (entry) {
-              setEntered(true)
-            }
+        'broadcast',
+        { event: 'raffle:draw' },
+        (payload: any) => {
+          const env = (payload?.payload || payload) as BroadcastEnvelope | undefined
+          if (!isValidBroadcastEnvelope(env)) return
+          const data = env.payload as any
+          if (data?.giveaway?.id === giveawayId || data?.giveawayId === giveawayId) {
+            loadGiveawayRef.current?.()
+          }
+        }
+      )
+      .on(
+        'broadcast',
+        { event: 'raffle:done' },
+        (payload: any) => {
+          const env = (payload?.payload || payload) as BroadcastEnvelope | undefined
+          if (!isValidBroadcastEnvelope(env)) return
+          const data = env.payload as any
+          if (data?.id === giveawayId || data?.giveaway_id === giveawayId) {
+            loadGiveawayRef.current?.()
           }
         }
       )

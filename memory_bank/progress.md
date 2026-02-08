@@ -1,5 +1,20 @@
 # 완료된 작업 내역 (Progress)
 
+## [2026-02-08] Giveaway Broadcast 전환 및 Realtime 권한 점검 (P1 티켓)
+- ✅ P1-티켓1: GiveawayWidget DB Changes 제거 → Broadcast 전환
+  - `components/webinar/GiveawayWidget.tsx`: giveaways, giveaway_entries **postgres_changes 구독 제거**
+  - `webinar:${webinarId}` 채널에서 **Broadcast만** 구독 (raffle:start, raffle:draw, raffle:done 수신 시 loadGiveaway 1회)
+  - 참여자 수: 초기 로드·Broadcast 후 1회만 조회 (실시간 카운트 제거로 DB 부하 감소)
+- ✅ P1-티켓2: Giveaway open/closed 시 Broadcast 추가
+  - `app/api/webinars/[webinarId]/giveaways/[giveawayId]/route.ts`: status === 'open' 시 broadcastRaffleStart, status === 'closed' 시 broadcastRaffleDone 호출
+- ✅ P1-티켓3: Realtime Broadcast 권한 정책 점검
+  - 코드 감사: poll:open, raffle:draw 등 관리자 이벤트는 서버만 전송 (클라이언트 send 코드 없음)
+  - 마이그레이션 104 적용: `realtime.messages` RLS (SELECT=인증 수신, INSERT=서버/운영자만)
+  - 문서: `docs/Realtime_Broadcast_권한_점검.md`, `docs/메모_Realtime_Authorization_나중적용.md`
+- 📌 **메모(나중에 할 것)**: Realtime Authorization **설정**은 나중에 점검해서 넣기로 함
+  - 채널을 `config: { private: true }` 로 열고, 대시보드에서 Allow public access 끄면 RLS가 실제 적용됨
+  - 적용 전에 참가자 발신 이벤트 `session_conflict`를 API 경유로 옮길지 검토 필요
+
 ## [2026-02-06] 웨비나 추첨 및 통계 기능 개선
 - ✅ 사용자 지정 방식 추첨에 저장 기능 추가
   - `app/api/webinars/[webinarId]/giveaways/[giveawayId]/route.ts`: PUT 엔드포인트에 `manual_winners` 업데이트 기능 추가
