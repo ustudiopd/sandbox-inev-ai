@@ -103,7 +103,7 @@ export default function Header() {
   if (isPublicPage) {
     return (
       <header className="bg-white border-b border-gray-200">
-        <div className="container mx-auto px-4 py-4">
+        <div className="max-w-[1600px] mx-auto px-4 py-4">
           <div className="flex justify-between items-center">
             <Link href="/" className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
               Inev.ai

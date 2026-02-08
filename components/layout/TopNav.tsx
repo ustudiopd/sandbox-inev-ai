@@ -111,20 +111,31 @@ export default function TopNav({ organizations: propOrganizations }: TopNavProps
     active: pathname === item.href || pathname.startsWith(item.href + '/'),
   }))
 
+  // 현재 클라이언트 정보 확인
+  const clientId = params?.clientId as string
+  const currentClient = clientId && organizations?.clients?.find(c => c.id === clientId)
+  const isWertIntelligence = currentClient && (currentClient.name?.includes('Wert Intelligence') || currentClient.name?.includes('워트 인텔리전스'))
+
   return (
     <>
       <nav 
         className="fixed top-0 left-0 right-0 z-50 bg-white shadow-md h-16 border-b border-gray-200"
         aria-label="메인 네비게이션"
       >
-        <div className="max-w-7xl mx-auto px-4 h-full flex items-center justify-between">
-          {/* 로고 */}
-          <Link 
-            href="/" 
-            className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent hover:opacity-80 transition-opacity"
-          >
-            Inev.ai
-          </Link>
+        <div className="max-w-[1600px] mx-auto px-4 h-full flex items-center justify-between">
+          {/* 로고 또는 클라이언트명 */}
+          {isWertIntelligence ? (
+            <div className="text-2xl font-bold text-gray-900">
+              {currentClient?.name || 'Wert Intelligence'}
+            </div>
+          ) : (
+            <Link 
+              href="/" 
+              className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent hover:opacity-80 transition-opacity"
+            >
+              Inev.ai
+            </Link>
+          )}
 
           {/* 데스크톱 메뉴 */}
           <div className="hidden lg:flex items-center gap-1">

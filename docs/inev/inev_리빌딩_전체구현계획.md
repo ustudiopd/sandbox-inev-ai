@@ -1,8 +1,8 @@
 # inev.ai 리빌딩 전체 구현 계획
 
-**문서 버전**: v2.0  
+**문서 버전**: v2.1  
 **최종 업데이트**: 2026-02-09  
-**상태**: Phase 8 완료, Phase 9는 지침만
+**상태**: Phase 10 완료 (필수 작업), Phase 9는 지침만
 
 ---
 
@@ -100,18 +100,39 @@
 
 **지침 문서**: `docs/inev/Phase9_인스턴스_Factory_지침.md`
 
-### Phase 10 — 대시보드 및 통계 시스템
+### Phase 10 — 대시보드 및 통계 시스템 ✅
 
-- Client Dashboard 수정 (inev.ai 스키마에 맞게)
-- Event Dashboard 확장 (통계 탭 추가)
-- 통계 API 구현 (`/api/inev/clients/[clientId]/statistics/overview`, `/api/inev/events/[eventId]/statistics`)
-- 통계 집계 시스템 (선택적, 대용량 데이터 대비)
+**핵심 원칙**: Phase 10은 "대시보드 UI 작업"이 아니라 **"운영 지표의 헌법을 고정하는 단계"**입니다.
+
+**주요 작업**:
+- ✅ 통계 계약서 작성 (지표 정의 / source table / 집계 방식 / 기간 규칙) - `Phase10_통계_계약서.md` 완료
+- ✅ Client Dashboard 수정 (inev.ai 스키마에 맞게, events 기준) - Phase 10-2 완료
+- ✅ Event Dashboard 확장 (모듈별 탭 구조: Overview/Registration/Marketing/Survey/Email/Webinar) - Phase 10-3 완료
+- ✅ 통계 API 구현 (가벼운 Overview API + 무거운 집계는 별도 엔드포인트) - 모든 API 구현 완료
+- ⏸️ 통계 집계 시스템 (선택적, 대용량 데이터 대비) - Phase 10-5, 조건부
+
+**핵심 결정사항**:
+- D10-1: 대시보드 최상위 단위는 Event ✅
+- D10-2: Event 통계와 Webinar 통계 분리 ✅
+- D10-3: `event_visits` vs `event_access_logs` 정의 통일 ✅
+- D10-4: 탭 클릭 시 로드 + 자동 갱신 최소화 ✅
+
+**완료된 작업**:
+- ✅ Phase 10-1: 통계 정의/데이터 계약 (`Phase10_통계_계약서.md`)
+- ✅ Phase 10-2: Client Dashboard 수정 (`/api/inev/clients/[clientId]/statistics/overview`)
+- ✅ Phase 10-3: Event Dashboard 확장 (모듈별 탭 + 통계 API)
+- ✅ Phase 10-4: Webinar 통계 연결 (별도 페이지 링크)
 
 **DoD**: 
-- Client Dashboard에서 이벤트 목록과 기본 통계가 표시됨
-- 통계 API가 정상 동작하고 대시보드에서 사용 가능
+- ✅ 통계 계약서 확정
+- ✅ Client Dashboard에서 이벤트 목록과 기본 통계가 표시됨
+- ✅ Event Dashboard에서 모듈별 탭 노출
+- ✅ 통계 API가 정상 동작하고 대시보드에서 사용 가능
+- ✅ RLS를 통한 보안 검증 완료 (모든 API에 `requireClientMember` 적용)
 
-**구현 계획 문서**: `docs/inev/Phase10_대시보드_통계_구현_계획.md`
+**구현 계획 문서**: 
+- `docs/inev/Phase10_대시보드_통계_구현_계획.md` ⭐
+- `docs/inev/Phase10_통계_계약서.md` ⭐ (필수 참조)
 
 ---
 
@@ -150,6 +171,8 @@
 
 - [Phase 8 전용 Supabase 분리 절차](./Phase8_전용_Supabase_분리_절차.md)
 - [Phase 9 인스턴스 Factory 지침](./Phase9_인스턴스_Factory_지침.md)
+- [Phase 10 대시보드 통계 구현 계획](./Phase10_대시보드_통계_구현_계획.md)
+- [Phase 10 통계 계약서](./Phase10_통계_계약서.md) ⭐
 - [inev.ai 개발 · 배포 운영 명세서](./inev.ai_개발_배포_운영_명세서.md)
 
 ---

@@ -5,19 +5,21 @@
 - **도메인**: inev.ai
 
 ## 1. 현재 집중하고 있는 작업  
-- **작업명**: inev.ai 리빌딩 (Phase 0–6)
-- **상태**: Phase 1~5 완료, Phase 6 착수 준비 완료
-  - Phase 0: Supabase inev 연결, Auth/Tenant 문서화 완료
-  - Phase 1 마무리: 이벤트 상세/편집(`/inev-admin/clients/[clientId]/events/[eventId]`), API GET/PATCH `/api/inev/events/[eventId]`, 공개 랜딩 모듈별 링크(등록/설문/웨비나) 노출
-  - Phase 2: 등록·설문·등록자 CSV, 설문 응답 탭
-  - Phase 3: UTM/Visit (`event_visits` 테이블, POST /api/inev/visits, Admin UTM/Visit 탭)
-  - Phase 4: 이벤트 이메일 초안·미리보기·테스트 발송 (event_emails, Admin 이메일 탭)
-  - Phase 5: Entry Gate + 표시이름 (`/event/[slug]/enter`, 자동/수동 입장, 표시이름 등록 데이터 기반)
-  - **Phase 1~5 DoD**: `node scripts/inev-dod-test-phase1-4-auth.mjs`, `node scripts/inev-phase5-dod-test.mjs` 로 검증 완료 (100% PASS)
-  - **Phase 4~5 Baseline 고정**: 테스트 보고서에 회귀 기준선 선언, Entry Gate Policy Lock 문서화 완료
-  - **Phase 6 준비**: 운영 명세서에 롤백 트리거 명시, Phase 6 변경 금지/허용 범위 문서화 (수동 추가 필요)
-  - inev Admin: 설정·등록자·설문 응답·UTM/Visit·이메일 탭
-  - Public: `/event/[slug]`, `/event/[slug]/enter`, `/event/[slug]/register`, `/event/[slug]/survey`, `/event/[slug]/webinar` (스텁)
+- **작업명**: inev.ai 리빌딩 (Phase 0–10)
+- **상태**: Phase 10 완료 (필수 작업), Wert Intelligence 전용 배포 준비
+  - Phase 0: Supabase inev 연결, Auth/Tenant 문서화 완료 ✅
+  - Phase 1~5: 기본 스키마 및 모듈 구현 완료 ✅
+  - Phase 6: Webinar(Live) 모듈 이식 완료 ✅
+  - Phase 7: Short Link(/s) 구현 완료 ✅
+  - Phase 8: 전용 Supabase 분리 절차 문서화 완료 ✅
+  - **Phase 10: 대시보드 및 통계 시스템 완료** ✅
+    - 통계 계약서 작성 (`Phase10_통계_계약서.md`)
+    - Client Dashboard 수정 (events 기준, 통계 API 연동)
+    - Event Dashboard 확장 (모듈별 탭: Overview/Registration/Marketing/Survey/Email/Webinar)
+    - 통계 API 구현 (overview, marketing, registration, survey)
+    - RLS 보안 적용 완료
+    - Wert Intelligence 브랜딩 적용 (로고 대신 클라이언트명 표시)
+  - **레이아웃 개선**: 전체 사이트 1600px 최대폭 기준 통일 완료 ✅
 - **이전 작업**: 웨비나 추첨 및 통계 기능 개선
 - **상태**: ✅ 완료
   - 사용자 지정 방식 추첨에 저장 기능 추가
@@ -236,6 +238,14 @@
   - 단일 채널(`webinar:${webinarId}`)로 모든 이벤트 타입 처리
 - ✅ 폴백 폴링 성능 최적화 및 Vercel 프록시 우회
   - 폴백 폴링 지연 시간 대폭 단축 (15초 → 3~5초)
+- ✅ Phase 10: 대시보드 및 통계 시스템 완료 (2026-02-09)
+  - 통계 계약서 작성 및 확정 (`Phase10_통계_계약서.md`)
+  - Client Dashboard 수정: events 기준 KPI 표시, 기간 필터 추가
+  - Event Dashboard 확장: 모듈별 탭 구조, 탭 클릭 시에만 API 호출
+  - 통계 API 구현: overview, marketing, registration, survey
+  - RLS 보안 적용: 모든 통계 API에 `requireClientMember` 적용
+  - Wert Intelligence 브랜딩: TopNav 및 inev-admin에서 로고 대신 클라이언트명 표시
+  - 레이아웃 개선: 전체 사이트 1600px 최대폭 기준 통일
   - 헬스체크 대기 시간 단축 (10초 → 3초)
   - 폴링 주기 단축 (15초 → 2초)
   - 원본 Supabase URL 직접 사용 (Vercel 프록시 우회)

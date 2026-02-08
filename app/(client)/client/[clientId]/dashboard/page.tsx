@@ -4,6 +4,7 @@ import { createAdminSupabase } from '@/lib/supabase/admin'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import UnifiedListItem from './components/UnifiedListItem'
+import StatisticsOverview from './components/StatisticsOverview'
 
 export default async function ClientDashboard({
   params,
@@ -114,149 +115,34 @@ export default async function ClientDashboard({
     
     const admin = createAdminSupabase()
     
-    // 웨비나, 온디맨드, 캠페인을 병렬로 조회 (성능 최적화)
-    // 기존: 순차 쿼리 900ms → 개선: 병렬 쿼리 300ms (3배 개선)
-    // 최근 50개만 조회하여 성능 추가 개선
-    // 통계 카드용 count는 별도로 병렬 조회
-    const [webinarsResult, ondemandsResult, campaignsResult, webinarsCountResult, ondemandsCountResult, campaignsCountResult] = await Promise.allSettled([
-      // 웨비나 목록 조회 (라이브만, 온디맨드 제외, 최근 50개)
-      admin
-        .from('webinars')
-        .select('id, title, slug, project_name, start_time, created_at, type')
-        .eq('client_id', clientId)
-        .or('type.is.null,type.eq.live,type.neq.ondemand') // type이 null이거나 'live'이거나 'ondemand'가 아닌 것
-        .order('created_at', { ascending: false })
-        .limit(50),
-      // 온디맨드 목록 조회 (최근 50개)
-      admin
-        .from('webinars')
-        .select('id, title, slug, project_name, created_at, type')
-        .eq('client_id', clientId)
-        .eq('type', 'ondemand')
-        .order('created_at', { ascending: false })
-        .limit(50),
-      // 설문조사 캠페인 목록 조회 (최근 50개)
-      admin
-        .from('event_survey_campaigns')
-        .select('id, title, public_path, type, created_at')
-        .eq('client_id', clientId)
-        .order('created_at', { ascending: false })
-        .limit(50),
-      // 웨비나 총 개수 (통계 카드용)
-      admin
-        .from('webinars')
-        .select('*', { count: 'exact', head: true })
-        .eq('client_id', clientId)
-        .or('type.is.null,type.eq.live,type.neq.ondemand'),
-      // 온디맨드 총 개수 (통계 카드용)
-      admin
-        .from('webinars')
-        .select('*', { count: 'exact', head: true })
-        .eq('client_id', clientId)
-        .eq('type', 'ondemand'),
-      // 캠페인 총 개수 (통계 카드용)
-      admin
-        .from('event_survey_campaigns')
-        .select('*', { count: 'exact', head: true })
-        .eq('client_id', clientId),
-    ])
+    // Phase 10: events 기준으로 변경
+    // 이벤트 목록 조회 (최근 50개)
+    const { data: eventsData, error: eventsError } = await admin
+      .from('events')
+      .select('id, code, slug, created_at, updated_at, module_webinar, module_survey, module_registration')
+      .eq('client_id', clientId)
+      .order('created_at', { ascending: false })
+      .limit(50)
     
-    // 결과 추출 및 에러 처리
-    const webinars = webinarsResult.status === 'fulfilled' ? webinarsResult.value.data : null
-    const webinarsError = webinarsResult.status === 'fulfilled' ? webinarsResult.value.error : null
-    
-    const ondemands = ondemandsResult.status === 'fulfilled' ? ondemandsResult.value.data : null
-    const ondemandsError = ondemandsResult.status === 'fulfilled' ? ondemandsResult.value.error : null
-    
-    const campaigns = campaignsResult.status === 'fulfilled' ? campaignsResult.value.data : null
-    const campaignsError = campaignsResult.status === 'fulfilled' ? campaignsResult.value.error : null
-    
-    // 통계 카드용 총 개수 추출
-    const webinarsCount = webinarsCountResult.status === 'fulfilled' ? webinarsCountResult.value.count : (webinars?.length || 0)
-    const ondemandsCount = ondemandsCountResult.status === 'fulfilled' ? ondemandsCountResult.value.count : (ondemands?.length || 0)
-    const campaignsCount = campaignsCountResult.status === 'fulfilled' ? campaignsCountResult.value.count : (campaigns?.length || 0)
-    
-    // 실제 에러가 있는 경우에만 로그 출력 (PGRST205=테이블 없음, 42703=컬럼 없음은 무시)
-    if (webinarsError && webinarsError.code !== '42703' && webinarsError.code !== 'PGRST205') {
-      const hasErrorInfo = 
-        (webinarsError.code !== undefined && webinarsError.code !== null) ||
-        (webinarsError.message !== undefined && webinarsError.message !== null) ||
-        (webinarsError.details !== undefined && webinarsError.details !== null) ||
-        (webinarsError.hint !== undefined && webinarsError.hint !== null)
-      
-      if (hasErrorInfo) {
-        const errorInfo: any = {}
-        if (webinarsError.code !== undefined && webinarsError.code !== null) errorInfo.code = String(webinarsError.code)
-        if (webinarsError.message !== undefined && webinarsError.message !== null) errorInfo.message = String(webinarsError.message)
-        if (webinarsError.details !== undefined && webinarsError.details !== null) errorInfo.details = String(webinarsError.details)
-        if (webinarsError.hint !== undefined && webinarsError.hint !== null) errorInfo.hint = String(webinarsError.hint)
-        
-        console.error('[ClientDashboard] 웨비나 목록 조회 오류:', JSON.stringify(errorInfo, null, 2))
-      } else {
-        console.warn('[ClientDashboard] 웨비나 목록 조회 - 에러 객체는 있지만 상세 정보 없음:', {
-          clientId,
-          errorType: typeof webinarsError,
-          errorExists: !!webinarsError,
-        })
-      }
+    if (eventsError && eventsError.code !== 'PGRST205') {
+      console.error('[ClientDashboard] 이벤트 목록 조회 오류:', eventsError)
     }
     
-    // 실제 에러가 있는 경우에만 로그 출력 (PGRST205=테이블 없음은 inev 전용 DB 등에서 정상)
-    if (campaignsError && campaignsError.code !== 'PGRST205') {
-      const hasErrorInfo = 
-        (campaignsError.code !== undefined && campaignsError.code !== null) ||
-        (campaignsError.message !== undefined && campaignsError.message !== null) ||
-        (campaignsError.details !== undefined && campaignsError.details !== null) ||
-        (campaignsError.hint !== undefined && campaignsError.hint !== null)
-      
-      if (hasErrorInfo) {
-        const errorInfo: any = {}
-        if (campaignsError.code !== undefined && campaignsError.code !== null) errorInfo.code = String(campaignsError.code)
-        if (campaignsError.message !== undefined && campaignsError.message !== null) errorInfo.message = String(campaignsError.message)
-        if (campaignsError.details !== undefined && campaignsError.details !== null) errorInfo.details = String(campaignsError.details)
-        if (campaignsError.hint !== undefined && campaignsError.hint !== null) errorInfo.hint = String(campaignsError.hint)
-        
-        console.error('[ClientDashboard] 캠페인 목록 조회 오류:', JSON.stringify(errorInfo, null, 2))
-      } else {
-        console.warn('[ClientDashboard] 캠페인 목록 조회 - 에러 객체는 있지만 상세 정보 없음:', {
-          clientId,
-          errorType: typeof campaignsError,
-          errorExists: !!campaignsError,
-        })
-      }
-    }
+    const events = eventsData || []
   
-  // 웨비나, 온디맨드, 설문조사, 등록 페이지를 통합 리스트로 변환
-  const unifiedItems = [
-    ...(webinars || []).map((webinar: any) => ({
-      type: 'webinar' as const,
-      id: webinar.id,
-      slug: webinar.slug,
-      title: webinar.title,
-      project_name: webinar.project_name,
-      start_time: webinar.start_time,
-      created_at: webinar.created_at,
-    })),
-    ...(ondemands || []).map((ondemand: any) => ({
-      type: 'ondemand' as const,
-      id: ondemand.id,
-      slug: ondemand.slug,
-      title: ondemand.title,
-      project_name: ondemand.project_name,
-      start_time: null, // 온디맨드는 시작 시간 없음
-      created_at: ondemand.created_at,
-    })),
-    ...(campaigns || []).map((campaign: any) => ({
-      type: (campaign.type || 'survey') as 'survey' | 'registration',
-      id: campaign.id,
-      title: campaign.title,
-      public_path: campaign.public_path,
-      created_at: campaign.created_at,
-    })),
-  ].sort((a, b) => {
-    // 최신순 정렬
-    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-  })
+  // 이벤트 목록을 통합 리스트로 변환
+  const unifiedItems = (events || []).map((event: any) => ({
+    type: 'event' as const,
+    id: event.id,
+    code: event.code,
+    slug: event.slug,
+    title: `이벤트 ${event.code}`,
+    created_at: event.created_at,
+    updated_at: event.updated_at,
+    module_webinar: event.module_webinar,
+    module_survey: event.module_survey,
+    module_registration: event.module_registration,
+  }))
   
   return (
     <div className="p-4 sm:p-6 md:p-8">
@@ -267,7 +153,7 @@ export default async function ClientDashboard({
               <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2 bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400 bg-clip-text text-transparent">
                 {clientName} 대시보드
               </h1>
-              <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">웨비나, 설문조사, 등록페이지를 생성하고 관리하세요</p>
+              <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">이벤트를 생성하고 관리하세요</p>
             </div>
             <div className="bg-white dark:bg-gray-800 px-3 py-2 sm:px-4 sm:py-3 rounded-lg shadow border border-gray-200 dark:border-gray-700 w-full md:w-auto">
               <div className="flex items-center justify-between">
@@ -287,34 +173,10 @@ export default async function ClientDashboard({
           </div>
           <div className="flex flex-col md:flex-row gap-2 md:gap-3">
             <Link 
-              href={`/client/${clientId}/webinars/new`}
+              href={`/inev-admin/clients/${clientId}/events/new`}
               className="w-full md:w-auto px-4 py-2.5 md:px-6 md:py-3 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-xl hover:from-green-700 hover:to-green-800 shadow-lg hover:shadow-xl transition-all duration-200 font-medium min-h-[44px] flex items-center justify-center"
             >
-              + 웨비나 생성
-            </Link>
-            <Link 
-              href={`/client/${clientId}/ondemand/new`}
-              className="w-full md:w-auto px-4 py-2.5 md:px-6 md:py-3 bg-gradient-to-r from-teal-600 to-emerald-600 text-white rounded-xl hover:from-teal-700 hover:to-emerald-700 shadow-lg hover:shadow-xl transition-all duration-200 font-medium min-h-[44px] flex items-center justify-center"
-            >
-              + 온디맨드 생성
-            </Link>
-            <Link 
-              href={`/client/${clientId}/surveys/new`}
-              className="w-full md:w-auto px-4 py-2.5 md:px-6 md:py-3 bg-gradient-to-r from-pink-600 to-purple-600 text-white rounded-xl hover:from-pink-700 hover:to-purple-700 shadow-lg hover:shadow-xl transition-all duration-200 font-medium min-h-[44px] flex items-center justify-center"
-            >
-              + 설문조사 생성
-            </Link>
-            <Link 
-              href={`/client/${clientId}/registrations/new`}
-              className="w-full md:w-auto px-4 py-2.5 md:px-6 md:py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-xl hover:from-blue-700 hover:to-cyan-700 shadow-lg hover:shadow-xl transition-all duration-200 font-medium min-h-[44px] flex items-center justify-center"
-            >
-              + 등록페이지 생성
-            </Link>
-            <Link 
-              href={`/client/${clientId}/campaigns`}
-              className="w-full md:w-auto px-4 py-2.5 md:px-6 md:py-3 bg-gradient-to-r from-orange-600 to-red-600 text-white rounded-xl hover:from-orange-700 hover:to-red-700 shadow-lg hover:shadow-xl transition-all duration-200 font-medium min-h-[44px] flex items-center justify-center"
-            >
-              📈 광고/캠페인
+              + 이벤트 생성
             </Link>
             <Link 
               href={`/client/${clientId}/notes`}
@@ -325,69 +187,60 @@ export default async function ClientDashboard({
           </div>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6 sm:mb-8">
-          <div className="bg-white dark:bg-gray-800 p-4 md:p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow border-l-4 border-blue-500 dark:border-blue-400">
-            <div className="flex items-center justify-between min-w-0">
-              <div className="flex-1 min-w-0">
-                <h2 className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-300 mb-1 truncate">웨비나 수</h2>
-                <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-white">{webinarsCount || 0}</p>
-              </div>
-              <div className="text-3xl sm:text-4xl opacity-20 dark:opacity-30 flex-shrink-0 ml-2">🎥</div>
-            </div>
-          </div>
-          <div className="bg-white dark:bg-gray-800 p-4 md:p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow border-l-4 border-teal-500 dark:border-teal-400">
-            <div className="flex items-center justify-between min-w-0">
-              <div className="flex-1 min-w-0">
-                <h2 className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-300 mb-1 truncate">온디맨드 수</h2>
-                <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-white">{ondemandsCount || 0}</p>
-              </div>
-              <div className="text-3xl sm:text-4xl opacity-20 dark:opacity-30 flex-shrink-0 ml-2">📺</div>
-            </div>
-          </div>
-          <div className="bg-white dark:bg-gray-800 p-4 md:p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow border-l-4 border-purple-500 dark:border-purple-400">
-            <div className="flex items-center justify-between min-w-0">
-              <div className="flex-1 min-w-0">
-                <h2 className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-300 mb-1 truncate">설문조사 수</h2>
-                <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-white">
-                  {campaigns?.filter((c: any) => (c.type || 'survey') === 'survey').length || 0}
-                </p>
-              </div>
-              <div className="text-3xl sm:text-4xl opacity-20 dark:opacity-30 flex-shrink-0 ml-2">📋</div>
-            </div>
-          </div>
-          <div className="bg-white dark:bg-gray-800 p-4 md:p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow border-l-4 border-cyan-500 dark:border-cyan-400">
-            <div className="flex items-center justify-between min-w-0">
-              <div className="flex-1 min-w-0">
-                <h2 className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-300 mb-1 truncate">등록페이지 수</h2>
-                <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-white">
-                  {campaigns?.filter((c: any) => c.type === 'registration').length || 0}
-                </p>
-              </div>
-              <div className="text-3xl sm:text-4xl opacity-20 dark:opacity-30 flex-shrink-0 ml-2">📝</div>
-            </div>
-          </div>
+        {/* Phase 10: 통계는 StatisticsOverview 컴포넌트에서 API로 조회 */}
+        <div className="mb-6 sm:mb-8">
+          <StatisticsOverview clientId={clientId} />
         </div>
         
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
           <div className="bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-500 dark:to-purple-500 p-4 sm:p-6">
-            <h2 className="text-lg sm:text-xl font-semibold text-white">웨비나 & 온디맨드 & 설문조사 & 등록페이지 목록</h2>
+            <h2 className="text-lg sm:text-xl font-semibold text-white">이벤트 목록</h2>
           </div>
           <div className="p-4 sm:p-6">
             {unifiedItems.length > 0 ? (
               <div className="space-y-2 sm:space-y-3">
                 {unifiedItems.map((item) => (
-                  <UnifiedListItem 
-                    key={`${item.type}-${item.id}`} 
-                    item={item}
-                    clientId={clientId}
-                  />
+                  <Link
+                    key={`event-${item.id}`}
+                    href={`/inev-admin/clients/${clientId}/events/${item.id}`}
+                    className="block p-4 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white truncate">
+                          {item.title}
+                        </h3>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="text-sm text-gray-600 dark:text-gray-300">코드: {item.code}</span>
+                          {item.module_webinar && (
+                            <span className="text-xs px-2 py-1 bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 rounded">
+                              웨비나
+                            </span>
+                          )}
+                          {item.module_survey && (
+                            <span className="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded">
+                              설문
+                            </span>
+                          )}
+                          {item.module_registration && (
+                            <span className="text-xs px-2 py-1 bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 rounded">
+                              등록
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="text-sm text-gray-500 dark:text-gray-400 ml-4">
+                        {new Date(item.created_at).toLocaleDateString('ko-KR', { timeZone: 'Asia/Seoul' })}
+                      </div>
+                    </div>
+                  </Link>
                 ))}
               </div>
             ) : (
               <div className="text-center text-gray-500 dark:text-gray-400 py-8 sm:py-12">
                 <div className="text-4xl sm:text-5xl mb-4">📋</div>
-                <p className="text-base sm:text-lg">웨비나나 설문조사가 없습니다.</p>
-                <p className="text-sm mt-2">새 웨비나나 설문조사를 생성해주세요.</p>
+                <p className="text-base sm:text-lg">이벤트가 없습니다.</p>
+                <p className="text-sm mt-2">새 이벤트를 생성해주세요.</p>
               </div>
             )}
           </div>

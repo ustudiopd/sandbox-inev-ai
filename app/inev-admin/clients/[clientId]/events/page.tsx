@@ -33,6 +33,14 @@ export default async function InevAdminEventsPage({
   
   // 서버 사이드에서 직접 데이터 조회 (성능 최적화)
   const admin = createAdminSupabase()
+  
+  // 클라이언트 정보 조회 (Wert Intelligence 확인용)
+  const { data: client } = await admin
+    .from('clients')
+    .select('id, name')
+    .eq('id', clientId)
+    .maybeSingle()
+  
   const { data: events, error } = await admin
     .from('events')
     .select('id, client_id, code, slug, module_registration, module_survey, module_webinar, created_at')
@@ -45,13 +53,18 @@ export default async function InevAdminEventsPage({
   }
 
   const eventsList = events || []
+  const isWertIntelligence = client?.name?.includes('Wert Intelligence') || client?.name?.includes('워트 인텔리전스')
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
           <Link href="/inev-admin" className="text-sm text-gray-500 hover:text-gray-700">← Clients</Link>
-          <h1 className="mt-1 text-xl font-semibold text-gray-900">이벤트</h1>
+          {isWertIntelligence ? (
+            <h1 className="mt-1 text-xl font-semibold text-gray-900">{client?.name || 'Wert Intelligence'}</h1>
+          ) : (
+            <h1 className="mt-1 text-xl font-semibold text-gray-900">이벤트</h1>
+          )}
         </div>
         <Link
           href={`/inev-admin/clients/${clientId}/events/new`}

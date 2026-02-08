@@ -35,7 +35,7 @@ export default function InevAdminEventDetailPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
-  const [activeTab, setActiveTab] = useState<'settings' | 'leads' | 'survey' | 'visits' | 'email'>('settings')
+  const [activeTab, setActiveTab] = useState<'overview' | 'registration' | 'marketing' | 'survey' | 'email' | 'webinar' | 'settings'>('overview')
 
   useEffect(() => {
     if (!eventId) return
@@ -102,40 +102,84 @@ export default function InevAdminEventDetailPage() {
       <div className="flex gap-2 border-b border-gray-200">
         <button
           type="button"
+          onClick={() => setActiveTab('overview')}
+          className={`border-b-2 px-3 py-2 text-sm font-medium ${activeTab === 'overview' ? 'border-gray-900 text-gray-900' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+        >
+          Overview
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab('registration')}
+          className={`border-b-2 px-3 py-2 text-sm font-medium ${activeTab === 'registration' ? 'border-gray-900 text-gray-900' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+        >
+          Registration
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab('marketing')}
+          className={`border-b-2 px-3 py-2 text-sm font-medium ${activeTab === 'marketing' ? 'border-gray-900 text-gray-900' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+        >
+          Marketing
+        </button>
+        {module_survey && (
+          <button
+            type="button"
+            onClick={() => setActiveTab('survey')}
+            className={`border-b-2 px-3 py-2 text-sm font-medium ${activeTab === 'survey' ? 'border-gray-900 text-gray-900' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+          >
+            Survey
+          </button>
+        )}
+        {module_email && (
+          <button
+            type="button"
+            onClick={() => setActiveTab('email')}
+            className={`border-b-2 px-3 py-2 text-sm font-medium ${activeTab === 'email' ? 'border-gray-900 text-gray-900' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+          >
+            Email
+          </button>
+        )}
+        {module_webinar && (
+          <button
+            type="button"
+            onClick={() => setActiveTab('webinar')}
+            className={`border-b-2 px-3 py-2 text-sm font-medium ${activeTab === 'webinar' ? 'border-gray-900 text-gray-900' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+          >
+            Webinar
+          </button>
+        )}
+        <button
+          type="button"
           onClick={() => setActiveTab('settings')}
           className={`border-b-2 px-3 py-2 text-sm font-medium ${activeTab === 'settings' ? 'border-gray-900 text-gray-900' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
         >
           설정
         </button>
-        <button
-          type="button"
-          onClick={() => setActiveTab('leads')}
-          className={`border-b-2 px-3 py-2 text-sm font-medium ${activeTab === 'leads' ? 'border-gray-900 text-gray-900' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
-        >
-          등록자
-        </button>
-        <button
-          type="button"
-          onClick={() => setActiveTab('survey')}
-          className={`border-b-2 px-3 py-2 text-sm font-medium ${activeTab === 'survey' ? 'border-gray-900 text-gray-900' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
-        >
-          설문 응답
-        </button>
-        <button
-          type="button"
-          onClick={() => setActiveTab('visits')}
-          className={`border-b-2 px-3 py-2 text-sm font-medium ${activeTab === 'visits' ? 'border-gray-900 text-gray-900' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
-        >
-          UTM/Visit
-        </button>
-        <button
-          type="button"
-          onClick={() => setActiveTab('email')}
-          className={`border-b-2 px-3 py-2 text-sm font-medium ${activeTab === 'email' ? 'border-gray-900 text-gray-900' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
-        >
-          이메일
-        </button>
       </div>
+
+      {activeTab === 'overview' && (
+        <OverviewTab eventId={eventId} />
+      )}
+
+      {activeTab === 'registration' && (
+        <RegistrationTab eventId={eventId} activeTab={activeTab} />
+      )}
+
+      {activeTab === 'marketing' && (
+        <MarketingTab eventId={eventId} activeTab={activeTab} />
+      )}
+
+      {activeTab === 'survey' && (
+        <SurveyResponsesTab eventId={eventId} activeTab={activeTab} />
+      )}
+
+      {activeTab === 'email' && (
+        <EmailTab eventId={eventId} />
+      )}
+
+      {activeTab === 'webinar' && (
+        <WebinarTab eventId={eventId} clientId={clientId} event={event} />
+      )}
 
       {activeTab === 'settings' && (
         <form onSubmit={handleSave} className="max-w-lg rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
@@ -208,21 +252,6 @@ export default function InevAdminEventDetailPage() {
         </form>
       )}
 
-      {activeTab === 'leads' && (
-        <LeadsTab eventId={eventId} />
-      )}
-
-      {activeTab === 'survey' && (
-        <SurveyResponsesTab eventId={eventId} />
-      )}
-
-      {activeTab === 'visits' && (
-        <VisitsTab eventId={eventId} />
-      )}
-
-      {activeTab === 'email' && (
-        <EmailTab eventId={eventId} />
-      )}
     </div>
   )
 }
@@ -371,82 +400,39 @@ function EmailTab({ eventId }: { eventId: string }) {
   )
 }
 
-type VisitAggregate = { total: number; by_utm_source: Record<string, number>; by_utm_medium: Record<string, number>; by_utm_campaign: Record<string, number> }
-
-function VisitsTab({ eventId }: { eventId: string }) {
-  const [agg, setAgg] = useState<VisitAggregate | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
-
-  useEffect(() => {
-    fetch(`/api/inev/events/${eventId}/visits?aggregate=true`)
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.error) setError(data.error)
-        else setAgg(data)
-      })
-      .catch((e) => setError(e.message))
-      .finally(() => setLoading(false))
-  }, [eventId])
-
-  if (loading) return <div className="text-gray-500">로딩 중...</div>
-  if (error) return <div className="text-red-600">오류: {error}</div>
-  if (!agg) return null
-
-  return (
-    <div className="space-y-4 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-      <h2 className="text-sm font-medium text-gray-900">Visit / UTM 집계</h2>
-      <p className="text-2xl font-semibold text-gray-900">총 Visit {agg.total}건</p>
-      <div className="grid gap-4 sm:grid-cols-3">
-        <div>
-          <p className="text-xs font-medium text-gray-500">utm_source</p>
-          <ul className="mt-1 text-sm">
-            {Object.entries(agg.by_utm_source || {}).map(([k, v]) => (
-              <li key={k}>{k}: {v}</li>
-            ))}
-            {Object.keys(agg.by_utm_source || {}).length === 0 && <li className="text-gray-400">없음</li>}
-          </ul>
-        </div>
-        <div>
-          <p className="text-xs font-medium text-gray-500">utm_medium</p>
-          <ul className="mt-1 text-sm">
-            {Object.entries(agg.by_utm_medium || {}).map(([k, v]) => (
-              <li key={k}>{k}: {v}</li>
-            ))}
-            {Object.keys(agg.by_utm_medium || {}).length === 0 && <li className="text-gray-400">없음</li>}
-          </ul>
-        </div>
-        <div>
-          <p className="text-xs font-medium text-gray-500">utm_campaign</p>
-          <ul className="mt-1 text-sm">
-            {Object.entries(agg.by_utm_campaign || {}).map(([k, v]) => (
-              <li key={k}>{k}: {v}</li>
-            ))}
-            {Object.keys(agg.by_utm_campaign || {}).length === 0 && <li className="text-gray-400">없음</li>}
-          </ul>
-        </div>
-      </div>
-    </div>
-  )
-}
 
 type SurveyRow = { id: string; lead_id: string | null; email: string | null; response: Record<string, unknown>; created_at: string }
 
-function SurveyResponsesTab({ eventId }: { eventId: string }) {
+// Phase 10: Survey Tab (탭 클릭 시에만 API 호출)
+function SurveyResponsesTab({ eventId, activeTab }: { eventId: string; activeTab: string }) {
   const [rows, setRows] = useState<SurveyRow[]>([])
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [hasLoaded, setHasLoaded] = useState(false)
 
+  const loadData = async () => {
+    setLoading(true)
+    setError('')
+    try {
+      const response = await fetch(`/api/inev/events/${eventId}/survey-responses`)
+      const result = await response.json()
+      if (result.error) setError(result.error)
+      else setRows(Array.isArray(result) ? result : [])
+      setHasLoaded(true)
+    } catch (e: any) {
+      setError(e.message || '오류 발생')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // 탭이 활성화되면 자동으로 로드 (탭 클릭 시에만)
   useEffect(() => {
-    fetch(`/api/inev/events/${eventId}/survey-responses`)
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.error) setError(data.error)
-        else setRows(Array.isArray(data) ? data : [])
-      })
-      .catch((e) => setError(e.message))
-      .finally(() => setLoading(false))
-  }, [eventId])
+    if (activeTab === 'survey' && !hasLoaded) {
+      loadData()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab])
 
   if (loading) return <div className="text-gray-500">로딩 중...</div>
   if (error) return <div className="text-red-600">오류: {error}</div>
@@ -475,6 +461,323 @@ function SurveyResponsesTab({ eventId }: { eventId: string }) {
           ))}
         </ul>
       )}
+    </div>
+  )
+}
+
+// Phase 10: Overview Tab (가벼운 KPI)
+function OverviewTab({ eventId }: { eventId: string }) {
+  const [data, setData] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    if (!eventId) return
+    setLoading(true)
+    fetch(`/api/inev/events/${eventId}/statistics/overview`)
+      .then((r) => r.json())
+      .then((result) => {
+        if (result.error) setError(result.error)
+        else setData(result)
+      })
+      .catch((e) => setError(e.message))
+      .finally(() => setLoading(false))
+  }, [eventId])
+
+  if (loading) return <div className="text-gray-500">로딩 중...</div>
+  if (error) return <div className="text-red-600">오류: {error}</div>
+  if (!data) return null
+
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+        <div className="bg-white rounded-lg border border-gray-200 p-4">
+          <div className="text-sm text-gray-600 mb-1">등록자</div>
+          <div className="text-2xl font-bold text-gray-900">{data.leads.total.toLocaleString()}</div>
+          <div className="text-xs text-gray-500 mt-1">고유: {data.leads.unique_emails.toLocaleString()}</div>
+        </div>
+        <div className="bg-white rounded-lg border border-gray-200 p-4">
+          <div className="text-sm text-gray-600 mb-1">Visit</div>
+          <div className="text-2xl font-bold text-gray-900">{data.visits.total.toLocaleString()}</div>
+        </div>
+        <div className="bg-white rounded-lg border border-gray-200 p-4">
+          <div className="text-sm text-gray-600 mb-1">ShortLink 클릭</div>
+          <div className="text-2xl font-bold text-gray-900">{data.shortlink_clicks.total.toLocaleString()}</div>
+        </div>
+        <div className="bg-white rounded-lg border border-gray-200 p-4">
+          <div className="text-sm text-gray-600 mb-1">설문 응답</div>
+          <div className="text-2xl font-bold text-gray-900">{data.survey_responses.total.toLocaleString()}</div>
+        </div>
+        <div className="bg-white rounded-lg border border-gray-200 p-4">
+          <div className="text-sm text-gray-600 mb-1">참여자</div>
+          <div className="text-2xl font-bold text-gray-900">{data.participations.total.toLocaleString()}</div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// Phase 10: Registration Tab (탭 클릭 시에만 API 호출)
+function RegistrationTab({ eventId, activeTab }: { eventId: string; activeTab: string }) {
+  const [data, setData] = useState<any>(null)
+  const [leads, setLeads] = useState<any[]>([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+  const [hasLoaded, setHasLoaded] = useState(false)
+
+  const loadData = async () => {
+    setLoading(true)
+    setError('')
+    try {
+      // 통계와 리스트를 병렬로 조회
+      const [stats, leadsList] = await Promise.all([
+        fetch(`/api/inev/events/${eventId}/statistics/registration`).then(r => r.json()),
+        fetch(`/api/inev/events/${eventId}/leads`).then(r => r.json()),
+      ])
+      
+      if (stats.error) setError(stats.error)
+      else setData(stats)
+      
+      if (Array.isArray(leadsList)) {
+        setLeads(leadsList)
+      } else if (leadsList.error) {
+        console.error('Leads 조회 오류:', leadsList.error)
+      }
+      
+      setHasLoaded(true)
+    } catch (e: any) {
+      setError(e.message || '오류 발생')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // 탭이 활성화되면 자동으로 로드 (탭 클릭 시에만)
+  useEffect(() => {
+    if (activeTab === 'registration' && !hasLoaded) {
+      loadData()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab])
+
+  const downloadCsv = () => {
+    const headers = ['이메일', '이름', '등록일시']
+    const rows = leads.map((l) => [l.email, l.name ?? '', l.created_at])
+    const csv = [headers.join(','), ...rows.map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(','))].join('\n')
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `leads-${eventId.slice(0, 8)}.csv`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  if (loading) return <div className="text-gray-500">로딩 중...</div>
+  if (error) return <div className="text-red-600">오류: {error}</div>
+
+  return (
+    <div className="space-y-4">
+      {data && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="bg-white rounded-lg border border-gray-200 p-4">
+            <div className="text-sm text-gray-600 mb-1">등록자 수</div>
+            <div className="text-2xl font-bold text-gray-900">{data.leads.total.toLocaleString()}</div>
+            <div className="text-xs text-gray-500 mt-1">고유 이메일: {data.leads.unique_emails.toLocaleString()}</div>
+          </div>
+          <div className="bg-white rounded-lg border border-gray-200 p-4">
+            <div className="text-sm text-gray-600 mb-1">참여자 수</div>
+            <div className="text-2xl font-bold text-gray-900">{data.participations.total.toLocaleString()}</div>
+          </div>
+          <div className="bg-white rounded-lg border border-gray-200 p-4">
+            <div className="text-sm text-gray-600 mb-1">전환율</div>
+            <div className="text-2xl font-bold text-gray-900">{(data.conversion_rate * 100).toFixed(1)}%</div>
+          </div>
+        </div>
+      )}
+      
+      <div className="rounded-lg border border-gray-200 bg-white shadow-sm">
+        <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
+          <h2 className="text-sm font-medium text-gray-900">등록자 목록 ({leads.length}명)</h2>
+          <button
+            type="button"
+            onClick={downloadCsv}
+            disabled={leads.length === 0}
+            className="rounded border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+          >
+            CSV 내보내기
+          </button>
+        </div>
+        {leads.length === 0 ? (
+          <div className="p-6 text-center text-sm text-gray-500">등록자가 없습니다.</div>
+        ) : (
+          <ul className="divide-y divide-gray-100">
+            {leads.map((l) => (
+              <li key={l.id} className="flex items-center justify-between px-4 py-3">
+                <div>
+                  <span className="font-medium text-gray-900">{l.email}</span>
+                  {l.name && <span className="ml-2 text-sm text-gray-500">{l.name}</span>}
+                </div>
+                <span className="text-xs text-gray-400">{new Date(l.created_at).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' })}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// Phase 10: Marketing Tab (탭 클릭 시에만 API 호출)
+function MarketingTab({ eventId, activeTab }: { eventId: string; activeTab: string }) {
+  const [groupBy, setGroupBy] = useState<'utm_source' | 'utm_medium' | 'utm_campaign'>('utm_source')
+  const [data, setData] = useState<any>(null)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+  const [hasLoaded, setHasLoaded] = useState(false)
+
+  const loadData = async () => {
+    setLoading(true)
+    setError('')
+    try {
+      const response = await fetch(`/api/inev/events/${eventId}/statistics/marketing?groupBy=${groupBy}`)
+      const result = await response.json()
+      if (result.error) setError(result.error)
+      else setData(result)
+      setHasLoaded(true)
+    } catch (e: any) {
+      setError(e.message || '오류 발생')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // 탭이 활성화되면 자동으로 로드 (탭 클릭 시에만)
+  useEffect(() => {
+    if (activeTab === 'marketing' && !hasLoaded) {
+      loadData()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab])
+
+  // groupBy 변경 시 재로드
+  useEffect(() => {
+    if (hasLoaded && groupBy) {
+      loadData()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [groupBy])
+
+  if (loading) return <div className="text-gray-500">로딩 중...</div>
+  if (error) return <div className="text-red-600">오류: {error}</div>
+  if (!data) return null
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center gap-2">
+        <label className="text-sm font-medium text-gray-700">집계 기준:</label>
+        <select
+          value={groupBy}
+          onChange={(e) => setGroupBy(e.target.value as typeof groupBy)}
+          className="rounded border border-gray-300 px-3 py-1.5 text-sm"
+        >
+          <option value="utm_source">UTM Source</option>
+          <option value="utm_medium">UTM Medium</option>
+          <option value="utm_campaign">UTM Campaign</option>
+        </select>
+        <button
+          type="button"
+          onClick={loadData}
+          disabled={loading}
+          className="px-3 py-1.5 text-sm bg-gray-100 hover:bg-gray-200 rounded disabled:opacity-50"
+        >
+          새로고침
+        </button>
+      </div>
+
+      <div className="rounded-lg border border-gray-200 bg-white shadow-sm">
+        <div className="border-b border-gray-100 px-4 py-3">
+          <h2 className="text-sm font-medium text-gray-900">Marketing 통계 ({groupBy})</h2>
+        </div>
+        {data.breakdown && data.breakdown.length > 0 ? (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">키</th>
+                  <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Visits</th>
+                  <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Leads</th>
+                  <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">전환율</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {data.breakdown.map((item: any) => (
+                  <tr key={item.key}>
+                    <td className="px-4 py-2 text-sm text-gray-900">{item.key}</td>
+                    <td className="px-4 py-2 text-sm text-gray-900 text-right">{item.visits.toLocaleString()}</td>
+                    <td className="px-4 py-2 text-sm text-gray-900 text-right">{item.leads.toLocaleString()}</td>
+                    <td className="px-4 py-2 text-sm text-gray-900 text-right">{(item.conversions * 100).toFixed(1)}%</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className="p-6 text-center text-sm text-gray-500">데이터가 없습니다.</div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// Phase 10: Webinar Tab (요약 + 링크만)
+function WebinarTab({ eventId, clientId, event }: { eventId: string; clientId: string; event: EventDetail }) {
+  // Phase 10 원칙: Webinar 탭은 "요약 + 링크"만 제공, 상세 통계는 별도 페이지
+  // 웨비나 ID 조회 (event_id로 연결된 webinar, 있으면 요약 KPI 표시)
+  const [webinar, setWebinar] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    if (!eventId) return
+    // event_id로 연결된 webinar 조회 (Phase 6에서 webinars.event_id 추가됨)
+    fetch(`/api/inev/events/${eventId}`)
+      .then((r) => r.json())
+      .then((data) => {
+        // webinar 조회는 별도로 처리 (현재는 링크만 제공)
+        setLoading(false)
+      })
+      .catch(() => setLoading(false))
+  }, [eventId])
+
+  if (loading) return <div className="text-gray-500">로딩 중...</div>
+
+  return (
+    <div className="space-y-4">
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <p className="text-sm text-blue-800">
+          웨비나 상세 통계는 별도 페이지에서 조회합니다. 아래 링크를 사용하세요.
+        </p>
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Link
+          href={`/webinar/${event.slug}/console`}
+          target="_blank"
+          className="block p-6 bg-white rounded-lg border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all"
+        >
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">🎛️ 운영 콘솔 열기</h3>
+          <p className="text-sm text-gray-600">웨비나 실시간 운영 콘솔로 이동합니다.</p>
+        </Link>
+        
+        <Link
+          href={`/webinar/${event.slug}/stats`}
+          target="_blank"
+          className="block p-6 bg-white rounded-lg border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all"
+        >
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">📊 웨비나 통계 보기</h3>
+          <p className="text-sm text-gray-600">웨비나 상세 통계 페이지로 이동합니다.</p>
+        </Link>
+      </div>
     </div>
   )
 }
