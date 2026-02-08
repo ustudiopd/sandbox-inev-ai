@@ -123,7 +123,7 @@ export default function TopNav({ organizations: propOrganizations }: TopNavProps
             href="/" 
             className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent hover:opacity-80 transition-opacity"
           >
-            EventFlow
+            Inev.ai
           </Link>
 
           {/* 데스크톱 메뉴 */}

@@ -11,7 +11,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "supabase": "supabase"
+    "supabase": "supabase",
+    "test:supabase": "node scripts/test-supabase-connection.mjs"
   },
   "dependencies": {
     "@fontsource/noto-sans-kr": "^5.2.9",

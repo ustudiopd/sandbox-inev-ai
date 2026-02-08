@@ -93,7 +93,7 @@ export default function SuperSidebar() {
     <aside className="hidden lg:flex w-64 bg-gradient-to-b from-gray-900 to-gray-800 text-white min-h-screen fixed left-0 top-0 flex-col z-10">
       <div className="p-6">
         <Link href="/super/dashboard" className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-          EventFlow
+          Inev.ai
         </Link>
         <div className="mt-2 text-xs text-gray-400">슈퍼 관리자</div>
       </div>

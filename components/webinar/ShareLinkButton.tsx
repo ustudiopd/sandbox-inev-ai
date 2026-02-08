@@ -44,7 +44,7 @@ export default function ShareLinkButton({
         try {
           await navigator.share({
             title: title,
-            text: `${title} - EventFlow 웨비나에 참여하세요`,
+            text: `${title} - Inev.ai 웨비나에 참여하세요`,
             url: urlToShare,
           })
           // 공유 성공

@@ -57,7 +57,7 @@ function printHourlyTable(
 /**
  * 오늘(KST) 시간대별 방문자
  * 1) 워트 등록페이지 방문자 (event_access_logs, campaign_id = 워트)
- * 2) EventFlow 전체 방문자 (event_access_logs 전체)
+ * 2) Inev.ai 전체 방문자 (event_access_logs 전체)
  */
 async function main() {
   const admin = createAdminSupabase()
@@ -117,7 +117,7 @@ async function main() {
     )
   }
 
-  // 2) EventFlow 전체 방문 (오늘 접근 로그 전체)
+  // 2) Inev.ai 전체 방문 (오늘 접근 로그 전체)
   const { data: allLogs, error: allErr } = await admin
     .from('event_access_logs')
     .select('session_id, accessed_at')
@@ -125,14 +125,14 @@ async function main() {
     .lt('accessed_at', toUTC)
 
   if (allErr) {
-    console.error('❌ EventFlow 전체 방문 로그 조회 실패:', allErr.message)
+    console.error('❌ Inev.ai 전체 방문 로그 조회 실패:', allErr.message)
   } else {
     const allHourly = todayHourlyFromLogs((allLogs ?? []) as LogRow[], todayKST)
     const allTotalVisits = allHourly.reduce((s, r) => s + r.visits, 0)
     const allTotalVisitors = new Set((allLogs ?? []).map((r: LogRow) => r.session_id)).size
     printHourlyTable(
       allHourly,
-      '🌐 EventFlow 전체 — 오늘 시간대별 방문 (KST)',
+      '🌐 Inev.ai 전체 — 오늘 시간대별 방문 (KST)',
       allTotalVisits,
       allTotalVisitors
     )

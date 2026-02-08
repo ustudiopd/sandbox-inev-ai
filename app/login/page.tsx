@@ -1,14 +1,20 @@
 'use client'
 
 import { useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { createClientSupabase } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
+
+const ALLOWED_NEXT_PREFIXES = ['/inev-admin', '/agency/', '/client/', '/super/']
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const nextUrl = searchParams.get('next') || ''
+  const safeNext = nextUrl && ALLOWED_NEXT_PREFIXES.some((p) => nextUrl.startsWith(p)) ? nextUrl : null
   const supabase = createClientSupabase()
   
   const handleLogin = async (e: React.FormEvent) => {
@@ -53,7 +59,9 @@ export default function LoginPage() {
         }
         
         if (result.dashboard) {
-          router.push(result.dashboard)
+          // next 파라미터가 허용 목록에 있으면 해당 경로로 복귀 (예: /inev-admin)
+          const redirectTo = safeNext || result.dashboard
+          router.push(redirectTo)
           router.refresh()
           return
         }
@@ -75,7 +83,7 @@ export default function LoginPage() {
           <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
             로그인
           </h1>
-          <p className="text-gray-600">EventFlow에 오신 것을 환영합니다</p>
+          <p className="text-gray-600">Inev.ai에 오신 것을 환영합니다</p>
         </div>
         <form onSubmit={handleLogin} className="space-y-6">
           <div>
@@ -108,12 +116,9 @@ export default function LoginPage() {
             {loading ? '로그인 중...' : '로그인'}
           </button>
         </form>
-        <div className="mt-6 text-center space-y-2">
+        <div className="mt-6 text-center">
           <a href="/reset-password" className="block text-sm text-blue-600 hover:text-blue-700 hover:underline transition-colors">
             비밀번호를 잊으셨나요?
-          </a>
-          <a href="/signup" className="block text-sm text-gray-600 hover:text-gray-700 hover:underline transition-colors">
-            계정이 없으신가요? 회원가입
           </a>
         </div>
       </div>

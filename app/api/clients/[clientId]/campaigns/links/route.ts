@@ -3,6 +3,7 @@ import { createAdminSupabase } from '@/lib/supabase/admin'
 import { requireClientMember } from '@/lib/auth/guards'
 import { normalizeUTM } from '@/lib/utils/utm'
 import { generateCID } from '@/lib/utils/cid'
+import { getClientPublicBaseUrl } from '@/lib/utils/client-domain'
 
 export const runtime = 'nodejs'
 
@@ -171,8 +172,8 @@ export async function GET(
           .eq('id', link.target_campaign_id)
           .single()
         
-        // URL 생성 (항상 eventflow.kr 사용)
-        const baseUrl = 'https://eventflow.kr'
+        // URL 생성 (public_base_url 사용)
+        const baseUrl = await getClientPublicBaseUrl(clientId)
         const landingPath = link.landing_variant === 'welcome' 
           ? targetCampaign?.public_path || ''
           : link.landing_variant === 'survey'
@@ -365,8 +366,8 @@ export async function POST(
       .eq('id', target_campaign_id)
       .single()
     
-    // URL 생성 (항상 eventflow.kr 사용)
-    const baseUrl = 'https://eventflow.kr'
+    // URL 생성 (public_base_url 사용)
+    const baseUrl = await getClientPublicBaseUrl(clientId)
     const landingPath = landing_variant === 'welcome' 
       ? targetCampaign?.public_path || ''
       : landing_variant === 'survey'

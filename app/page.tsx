@@ -18,7 +18,7 @@ export default async function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <div className="inline-flex items-center rounded-full px-3 py-1 text-sm font-medium text-blue-600 dark:text-blue-400 ring-1 ring-inset ring-blue-200 dark:ring-blue-800 bg-blue-50 dark:bg-blue-900/30 mb-8">
             <span className="flex h-2 w-2 rounded-full bg-blue-600 dark:bg-blue-400 mr-2"></span>
-            EventFlow 2.0
+            Inev.ai
           </div>
           
           <h1 className="text-5xl md:text-6xl font-extrabold text-gray-900 dark:text-white tracking-tight mb-6 break-keep">
@@ -31,7 +31,7 @@ export default async function Home() {
           
           <p className="mt-4 text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto mb-10 break-keep">
             복잡한 웨비나 운영부터 실시간 데이터 분석까지.<br/>
-            EventFlow 하나로 모든 이벤트 경험을 혁신하세요.
+            Inev.ai로 모든 이벤트 경험을 혁신하세요.
           </p>
 
           <div className="flex justify-center gap-4">
@@ -104,7 +104,7 @@ export default async function Home() {
           <div className="text-center mb-16">
             <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">B2B 관리 플랫폼</h2>
             <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-              EventFlow는 기업을 위한 전용 이벤트 관리 플랫폼입니다.<br/>
+              Inev.ai는 기업을 위한 전용 이벤트 관리 플랫폼입니다.<br/>
               로그인하여 대시보드에서 이벤트를 생성하고 관리하세요.
             </p>
           </div>

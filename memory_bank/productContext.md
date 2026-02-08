@@ -1,8 +1,8 @@
 # 비즈니스 로직 및 기능 동작 (Product Context)
 
 ## 서비스 정보
-- **서비스 이름**: EventFlow
-- **도메인**: EventFlow.kr
+- **서비스 이름**: Inev.ai
+- **도메인**: inev.ai
 - **설명**: B2B2C 멀티테넌시 웨비나 플랫폼
 
 ## 1. 핵심 비즈니스 로직  

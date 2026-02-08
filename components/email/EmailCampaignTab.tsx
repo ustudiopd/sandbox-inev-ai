@@ -1577,7 +1577,7 @@ export default function EmailCampaignTab({ clientId, scopeType, scopeId }: Email
                   수신자가 답장할 이메일 주소입니다. 비워두면 기본값({clientEmailPolicy?.reply_to_default || '설정되지 않음'})이 사용됩니다.
                 </p>
                 <p className="mt-1 text-xs text-gray-600 font-medium">
-                  From: no-reply@eventflow.kr (표시명: 고객사명 via EventFlow)
+                  From: no-reply@eventflow.kr (표시명: 고객사명 via Inev.ai)
                 </p>
               </div>
               

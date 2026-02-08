@@ -5,7 +5,7 @@ import ConditionalFooter from '@/components/layout/ConditionalFooter'
 import LayoutWrapper from '@/components/layout/LayoutWrapper'
 
 export const metadata: Metadata = {
-  title: 'EventFlow - Enterprise Edition',
+  title: 'Inev.ai - Enterprise Edition',
   description: 'B2B2C 멀티테넌시 웨비나 플랫폼',
 }
 

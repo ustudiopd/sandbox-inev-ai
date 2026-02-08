@@ -79,7 +79,7 @@ export async function generateMetadata({
     if (id === '426307') {
       const thumbnailUrl = 'https://yqsayphssjznthrxpgfb.supabase.co/storage/v1/object/public/webinar-thumbnails/onepredict/thumb4.png'
       return {
-        title: '[원프레딕트] 2월 웨비나 | EventFlow 웨비나 등록',
+        title: '[원프레딕트] 2월 웨비나 | Inev.ai 웨비나 등록',
         description: 'AI가 움직이는 공장: AI native factory I - AI Ready Data',
         keywords: '원프레딕트, GuardiOne, 산업 AI, 설비 관리, 디지털 트랜스포메이션, 예지보전, 웨비나',
         metadataBase: new URL('https://eventflow.kr'),

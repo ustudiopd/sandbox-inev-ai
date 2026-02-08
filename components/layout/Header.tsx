@@ -106,7 +106,7 @@ export default function Header() {
         <div className="container mx-auto px-4 py-4">
           <div className="flex justify-between items-center">
             <Link href="/" className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              EventFlow
+              Inev.ai
             </Link>
             <div className="flex gap-4">
               {user ? (

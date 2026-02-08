@@ -1,6 +1,10 @@
 import { redirect } from 'next/navigation'
 import { createAdminSupabase } from '@/lib/supabase/admin'
+import { getClientPublicBaseUrl } from '@/lib/utils/client-domain'
+import { extractUTMParams, normalizeUTM } from '@/lib/utils/utm'
+import { generateSessionId } from '@/lib/utils/session'
 import type { Metadata } from 'next'
+import { headers } from 'next/headers'
 
 interface PageProps {
   params: Promise<{ code: string }>
@@ -11,53 +15,83 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const { code } = await params
   const admin = createAdminSupabase()
 
-  // 짧은 링크로 웨비나 ID 조회
+  // 짧은 링크로 Event 또는 Webinar ID 조회
   const { data: shortLink } = await admin
     .from('short_links')
-    .select('webinar_id')
+    .select('event_id, webinar_id')
     .eq('code', code)
     .single()
 
   if (!shortLink) {
     return {
-      title: '웨비나를 찾을 수 없습니다',
+      title: '이벤트를 찾을 수 없습니다',
     }
   }
 
-  // 웨비나 정보 조회 (slug 포함)
-  const { data: webinar, error: webinarError } = await admin
-    .from('webinars')
-    .select('id, slug, title, description')
-    .eq('id', shortLink.webinar_id)
-    .single()
+  let title = '이벤트'
+  let description = 'Inev.ai 이벤트에 참여하세요'
 
-  if (webinarError || !webinar) {
-    return {
-      title: '웨비나를 찾을 수 없습니다',
+  // Event 기반인 경우
+  if (shortLink.event_id) {
+    const { data: event } = await admin
+      .from('events')
+      .select('id, slug, code')
+      .eq('id', shortLink.event_id)
+      .single()
+
+    if (event) {
+      title = `이벤트 ${event.code}`
+      description = 'Inev.ai 이벤트에 참여하세요'
+    }
+  }
+  // Webinar 기반인 경우 (호환성)
+  else if (shortLink.webinar_id) {
+    const { data: webinar } = await admin
+      .from('webinars')
+      .select('id, slug, title, description')
+      .eq('id', shortLink.webinar_id)
+      .single()
+
+    if (webinar) {
+      title = webinar.title || '웨비나'
+      description = webinar.description || 'Inev.ai 웨비나에 참여하세요'
     }
   }
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://eventflow.kr'
-  const shortUrl = `${appUrl}/s/${code}`
+  const headersList = await headers()
+  const host = headersList.get('host') || 'localhost:3000'
+  const protocol = headersList.get('x-forwarded-proto') || 'http'
+  const baseUrl = `${protocol}://${host}`
+  const shortUrl = `${baseUrl}/s/${code}`
 
   return {
-    title: webinar.title || '웨비나',
-    description: webinar.description || 'EventFlow 웨비나에 참여하세요',
+    title,
+    description,
     openGraph: {
-      title: webinar.title || '웨비나',
-      description: webinar.description || 'EventFlow 웨비나에 참여하세요',
+      title,
+      description,
       url: shortUrl,
-      siteName: 'EventFlow',
+      siteName: 'Inev.ai',
       type: 'website',
     },
     twitter: {
       card: 'summary_large_image',
-      title: webinar.title || '웨비나',
-      description: webinar.description || 'EventFlow 웨비나에 참여하세요',
+      title,
+      description,
     },
   }
 }
 
+/**
+ * Phase 7: Short Link(/s) 라우트
+ * 
+ * {public_base_url}/s/{code}?u={email}
+ * 
+ * 동작:
+ * 1. 클릭 로그 저장 (event_access_logs)
+ * 2. 307 리다이렉트로 동일 도메인 내 `/entry` 또는 `/event/[slug]/enter`로 전달
+ * 3. Entry 페이지는 버튼 클릭 전까지 side effect 없음
+ */
 export default async function ShortLinkRedirectPage({ 
   params,
   searchParams 
@@ -65,15 +99,17 @@ export default async function ShortLinkRedirectPage({
   try {
     const { code } = await params
     const searchParamsData = await searchParams
+    const headersList = await headers()
+    
     console.log('[ShortLink] 시작:', { code, searchParams: Object.keys(searchParamsData || {}) })
     
     const admin = createAdminSupabase()
 
-    // 짧은 링크로 웨비나 ID 조회
+    // 짧은 링크로 Event 또는 Webinar ID 조회
     console.log('[ShortLink] 짧은 링크 조회 시작:', code)
     const { data: shortLink, error } = await admin
       .from('short_links')
-      .select('webinar_id, expires_at')
+      .select('event_id, webinar_id, expires_at')
       .eq('code', code)
       .single()
 
@@ -84,6 +120,7 @@ export default async function ShortLinkRedirectPage({
     
     console.log('[ShortLink] 짧은 링크 조회 성공:', { 
       code, 
+      event_id: shortLink.event_id,
       webinar_id: shortLink.webinar_id,
       expires_at: shortLink.expires_at 
     })
@@ -97,123 +134,187 @@ export default async function ShortLinkRedirectPage({
       }
     }
 
-    // 웨비나 정보 조회 (slug 포함)
-    console.log('[ShortLink] 웨비나 조회 시작:', shortLink.webinar_id)
-    const { data: webinar, error: webinarError } = await admin
-      .from('webinars')
-      .select('id, slug')
-      .eq('id', shortLink.webinar_id)
-      .single()
+    let event: { id: string; slug: string; code: string; client_id: string } | null = null
+    let webinar: { id: string; slug: string | null; client_id: string } | null = null
+    let clientId: string | null = null
 
-    if (webinarError || !webinar) {
-      console.error('[ShortLink] 웨비나 조회 실패:', {
-        error: webinarError,
-        webinarId: shortLink.webinar_id,
-        code
-      })
+    // Event 기반인 경우 (우선)
+    if (shortLink.event_id) {
+      console.log('[ShortLink] Event 기반 조회:', shortLink.event_id)
+      const { data: eventData, error: eventError } = await admin
+        .from('events')
+        .select('id, slug, code, client_id')
+        .eq('id', shortLink.event_id)
+        .single()
+
+      if (eventError || !eventData) {
+        console.error('[ShortLink] Event 조회 실패:', { error: eventError, eventId: shortLink.event_id })
+        redirect('/')
+      }
+
+      event = eventData
+      clientId = eventData.client_id
+    }
+    // Webinar 기반인 경우 (호환성)
+    else if (shortLink.webinar_id) {
+      console.log('[ShortLink] Webinar 기반 조회 (호환성):', shortLink.webinar_id)
+      const { data: webinarData, error: webinarError } = await admin
+        .from('webinars')
+        .select('id, slug, client_id')
+        .eq('id', shortLink.webinar_id)
+        .single()
+
+      if (webinarError || !webinarData) {
+        console.error('[ShortLink] Webinar 조회 실패:', { error: webinarError, webinarId: shortLink.webinar_id })
+        redirect('/')
+      }
+
+      webinar = webinarData
+      clientId = webinarData.client_id
+    } else {
+      console.error('[ShortLink] event_id 또는 webinar_id가 없음:', shortLink)
       redirect('/')
     }
-    
-    console.log('[ShortLink] 웨비나 조회 성공:', {
-      id: webinar.id,
-      slug: webinar.slug
-    })
 
-    // slug가 있으면 slug를 사용하고, 없으면 id를 사용
-    // slug가 null이거나 빈 문자열이면 id 사용
-    // 임시: 한글 slug 문제 해결 전까지 UUID 사용
-    const webinarSlug = webinar.id // 임시로 UUID 사용
-    
-    console.log('[ShortLink] 최종 slug 결정:', {
-      code,
-      webinarId: webinar.id,
-      slug: webinar.slug,
-      finalSlug: webinarSlug,
-      note: '임시로 UUID 사용'
-    })
+    // public_base_url 조회 (커스텀 도메인 지원)
+    const baseUrl = clientId 
+      ? await getClientPublicBaseUrl(clientId)
+      : process.env.NEXT_PUBLIC_APP_URL || 'https://eventflow.kr'
 
-    // URL 파라미터 유지 (UTM, cid, 이메일 등)
-    const queryParams = new URLSearchParams()
-    
-    // UTM 파라미터 및 cid 우선 보존 (추적 정보)
-    const trackingParams = ['cid', 'utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content']
-    trackingParams.forEach(key => {
-      if (searchParamsData?.[key]) {
-        const value = Array.isArray(searchParamsData[key])
-          ? searchParamsData[key][0]
-          : searchParamsData[key]
-        if (value && typeof value === 'string') {
-          queryParams.set(key, value)
-        }
+    // 세션 ID 생성/조회 (클릭 로그용)
+    const sessionId = generateSessionId()
+
+    // UTM 파라미터 추출
+    const utmParams = extractUTMParams(searchParamsData)
+    const normalizedUTM = normalizeUTM(utmParams)
+
+    // 이메일 파라미터 처리: ?u= 또는 ?email=
+    let email: string | null = null
+    if (searchParamsData?.u) {
+      const uValue = Array.isArray(searchParamsData.u) 
+        ? searchParamsData.u[0] 
+        : searchParamsData.u
+      if (uValue && typeof uValue === 'string') {
+        email = uValue.trim().toLowerCase()
       }
-    })
-    
-    // 이메일 파라미터 처리: email 우선, 없으면 e 파라미터 디코딩
-    let emailToPass: string | null = null
-    
-    if (searchParamsData?.email) {
+    } else if (searchParamsData?.email) {
       const emailValue = Array.isArray(searchParamsData.email) 
         ? searchParamsData.email[0] 
         : searchParamsData.email
-      if (emailValue) {
-        emailToPass = emailValue
-      }
-    } else if (searchParamsData?.e) {
-      // Base64 디코딩 방식 (다이렉트샌드 호환)
-      try {
-        const eValue = Array.isArray(searchParamsData.e) 
-          ? searchParamsData.e[0] 
-          : searchParamsData.e
-        if (eValue) {
-          // Node.js 환경에서는 Buffer 사용
-          const decodedEmail = Buffer.from(eValue, 'base64').toString('utf-8')
-          emailToPass = decodedEmail
-        }
-      } catch (error) {
-        console.error('[ShortLink] Base64 이메일 디코딩 실패:', error)
-        // 디코딩 실패 시 무시하고 계속 진행
+      if (emailValue && typeof emailValue === 'string') {
+        email = emailValue.trim().toLowerCase()
       }
     }
+
+    // 클릭 로그 저장 (event_access_logs)
+    try {
+      const referrer = headersList.get('referer') || null
+      const userAgent = headersList.get('user-agent') || null
+
+      // Event 기반인 경우
+      if (event) {
+        // Event와 연결된 캠페인 찾기 (등록 캠페인 우선)
+        const { data: campaign } = await admin
+          .from('event_survey_campaigns')
+          .select('id')
+          .eq('client_id', clientId)
+          .eq('type', 'registration')
+          .limit(1)
+          .maybeSingle()
+
+        if (campaign) {
+          await admin.from('event_access_logs').insert({
+            campaign_id: campaign.id,
+            session_id: sessionId,
+            utm_source: normalizedUTM.utm_source || null,
+            utm_medium: normalizedUTM.utm_medium || null,
+            utm_campaign: normalizedUTM.utm_campaign || null,
+            utm_term: normalizedUTM.utm_term || null,
+            utm_content: normalizedUTM.utm_content || null,
+            referrer: referrer,
+            user_agent: userAgent,
+            accessed_at: new Date().toISOString(),
+          })
+        }
+      }
+      // Webinar 기반인 경우 (호환성)
+      else if (webinar) {
+        await admin.from('event_access_logs').insert({
+          webinar_id: webinar.id,
+          session_id: sessionId,
+          utm_source: normalizedUTM.utm_source || null,
+          utm_medium: normalizedUTM.utm_medium || null,
+          utm_campaign: normalizedUTM.utm_campaign || null,
+          utm_term: normalizedUTM.utm_term || null,
+          utm_content: normalizedUTM.utm_content || null,
+          referrer: referrer,
+          user_agent: userAgent,
+          accessed_at: new Date().toISOString(),
+        })
+      }
+    } catch (logError) {
+      // 클릭 로그 저장 실패는 무시 (graceful failure)
+      console.warn('[ShortLink] 클릭 로그 저장 실패 (무시):', logError)
+    }
+
+    // 리다이렉트 URL 생성
+    const queryParams = new URLSearchParams()
     
     // 이메일 파라미터 추가
-    if (emailToPass) {
-      queryParams.set('email', emailToPass)
+    if (email) {
+      queryParams.set('email', email)
     }
-    
-    // 다른 파라미터도 유지 (e 파라미터는 제외, tracking 파라미터는 이미 추가됨)
-    Object.keys(searchParamsData).forEach(key => {
-      if (key !== 'email' && key !== 'e' && !trackingParams.includes(key) && searchParamsData[key]) {
-        const value = Array.isArray(searchParamsData[key])
-          ? searchParamsData[key][0]
-          : searchParamsData[key]
-        if (value && typeof value === 'string') {
-          queryParams.set(key, value)
-        }
+
+    // UTM 파라미터 추가
+    if (normalizedUTM.utm_source) queryParams.set('utm_source', normalizedUTM.utm_source)
+    if (normalizedUTM.utm_medium) queryParams.set('utm_medium', normalizedUTM.utm_medium)
+    if (normalizedUTM.utm_campaign) queryParams.set('utm_campaign', normalizedUTM.utm_campaign)
+    if (normalizedUTM.utm_term) queryParams.set('utm_term', normalizedUTM.utm_term)
+    if (normalizedUTM.utm_content) queryParams.set('utm_content', normalizedUTM.utm_content)
+
+    // cid 파라미터 유지 (있으면)
+    if (searchParamsData?.cid) {
+      const cidValue = Array.isArray(searchParamsData.cid) 
+        ? searchParamsData.cid[0] 
+        : searchParamsData.cid
+      if (cidValue && typeof cidValue === 'string') {
+        queryParams.set('cid', cidValue)
       }
-    })
-    
-    console.log('[ShortLink] 파라미터 보존:', {
-      code,
-      preservedParams: Array.from(queryParams.keys()),
-      cid: queryParams.get('cid'),
-      utm_source: queryParams.get('utm_source'),
-    })
+    }
 
     const queryString = queryParams.toString()
-    // UUID로 리다이렉트 (/live 경로 포함)
-    const redirectUrl = queryString 
-      ? `/webinar/${webinarSlug}/live?${queryString}`
-      : `/webinar/${webinarSlug}/live`
+
+    // 리다이렉트 URL 결정
+    let redirectUrl: string
+
+    // Event 기반인 경우: /event/[slug]/enter
+    if (event) {
+      redirectUrl = queryString 
+        ? `/event/${event.slug}/enter?${queryString}`
+        : `/event/${event.slug}/enter`
+    }
+    // Webinar 기반인 경우 (호환성): /webinar/[id]/live
+    else if (webinar) {
+      const webinarPath = webinar.slug || webinar.id
+      redirectUrl = queryString 
+        ? `/webinar/${webinarPath}/live?${queryString}`
+        : `/webinar/${webinarPath}/live`
+    } else {
+      redirectUrl = '/'
+    }
 
     console.log('[ShortLink] 리다이렉트 실행:', {
       code,
       redirectUrl,
-      webinarId: webinarSlug,
-      queryString
+      baseUrl,
+      eventId: event?.id,
+      webinarId: webinar?.id,
+      email,
     })
 
-    // UUID로 리다이렉트 (파라미터 포함)
-    redirect(redirectUrl)
+    // 307 리다이렉트 (Temporary Redirect)
+    // Next.js redirect()는 기본적으로 307을 사용하지만, 명시적으로 설정
+    redirect(redirectUrl, 'replace')
   } catch (err: any) {
     console.error('[ShortLink] 예외 발생:', {
       error: err,
@@ -223,4 +324,3 @@ export default async function ShortLinkRedirectPage({
     redirect('/')
   }
 }
-

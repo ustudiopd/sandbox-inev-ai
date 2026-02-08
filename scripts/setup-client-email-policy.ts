@@ -51,7 +51,7 @@ async function setupClientEmailPolicy(clientId: string) {
       .maybeSingle()
 
     // 기본값 설정 (클라이언트 이름 사용)
-    const fromName = client.name || 'EventFlow'
+    const fromName = client.name || 'Inev.ai'
     const fromDomain = 'eventflow.kr'
     const fromLocalpart = 'notify'
     const replyTo = 'connect@wert.co.kr'

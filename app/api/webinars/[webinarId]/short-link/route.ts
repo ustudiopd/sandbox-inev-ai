@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createAdminSupabase } from '@/lib/supabase/admin'
 import { requireAuth } from '@/lib/auth/guards'
 import { getWebinarIdFromIdOrSlug } from '@/lib/utils/webinar-query'
+import { getClientPublicBaseUrl } from '@/lib/utils/client-domain'
 
 export async function POST(
   req: NextRequest,
@@ -94,12 +95,15 @@ export async function POST(
 
     if (existingLink) {
       const webinarPath = webinar.slug || actualWebinarId
-      // 항상 eventflow.kr 사용
-      const shortUrl = `https://eventflow.kr/s/${existingLink.code}`
+      // public_base_url 사용
+      const baseUrl = webinar.client_id 
+        ? await getClientPublicBaseUrl(webinar.client_id)
+        : 'https://eventflow.kr'
+      const shortUrl = `${baseUrl}/s/${existingLink.code}`
       return NextResponse.json({
         code: existingLink.code,
         shortUrl,
-        fullUrl: `https://eventflow.kr/webinar/${webinarPath}`,
+        fullUrl: `${baseUrl}/webinar/${webinarPath}`,
         webinarTitle: webinar.title,
       })
     }
@@ -153,13 +157,16 @@ export async function POST(
     }
 
     const webinarPath = webinar.slug || actualWebinarId
-    // 항상 eventflow.kr 사용
-    const shortUrl = `https://eventflow.kr/s/${savedLink.code}`
+    // public_base_url 사용
+    const baseUrl = webinar.client_id 
+      ? await getClientPublicBaseUrl(webinar.client_id)
+      : 'https://eventflow.kr'
+    const shortUrl = `${baseUrl}/s/${savedLink.code}`
     
     return NextResponse.json({
       code: savedLink.code,
       shortUrl,
-      fullUrl: `https://eventflow.kr/webinar/${webinarPath}`,
+      fullUrl: `${baseUrl}/webinar/${webinarPath}`,
       webinarTitle: webinar.title,
     })
   } catch (error: any) {

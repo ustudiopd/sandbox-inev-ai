@@ -34,20 +34,25 @@ export default async function ClientDashboard({
         .maybeSingle()
       
       if (profileError) {
-        const hasErrorInfo = 
-          (profileError.code !== undefined && profileError.code !== null) ||
-          (profileError.message !== undefined && profileError.message !== null) ||
-          (profileError.details !== undefined && profileError.details !== null) ||
-          (profileError.hint !== undefined && profileError.hint !== null)
-        
-        if (hasErrorInfo) {
-          const errorInfo: any = {}
-          if (profileError.code !== undefined && profileError.code !== null) errorInfo.code = String(profileError.code)
-          if (profileError.message !== undefined && profileError.message !== null) errorInfo.message = String(profileError.message)
-          if (profileError.details !== undefined && profileError.details !== null) errorInfo.details = String(profileError.details)
-          if (profileError.hint !== undefined && profileError.hint !== null) errorInfo.hint = String(profileError.hint)
+        // PGRST205 = 테이블 없음 (inev 전용 DB 등 EventFlow 스키마 미사용 시 정상)
+        if (profileError.code === 'PGRST205') {
+          finalProfile = null
+        } else {
+          const hasErrorInfo = 
+            (profileError.code !== undefined && profileError.code !== null) ||
+            (profileError.message !== undefined && profileError.message !== null) ||
+            (profileError.details !== undefined && profileError.details !== null) ||
+            (profileError.hint !== undefined && profileError.hint !== null)
           
-          console.error('[ClientDashboard] 프로필 조회 오류 (Admin):', JSON.stringify(errorInfo, null, 2))
+          if (hasErrorInfo) {
+            const errorInfo: any = {}
+            if (profileError.code !== undefined && profileError.code !== null) errorInfo.code = String(profileError.code)
+            if (profileError.message !== undefined && profileError.message !== null) errorInfo.message = String(profileError.message)
+            if (profileError.details !== undefined && profileError.details !== null) errorInfo.details = String(profileError.details)
+            if (profileError.hint !== undefined && profileError.hint !== null) errorInfo.hint = String(profileError.hint)
+            
+            console.error('[ClientDashboard] 프로필 조회 오류 (Admin):', JSON.stringify(errorInfo, null, 2))
+          }
         }
       } else {
         finalProfile = adminProfile || null
@@ -144,8 +149,8 @@ export default async function ClientDashboard({
     const campaigns = campaignsResult.status === 'fulfilled' ? campaignsResult.value.data : null
     const campaignsError = campaignsResult.status === 'fulfilled' ? campaignsResult.value.error : null
     
-    // 실제 에러가 있는 경우에만 로그 출력 (type 컬럼 없음 에러는 무시)
-    if (webinarsError && webinarsError.code !== '42703') {
+    // 실제 에러가 있는 경우에만 로그 출력 (PGRST205=테이블 없음, 42703=컬럼 없음은 무시)
+    if (webinarsError && webinarsError.code !== '42703' && webinarsError.code !== 'PGRST205') {
       const hasErrorInfo = 
         (webinarsError.code !== undefined && webinarsError.code !== null) ||
         (webinarsError.message !== undefined && webinarsError.message !== null) ||
@@ -169,8 +174,8 @@ export default async function ClientDashboard({
       }
     }
     
-    // 실제 에러가 있는 경우에만 로그 출력
-    if (campaignsError) {
+    // 실제 에러가 있는 경우에만 로그 출력 (PGRST205=테이블 없음은 inev 전용 DB 등에서 정상)
+    if (campaignsError && campaignsError.code !== 'PGRST205') {
       const hasErrorInfo = 
         (campaignsError.code !== undefined && campaignsError.code !== null) ||
         (campaignsError.message !== undefined && campaignsError.message !== null) ||

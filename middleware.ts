@@ -59,6 +59,25 @@ export async function middleware(req: NextRequest) {
     ensureSessionIdCookie(req, response)
   }
 
+  // /inev-admin/** 로그인 필수 (소속 클라이언트만 API에서 필터됨)
+  if (path.startsWith('/inev-admin')) {
+    const res = NextResponse.next()
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          get: (name: string) => req.cookies.get(name)?.value,
+          set: (name: string, value: string, options?: any) => { res.cookies.set({ name, value, ...options }) },
+          remove: (name: string, options?: any) => { res.cookies.set({ name, value: '', ...options }) },
+        } as any,
+      }
+    )
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return NextResponse.redirect(new URL('/login?next=' + encodeURIComponent(path), req.url))
+    return res
+  }
+
   // /super/** 경로 보호
   if (path.startsWith('/super')) {
     // 쿠키에서 세션 확인
@@ -149,6 +168,7 @@ export async function middleware(req: NextRequest) {
 
 export const config = {
   matcher: [
+    '/inev-admin/:path*',
     '/super/:path*',
     '/event/:path*',
     '/webinar/:path*',

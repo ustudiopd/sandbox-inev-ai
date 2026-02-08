@@ -109,7 +109,7 @@ export default function Sidebar() {
         <aside className="hidden lg:flex bg-gradient-to-b from-gray-900 to-gray-800 text-white min-h-screen fixed left-0 top-0 flex-col transition-all duration-300 z-50 w-64">
         <div className="p-6 flex items-center">
           <Link href="/" className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-            EventFlow
+            Inev.ai
           </Link>
         </div>
         

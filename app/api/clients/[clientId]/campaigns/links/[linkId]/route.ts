@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createAdminSupabase } from '@/lib/supabase/admin'
 import { requireClientMember } from '@/lib/auth/guards'
 import { normalizeUTM } from '@/lib/utils/utm'
+import { getClientPublicBaseUrl } from '@/lib/utils/client-domain'
 
 export const runtime = 'nodejs'
 
@@ -122,8 +123,8 @@ export async function PUT(
       .eq('id', updatedLink.target_campaign_id)
       .single()
     
-    // URL 생성 (항상 eventflow.kr 사용)
-    const baseUrl = 'https://eventflow.kr'
+    // URL 생성 (public_base_url 사용)
+    const baseUrl = await getClientPublicBaseUrl(clientId)
     const landingPath = updatedLink.landing_variant === 'welcome' 
       ? targetCampaign?.public_path || ''
       : updatedLink.landing_variant === 'survey'

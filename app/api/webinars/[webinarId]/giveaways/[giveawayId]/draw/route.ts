@@ -288,7 +288,7 @@ export async function POST(
 
         if (adminProfile?.email) {
           await sendEmailViaResend({
-            from: 'EventFlow <notify@eventflow.kr>',
+            from: 'Inev.ai <notify@eventflow.kr>',
             to: adminProfile.email,
             subject: `[${updatedGiveaway.name}] 추첨 결과 - 당첨자 ${formattedWinners.length}명`,
             html: emailHtml,

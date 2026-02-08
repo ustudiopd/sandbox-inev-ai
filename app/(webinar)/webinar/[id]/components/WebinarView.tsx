@@ -231,10 +231,12 @@ export default function WebinarView({ webinar, isAdminMode = false }: WebinarVie
   const router = useRouter()
   const searchParams = useSearchParams()
   
-  // 중복 로그인 방지: 세션 관리 (관리자 제외)
+  // Phase 6: 중복 로그인 방지 - 입장 시 선택 → 승자 1명 → 기존 세션은 다음 갱신에서 퇴장
   const sessionKeyRef = useRef<string | null>(null)
   const sessionChannelRef = useRef<any>(null)
-  const notifiedSessionsRef = useRef<Set<string>>(new Set()) // 이미 알림을 보낸 세션 추적
+  const sessionTimestampRef = useRef<number>(Date.now()) // 세션 생성 시간 (승자 기준)
+  const isSessionWinnerRef = useRef<boolean>(false) // 이 세션이 승자인지 여부
+  const hasCheckedDuplicateRef = useRef<boolean>(false) // 입장 시 중복 체크 완료 여부
   
   // Chat 컴포넌트를 한 번만 렌더링하여 중복 구독 방지 (해결책.md 권장사항)
   const chatComponent = useMemo(() => (
@@ -362,7 +364,7 @@ export default function WebinarView({ webinar, isAdminMode = false }: WebinarVie
     }
   }, [webinar.id])
   
-  // 중복 로그인 방지: 세션 관리 (관리자 제외)
+  // Phase 6: 중복 로그인 방지 - 입장 시 선택 → 승자 1명 → 기존 세션은 다음 갱신에서 퇴장
   useEffect(() => {
     // 관리자는 중복 로그인 방지 제외
     if (isAdminMode) {
@@ -381,11 +383,13 @@ export default function WebinarView({ webinar, isAdminMode = false }: WebinarVie
           return
         }
         
-        // 세션 키 생성 (페이지 진입 시 1회)
+        // 세션 키 및 타임스탬프 생성 (페이지 진입 시 1회)
         if (!sessionKeyRef.current) {
           sessionKeyRef.current = `session_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`
+          sessionTimestampRef.current = Date.now()
         }
         const sessionKey = sessionKeyRef.current
+        const sessionTimestamp = sessionTimestampRef.current
         
         // 세션 관리 채널 생성 (presence 사용)
         const channelName = `session:webinar-${webinar.id}`
@@ -398,41 +402,55 @@ export default function WebinarView({ webinar, isAdminMode = false }: WebinarVie
           },
         })
         
-        // 다른 세션에서 충돌 알림을 받았을 때 처리
-        channel.on('broadcast', { event: 'session_conflict' }, (payload: any) => {
-          const { userId, newSessionKey } = payload.payload || payload
+        // Phase 6: 입장 시 중복 체크 및 승자 결정
+        const checkAndResolveDuplicate = async () => {
+          if (hasCheckedDuplicateRef.current) return
           
-          // 자신의 user_id이고 자신의 세션이 아니면 충돌 (이전 세션)
-          if (userId === user.id && newSessionKey !== sessionKey && isActive) {
-            console.log('[WebinarView] 중복 로그인 감지: 다른 세션에서 접속했습니다.')
+          try {
+            const presenceState = channel.presenceState()
+            const allPresences = Object.values(presenceState).flat() as any[]
             
-            // 이전 세션 종료 처리
-            isActive = false
+            // 같은 user_id의 다른 세션 찾기
+            const otherSessions = allPresences.filter((presence: any) => {
+              return presence.userId === user.id && presence.sessionKey !== sessionKey
+            })
             
-            // 사용자에게 알림
-            alert('다른 기기 또는 브라우저에서 로그인하여 이 세션이 종료됩니다.')
+            if (otherSessions.length > 0) {
+              // Phase 6 정책: 입장 시 선택
+              const shouldContinue = window.confirm(
+                '다른 기기 또는 브라우저에서 접속 중입니다. 계속하시겠습니까?\n\n계속하시면 이전 세션이 종료됩니다.'
+              )
+              
+              if (!shouldContinue) {
+                // 사용자가 취소하면 이 페이지를 닫음
+                isActive = false
+                window.location.href = `/webinar/${webinar.slug || webinar.id}`
+                return
+              }
+              
+              // 승자 결정: timestamp 기준 (가장 최근 세션이 승자)
+              const otherTimestamps = otherSessions.map((s: any) => s.timestamp || 0)
+              const maxOtherTimestamp = Math.max(...otherTimestamps, 0)
+              
+              if (sessionTimestamp >= maxOtherTimestamp) {
+                // 이 세션이 승자
+                isSessionWinnerRef.current = true
+                console.log('[WebinarView] Phase 6: 이 세션이 승자로 결정됨 (timestamp 기준)')
+              } else {
+                // 다른 세션이 승자 → 이 세션은 다음 갱신에서 퇴장
+                isSessionWinnerRef.current = false
+                console.log('[WebinarView] Phase 6: 다른 세션이 승자, 이 세션은 다음 갱신에서 퇴장 예정')
+              }
+            } else {
+              // 중복 세션이 없으면 이 세션이 승자
+              isSessionWinnerRef.current = true
+            }
             
-            // 페이지 닫기 또는 로그아웃
-            window.location.href = `/webinar/${webinar.slug || webinar.id}`
+            hasCheckedDuplicateRef.current = true
+          } catch (error) {
+            console.error('[WebinarView] 중복 체크 오류:', error)
           }
-        })
-        
-        // Presence sync 이벤트: 다른 세션 감지
-        channel.on('presence', { event: 'sync' }, () => {
-          if (!isActive) return
-          
-          checkForDuplicateSessions(user.id, sessionKey, channel)
-        })
-        
-        // Presence join 이벤트: 새 세션 참가 감지
-        channel.on('presence', { event: 'join' }, ({ key, newPresences }: any) => {
-          if (!isActive) return
-          
-          // 잠시 후 체크 (presence state 업데이트 대기)
-          setTimeout(() => {
-            checkForDuplicateSessions(user.id, sessionKey, channel)
-          }, 500)
-        })
+        }
         
         // 구독 완료 후 현재 세션 등록
         channel.subscribe(async (status: string) => {
@@ -441,18 +459,50 @@ export default function WebinarView({ webinar, isAdminMode = false }: WebinarVie
             await channel.track({
               userId: user.id,
               sessionKey: sessionKey,
-              timestamp: Date.now(),
+              timestamp: sessionTimestamp,
             })
             
-            // 초기 체크 (다른 세션이 이미 있는지 확인)
+            // 입장 시 중복 체크 (1초 후)
             setTimeout(() => {
-              checkForDuplicateSessions(user.id, sessionKey, channel)
+              checkAndResolveDuplicate()
             }, 1000)
             
-            // 주기적으로 체크 (5초마다)
+            // Phase 6: 주기적으로 체크 (5초마다) - 승자가 아닌 세션은 퇴장
             checkInterval = setInterval(() => {
-              if (isActive) {
-                checkForDuplicateSessions(user.id, sessionKey, channel)
+              if (!isActive) return
+              
+              // 승자가 아닌 세션은 다음 갱신에서 퇴장
+              if (!isSessionWinnerRef.current) {
+                console.log('[WebinarView] Phase 6: 승자가 아닌 세션, 퇴장 처리')
+                isActive = false
+                alert('다른 기기에서 접속하여 이 세션이 종료됩니다.')
+                window.location.href = `/webinar/${webinar.slug || webinar.id}`
+                return
+              }
+              
+              // 승자 세션은 다른 세션이 있는지 계속 확인
+              try {
+                const presenceState = channel.presenceState()
+                const allPresences = Object.values(presenceState).flat() as any[]
+                const otherSessions = allPresences.filter((presence: any) => {
+                  return presence.userId === user.id && presence.sessionKey !== sessionKey
+                })
+                
+                // 다른 세션이 있으면 timestamp 비교로 승자 재확인
+                if (otherSessions.length > 0) {
+                  const otherTimestamps = otherSessions.map((s: any) => s.timestamp || 0)
+                  const maxOtherTimestamp = Math.max(...otherTimestamps, 0)
+                  
+                  if (sessionTimestamp < maxOtherTimestamp) {
+                    // 다른 세션이 더 최신이면 이 세션 퇴장
+                    console.log('[WebinarView] Phase 6: 더 최신 세션 발견, 이 세션 퇴장')
+                    isActive = false
+                    alert('다른 기기에서 접속하여 이 세션이 종료됩니다.')
+                    window.location.href = `/webinar/${webinar.slug || webinar.id}`
+                  }
+                }
+              } catch (error) {
+                console.error('[WebinarView] 주기적 체크 오류:', error)
               }
             }, 5000)
           }
@@ -461,52 +511,6 @@ export default function WebinarView({ webinar, isAdminMode = false }: WebinarVie
         sessionChannelRef.current = channel
       } catch (error) {
         console.error('[WebinarView] 세션 관리 설정 오류:', error)
-      }
-    }
-    
-    // 중복 세션 체크 함수
-    const checkForDuplicateSessions = (userId: string, currentSessionKey: string, ch: any) => {
-      if (!isActive) return
-      
-      try {
-        const presenceState = ch.presenceState()
-        const allPresences = Object.values(presenceState).flat() as any[]
-        
-        // 같은 user_id의 다른 세션 찾기
-        const otherSessions = allPresences.filter((presence: any) => {
-          return presence.userId === userId && presence.sessionKey !== currentSessionKey
-        })
-        
-        if (otherSessions.length > 0 && isActive) {
-          // 아직 알림을 보내지 않은 새 세션만 필터링
-          const newSessions = otherSessions.filter((otherSession: any) => {
-            return !notifiedSessionsRef.current.has(otherSession.sessionKey)
-          })
-          
-          if (newSessions.length > 0) {
-            // 새로운 세션에만 종료 알림 전송
-            console.log('[WebinarView] 다른 세션 발견, 이전 세션 종료 알림 전송:', newSessions.length, '개')
-            
-            newSessions.forEach((otherSession: any) => {
-              // 알림 전송
-              ch.send({
-                type: 'broadcast',
-                event: 'session_conflict',
-                payload: {
-                  userId: userId,
-                  newSessionKey: currentSessionKey,
-                  oldSessionKey: otherSession.sessionKey,
-                  timestamp: Date.now(),
-                },
-              })
-              
-              // 알림 전송 기록
-              notifiedSessionsRef.current.add(otherSession.sessionKey)
-            })
-          }
-        }
-      } catch (error) {
-        console.error('[WebinarView] 중복 세션 체크 오류:', error)
       }
     }
     

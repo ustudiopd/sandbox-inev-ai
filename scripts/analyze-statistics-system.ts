@@ -19,7 +19,7 @@ function formatKST(d: Date): string {
 }
 
 /**
- * EventFlow 전체 통계 시스템 종합 분석
+ * Inev.ai 전체 통계 시스템 종합 분석
  * 
  * 분석 항목:
  * 1. Visit 추적 현황 (event_access_logs)
@@ -33,7 +33,7 @@ async function analyzeStatisticsSystem() {
   const admin = createAdminSupabase()
 
   console.log('='.repeat(80))
-  console.log('EventFlow 전체 통계 시스템 종합 분석')
+  console.log('Inev.ai 전체 통계 시스템 종합 분석')
   console.log('='.repeat(80))
   console.log()
 

@@ -1,8 +1,8 @@
 # 기술 스택 정보 (Tech Context)
 
 ## 서비스 정보
-- **서비스 이름**: EventFlow
-- **도메인**: EventFlow.kr
+- **서비스 이름**: Inev.ai
+- **도메인**: inev.ai
 
 ## 1. 프레임워크 및 라이브러리  
 

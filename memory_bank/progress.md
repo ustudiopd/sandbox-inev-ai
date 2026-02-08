@@ -1,5 +1,22 @@
 # 완료된 작업 내역 (Progress)
 
+## [2026-02-09] Phase 6 착수 전 문서 고정 작업
+- ✅ Phase 4~5 테스트 보고서에 Baseline 고정 선언 추가
+  - `docs/reports/inev_Phase4-5_테스트_결과_보고서.md` 상단에 "✅ Baseline 고정 선언" 섹션 추가
+  - Phase 6 이후 회귀 기준선으로 사용, 롤백 조건 명시
+  - 통과가 보장하는 것(Guarantees) 5개 항목 추가 (Email draft 저장/조회/테스트발송, Entry Gate 자동/수동 플로우 분기, Side effect 없음, Display name 규칙 고정, 스캐너/미리보기 꼬임 방지)
+- ✅ 전체 구현 계획에 Entry Gate Policy Lock 추가
+  - `docs/inev/inev_리빌딩_전체구현계획.md`의 Phase 5 섹션에 "Policy Lock — Entry Gate (Non-Negotiable)" 블록 추가
+  - 링크 오픈만으로 side effect 금지, 버튼 클릭 시에만 실행, 표시이름 규칙 등 확정 정책 문서화
+- ✅ 운영 명세서 생성 및 Phase 6 롤백 기준 추가
+  - `docs/inev/inev.ai_개발_배포_운영_명세서.md` 파일 생성
+  - "Phase 6 Rollback Triggers" 섹션 추가 (중복 로그인 "둘 다 튕김" 재현, Entry Gate side effect 발생, 표시이름 fallback, 핫패스 트래픽 증가, 운영 앱 긴급 수정 필요 시)
+- ⚠️ Phase 6 섹션에 변경 금지/허용 범위, 중복 로그인 정책, Hotpath Guardrails 추가 (파일 수정 실패로 수동 추가 필요)
+  - Phase 6에서 바꾸지 않는 것: Entry Gate 정책, 표시이름 규칙, /s → /entry → 버튼 플로우
+  - Phase 6에서 바꾸는 것: Webinar 모듈 event 귀속, 중복 로그인 정책 구현, 핫패스 최적화
+  - 중복 로그인 정책 고정: 정책/버그 정의/승자 기준 명시
+  - Hotpath Guardrails: 실시간 화면에서 무거운 집계/AI 호출/DB 핫쿼리 금지, 폴링 주기 증가 금지
+
 ## [2026-02-08] Giveaway Broadcast 전환 및 Realtime 권한 점검 (P1 티켓)
 - ✅ P1-티켓1: GiveawayWidget DB Changes 제거 → Broadcast 전환
   - `components/webinar/GiveawayWidget.tsx`: giveaways, giveaway_entries **postgres_changes 구독 제거**

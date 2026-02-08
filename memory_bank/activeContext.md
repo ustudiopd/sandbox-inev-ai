@@ -1,11 +1,24 @@
 # 현재 작업 상황 (Active Context)
 
 ## 서비스 정보
-- **서비스 이름**: EventFlow
-- **도메인**: EventFlow.kr
+- **서비스 이름**: Inev.ai
+- **도메인**: inev.ai
 
 ## 1. 현재 집중하고 있는 작업  
-- **작업명**: 웨비나 추첨 및 통계 기능 개선
+- **작업명**: inev.ai 리빌딩 (Phase 0–6)
+- **상태**: Phase 1~5 완료, Phase 6 착수 준비 완료
+  - Phase 0: Supabase inev 연결, Auth/Tenant 문서화 완료
+  - Phase 1 마무리: 이벤트 상세/편집(`/inev-admin/clients/[clientId]/events/[eventId]`), API GET/PATCH `/api/inev/events/[eventId]`, 공개 랜딩 모듈별 링크(등록/설문/웨비나) 노출
+  - Phase 2: 등록·설문·등록자 CSV, 설문 응답 탭
+  - Phase 3: UTM/Visit (`event_visits` 테이블, POST /api/inev/visits, Admin UTM/Visit 탭)
+  - Phase 4: 이벤트 이메일 초안·미리보기·테스트 발송 (event_emails, Admin 이메일 탭)
+  - Phase 5: Entry Gate + 표시이름 (`/event/[slug]/enter`, 자동/수동 입장, 표시이름 등록 데이터 기반)
+  - **Phase 1~5 DoD**: `node scripts/inev-dod-test-phase1-4-auth.mjs`, `node scripts/inev-phase5-dod-test.mjs` 로 검증 완료 (100% PASS)
+  - **Phase 4~5 Baseline 고정**: 테스트 보고서에 회귀 기준선 선언, Entry Gate Policy Lock 문서화 완료
+  - **Phase 6 준비**: 운영 명세서에 롤백 트리거 명시, Phase 6 변경 금지/허용 범위 문서화 (수동 추가 필요)
+  - inev Admin: 설정·등록자·설문 응답·UTM/Visit·이메일 탭
+  - Public: `/event/[slug]`, `/event/[slug]/enter`, `/event/[slug]/register`, `/event/[slug]/survey`, `/event/[slug]/webinar` (스텁)
+- **이전 작업**: 웨비나 추첨 및 통계 기능 개선
 - **상태**: ✅ 완료
   - 사용자 지정 방식 추첨에 저장 기능 추가
     - API 엔드포인트에 `manual_winners` 업데이트 기능 추가 (`PUT /api/webinars/[webinarId]/giveaways/[giveawayId]`)
@@ -83,6 +96,13 @@
   - 빌드 오류 수정 완료 (템플릿 리터럴, JSX 주석 등)
 
 ## 2. 다음 예정 작업  
+- **즉시 진행 가능**:
+  1. ⏳ Phase 6: Webinar(Live) 모듈 이식 + 중복 로그인 교체
+     - 웨비나를 event에 귀속, 핫패스/폴링 정리
+     - 중복 로그인: "입장 시 선택 + 다음 갱신에 퇴장" 방식으로 교체
+     - DoD: 등록↔라이브 세션 연결 유지, 두 탭 동시 접속 시 "둘 다 튕김" 재현 불가
+     - 변경 금지: Entry Gate 정책, 표시이름 규칙, /s → /entry → 버튼 플로우
+     - Hotpath Guardrails 준수: 실시간 화면에서 무거운 집계/AI 호출/DB 핫쿼리 금지
 - **나중에 점검·적용 (메모)**:
   - **Realtime Authorization 설정**: 채널 `private: true` + 대시보드 Allow public access 끄기 → RLS가 실제 적용됨. 적용 전에 `session_conflict` 참가자 발신을 API 경유로 옮길지 검토. (2026-02-08 기준 기능 구현은 완료, 설정만 보류)
 - **우선순위 높음**: 

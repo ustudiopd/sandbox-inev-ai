@@ -1,0 +1,17 @@
+---
+description: Project-specific guardrails (Git, DB, timezone)
+alwaysApply: true
+---
+
+## Git
+- 절대로 자동으로 `git commit` 또는 `git push`를 실행하지 않는다. 사용자가 명시적으로 요청할 때만 실행한다.
+- 허용: `git add`, `git status`, `git diff`, `git log`
+
+## 데이터베이스
+- 데이터 수정/삭제 전 반드시 CSV 백업 및 Supabase 백업 확인 후 진행. 백업 없으면 안내 후 사용자 확인을 기다린다.
+- 더미 데이터 생성 금지. 테스트/통계 목적으로도 생성하지 않는다.
+- 데이터 수정 스크립트: `--execute` 플래그 없이는 실제 수정/삭제하지 않음. 롤백 방법 안내 포함.
+
+## 시간대
+- 표시는 항상 KST(한국 표준시). DB 저장은 UTC, 조회 후 표시 시 KST 변환.
+- `toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' })` 사용. UTC를 사용자에게 그대로 표시하지 않는다.

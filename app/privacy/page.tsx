@@ -11,13 +11,13 @@ export default function PrivacyPolicyPage() {
           </Link>
           <h1 className="text-4xl font-bold text-gray-900 mb-4">개인정보처리방침</h1>
           <p className="text-gray-700 leading-relaxed mb-4">
-            주식회사 유스튜디오(이하 "회사")는 EventFlow 서비스(이하 "서비스")를 제공함에 있어 「개인정보 보호법」, 
+            주식회사 유스튜디오(이하 "회사")는 Inev.ai 서비스(이하 "서비스")를 제공함에 있어 「개인정보 보호법」, 
             「정보통신망 이용촉진 및 정보보호 등에 관한 법률」 등 관련 법령을 준수하며, 이용자의 개인정보를 보호하고 
             권익을 보장하기 위하여 다음과 같이 개인정보처리방침을 수립·공개합니다.
           </p>
           <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mt-4">
             <ul className="text-sm text-gray-700 space-y-1">
-              <li><strong>서비스명:</strong> EventFlow</li>
+              <li><strong>서비스명:</strong> Inev.ai</li>
               <li><strong>운영사:</strong> 주식회사 유스튜디오 (U-STUDIO CO., LTD.)</li>
               <li><strong>시행일:</strong> 2025년 1월 27일</li>
               <li><strong>버전:</strong> Privacy Policy v1.0</li>
@@ -202,7 +202,7 @@ export default function PrivacyPolicyPage() {
             </ul>
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4">
               <p className="text-sm text-gray-700">
-                또한, EventFlow 서비스를 운영하는 <strong>주식회사 유스튜디오(U-STUDIO CO., LTD.)</strong>는 국제 정보보호 관리체계 표준인 
+                또한, Inev.ai 서비스를 운영하는 <strong>주식회사 유스튜디오(U-STUDIO CO., LTD.)</strong>는 국제 정보보호 관리체계 표준인 
                 <strong> ISO/IEC 27001:2022(정보보안경영시스템)</strong> 인증을 취득하여 정보보호 관리체계를 기반으로 서비스 운영 및 개인정보 보호 조치를 수행하고 있습니다.
               </p>
             </div>

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { requireClientMember } from '@/lib/auth/guards'
 import { createAdminSupabase } from '@/lib/supabase/admin'
 import { buildWebinarVariables } from '@/lib/email/template-processor'
+import { getClientPublicBaseUrl } from '@/lib/utils/client-domain'
 
 export const runtime = 'nodejs'
 
@@ -39,15 +40,15 @@ export async function POST(req: Request) {
       .eq('id', clientId)
       .single()
 
-    let clientName = client?.name || 'EventFlow'
+    let clientName = client?.name || 'Inev.ai'
     
     // 인텔리전트 → 인텔리전스로 변환 (발송자·제목·본문 등 모든 표기 통일)
     if (clientName.includes('인텔리전트')) {
       clientName = clientName.replace(/인텔리전트/g, '인텔리전스')
     }
     
-    // 워트 클라이언트인 경우 기본 헤더 이미지 설정
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://eventflow.kr'
+    // public_base_url 조회
+    const baseUrl = await getClientPublicBaseUrl(clientId)
     const isWertClient = clientName.includes('워트') || clientName.includes('모두의특강') || clientName.includes('Wert') || clientName.includes('wert')
     const defaultHeaderImageUrl = isWertClient 
       ? `${baseUrl}/img/wert/thumb_wert1.png`
@@ -76,7 +77,7 @@ export async function POST(req: Request) {
       }
 
       // 템플릿 기반 초안 생성
-      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://eventflow.kr'
+      const baseUrl = await getClientPublicBaseUrl(clientId)
       const webinarPath = webinar.slug || scopeId
       const entryUrl = `${baseUrl}/webinar/${webinarPath}`
 
@@ -228,7 +229,7 @@ export async function POST(req: Request) {
       }
 
       // 템플릿 기반 초안 생성
-      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://eventflow.kr'
+      const baseUrl = await getClientPublicBaseUrl(clientId)
       
       // 등록 캠페인과 연동된 웨비나 찾기 (입장 링크용)
       const { data: linkedWebinar } = await admin

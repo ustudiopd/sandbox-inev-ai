@@ -6,10 +6,8 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 
 export default function AdminPage() {
-  const [mode, setMode] = useState<'login' | 'signup'>('login')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [displayName, setDisplayName] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const router = useRouter()
@@ -71,67 +69,18 @@ export default function AdminPage() {
     }
   }
   
-  const handleSignup = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError('')
-    
-    if (password.length < 6) {
-      setError('비밀번호는 최소 6자 이상이어야 합니다')
-      return
-    }
-    
-    setLoading(true)
-    
-    try {
-      // 회원가입은 역할 선택 페이지로 이동
-      router.push('/signup')
-    } catch (err: any) {
-      setError(err.message || '회원가입 중 오류가 발생했습니다')
-      setLoading(false)
-    }
-  }
-  
   return (
     <main className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       <div className="container mx-auto px-4 py-20">
         <div className="max-w-md mx-auto">
           <div className="text-center mb-8">
             <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              EventFlow
+              Inev.ai
             </h1>
             <p className="text-gray-600">관리자 로그인</p>
           </div>
           
           <div className="bg-white rounded-xl shadow-lg p-8">
-                <div className="flex gap-4 mb-6 border-b border-gray-200">
-                <button
-                  onClick={() => {
-                    setMode('login')
-                    setError('')
-                  }}
-                  className={`flex-1 py-3 text-center font-medium transition-colors ${
-                    mode === 'login'
-                      ? 'text-blue-600 border-b-2 border-blue-600'
-                      : 'text-gray-500 hover:text-gray-700'
-                  }`}
-                >
-                  로그인
-                </button>
-                <button
-                  onClick={() => {
-                    setMode('signup')
-                    setError('')
-                  }}
-                  className={`flex-1 py-3 text-center font-medium transition-colors ${
-                    mode === 'signup'
-                      ? 'text-blue-600 border-b-2 border-blue-600'
-                      : 'text-gray-500 hover:text-gray-700'
-                  }`}
-                >
-                  회원가입
-                </button>
-              </div>
-              
               {error && (
                 <div className="mb-4 p-4 bg-red-50 border-l-4 border-red-500 text-red-700 rounded-lg">
                   <div className="font-semibold mb-1">오류</div>
@@ -145,80 +94,39 @@ export default function AdminPage() {
                 </div>
               )}
               
-              {mode === 'login' ? (
-                <form onSubmit={handleLogin} className="space-y-5">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">이메일</label>
-                    <input
-                      type="text"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                      placeholder="admin 또는 your@email.com"
-                      required
-                      disabled={loading}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">비밀번호</label>
-                    <input
-                      type="password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                      placeholder="••••••••"
-                      required
-                      disabled={loading}
-                    />
-                  </div>
-                  <button
-                    type="submit"
+              <form onSubmit={handleLogin} className="space-y-5">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">이메일</label>
+                  <input
+                    type="text"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    placeholder="admin 또는 your@email.com"
+                    required
                     disabled={loading}
-                    className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 rounded-lg font-medium hover:from-blue-700 hover:to-purple-700 disabled:opacity-50 transition-all shadow-lg hover:shadow-xl"
-                  >
-                    {loading ? '로그인 중...' : '로그인'}
-                  </button>
-                </form>
-              ) : (
-                <div className="text-center py-8">
-                  <p className="text-gray-700 mb-6">
-                    관리자 계정을 생성하려면 역할을 선택해주세요
-                  </p>
-                  <div className="space-y-4">
-                    <button
-                      onClick={() => router.push('/signup/agency')}
-                      className="w-full p-4 border-2 border-blue-200 rounded-xl hover:border-blue-500 hover:bg-gradient-to-br hover:from-blue-50 hover:to-purple-50 transition-all duration-200 text-left shadow-md hover:shadow-xl"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="text-2xl">🏢</div>
-                        <div>
-                          <div className="font-semibold text-lg text-gray-800">에이전시</div>
-                          <div className="text-sm text-gray-600">여러 클라이언트를 관리하고 웨비나 서비스를 제공합니다</div>
-                        </div>
-                      </div>
-                    </button>
-                    
-                    <button
-                      onClick={() => router.push('/signup/client')}
-                      className="w-full p-4 border-2 border-green-200 rounded-xl hover:border-green-500 hover:bg-gradient-to-br hover:from-green-50 hover:to-emerald-50 transition-all duration-200 text-left shadow-md hover:shadow-xl"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="text-2xl">👥</div>
-                        <div>
-                          <div className="font-semibold text-lg text-gray-800">클라이언트</div>
-                          <div className="text-sm text-gray-600">웨비나를 생성하고 운영합니다 (에이전시 초대 필요)</div>
-                        </div>
-                      </div>
-                    </button>
-                  </div>
-                  
-                  <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                    <p className="text-sm text-blue-800">
-                      💡 참여자(개인회원)는 웨비나 페이지에서 가입할 수 있습니다
-                    </p>
-                  </div>
+                  />
                 </div>
-              )}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">비밀번호</label>
+                  <input
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    placeholder="••••••••"
+                    required
+                    disabled={loading}
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 rounded-lg font-medium hover:from-blue-700 hover:to-purple-700 disabled:opacity-50 transition-all shadow-lg hover:shadow-xl"
+                >
+                  {loading ? '로그인 중...' : '로그인'}
+                </button>
+              </form>
           </div>
         </div>
       </div>

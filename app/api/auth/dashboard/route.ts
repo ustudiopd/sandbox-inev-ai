@@ -109,6 +109,13 @@ export async function GET() {
       profileError = profileResult.reason
     }
     
+    // inev client_members만 있는 경우 (profiles 없음) → inev-admin으로
+    const inevMember = clientResult.status === 'fulfilled' && clientResult.value.data
+    if (!profile && !profileError && inevMember) {
+      console.log('[Dashboard API] inev 클라이언트 멤버 (profiles 없음) → inev-admin')
+      return NextResponse.json({ dashboard: '/inev-admin' })
+    }
+
     // 프로필이 없으면 가입되지 않은 계정
     if (!profile && !profileError) {
       console.warn('[Dashboard API] 가입되지 않은 계정:', { userId: user.id, email: user.email })
@@ -229,8 +236,9 @@ export async function GET() {
     }
     
     if (clientMember) {
-      console.log('[Dashboard API] 클라이언트 멤버로 인식:', { clientId: clientMember.client_id })
-      return NextResponse.json({ dashboard: `/client/${clientMember.client_id}/dashboard` })
+      // inev: client_members 소속 사용자는 클라이언트 목록이 있는 inev-admin으로
+      console.log('[Dashboard API] inev 클라이언트 멤버로 인식 → inev-admin:', { clientId: clientMember.client_id })
+      return NextResponse.json({ dashboard: '/inev-admin' })
     }
     
     // 디버깅 정보 포함
