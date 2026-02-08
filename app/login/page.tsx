@@ -38,11 +38,18 @@ function LoginForm() {
     
     // 사용자 역할에 따라 적절한 대시보드로 리다이렉트
     if (data.user) {
-      // 세션이 완전히 설정될 때까지 잠시 대기
-      await new Promise(resolve => setTimeout(resolve, 500))
+      // 성능 최적화: 슈퍼 관리자는 JWT에서 즉시 확인하여 빠른 리다이렉트
+      const isSuperAdmin = !!data.user.app_metadata?.is_super_admin
+      if (isSuperAdmin) {
+        const redirectTo = safeNext || '/super/dashboard'
+        router.push(redirectTo)
+        router.refresh()
+        return
+      }
       
       try {
         // API를 통해 대시보드 경로 가져오기 (서버 사이드에서 RLS 정책 적용)
+        // 슈퍼 관리자가 아닌 경우에만 API 호출 (성능 개선)
         const response = await fetch('/api/auth/dashboard')
         const result = await response.json()
         

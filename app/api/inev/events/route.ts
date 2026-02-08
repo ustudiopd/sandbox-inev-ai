@@ -10,6 +10,7 @@ export async function GET(request: Request) {
   if (auth instanceof NextResponse) return auth
   const { searchParams } = new URL(request.url)
   const clientId = searchParams.get('client_id')
+  const limit = parseInt(searchParams.get('limit') || '100', 10) // 기본값 100개
   if (!clientId) return NextResponse.json({ error: 'client_id required' }, { status: 400 })
   const forbidden = ensureClientAccess(clientId, auth.allowedClientIds)
   if (forbidden) return forbidden
@@ -19,6 +20,7 @@ export async function GET(request: Request) {
     .select('id, client_id, code, slug, module_registration, module_survey, module_webinar, module_email, module_utm, module_ondemand, created_at')
     .eq('client_id', clientId)
     .order('created_at', { ascending: false })
+    .limit(Math.min(limit, 500)) // 최대 500개로 제한 (성능 보호)
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json(data ?? [])
 }

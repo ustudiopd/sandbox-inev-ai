@@ -116,27 +116,49 @@ export default async function ClientDashboard({
     
     // 웨비나, 온디맨드, 캠페인을 병렬로 조회 (성능 최적화)
     // 기존: 순차 쿼리 900ms → 개선: 병렬 쿼리 300ms (3배 개선)
-    const [webinarsResult, ondemandsResult, campaignsResult] = await Promise.allSettled([
-      // 웨비나 목록 조회 (라이브만, 온디맨드 제외)
+    // 최근 50개만 조회하여 성능 추가 개선
+    // 통계 카드용 count는 별도로 병렬 조회
+    const [webinarsResult, ondemandsResult, campaignsResult, webinarsCountResult, ondemandsCountResult, campaignsCountResult] = await Promise.allSettled([
+      // 웨비나 목록 조회 (라이브만, 온디맨드 제외, 최근 50개)
       admin
         .from('webinars')
-        .select('*')
+        .select('id, title, slug, project_name, start_time, created_at, type')
         .eq('client_id', clientId)
         .or('type.is.null,type.eq.live,type.neq.ondemand') // type이 null이거나 'live'이거나 'ondemand'가 아닌 것
-        .order('created_at', { ascending: false }),
-      // 온디맨드 목록 조회
+        .order('created_at', { ascending: false })
+        .limit(50),
+      // 온디맨드 목록 조회 (최근 50개)
       admin
         .from('webinars')
-        .select('*')
+        .select('id, title, slug, project_name, created_at, type')
         .eq('client_id', clientId)
         .eq('type', 'ondemand')
-        .order('created_at', { ascending: false }),
-      // 설문조사 캠페인 목록 조회
+        .order('created_at', { ascending: false })
+        .limit(50),
+      // 설문조사 캠페인 목록 조회 (최근 50개)
       admin
         .from('event_survey_campaigns')
-        .select('*')
+        .select('id, title, public_path, type, created_at')
         .eq('client_id', clientId)
-        .order('created_at', { ascending: false }),
+        .order('created_at', { ascending: false })
+        .limit(50),
+      // 웨비나 총 개수 (통계 카드용)
+      admin
+        .from('webinars')
+        .select('*', { count: 'exact', head: true })
+        .eq('client_id', clientId)
+        .or('type.is.null,type.eq.live,type.neq.ondemand'),
+      // 온디맨드 총 개수 (통계 카드용)
+      admin
+        .from('webinars')
+        .select('*', { count: 'exact', head: true })
+        .eq('client_id', clientId)
+        .eq('type', 'ondemand'),
+      // 캠페인 총 개수 (통계 카드용)
+      admin
+        .from('event_survey_campaigns')
+        .select('*', { count: 'exact', head: true })
+        .eq('client_id', clientId),
     ])
     
     // 결과 추출 및 에러 처리
@@ -148,6 +170,11 @@ export default async function ClientDashboard({
     
     const campaigns = campaignsResult.status === 'fulfilled' ? campaignsResult.value.data : null
     const campaignsError = campaignsResult.status === 'fulfilled' ? campaignsResult.value.error : null
+    
+    // 통계 카드용 총 개수 추출
+    const webinarsCount = webinarsCountResult.status === 'fulfilled' ? webinarsCountResult.value.count : (webinars?.length || 0)
+    const ondemandsCount = ondemandsCountResult.status === 'fulfilled' ? ondemandsCountResult.value.count : (ondemands?.length || 0)
+    const campaignsCount = campaignsCountResult.status === 'fulfilled' ? campaignsCountResult.value.count : (campaigns?.length || 0)
     
     // 실제 에러가 있는 경우에만 로그 출력 (PGRST205=테이블 없음, 42703=컬럼 없음은 무시)
     if (webinarsError && webinarsError.code !== '42703' && webinarsError.code !== 'PGRST205') {
@@ -303,7 +330,7 @@ export default async function ClientDashboard({
             <div className="flex items-center justify-between min-w-0">
               <div className="flex-1 min-w-0">
                 <h2 className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-300 mb-1 truncate">웨비나 수</h2>
-                <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-white">{webinars?.length || 0}</p>
+                <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-white">{webinarsCount || 0}</p>
               </div>
               <div className="text-3xl sm:text-4xl opacity-20 dark:opacity-30 flex-shrink-0 ml-2">🎥</div>
             </div>
@@ -312,7 +339,7 @@ export default async function ClientDashboard({
             <div className="flex items-center justify-between min-w-0">
               <div className="flex-1 min-w-0">
                 <h2 className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-300 mb-1 truncate">온디맨드 수</h2>
-                <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-white">{ondemands?.length || 0}</p>
+                <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-white">{ondemandsCount || 0}</p>
               </div>
               <div className="text-3xl sm:text-4xl opacity-20 dark:opacity-30 flex-shrink-0 ml-2">📺</div>
             </div>

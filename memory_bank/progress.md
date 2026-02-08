@@ -1,5 +1,24 @@
 # 완료된 작업 내역 (Progress)
 
+## [2026-02-09] 로그인 및 대시보드 성능 최적화
+- ✅ 관리자 로그인 속도 개선
+  - 슈퍼 관리자 빠른 경로 추가: JWT `app_metadata.is_super_admin` 확인으로 DB 쿼리 생략, 즉시 리다이렉트
+  - 500ms 고정 대기 시간 제거: `signInWithPassword` 후 세션은 즉시 설정되므로 불필요한 대기 제거
+  - 대시보드 API 최적화: 슈퍼 관리자는 JWT만으로 판단하여 DB 쿼리 생략
+  - 예상 개선: 슈퍼 관리자 ~700-800ms 단축, 일반 사용자 ~500ms 단축
+- ✅ 이벤트 로딩 및 대시보드 성능 개선
+  - 이벤트 목록 페이지 SSR 전환: 클라이언트 사이드 fetch → 서버 컴포넌트로 변경하여 초기 로딩 시간 단축
+  - 대시보드 쿼리 최적화: 목록 조회에 limit 50개 추가, 필요한 필드만 선택 (`select` 최적화)
+  - 통계 카드용 count 쿼리 병렬 실행: 정확한 총 개수 표시를 위해 별도 count 쿼리 추가
+  - 이벤트 API limit 파라미터 추가: 기본값 100개, 최대 500개로 제한하여 대량 데이터 조회 방지
+  - 예상 개선: 이벤트 목록 ~200-300ms 단축, 대시보드 ~300-500ms 단축, API 응답 ~50-100ms 단축
+- ✅ 수정된 파일
+  - `app/login/page.tsx`: 슈퍼 관리자 빠른 경로 추가, 500ms 대기 제거
+  - `app/api/auth/dashboard/route.ts`: 슈퍼 관리자 조기 반환 로직 추가
+  - `app/inev-admin/clients/[clientId]/events/page.tsx`: 서버 컴포넌트로 전환, limit 100개 추가
+  - `app/(client)/client/[clientId]/dashboard/page.tsx`: limit 50개 추가, 필드 선택 최적화, count 쿼리 병렬 실행
+  - `app/api/inev/events/route.ts`: limit 파라미터 추가 (기본값 100개, 최대 500개)
+
 ## [2026-02-09] Phase 6 착수 전 문서 고정 작업
 - ✅ Phase 4~5 테스트 보고서에 Baseline 고정 선언 추가
   - `docs/reports/inev_Phase4-5_테스트_결과_보고서.md` 상단에 "✅ Baseline 고정 선언" 섹션 추가

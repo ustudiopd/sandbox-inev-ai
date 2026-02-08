@@ -1,7 +1,5 @@
-'use client'
-
-import { useEffect, useState } from 'react'
-import { useParams, useRouter } from 'next/navigation'
+import { createAdminSupabase } from '@/lib/supabase/admin'
+import { getInevAuth, ensureClientAccess } from '@/lib/auth/inev-api-auth'
 import Link from 'next/link'
 
 type EventRow = {
@@ -15,28 +13,38 @@ type EventRow = {
   created_at: string
 }
 
-export default function InevAdminEventsPage() {
-  const params = useParams()
-  const router = useRouter()
-  const clientId = params.clientId as string
-  const [events, setEvents] = useState<EventRow[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
+export default async function InevAdminEventsPage({
+  params,
+}: {
+  params: Promise<{ clientId: string }>
+}) {
+  const { clientId } = await params
+  
+  // 인증 및 권한 확인
+  const auth = await getInevAuth()
+  if (auth instanceof Response) {
+    return <div className="text-red-600">인증 오류</div>
+  }
+  
+  const forbidden = ensureClientAccess(clientId, auth.allowedClientIds)
+  if (forbidden) {
+    return <div className="text-red-600">접근 권한이 없습니다</div>
+  }
+  
+  // 서버 사이드에서 직접 데이터 조회 (성능 최적화)
+  const admin = createAdminSupabase()
+  const { data: events, error } = await admin
+    .from('events')
+    .select('id, client_id, code, slug, module_registration, module_survey, module_webinar, created_at')
+    .eq('client_id', clientId)
+    .order('created_at', { ascending: false })
+    .limit(100) // 최대 100개만 조회 (성능 최적화)
+  
+  if (error) {
+    return <div className="text-red-600">오류: {error.message}</div>
+  }
 
-  useEffect(() => {
-    if (!clientId) return
-    fetch(`/api/inev/events?client_id=${clientId}`)
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.error) setError(data.error)
-        else setEvents(Array.isArray(data) ? data : [])
-      })
-      .catch((e) => setError(e.message))
-      .finally(() => setLoading(false))
-  }, [clientId])
-
-  if (loading) return <div className="text-gray-500">로딩 중...</div>
-  if (error) return <div className="text-red-600">오류: {error}</div>
+  const eventsList = events || []
 
   return (
     <div className="space-y-4">
@@ -52,13 +60,13 @@ export default function InevAdminEventsPage() {
           이벤트 추가
         </Link>
       </div>
-      {events.length === 0 ? (
+      {eventsList.length === 0 ? (
         <div className="rounded-lg border border-gray-200 bg-white p-6 text-center text-gray-500">
           이벤트가 없습니다. 이벤트를 추가해 보세요.
         </div>
       ) : (
         <ul className="rounded-lg border border-gray-200 bg-white shadow-sm">
-          {events.map((e) => (
+          {eventsList.map((e) => (
             <li key={e.id} className="flex items-center justify-between border-b border-gray-100 px-4 py-3 last:border-0">
               <div>
                 <span className="font-medium text-gray-900">{e.slug}</span>

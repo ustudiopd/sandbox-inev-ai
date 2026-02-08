@@ -30,6 +30,12 @@ export async function GET() {
     // 슈퍼 관리자 확인 (JWT app_metadata 사용 - RLS 재귀 방지)
     let isSuperAdmin = !!user?.app_metadata?.is_super_admin
     
+    // 성능 최적화: 슈퍼 관리자는 DB 쿼리 없이 즉시 반환
+    if (isSuperAdmin) {
+      console.log('[Dashboard API] 슈퍼 관리자로 인식 (JWT만으로 판단):', user.email)
+      return NextResponse.json({ dashboard: '/super/dashboard' })
+    }
+    
     // 재시도 헬퍼 함수
     const retryQuery = async <T>(
       queryFn: () => Promise<T>,
@@ -147,44 +153,11 @@ export async function GET() {
       }
     }
     
-    // JWT에 app_metadata가 없을 경우 fallback: Admin Supabase로 확인
-    if (!isSuperAdmin) {
-      try {
-        // 환경 변수 확인
-        if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
-          console.error('[Dashboard API] SUPABASE_SERVICE_ROLE_KEY가 설정되지 않았습니다')
-          throw new Error('환경 변수 설정 오류')
-        }
-        
-        if (profileError) {
-          console.error('[Dashboard API] 프로필 조회 오류:', profileError)
-          console.error('[Dashboard API] 프로필 조회 오류 상세:', {
-            message: profileError.message,
-            details: profileError.details,
-            hint: profileError.hint,
-            code: profileError.code,
-          })
-        }
-        
-        if (profile?.is_super_admin) {
-          isSuperAdmin = true
-          // JWT app_metadata 동기화 (재로그인 필요 안내)
-          console.warn(`⚠️  사용자 ${user.email}의 JWT에 app_metadata가 없습니다. 재로그인하여 JWT를 갱신하세요.`)
-        } else {
-          console.log('[Dashboard API] 슈퍼 관리자 권한 없음:', { userId: user.id, email: user.email })
-        }
-      } catch (error: any) {
-        console.error('[Dashboard API] 프로필 확인 오류:', error)
-        console.error('[Dashboard API] 프로필 확인 오류 상세:', {
-          message: error?.message,
-          stack: error?.stack,
-          name: error?.name,
-        })
-      }
-    }
-    
-    if (isSuperAdmin) {
-      console.log('[Dashboard API] 슈퍼 관리자로 인식:', user.email)
+    // JWT에 app_metadata가 없을 경우 fallback: 프로필에서 확인
+    // (이미 위에서 슈퍼 관리자는 조기 반환했으므로 여기서는 일반 사용자만 처리)
+    if (profile?.is_super_admin) {
+      // JWT app_metadata 동기화 필요 (재로그인 필요 안내)
+      console.warn(`⚠️  사용자 ${user.email}의 JWT에 app_metadata가 없습니다. 재로그인하여 JWT를 갱신하세요.`)
       return NextResponse.json({ dashboard: '/super/dashboard' })
     }
     
