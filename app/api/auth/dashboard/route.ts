@@ -84,14 +84,12 @@ export async function GET() {
           .limit(1)
           .maybeSingle()
       ),
-      // 클라이언트 멤버십 확인 (첫 번째 클라이언트)
+      // 클라이언트 멤버십 확인 (모든 클라이언트 조회하여 개수 확인)
       retryQuery(async () =>
         await admin
           .from('client_members')
           .select('client_id')
           .eq('user_id', user.id)
-          .limit(1)
-          .maybeSingle()
       ),
     ])
     
@@ -115,10 +113,17 @@ export async function GET() {
       profileError = profileResult.reason
     }
     
-    // inev client_members만 있는 경우 (profiles 없음) → inev-admin으로
-    const inevMember = clientResult.status === 'fulfilled' && clientResult.value.data
-    if (!profile && !profileError && inevMember) {
-      console.log('[Dashboard API] inev 클라이언트 멤버 (profiles 없음) → inev-admin')
+    // inev client_members만 있는 경우 (profiles 없음) → 클라이언트 개수에 따라 처리
+    const inevMembers = clientResult.status === 'fulfilled' && clientResult.value.data
+    if (!profile && !profileError && inevMembers && Array.isArray(inevMembers) && inevMembers.length > 0) {
+      // 클라이언트가 1개면 바로 해당 클라이언트 대시보드로 이동
+      if (inevMembers.length === 1) {
+        const clientId = inevMembers[0].client_id
+        console.log('[Dashboard API] inev 클라이언트 멤버 (profiles 없음, 클라이언트 1개) → 바로 클라이언트 대시보드:', { clientId })
+        return NextResponse.json({ dashboard: `/client/${clientId}/dashboard` })
+      }
+      // 클라이언트가 2개 이상이면 inev-admin으로
+      console.log('[Dashboard API] inev 클라이언트 멤버 (profiles 없음, 클라이언트 여러 개) → inev-admin')
       return NextResponse.json({ dashboard: '/inev-admin' })
     }
 
@@ -183,21 +188,50 @@ export async function GET() {
     }
     
     if (agencyMember) {
-      console.log('[Dashboard API] 에이전시 멤버로 인식:', { agencyId: agencyMember.agency_id })
-      return NextResponse.json({ dashboard: `/agency/${agencyMember.agency_id}/dashboard` })
+      const agencyId = agencyMember.agency_id
+      console.log('[Dashboard API] 에이전시 멤버로 인식:', { agencyId })
+      
+      // 에이전시의 클라이언트 개수 확인
+      const { data: agencyClients, error: agencyClientsError } = await retryQuery(async () =>
+        await admin
+          .from('clients')
+          .select('id')
+          .eq('agency_id', agencyId)
+      )
+      
+      if (agencyClientsError) {
+        console.error('[Dashboard API] 에이전시 클라이언트 조회 오류:', agencyClientsError)
+        // 오류가 있어도 에이전시 대시보드로 이동 (기존 동작 유지)
+        return NextResponse.json({ dashboard: `/agency/${agencyId}/dashboard` })
+      }
+      
+      const clientCount = agencyClients?.length || 0
+      console.log('[Dashboard API] 에이전시 클라이언트 개수:', { agencyId, clientCount })
+      
+      // 클라이언트가 1개면 바로 해당 클라이언트 대시보드로 이동
+      if (clientCount === 1 && agencyClients && agencyClients[0]) {
+        const clientId = agencyClients[0].id
+        console.log('[Dashboard API] 에이전시 멤버 (클라이언트 1개) → 바로 클라이언트 대시보드로:', { agencyId, clientId })
+        return NextResponse.json({ dashboard: `/client/${clientId}/dashboard` })
+      }
+      
+      // 클라이언트가 2개 이상이거나 0개면 에이전시 대시보드로 이동
+      console.log('[Dashboard API] 에이전시 멤버 (클라이언트 여러 개 또는 없음) → 에이전시 대시보드:', { agencyId, clientCount })
+      return NextResponse.json({ dashboard: `/agency/${agencyId}/dashboard` })
     }
     
     // 클라이언트 멤버십 결과 처리
-    let clientMember = null
+    let clientMembers: Array<{ client_id: string }> | null = null
     let clientError = null
     
     if (clientResult.status === 'fulfilled') {
-      clientMember = clientResult.value.data
+      clientMembers = clientResult.value.data
       clientError = clientResult.value.error
       console.log('[Dashboard API] 클라이언트 멤버십 조회 결과:', { 
-        hasClientMember: !!clientMember,
+        hasClientMembers: !!clientMembers,
+        clientCount: clientMembers?.length || 0,
         hasError: !!clientError,
-        clientId: clientMember?.client_id
+        clientIds: clientMembers?.map(cm => cm.client_id)
       })
     } else {
       console.error('[Dashboard API] 클라이언트 멤버십 조회 Promise 실패:', clientResult.reason)
@@ -208,9 +242,19 @@ export async function GET() {
       console.error('[Dashboard API] 클라이언트 멤버십 조회 오류:', clientError)
     }
     
-    if (clientMember) {
-      // inev: client_members 소속 사용자는 클라이언트 목록이 있는 inev-admin으로
-      console.log('[Dashboard API] inev 클라이언트 멤버로 인식 → inev-admin:', { clientId: clientMember.client_id })
+    if (clientMembers && clientMembers.length > 0) {
+      // 클라이언트가 1개면 바로 해당 클라이언트 대시보드로 이동
+      if (clientMembers.length === 1) {
+        const clientId = clientMembers[0].client_id
+        console.log('[Dashboard API] 클라이언트 1개 → 바로 클라이언트 대시보드로:', { clientId })
+        return NextResponse.json({ dashboard: `/client/${clientId}/dashboard` })
+      }
+      
+      // 클라이언트가 2개 이상이면 inev-admin으로 (클라이언트 선택 화면)
+      console.log('[Dashboard API] inev 클라이언트 멤버 (여러 개) → inev-admin:', { 
+        clientCount: clientMembers.length,
+        clientIds: clientMembers.map(cm => cm.client_id)
+      })
       return NextResponse.json({ dashboard: '/inev-admin' })
     }
     
@@ -221,7 +265,8 @@ export async function GET() {
       hasProfile: !!profile,
       isSuperAdmin: isSuperAdmin || profile?.is_super_admin,
       hasAgencyMember: !!agencyMember,
-      hasClientMember: !!clientMember,
+      hasClientMembers: !!clientMembers,
+      clientMemberCount: clientMembers?.length || 0,
       profileError: profileError?.message,
       agencyError: agencyError?.message,
       clientError: clientError?.message
@@ -234,7 +279,8 @@ export async function GET() {
         hasProfile: !!profile,
         isSuperAdmin: isSuperAdmin || profile?.is_super_admin,
         hasAgencyMember: !!agencyMember,
-        hasClientMember: !!clientMember
+        hasClientMembers: !!clientMembers,
+        clientMemberCount: clientMembers?.length || 0
       }
     })
   } catch (error: any) {

@@ -3,9 +3,8 @@ import { createServerSupabase } from '@/lib/supabase/server'
 import { createAdminSupabase } from '@/lib/supabase/admin'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { Edit, ExternalLink } from 'lucide-react'
 import UnifiedListItem from './components/UnifiedListItem'
-import StatisticsOverview from './components/StatisticsOverview'
+import EventItemActions from './components/EventItemActions'
 
 export default async function ClientDashboard({
   params,
@@ -174,11 +173,6 @@ export default async function ClientDashboard({
           </div>
         </div>
         
-        {/* Phase 10: 통계는 StatisticsOverview 컴포넌트에서 API로 조회 */}
-        <div className="mb-6 sm:mb-8">
-          <StatisticsOverview clientId={clientId} />
-        </div>
-        
         {/* 이벤트 목록 */}
         <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
           <div className="border-b border-gray-200 dark:border-gray-700 px-6 py-4">
@@ -188,19 +182,18 @@ export default async function ClientDashboard({
             {unifiedItems.length > 0 ? (
               <div className="space-y-2">
                 {unifiedItems.map((item) => (
-                  <Link
+                  <div
                     key={`event-${item.id}`}
-                    href={`/inev-admin/clients/${clientId}/events/${item.id}`}
                     className="block p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-blue-300 dark:hover:border-blue-600 hover:bg-blue-50/50 dark:hover:bg-blue-900/10 transition-all"
                   >
                     <div className="flex items-center justify-between">
-                      <div className="flex-1 min-w-0">
-                        <Link
-                          href={`/inev-admin/clients/${clientId}/events/${item.id}`}
-                          className="text-base font-semibold text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer truncate block mb-1"
-                        >
+                      <Link
+                        href={`/inev-admin/clients/${clientId}/events/${item.id}`}
+                        className="flex-1 min-w-0"
+                      >
+                        <div className="text-base font-semibold text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors truncate block mb-1">
                           {item.slug || item.title}
-                        </Link>
+                        </div>
                         <div className="flex items-center gap-2">
                           <span className="text-sm text-gray-500 dark:text-gray-400">코드: {item.code}</span>
                           {item.module_webinar && (
@@ -219,30 +212,16 @@ export default async function ClientDashboard({
                             </span>
                           )}
                         </div>
-                      </div>
-                      <div className="flex items-center gap-2 ml-4">
-                        <span className="text-sm text-gray-500 dark:text-gray-400 mr-2">
-                          {new Date(item.created_at).toLocaleDateString('ko-KR', { timeZone: 'Asia/Seoul' })}
-                        </span>
-                        <Link
-                          href={`/inev-admin/clients/${clientId}/events/${item.id}`}
-                          className="inline-flex items-center justify-center p-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-                          title="편집"
-                        >
-                          <Edit className="w-4 h-4" />
-                        </Link>
-                        <Link
-                          href={`/event/${item.slug || item.code}`}
-                          target="_blank"
-                          rel="noopener"
-                          className="inline-flex items-center justify-center p-2 border border-blue-300 dark:border-blue-600 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors"
-                          title="공개 페이지"
-                        >
-                          <ExternalLink className="w-4 h-4" />
-                        </Link>
-                      </div>
+                      </Link>
+                      <EventItemActions
+                        clientId={clientId}
+                        eventId={item.id}
+                        eventSlug={item.slug}
+                        eventCode={item.code}
+                        createdAt={item.created_at}
+                      />
                     </div>
-                  </Link>
+                  </div>
                 ))}
               </div>
             ) : (

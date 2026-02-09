@@ -7,6 +7,15 @@
 ## 1. 현재 집중하고 있는 작업  
 - **작업명**: inev.ai 리빌딩 (Phase 0–10)
 - **상태**: Phase 4 완료 (온디맨드 시청 세션 추적), Phase 10 완료 (필수 작업), Wert Intelligence 전용 배포 준비
+- **최근 작업 (2026-02-09)**:
+  - ✅ 워트인텔리전스 관리자 계정 추가 스크립트 수정 (inev 스키마 호환)
+    - `scripts/add-wert-admin.ts`: `agency_id` 제거, `profiles`/`agency_members` 테이블 선택적 처리
+  - ✅ Wert Intelligence 대시보드 메인 화면 개선
+    - 통계 화면 제거 (StatisticsOverview 컴포넌트 제거)
+    - 이벤트 목록만 표시하도록 변경
+    - 중첩된 Link 컴포넌트 문제 해결 (EventItemActions Client Component로 분리)
+  - ✅ 테스트 이벤트 삭제 스크립트 작성 및 실행
+    - `scripts/delete-test-events.ts`: 테스트 이벤트 5개 삭제 (149403, 149402, W2, W1, 999888)
   - Phase 0: Supabase inev 연결, Auth/Tenant 문서화 완료 ✅
   - Phase 1~5: 기본 스키마 및 모듈 구현 완료 ✅
   - **Phase 4: 온디맨드 시청 세션 추적 시스템 완료** ✅
