@@ -2,13 +2,14 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState, useEffect } from "react";
-import { useSearchParams, usePathname } from "next/navigation";
+import { useState } from "react";
+import { useSearchParams, usePathname, useRouter } from "next/navigation";
 import { extractUTMParams } from "@/lib/utils/utm";
 import { getOrCreateSessionId } from "@/lib/utils/session";
 
-/** 워트 149403 등록 캠페인 ID (Visit/통계용) */
-const WERT_CAMPAIGN_ID = "3a88682e-6fab-463c-8328-6b403c8c5c7a";
+/** 185044 AI 특허리서치 실무 활용 웨비나 이벤트 */
+const EVENT_CODE = "185044";
+const EVENT_SLUG = "185044";
 
 // Supabase Storage URL
 const SUPABASE_STORAGE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://gbkivxdlebdtfudexbga.supabase.co';
@@ -248,94 +249,69 @@ function OrganizationCarousel() {
   );
 }
 
-export function WebinarFormWertPageContent() {
+export function WebinarFormPatentPageContent() {
   const searchParams = useSearchParams()
   const pathname = usePathname()
-  
-  // 현재 경로에 따라 웨비나 링크 결정
-  const webinarLink = pathname?.includes('/149400') ? '/webinar/149400' : '/webinar/149402'
+  const router = useRouter()
   
   // URL에서 UTM 파라미터 추출
   const utmParams = extractUTMParams(searchParams)
-  
-  // Visit 수집 (랜딩 페이지 진입 시 — 통계 시스템 연동)
-  useEffect(() => {
+
+  // 이벤트 ID (185044)
+  const EVENT_ID = "a8e841e3-5a8a-4290-a4fc-b9035a472750"
+
+  // 폼 상태
+  const [email, setEmail] = useState('')
+  const [name, setName] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  // 웨비나 다시보기 버튼 클릭 핸들러
+  const handleWatchReplay = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError(null)
+
+    if (!email.trim()) {
+      setError('이메일을 입력해주세요.')
+      return
+    }
+
+    if (!name.trim()) {
+      setError('이름을 입력해주세요.')
+      return
+    }
+
+    setLoading(true)
+
     try {
-      const sessionId = getOrCreateSessionId("ef_session_id", 30)
-      const visitUrl = `/api/public/campaigns/${WERT_CAMPAIGN_ID}/visit`
-      
-      fetch(visitUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const response = await fetch(`/api/inev/events/${EVENT_ID}/enter`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          session_id: sessionId,
-          utm_source: utmParams.utm_source ?? null,
-          utm_medium: utmParams.utm_medium ?? null,
-          utm_campaign: utmParams.utm_campaign ?? null,
-          utm_term: utmParams.utm_term ?? null,
-          utm_content: utmParams.utm_content ?? null,
-          cid: searchParams.get("cid") ?? null,
-          referrer: typeof document !== "undefined" ? document.referrer || null : null,
-          user_agent: typeof navigator !== "undefined" ? navigator.userAgent : null,
+          email: email.trim(),
+          name: name.trim(),
         }),
       })
-        .then(async (response) => {
-          if (!response.ok) {
-            const errorText = await response.text()
-            console.error('[워트 Visit API 실패]', {
-              status: response.status,
-              statusText: response.statusText,
-              error: errorText,
-              url: visitUrl,
-              campaignId: WERT_CAMPAIGN_ID,
-            })
-          } else {
-            const result = await response.json()
-            console.log('[워트 Visit API 성공]', {
-              success: result.success,
-              campaignId: WERT_CAMPAIGN_ID,
-            })
-          }
-        })
-        .catch((error) => {
-          // Visit 실패해도 페이지 동작에는 영향 없음
-          console.error('[워트 Visit API 네트워크 오류]', {
-            error: error.message,
-            url: visitUrl,
-            campaignId: WERT_CAMPAIGN_ID,
-          })
-        })
-    } catch (error: any) {
-      // 초기화 실패 무시
-      console.error('[워트 Visit API 초기화 오류]', {
-        error: error?.message,
-        campaignId: WERT_CAMPAIGN_ID,
-      })
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- 랜딩 1회 방문만 기록
-  }, [])
 
-  // 등록 페이지 링크에 UTM 파라미터 및 CID 포함
-  const getRegisterLink = () => {
-    const baseUrl = "/event/149403/register"
-    const params = new URLSearchParams()
-    
-    // cid가 있으면 항상 포함 (UTM이 없어도)
-    const cid = searchParams.get('cid')
-    if (cid) {
-      params.set('cid', cid)
-    }
-    
-    // UTM 파라미터 추가
-    Object.entries(utmParams).forEach(([key, value]) => {
-      if (value) {
-        params.set(key, value)
+      const data = await response.json()
+
+      if (!response.ok) {
+        setError(data.error || '입장에 실패했습니다.')
+        setLoading(false)
+        return
       }
-    })
-    
-    // 파라미터가 있으면 쿼리스트링 추가, 없으면 baseUrl만 반환
-    const queryString = params.toString()
-    return queryString ? `${baseUrl}?${queryString}` : baseUrl
+
+      if (data.success && data.redirectTo) {
+        // 온디맨드 페이지를 새 창으로 열기
+        window.open(data.redirectTo, '_blank', 'noopener,noreferrer')
+      } else {
+        // 기본적으로 온디맨드 페이지를 새 창으로 열기
+        window.open(`/event/${EVENT_SLUG}/ondemand`, '_blank', 'noopener,noreferrer')
+      }
+    } catch (err: any) {
+      setError(err.message || '입장 처리 중 오류가 발생했습니다.')
+      setLoading(false)
+    }
   }
   
   return (
@@ -428,46 +404,65 @@ export function WebinarFormWertPageContent() {
               </div>
             </div>
           </div>
-          <div className="w-full max-w-[384px] flex flex-col justify-start items-center sm:items-start gap-2.5 sm:gap-4 lg:gap-8">
-            <Link
-              href={getRegisterLink()}
-              className="w-auto sm:self-stretch px-4 sm:px-8 lg:pl-16 lg:pr-10 py-2.5 sm:py-3 lg:py-6 bg-[#00A08C] rounded-full lg:rounded-[200px] inline-flex justify-center items-center gap-2 sm:gap-3 lg:gap-6 overflow-hidden min-h-[44px] sm:min-h-[48px]"
-            >
-              <div className="text-center justify-start text-white font-bold text-sm sm:text-lg lg:text-[36px] leading-tight" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
-                웨비나 등록하기
+          <div className="w-full max-w-[240px] sm:max-w-[384px] flex flex-col justify-start items-center sm:items-start gap-4 sm:gap-6 lg:gap-8">
+            {/* 이름, 이메일 입력 폼 */}
+            <form onSubmit={handleWatchReplay} className="w-full flex flex-col gap-3 sm:gap-4 lg:gap-6">
+              {error && (
+                <div className="w-full px-4 py-2 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-red-600 text-sm sm:text-base">{error}</p>
+                </div>
+              )}
+              <div className="w-full">
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="이름을 입력해주세요"
+                  required
+                  disabled={loading}
+                  className="w-full px-2 sm:px-4 lg:px-6 py-1.5 sm:py-2.5 lg:py-3 rounded-lg sm:rounded-xl lg:rounded-2xl border-2 border-gray-300 focus:border-[#00A08C] focus:outline-none text-xs sm:text-base lg:text-lg disabled:bg-gray-100 disabled:cursor-not-allowed"
+                  style={{ fontFamily: 'Noto Sans KR, sans-serif' }}
+                />
               </div>
-              <Image
-                src={`${WERT_IMAGE_BASE}/symbol1.png`}
-                alt=""
-                width={14}
-                height={20}
-                className="w-2.5 h-3.5 sm:w-3.5 sm:h-5 object-contain"
-                unoptimized
-              />
-            </Link>
-            <Link
-              href="/event/149403/enter"
-              className="w-auto sm:self-stretch px-4 sm:px-8 lg:pl-16 lg:pr-10 py-2.5 sm:py-3 lg:py-6 bg-[#000000] rounded-full lg:rounded-[200px] inline-flex justify-center items-center gap-2 sm:gap-3 lg:gap-6 overflow-hidden min-h-[44px] sm:min-h-[48px]"
-            >
-              <div className="text-center justify-start text-[#ffffff] font-bold text-sm sm:text-lg lg:text-[36px] leading-tight" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
-                입장하기
+              <div className="w-full">
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="이메일을 입력해주세요"
+                  required
+                  disabled={loading}
+                  className="w-full px-2 sm:px-4 lg:px-6 py-1.5 sm:py-2.5 lg:py-3 rounded-lg sm:rounded-xl lg:rounded-2xl border-2 border-gray-300 focus:border-[#00A08C] focus:outline-none text-xs sm:text-base lg:text-lg disabled:bg-gray-100 disabled:cursor-not-allowed"
+                  style={{ fontFamily: 'Noto Sans KR, sans-serif' }}
+                />
               </div>
-              <Image
-                src={`${WERT_IMAGE_BASE}/symbol1.png`}
-                alt=""
-                width={14}
-                height={20}
-                className="w-2.5 h-3.5 sm:w-3.5 sm:h-5 object-contain brightness-[10]"
-                unoptimized
-              />
-            </Link>
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full px-4 sm:px-8 lg:pl-16 lg:pr-10 py-3 sm:py-4 lg:py-6 bg-[#00A08C] rounded-full lg:rounded-[200px] inline-flex justify-center items-center gap-2 sm:gap-3 lg:gap-6 overflow-hidden min-h-[44px] sm:min-h-[48px] disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#008a75] transition-colors"
+              >
+                <div className="text-center justify-start text-white font-bold text-sm sm:text-lg lg:text-[36px] leading-tight" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
+                  {loading ? '처리 중...' : '웨비나 다시보기'}
+                </div>
+                {!loading && (
+                  <Image
+                    src={`${WERT_IMAGE_BASE}/symbol1.png`}
+                    alt=""
+                    width={14}
+                    height={20}
+                    className="w-2.5 h-3.5 sm:w-3.5 sm:h-5 object-contain"
+                    unoptimized
+                  />
+                )}
+              </button>
+            </form>
           </div>
         </div>
       </section>
 
       {/* Section 2 - Question & Webinar Points */}
       <section className="w-full relative bg-white overflow-hidden py-8 sm:py-12 lg:py-20">
-        <div className="w-full max-w-[858px] mx-auto px-4 sm:px-6 lg:px-[72px] flex flex-col justify-start items-start gap-8 sm:gap-12 lg:gap-20">
+        <div className="w-full max-w-[856px] mx-auto px-4 sm:px-6 lg:px-[72px] flex flex-col justify-start items-start gap-8 sm:gap-12 lg:gap-20">
           <div className="self-stretch flex flex-col justify-start items-center gap-3.5">
             <div className="w-24 h-24 relative flex items-center justify-center">
               <div className="w-[103px] h-[90px]">
@@ -485,7 +480,7 @@ export function WebinarFormWertPageContent() {
               <div className="text-center justify-start text-teal-600 font-bold text-lg sm:text-2xl lg:text-[48px] leading-tight sm:leading-tight lg:leading-[72px]" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
                 "AI 특허리서치가 과연 우리 조직에<br />실질적인 도움이 될까?"
               </div>
-              <div className="self-stretch text-center justify-start text-[15px] sm:text-base lg:text-[36px] leading-relaxed sm:leading-relaxed lg:leading-[60px]">
+              <div className="self-stretch text-center justify-start text-sm sm:text-base lg:text-[34px] leading-relaxed sm:leading-relaxed lg:leading-relaxed">
                 <span className="text-black/80 font-normal" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
                   AI 특허리서치 활용을 고민하고 있지만<span className="hidden sm:inline"><br /></span>이 질문이 남아 있다면,<span className="hidden sm:inline"><br /></span>{" "}
                 </span>
@@ -524,7 +519,7 @@ export function WebinarFormWertPageContent() {
                     {" "}POINT 1
                   </span>
                 </div>
-                <div className="self-stretch justify-start text-xs sm:text-base lg:text-[28px] leading-relaxed sm:leading-relaxed lg:leading-[42px]">
+                <div className="self-stretch justify-start text-xs sm:text-base lg:text-[26px] leading-relaxed sm:leading-relaxed lg:leading-[42px]">
                   <span className="text-white/90 font-normal" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
                     기업의 IP팀, 특허사무소, R&D팀 등<span className="hidden sm:inline"> </span>
                   </span>
@@ -554,7 +549,7 @@ export function WebinarFormWertPageContent() {
                     {" "}POINT 2
                   </span>
                 </div>
-                <div className="self-stretch justify-start text-xs sm:text-base lg:text-[28px] leading-relaxed sm:leading-relaxed lg:leading-[42px]">
+                <div className="self-stretch justify-start text-xs sm:text-base lg:text-[26px] leading-relaxed sm:leading-relaxed lg:leading-[42px]">
                   <span className="text-white font-bold" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
                     키워트 인사이트를 활용함
                   </span>
@@ -580,7 +575,7 @@ export function WebinarFormWertPageContent() {
           width: '100vw'
         }}
       >
-        {/* OVERVIEW Section */}
+        {/* OVERVIEW Section - 기존 코드와 동일하게 유지 */}
         <div className="w-full max-w-[856px] mx-auto px-4 sm:px-6 lg:px-[72px] flex flex-col justify-start items-start gap-1 sm:gap-10 lg:gap-16">
           <div className="self-stretch flex flex-col justify-center items-center gap-2 sm:gap-3">
             <div className="text-center justify-start text-green-200 font-bold text-sm sm:text-lg lg:text-[24px] leading-tight sm:leading-tight lg:leading-[32px]" style={{ fontFamily: 'Figtree, sans-serif' }}>
@@ -663,7 +658,7 @@ export function WebinarFormWertPageContent() {
           </div>
         </div>
 
-        {/* AUDIENCE Section */}
+        {/* AUDIENCE Section - 기존 코드와 동일하게 유지 */}
         <div className="w-full max-w-[856px] mx-auto px-4 sm:px-6 lg:px-[72px] mt-6 sm:mt-10 lg:mt-20 flex flex-col justify-start items-start gap-6 sm:gap-10 lg:gap-16">
           <div className="self-stretch flex flex-col justify-center items-center gap-2 sm:gap-3">
             <div className="text-center justify-start text-green-200 font-bold text-sm sm:text-lg lg:text-[24px] leading-tight sm:leading-tight lg:leading-[32px]" style={{ fontFamily: 'Figtree, sans-serif' }}>
@@ -674,48 +669,25 @@ export function WebinarFormWertPageContent() {
             </div>
           </div>
           <div className="self-stretch p-4 sm:p-8 lg:p-16 bg-white/10 rounded-xl sm:rounded-2xl lg:rounded-[48px] outline outline-1 outline-offset-[-1px] outline-white/20 flex flex-col justify-start items-start gap-3 sm:gap-5 lg:gap-8 overflow-hidden">
-            <div className="self-stretch inline-flex justify-start items-center gap-4 sm:gap-6">
-              <div className="flex-1 justify-start">
-                <span className="text-white/80 font-normal text-sm sm:text-base lg:text-[24px] leading-relaxed sm:leading-relaxed lg:leading-[40px]" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
-                  특허 리서치·분석 업무를 효율화하고 싶은<br />
-                </span>
-                <span className="text-green-200 font-bold text-sm sm:text-base lg:text-[24px] leading-relaxed sm:leading-relaxed lg:leading-[40px]" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
-                  IP 담당자 및 특허사무소
-                </span>
+            {audience.map((item, index) => (
+              <div key={index}>
+                {index > 0 && <div className="self-stretch h-px bg-white/20 mb-3 sm:mb-5 lg:mb-8"></div>}
+                <div className="self-stretch inline-flex justify-start items-center gap-4 sm:gap-6">
+                  <div className="flex-1 justify-start">
+                    <span className="text-white/80 font-normal text-sm sm:text-base lg:text-[24px] leading-relaxed sm:leading-relaxed lg:leading-[40px]" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
+                      {item.split(' ').slice(0, -2).join(' ')}<br />
+                    </span>
+                    <span className="text-green-200 font-bold text-sm sm:text-base lg:text-[24px] leading-relaxed sm:leading-relaxed lg:leading-[40px]" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
+                      {item.split(' ').slice(-2).join(' ')}
+                    </span>
+                  </div>
+                </div>
               </div>
-            </div>
-            <div className="self-stretch h-px bg-white/20"></div>
-            <div className="self-stretch inline-flex justify-start items-center gap-4 sm:gap-6">
-              <div className="flex-1 justify-start">
-                <span className="text-white/80 font-normal text-sm sm:text-base lg:text-[24px] leading-relaxed sm:leading-relaxed lg:leading-[40px]" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
-                  연구 초기부터 특허 리스크를 줄이고 싶은<br />
-                </span>
-                <span className="text-green-200 font-bold text-sm sm:text-base lg:text-[24px] leading-relaxed sm:leading-relaxed lg:leading-[40px]" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
-                  R&D 연구원
-                </span>
-              </div>
-            </div>
-            <div className="self-stretch h-px bg-white/20"></div>
-            <div className="self-stretch inline-flex justify-start items-center gap-4 sm:gap-6">
-              <div className="flex-1 justify-start">
-                <span className="text-white/80 font-normal text-sm sm:text-base lg:text-[24px] leading-relaxed sm:leading-relaxed lg:leading-[40px]" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
-                  IP 및 R&D 조직 내 협업과 의사결정을<br />
-                </span>
-                <span className="text-green-200 font-bold text-sm sm:text-base lg:text-[24px] leading-relaxed sm:leading-relaxed lg:leading-[40px]" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
-                  빠르게 만들고 싶은 담당자
-                </span>
-              </div>
-            </div>
-            <div className="self-stretch h-px bg-white/20"></div>
-            <div className="self-stretch inline-flex justify-start items-center gap-4 sm:gap-6">
-              <div className="flex-1 justify-start text-green-200 font-bold text-sm sm:text-base lg:text-[24px] leading-relaxed sm:leading-relaxed lg:leading-[40px]" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
-                키워트 인사이트 도입을 고민 중인 담당자
-              </div>
-            </div>
+            ))}
           </div>
         </div>
 
-        {/* AGENDA & SPEAKER Section */}
+        {/* AGENDA & SPEAKER Section - 기존 코드와 동일하게 유지 (간소화) */}
         <div className="w-full max-w-[856px] mx-auto px-4 sm:px-6 lg:px-[72px] mt-6 sm:mt-10 lg:mt-20 flex flex-col justify-start items-start gap-8 sm:gap-12 lg:gap-16">
           <div className="self-stretch flex flex-col justify-start items-center gap-2 sm:gap-3">
             <div className="self-stretch text-center justify-start text-green-200 font-bold text-sm sm:text-lg lg:text-[24px] leading-tight sm:leading-tight lg:leading-[32px]" style={{ fontFamily: 'Figtree, sans-serif' }}>
@@ -759,93 +731,34 @@ export function WebinarFormWertPageContent() {
                       <span className="hidden sm:inline">{session.title}</span>
                     </div>
                     <div className="self-stretch flex flex-col justify-start items-start gap-0.5 sm:gap-1 lg:gap-2">
-                      {session.bullets.map((bullet, bulletIndex) => {
-                        const isMultiLine = bullet.includes('\n');
-                        const isMobileSingleLine = index === 1 && bulletIndex === 2; // SESSION 2의 세 번째 bullet
-                        const isSession4MobileBreak = index === 3 && bulletIndex === 0; // SESSION 4의 첫 번째 bullet - 모바일에서 줄바꿈
-                        const parts = bullet.split('\n');
-                        const isSession1 = session.label === 'SESSION 1';
-                        const isSession2 = session.label === 'SESSION 2';
-                        return (
-                          <div
-                            key={bulletIndex}
-                            className={isMultiLine && !isMobileSingleLine ? 'self-stretch flex flex-col justify-center items-start' : index === 0 && bulletIndex === 0 ? 'self-stretch inline-flex justify-start items-start sm:items-center gap-2 sm:gap-3 lg:gap-4' : isSession4MobileBreak ? 'inline-flex justify-start items-start sm:items-center gap-2 sm:gap-3 lg:gap-4' : 'inline-flex justify-start items-start sm:items-center gap-2 sm:gap-3 lg:gap-4'}
-                          >
-                            {isMultiLine && !isMobileSingleLine ? (
-                              <div className="self-stretch flex flex-col justify-start items-start gap-1.5">
-                                {parts.map((part, partIndex) => (
-                                  <div key={partIndex} className="self-stretch inline-flex justify-start items-start sm:items-center gap-2 sm:gap-3 lg:gap-4">
-                                    {partIndex === 0 && (
-                                      <div className={`relative flex-shrink-0 flex items-center justify-center ${
-                                        ['SESSION 1', 'SESSION 2'].includes(session.label)
-                                          ? 'w-3.5 h-3.5 sm:w-4 sm:h-4 lg:w-5 lg:h-5' 
-                                          : 'w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6'
-                                      }`}>
-                                        <Image
-                                          src={`${WERT_IMAGE_BASE}/check_icon.png`}
-                                          alt="check"
-                                          width={40}
-                                          height={40}
-                                          className="w-full h-full object-contain translate-y-[2px] sm:translate-y-0"
-                                          quality={100}
-                                        />
-                                      </div>
-                                    )}
-                                    {partIndex > 0 && <div className={`relative ${
-                                      ['SESSION 1', 'SESSION 2'].includes(session.label)
-                                        ? 'w-3.5 h-3.5 sm:w-4 sm:h-4 lg:w-5 lg:h-5' 
-                                        : 'w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6'
-                                    }`}></div>}
-                                    <div className={`flex-1 justify-start text-white/80 font-normal flex items-start sm:items-center ${
-                                      ['SESSION 1', 'SESSION 2'].includes(session.label)
-                                        ? 'text-sm sm:text-xl lg:text-2xl'
-                                        : 'text-sm sm:text-base lg:text-[24px]'
-                                    } leading-relaxed sm:leading-relaxed lg:leading-normal`} style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
-                                      {part}
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-                            ) : (
-                              <>
-                                <div className={`relative flex-shrink-0 flex items-center justify-center ${
-                                  ['SESSION 1', 'SESSION 2'].includes(session.label)
-                                    ? 'w-3.5 h-3.5 sm:w-4 sm:h-4 lg:w-5 lg:h-5' 
-                                    : 'w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6'
-                                }`}>
-                                  <Image
-                                    src={`${WERT_IMAGE_BASE}/check_icon.png`}
-                                    alt="check"
-                                    width={40}
-                                    height={40}
-                                    className="w-full h-full object-contain translate-y-[2px] sm:translate-y-0"
-                                    quality={100}
-                                  />
-                                </div>
-                                <div className={`justify-start text-white/80 font-normal flex items-start sm:items-center ${
-                                  ['SESSION 1', 'SESSION 2'].includes(session.label)
-                                    ? 'text-sm sm:text-xl lg:text-2xl'
-                                    : 'text-sm sm:text-base lg:text-[24px]'
-                                } leading-relaxed sm:leading-relaxed lg:leading-normal`} style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
-                                  {isMobileSingleLine ? (
-                                    <>
-                                      <span className="sm:hidden">{bullet.replace(/\n/g, ' ')}</span>
-                                      <span className="hidden sm:inline whitespace-pre-line">{bullet}</span>
-                                    </>
-                                  ) : isSession4MobileBreak ? (
-                                    <>
-                                      <span className="sm:hidden whitespace-pre-line">좋은 질문을 해주신 분들 중 추첨으로{'\n'}선물을 드립니다.</span>
-                                      <span className="hidden sm:inline">{bullet}</span>
-                                    </>
-                                  ) : (
-                                    bullet
-                                  )}
-                                </div>
-                              </>
-                            )}
+                      {session.bullets.map((bullet, bulletIndex) => (
+                        <div
+                          key={bulletIndex}
+                          className="inline-flex justify-start items-start sm:items-center gap-2 sm:gap-3 lg:gap-4"
+                        >
+                          <div className={`relative flex-shrink-0 flex items-center justify-center ${
+                            ['SESSION 1', 'SESSION 2'].includes(session.label)
+                              ? 'w-3.5 h-3.5 sm:w-4 sm:h-4 lg:w-5 lg:h-5' 
+                              : 'w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6'
+                          }`}>
+                            <Image
+                              src={`${WERT_IMAGE_BASE}/check_icon.png`}
+                              alt="check"
+                              width={40}
+                              height={40}
+                              className="w-full h-full object-contain translate-y-[2px] sm:translate-y-0"
+                              quality={100}
+                            />
                           </div>
-                        );
-                      })}
+                          <div className={`justify-start text-white/80 font-normal flex items-start sm:items-center ${
+                            ['SESSION 1', 'SESSION 2'].includes(session.label)
+                              ? 'text-sm sm:text-xl lg:text-2xl'
+                              : 'text-sm sm:text-base lg:text-[24px]'
+                          } leading-relaxed sm:leading-relaxed lg:leading-normal`} style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
+                            {bullet}
+                          </div>
+                        </div>
+                      ))}
                       {session.note && (
                         <div className="self-stretch inline-flex justify-start items-center gap-2 sm:gap-4 mt-1 sm:-mt-2">
                           <div className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 relative"></div>
@@ -897,8 +810,8 @@ export function WebinarFormWertPageContent() {
           width: '100vw'
         }}
       >
-        {/* About keywert Insight Section */}
-        <div className="w-full mx-auto px-4 sm:px-6 lg:px-8 flex flex-col justify-start items-start gap-8 sm:gap-12 lg:gap-24">
+        {/* About keywert Insight Section - 기존 코드와 동일하게 유지 (간소화) */}
+        <div className="w-full max-w-[856px] mx-auto px-4 sm:px-6 lg:px-8 flex flex-col justify-start items-start gap-8 sm:gap-12 lg:gap-24">
           <div className="self-stretch flex flex-col justify-center items-center gap-2 sm:gap-3">
             <div className="text-center justify-start text-teal-600 font-bold text-sm sm:text-lg lg:text-[24px] leading-tight sm:leading-tight lg:leading-[32px]" style={{ fontFamily: 'Figtree, sans-serif' }}>
               ABOUT keywert Insight
@@ -939,74 +852,34 @@ export function WebinarFormWertPageContent() {
                 </div>
               </div>
             </div>
+            {/* 통계 데이터 - 기존 코드와 동일하게 유지 */}
             <div className="self-stretch flex flex-col justify-start items-start gap-3 sm:gap-4 lg:gap-6">
-              <div className="self-stretch inline-flex flex-row justify-between items-center gap-2 sm:gap-0">
-                <div className="text-left justify-start text-black/80 font-semibold text-base sm:text-xl lg:text-[36px]" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
-                  특허 문헌
+              {[
+                { label: "특허 문헌", value: "1.7", unit: "억", suffix: "건" },
+                { label: "특허 문장", value: "2,500", unit: "억", suffix: "개" },
+                { label: "특허 도면", value: "16", unit: "억", suffix: "장" },
+                { label: "가공 데이터", value: "1.5", unit: "억", suffix: "건" },
+              ].map((stat, index) => (
+                <div key={index} className="self-stretch">
+                  {index > 0 && <div className="self-stretch h-0.5 bg-black/10 mb-3 sm:mb-4 lg:mb-6"></div>}
+                  <div className="self-stretch flex flex-row justify-between items-center gap-2 sm:gap-0">
+                    <div className="text-left text-black/80 font-semibold text-base sm:text-xl lg:text-[36px]" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
+                      {stat.label}
+                    </div>
+                    <div className="text-right flex-shrink-0">
+                      <span className="text-teal-600 font-bold text-2xl sm:text-3xl lg:text-[60px]" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
+                        {stat.value}
+                      </span>
+                      <span className="text-teal-600 font-bold tracking-wider text-2xl sm:text-3xl lg:text-[60px]" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
+                        {stat.unit}
+                      </span>
+                      <span className="text-teal-600 font-bold text-base sm:text-xl lg:text-[36px]" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
+                        {stat.suffix}
+                      </span>
+                    </div>
+                  </div>
                 </div>
-                <div className="text-right justify-start">
-                  <span className="text-teal-600 font-bold text-2xl sm:text-3xl lg:text-[60px]" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
-                    1.7
-                  </span>
-                  <span className="text-teal-600 font-bold tracking-wider text-2xl sm:text-3xl lg:text-[60px]" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
-                    억
-                  </span>
-                  <span className="text-teal-600 font-bold text-base sm:text-xl lg:text-[36px]" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
-                    건
-                  </span>
-                </div>
-              </div>
-              <div className="self-stretch h-0.5 bg-black/10"></div>
-              <div className="self-stretch inline-flex flex-row justify-between items-center gap-2 sm:gap-0">
-                <div className="text-left justify-start text-black/80 font-semibold text-base sm:text-xl lg:text-[36px]" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
-                  특허 문장
-                </div>
-                <div className="text-right justify-start">
-                  <span className="text-teal-600 font-bold text-2xl sm:text-3xl lg:text-[60px]" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
-                    2,500
-                  </span>
-                  <span className="text-teal-600 font-bold tracking-wider text-2xl sm:text-3xl lg:text-[60px]" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
-                    억
-                  </span>
-                  <span className="text-teal-600 font-bold text-base sm:text-xl lg:text-[36px]" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
-                    개
-                  </span>
-                </div>
-              </div>
-              <div className="self-stretch h-0.5 bg-black/10"></div>
-              <div className="self-stretch inline-flex flex-row justify-between items-center gap-2 sm:gap-0">
-                <div className="text-left justify-start text-black/80 font-semibold text-base sm:text-xl lg:text-[36px]" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
-                  특허 도면
-                </div>
-                <div className="text-right justify-start">
-                  <span className="text-teal-600 font-bold text-2xl sm:text-3xl lg:text-[60px]" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
-                    16
-                  </span>
-                  <span className="text-teal-600 font-bold tracking-wider text-2xl sm:text-3xl lg:text-[60px]" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
-                    억
-                  </span>
-                  <span className="text-teal-600 font-bold text-base sm:text-xl lg:text-[36px]" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
-                    장
-                  </span>
-                </div>
-              </div>
-              <div className="self-stretch h-0.5 bg-black/10"></div>
-              <div className="self-stretch inline-flex flex-row justify-between items-center gap-2 sm:gap-0">
-                <div className="text-left justify-start text-black/80 font-semibold text-base sm:text-xl lg:text-[36px]" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
-                  가공 데이터
-                </div>
-                <div className="text-right justify-start">
-                  <span className="text-teal-600 font-bold text-2xl sm:text-3xl lg:text-[60px]" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
-                    1.5
-                  </span>
-                  <span className="text-teal-600 font-bold tracking-wider text-2xl sm:text-3xl lg:text-[60px]" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
-                    억
-                  </span>
-                  <span className="text-teal-600 font-bold text-base sm:text-xl lg:text-[36px]" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
-                    건
-                  </span>
-                </div>
-              </div>
+              ))}
             </div>
           </div>
         </div>
@@ -1031,8 +904,8 @@ export function WebinarFormWertPageContent() {
           width: '100vw'
         }}
       >
-        <div className="w-full max-w-[856px] mx-auto px-4 sm:px-6 lg:px-[72px] flex flex-col justify-start items-start gap-12 sm:gap-16 lg:gap-24">
-          <div className="self-stretch flex flex-col justify-center items-center gap-3">
+        <div className="w-full max-w-[856px] mx-auto flex flex-col justify-start items-start gap-12 sm:gap-16 lg:gap-24">
+          <div className="w-full px-4 sm:px-6 lg:px-[72px] flex flex-col justify-center items-center gap-3">
             <div className="text-center justify-start text-green-200 font-bold text-sm sm:text-lg lg:text-[24px] leading-tight sm:leading-tight lg:leading-[32px]" style={{ fontFamily: 'Figtree, sans-serif' }}>
               EVENT
             </div>
@@ -1040,16 +913,16 @@ export function WebinarFormWertPageContent() {
               웨비나 참여 이벤트
             </div>
           </div>
-          <div className="self-stretch flex flex-col justify-start items-end gap-12 sm:gap-16 lg:gap-20">
+          <div className="w-full flex flex-col justify-start items-end gap-12 sm:gap-16 lg:gap-20">
             {/* Event 1 */}
-            <div className="self-stretch flex flex-col justify-start items-start gap-3 sm:gap-8 lg:gap-10">
-              <div className="self-stretch flex flex-col justify-center items-center gap-4 sm:gap-8 lg:gap-10">
+            <div className="w-full flex flex-col justify-start items-start gap-3 sm:gap-8 lg:gap-10">
+              <div className="w-full px-4 sm:px-6 lg:px-[72px] flex flex-col justify-center items-center gap-4 sm:gap-8 lg:gap-10">
                 <div className="px-4 sm:px-5 lg:px-6 py-0.5 sm:py-1 bg-white/25 rounded-2xl sm:rounded-3xl lg:rounded-[48px] inline-flex justify-center items-center gap-2 overflow-hidden">
                   <div className="text-center justify-start text-white font-bold text-base sm:text-lg lg:text-[24px] leading-tight sm:leading-tight lg:leading-[40px]" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
                     Event 1
                   </div>
                 </div>
-                <div className="self-stretch flex flex-col justify-start items-center gap-4 sm:gap-5 lg:gap-6">
+                <div className="w-full flex flex-col justify-start items-center gap-4 sm:gap-5 lg:gap-6">
                   <div className="justify-start text-white font-bold text-xl sm:text-3xl lg:text-[48px] leading-tight sm:leading-tight lg:leading-[40px]" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
                     QnA 이벤트
                   </div>
@@ -1067,7 +940,7 @@ export function WebinarFormWertPageContent() {
                   </div>
                 </div>
               </div>
-              <div className="self-stretch h-[128px] sm:h-44 lg:h-56 p-4 sm:p-6 lg:p-10 bg-black/10 rounded-xl sm:rounded-2xl lg:rounded-[32px] outline outline-1 outline-offset-[-1px] outline-white/20 flex flex-row justify-start items-center gap-3 sm:gap-4 lg:gap-2.5 overflow-hidden">
+              <div className="w-full px-4 sm:px-0 h-[128px] sm:h-44 lg:h-56 p-4 sm:p-6 lg:p-10 bg-black/10 rounded-xl sm:rounded-2xl lg:rounded-[32px] outline outline-1 outline-offset-[-1px] outline-white/20 flex flex-row justify-start items-center gap-3 sm:gap-4 lg:gap-2.5 overflow-hidden">
                 <div className="flex-1 justify-start text-white font-bold text-[17px] sm:text-xl lg:text-[36px] leading-relaxed sm:leading-relaxed lg:leading-[60px] text-left" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
                   스타벅스 아메리카노 Tall<br />기프티콘 증정
                 </div>
@@ -1080,17 +953,17 @@ export function WebinarFormWertPageContent() {
             </div>
 
             {/* Divider */}
-            <div className="self-stretch h-0 outline outline-1 outline-offset-[-0.50px] outline-white/20"></div>
+            <div className="w-full h-0 outline outline-1 outline-offset-[-0.50px] outline-white/20"></div>
 
             {/* Event 2 */}
-            <div className="self-stretch flex flex-col justify-start items-start gap-6 sm:gap-8 lg:gap-10">
-              <div className="self-stretch flex flex-col justify-center items-center gap-6 sm:gap-8 lg:gap-10">
+            <div className="w-full flex flex-col justify-start items-start gap-6 sm:gap-8 lg:gap-10">
+              <div className="w-full px-4 sm:px-6 lg:px-[72px] flex flex-col justify-center items-center gap-6 sm:gap-8 lg:gap-10">
                 <div className="px-4 sm:px-5 lg:px-6 py-0.5 sm:py-1 bg-white/25 rounded-xl sm:rounded-2xl lg:rounded-[32px] inline-flex justify-center items-center gap-2 overflow-hidden">
                   <div className="text-center justify-start text-white font-bold text-base sm:text-lg lg:text-[24px] leading-tight sm:leading-tight lg:leading-[40px]" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
                     Event 2
                   </div>
                 </div>
-                <div className="self-stretch flex flex-col justify-center items-center gap-4 sm:gap-5 lg:gap-6">
+                <div className="w-full flex flex-col justify-center items-center gap-4 sm:gap-5 lg:gap-6">
                   <div className="text-center justify-start text-neutral-100 font-bold text-xl sm:text-3xl lg:text-[48px] leading-tight sm:leading-tight lg:leading-[40px]" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
                     특별 혜택 이벤트
                   </div>
@@ -1107,16 +980,16 @@ export function WebinarFormWertPageContent() {
                   </div>
                 </div>
               </div>
-              <div className="self-stretch flex flex-col justify-start items-start gap-3 sm:gap-5 lg:gap-6 relative">
+              <div className="w-full px-4 sm:px-0 flex flex-col justify-start items-start gap-3 sm:gap-5 lg:gap-6 relative">
                 {/* 1달 무료 체험 */}
-                <div className="self-stretch h-[128px] sm:h-40 lg:h-56 p-4 sm:p-6 lg:p-10 bg-gradient-to-r from-black/5 to-black/10 rounded-xl sm:rounded-2xl lg:rounded-[32px] outline outline-1 outline-offset-[-1px] outline-white/20 flex flex-row justify-start items-center gap-3 sm:gap-3 lg:gap-2.5 overflow-hidden">
-                  <div className="flex-1 justify-start text-white font-bold text-[17px] sm:text-xl lg:text-[36px] leading-relaxed sm:leading-relaxed lg:leading-[60px] text-left" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
-                    키워트 인사이트 신규회원 대상<br />무료 체험 제공
+                <div className="w-full h-[128px] sm:h-40 lg:h-56 p-4 sm:p-6 lg:p-10 bg-gradient-to-r from-black/5 to-black/10 rounded-xl sm:rounded-2xl lg:rounded-[32px] outline outline-1 outline-offset-[-1px] outline-white/20 flex flex-row justify-start items-center gap-3 sm:gap-3 lg:gap-2.5 overflow-hidden">
+                  <div className="flex-1 justify-start text-white text-[17px] sm:text-xl lg:text-[36px] leading-relaxed sm:leading-relaxed lg:leading-[60px] text-left" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
+                    <span className="font-normal">키워트 인사이트 신규회원 대상</span><br /><span className="font-bold">무료 체험 제공</span>
                   </div>
                   <img
                     src={`${WERT_IMAGE_BASE}/image 49.png`}
                     alt="1달 무료 체험"
-                    className="w-16 h-16 sm:w-28 sm:h-28 lg:w-40 lg:h-40 object-contain flex-shrink-0"
+                    className="w-12 h-12 sm:w-20 sm:h-20 lg:w-32 lg:h-32 object-contain flex-shrink-0"
                   />
                 </div>
                 {/* Plus Icon - 카드 사이 중앙에 배치 */}
@@ -1142,14 +1015,14 @@ export function WebinarFormWertPageContent() {
                   />
                 </div>
                 {/* 특별 견적 */}
-                <div className="self-stretch h-[128px] sm:h-40 lg:h-56 p-4 sm:p-6 lg:p-10 bg-black/10 rounded-xl sm:rounded-2xl lg:rounded-[32px] outline outline-1 outline-offset-[-1px] outline-white/20 flex flex-row justify-start items-center gap-3 sm:gap-3 lg:gap-2.5 overflow-hidden">
-                  <div className="flex-1 justify-start text-white font-bold text-[17px] sm:text-xl lg:text-[36px] leading-relaxed sm:leading-relaxed lg:leading-[60px] text-left" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
-                    웨비나 참여 후 엔터프라이즈용<br />상담 신청하면 특별 견적 제공
+                <div className="w-full h-[128px] sm:h-40 lg:h-56 p-4 sm:p-6 lg:p-10 bg-black/10 rounded-xl sm:rounded-2xl lg:rounded-[32px] outline outline-1 outline-offset-[-1px] outline-white/20 flex flex-row justify-start items-center gap-3 sm:gap-3 lg:gap-2.5 overflow-hidden">
+                  <div className="flex-1 justify-start text-white text-[17px] sm:text-xl lg:text-[36px] leading-relaxed sm:leading-relaxed lg:leading-[60px] text-left" style={{ fontFamily: 'Noto Sans KR, sans-serif' }}>
+                    <span className="font-normal">웨비나 참여 후 엔터프라이즈용</span><br /><span className="font-bold">상담 신청하면 특별 견적 제공</span>
                   </div>
                   <img
                     src={`${WERT_IMAGE_BASE}/image 48.png`}
                     alt="특별 견적"
-                    className="w-16 h-24 sm:w-24 sm:h-32 lg:w-36 lg:h-48 object-contain flex-shrink-0"
+                    className="w-12 h-20 sm:w-20 sm:h-28 lg:w-28 lg:h-40 object-contain flex-shrink-0"
                   />
                 </div>
               </div>
@@ -1308,7 +1181,7 @@ export function WebinarFormWertPageContent() {
                 <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 left-0 top-[11px] sm:top-[14px] absolute bg-black/60 rounded-full"></div>
               </div>
               <div className="flex-1 justify-start">
-                <span className="text-black/60 font-normal text-xs sm:text-base lg:text-[26px] leading-relaxed sm:leading-relaxed lg:leading-[40px]" style={{ fontFamily: 'Noto Sans KR, sans-serif', letterSpacing: '-0.4px' }}>
+                <span className="text-black/60 font-normal text-xs sm:text-base lg:text-[25px] leading-relaxed sm:leading-relaxed lg:leading-[40px]" style={{ fontFamily: 'Noto Sans KR, sans-serif', letterSpacing: '-0.4px' }}>
                   웨비나와 관련된 문의사항이 있으시면 아래 연락처를 통해 문의주시기 바랍니다.
                 </span>
               </div>

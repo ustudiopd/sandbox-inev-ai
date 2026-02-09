@@ -129,10 +129,21 @@ export default function EnterPageClient({ event }: { event: EventData }) {
         setDisplayName(data.displayName)
         setEntered(true)
 
-        // 이벤트 페이지로 리다이렉트
+        // 온디맨드 이벤트인 경우 온디맨드 시청 페이지를 새 창으로 열기
+        // 일반 이벤트인 경우 redirectTo 사용
         if (data.redirectTo) {
           setTimeout(() => {
-            router.push(data.redirectTo!)
+            // 온디맨드 페이지인지 확인
+            if (data.redirectTo && data.redirectTo.includes('/ondemand')) {
+              window.open(data.redirectTo, '_blank', 'noopener,noreferrer')
+            } else if (data.redirectTo) {
+              router.push(data.redirectTo)
+            }
+          }, 1000)
+        } else {
+          // 온디맨드 이벤트로 가정하고 온디맨드 페이지를 새 창으로 열기
+          setTimeout(() => {
+            window.open(`/event/${event.slug}/ondemand`, '_blank', 'noopener,noreferrer')
           }, 1000)
         }
       } else {

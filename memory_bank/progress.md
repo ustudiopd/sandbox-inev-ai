@@ -1,5 +1,32 @@
 # 완료된 작업 내역 (Progress)
 
+## [2026-02-09] 온디맨드 시청 세션 추적 시스템 구현 완료
+- ✅ 데이터베이스 마이그레이션 적용
+  - `003_event_visits_add_session_id.sql`: `event_visits` 테이블에 `session_id` 컬럼 추가 (D-OD-9)
+  - `004_event_playback_sessions.sql`: `event_playback_sessions` 테이블 생성 (D-OD-3 반영, RLS 정책 포함)
+  - MCP Supabase를 사용하여 마이그레이션 적용 완료
+- ✅ API 엔드포인트 구현
+  - `/api/inev/events/[eventId]/ondemand/sessions/start`: 세션 시작 (D-OD-3, D-OD-9 반영)
+  - `/api/inev/events/[eventId]/ondemand/sessions/ping`: Heartbeat (D-OD-3, D-OD-4, D-OD-7 반영)
+  - `/api/inev/events/[eventId]/ondemand/sessions/end`: 세션 종료 (D-OD-3, D-OD-5 반영)
+- ✅ Visit API 수정
+  - `app/api/inev/visits/route.ts`: `session_id` 저장 로직 추가 (D-OD-9)
+  - `app/event/[slug]/VisitLogger.tsx`: `session_id` 전달 로직 추가
+- ✅ 클라이언트 Heartbeat 구현
+  - `app/event/[slug]/ondemand/page.tsx`: 세션 시작/종료 및 heartbeat 로직 구현
+  - 45초 간격 heartbeat (120초 cap, 30초 throttle)
+  - 재생 상태 추적 (`is_playing`)
+  - Visibility API 연동 (hidden 시 스킵)
+  - `beforeunload`/`pagehide` 이벤트 처리
+- ✅ 비디오 플레이어 컴포넌트 개선
+  - `components/media/YouTubePlayer.tsx`: `onPlayingStateChange` 콜백 및 `playerRef` prop 추가
+  - `components/media/VimeoPlayer.tsx`: `onPlayingStateChange` 콜백 및 `playerRef` prop 추가
+- ✅ 설계 문서 작성
+  - `docs/inev/온디맨드_시청_세션_설계.md`: 확정 결정 10개 반영 완료
+- ✅ 테스트 완료
+  - jubileo@naver.com 계정으로 테스트 완료
+  - Visit 기록, Playback Session 생성, Heartbeat 전송, 세션 종료 모두 정상 작동 확인
+
 ## [2026-02-09] 로그인 및 대시보드 성능 최적화
 - ✅ 관리자 로그인 속도 개선
   - 슈퍼 관리자 빠른 경로 추가: JWT `app_metadata.is_super_admin` 확인으로 DB 쿼리 생략, 즉시 리다이렉트

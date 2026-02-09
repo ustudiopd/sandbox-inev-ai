@@ -1,6 +1,17 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { 
+  Calendar, 
+  Users, 
+  Eye, 
+  MousePointerClick, 
+  FileText, 
+  UserCheck, 
+  RefreshCw,
+  TrendingUp,
+  BarChart3
+} from 'lucide-react'
 
 interface StatisticsOverviewProps {
   clientId: string
@@ -121,23 +132,32 @@ export default function StatisticsOverview({ clientId }: StatisticsOverviewProps
   
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-white">통계 요약</h2>
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+            <BarChart3 className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+          </div>
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">통계 요약</h2>
+        </div>
         <div className="flex items-center gap-2">
-          <select
-            value={dateRange}
-            onChange={(e) => setDateRange(e.target.value as typeof dateRange)}
-            className="text-sm px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-          >
-            <option value="7days">최근 7일</option>
-            <option value="30days">최근 30일</option>
-            <option value="90days">최근 90일</option>
-            <option value="all">전체</option>
-          </select>
+          <div className="relative">
+            <Calendar className="absolute left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <select
+              value={dateRange}
+              onChange={(e) => setDateRange(e.target.value as typeof dateRange)}
+              className="text-sm pl-8 pr-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="7days">최근 7일</option>
+              <option value="30days">최근 30일</option>
+              <option value="90days">최근 90일</option>
+              <option value="all">전체</option>
+            </select>
+          </div>
           <button
             onClick={loadStatistics}
-            className="text-sm px-3 py-1.5 bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors"
+            className="flex items-center gap-2 text-sm px-3 py-1.5 bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors shadow-sm"
           >
+            <RefreshCw className="w-4 h-4" />
             새로고침
           </button>
         </div>
@@ -145,45 +165,66 @@ export default function StatisticsOverview({ clientId }: StatisticsOverviewProps
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
         {/* 이벤트 수 */}
-        <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 rounded-lg p-4 border-l-4 border-blue-500">
-          <div className="text-sm text-gray-600 dark:text-gray-300 mb-1">이벤트 수</div>
-          <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+        <div className="bg-white dark:bg-gray-800 rounded-xl p-5 border-2 border-blue-500 shadow-sm hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between mb-2">
+            <div className="text-sm font-medium text-gray-600 dark:text-gray-300">이벤트 수</div>
+            <div className="p-1.5 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+              <Calendar className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+            </div>
+          </div>
+          <div className="text-3xl font-bold text-blue-600 dark:text-blue-400 mb-1">
             {data.events.total.toLocaleString()}
           </div>
-          <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+          <div className="text-xs text-gray-500 dark:text-gray-400 mt-2 flex items-center gap-2">
+            <TrendingUp className="w-3 h-3" />
             진행 중: {data.events.active} | 종료: {data.events.completed}
           </div>
         </div>
         
         {/* 등록자 수 */}
-        <div className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 rounded-lg p-4 border-l-4 border-green-500">
-          <div className="text-sm text-gray-600 dark:text-gray-300 mb-1">등록자 수</div>
-          <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+        <div className="bg-white dark:bg-gray-800 rounded-xl p-5 border-2 border-green-500 shadow-sm hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between mb-2">
+            <div className="text-sm font-medium text-gray-600 dark:text-gray-300">등록자 수</div>
+            <div className="p-1.5 bg-green-100 dark:bg-green-900/30 rounded-lg">
+              <Users className="w-4 h-4 text-green-600 dark:text-green-400" />
+            </div>
+          </div>
+          <div className="text-3xl font-bold text-green-600 dark:text-green-400 mb-1">
             {data.leads.total.toLocaleString()}
           </div>
-          <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+          <div className="text-xs text-gray-500 dark:text-gray-400 mt-2">
             고유 이메일: {data.leads.unique_emails.toLocaleString()}
           </div>
         </div>
         
         {/* Visit 수 */}
-        <div className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 rounded-lg p-4 border-l-4 border-purple-500">
-          <div className="text-sm text-gray-600 dark:text-gray-300 mb-1">Visit 수</div>
-          <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+        <div className="bg-white dark:bg-gray-800 rounded-xl p-5 border-2 border-purple-500 shadow-sm hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between mb-2">
+            <div className="text-sm font-medium text-gray-600 dark:text-gray-300">Visit 수</div>
+            <div className="p-1.5 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
+              <Eye className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+            </div>
+          </div>
+          <div className="text-3xl font-bold text-purple-600 dark:text-purple-400 mb-1">
             {data.visits.total.toLocaleString()}
           </div>
-          <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+          <div className="text-xs text-gray-500 dark:text-gray-400 mt-2">
             {data.visits.unique_sessions > 0 && `고유 세션: ${data.visits.unique_sessions.toLocaleString()}`}
           </div>
         </div>
         
         {/* ShortLink 클릭 */}
-        <div className="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20 rounded-lg p-4 border-l-4 border-orange-500">
-          <div className="text-sm text-gray-600 dark:text-gray-300 mb-1">ShortLink 클릭</div>
-          <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
+        <div className="bg-white dark:bg-gray-800 rounded-xl p-5 border-2 border-orange-500 shadow-sm hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between mb-2">
+            <div className="text-sm font-medium text-gray-600 dark:text-gray-300">ShortLink 클릭</div>
+            <div className="p-1.5 bg-orange-100 dark:bg-orange-900/30 rounded-lg">
+              <MousePointerClick className="w-4 h-4 text-orange-600 dark:text-orange-400" />
+            </div>
+          </div>
+          <div className="text-3xl font-bold text-orange-600 dark:text-orange-400 mb-1">
             {data.shortlink_clicks.total.toLocaleString()}
           </div>
-          <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+          <div className="text-xs text-gray-500 dark:text-gray-400 mt-2">
             {data.shortlink_clicks.unique_sessions > 0 && `고유 세션: ${data.shortlink_clicks.unique_sessions.toLocaleString()}`}
           </div>
         </div>
@@ -192,17 +233,27 @@ export default function StatisticsOverview({ clientId }: StatisticsOverviewProps
       {/* 추가 통계 (2열) */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* 설문 응답 */}
-        <div className="bg-gradient-to-br from-teal-50 to-teal-100 dark:from-teal-900/20 dark:to-teal-800/20 rounded-lg p-4 border-l-4 border-teal-500">
-          <div className="text-sm text-gray-600 dark:text-gray-300 mb-1">설문 응답 수</div>
-          <div className="text-2xl font-bold text-teal-600 dark:text-teal-400">
+        <div className="bg-white dark:bg-gray-800 rounded-xl p-5 border-2 border-teal-500 shadow-sm hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between mb-2">
+            <div className="text-sm font-medium text-gray-600 dark:text-gray-300">설문 응답 수</div>
+            <div className="p-1.5 bg-teal-100 dark:bg-teal-900/30 rounded-lg">
+              <FileText className="w-4 h-4 text-teal-600 dark:text-teal-400" />
+            </div>
+          </div>
+          <div className="text-3xl font-bold text-teal-600 dark:text-teal-400">
             {data.survey_responses.total.toLocaleString()}
           </div>
         </div>
         
         {/* 참여자 수 */}
-        <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 dark:from-indigo-900/20 dark:to-indigo-800/20 rounded-lg p-4 border-l-4 border-indigo-500">
-          <div className="text-sm text-gray-600 dark:text-gray-300 mb-1">참여자 수</div>
-          <div className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">
+        <div className="bg-white dark:bg-gray-800 rounded-xl p-5 border-2 border-indigo-500 shadow-sm hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between mb-2">
+            <div className="text-sm font-medium text-gray-600 dark:text-gray-300">참여자 수</div>
+            <div className="p-1.5 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg">
+              <UserCheck className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+            </div>
+          </div>
+          <div className="text-3xl font-bold text-indigo-600 dark:text-indigo-400">
             {data.participations.total.toLocaleString()}
           </div>
         </div>

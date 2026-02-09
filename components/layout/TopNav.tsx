@@ -33,6 +33,7 @@ export default function TopNav({ organizations: propOrganizations }: TopNavProps
     agencies: Array<{ id: string; name: string; role: string }>
     clients: Array<{ id: string; name: string; role: string; agencyId: string; agencyName: string }>
   } | null>(propOrganizations || null)
+  const [clientName, setClientName] = useState<string | null>(null)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   useEffect(() => {
@@ -50,6 +51,72 @@ export default function TopNav({ organizations: propOrganizations }: TopNavProps
         .catch(err => console.error('조직 목록 조회 실패:', err))
     }
   }, [supabase, propOrganizations])
+
+  // 클라이언트명 조회 (pathname 기반)
+  useEffect(() => {
+    // pathname에서 clientId 추출
+    // /inev-admin/clients/[clientId] 또는 /client/[clientId] 형태
+    let extractedClientId: string | null = null
+    
+    // inev-admin 경로: /inev-admin/clients/[clientId]
+    const inevAdminMatch = pathname.match(/\/inev-admin\/clients\/([^\/]+)/)
+    if (inevAdminMatch) {
+      extractedClientId = inevAdminMatch[1]
+    }
+    
+    // client 경로: /client/[clientId]
+    if (!extractedClientId) {
+      const clientMatch = pathname.match(/\/client\/([^\/]+)/)
+      if (clientMatch) {
+        extractedClientId = clientMatch[1]
+      }
+    }
+    
+    // params에서도 확인
+    if (!extractedClientId) {
+      extractedClientId = params?.clientId as string || null
+    }
+
+    if (!extractedClientId) {
+      setClientName(null)
+      return
+    }
+
+    // 이미 같은 클라이언트면 스킵
+    if (clientName) {
+      const currentClientId = organizations?.clients?.find(c => c.name === clientName)?.id
+      if (currentClientId === extractedClientId) {
+        return
+      }
+    }
+
+    // organizations에서 먼저 찾기
+    const currentOrgs = organizations || propOrganizations
+    if (currentOrgs?.clients) {
+      const client = currentOrgs.clients.find(c => c.id === extractedClientId)
+      if (client) {
+        setClientName(client.name)
+        return
+      }
+    }
+
+    // organizations에 없으면 API 호출
+    fetch('/api/inev/clients')
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          const client = data.find((c: any) => c.id === extractedClientId)
+          if (client && client.name) {
+            setClientName(client.name)
+          } else {
+            setClientName(null)
+          }
+        }
+      })
+      .catch(() => {
+        setClientName(null)
+      })
+  }, [pathname, params, organizations, propOrganizations])
 
   // 웨비나 관리 페이지인지 확인
   const isWebinarAdminPage = pathname.includes('/webinar/') && 
@@ -111,10 +178,13 @@ export default function TopNav({ organizations: propOrganizations }: TopNavProps
     active: pathname === item.href || pathname.startsWith(item.href + '/'),
   }))
 
-  // 현재 클라이언트 정보 확인
+  // 현재 클라이언트 정보 확인 (여러 소스에서 확인)
   const clientId = params?.clientId as string
-  const currentClient = clientId && organizations?.clients?.find(c => c.id === clientId)
-  const isWertIntelligence = currentClient && (currentClient.name?.includes('Wert Intelligence') || currentClient.name?.includes('워트 인텔리전스'))
+  const pathnameClientId = pathname.match(/\/(inev-admin|client)\/([^\/]+)/)?.[2]
+  const extractedClientId = clientId || pathnameClientId
+  
+  const currentClient = extractedClientId && organizations?.clients?.find(c => c.id === extractedClientId)
+  const displayClientName = clientName || (currentClient && typeof currentClient === 'object' && 'name' in currentClient ? currentClient.name : undefined)
 
   return (
     <>
@@ -123,18 +193,15 @@ export default function TopNav({ organizations: propOrganizations }: TopNavProps
         aria-label="메인 네비게이션"
       >
         <div className="max-w-[1600px] mx-auto px-4 h-full flex items-center justify-between">
-          {/* 로고 또는 클라이언트명 */}
-          {isWertIntelligence ? (
+          {/* 클라이언트명 표시 */}
+          {displayClientName ? (
             <div className="text-2xl font-bold text-gray-900">
-              {currentClient?.name || 'Wert Intelligence'}
+              {displayClientName}
             </div>
           ) : (
-            <Link 
-              href="/" 
-              className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent hover:opacity-80 transition-opacity"
-            >
+            <div className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
               Inev.ai
-            </Link>
+            </div>
           )}
 
           {/* 데스크톱 메뉴 */}

@@ -6,9 +6,14 @@
 
 ## 1. 현재 집중하고 있는 작업  
 - **작업명**: inev.ai 리빌딩 (Phase 0–10)
-- **상태**: Phase 10 완료 (필수 작업), Wert Intelligence 전용 배포 준비
+- **상태**: Phase 4 완료 (온디맨드 시청 세션 추적), Phase 10 완료 (필수 작업), Wert Intelligence 전용 배포 준비
   - Phase 0: Supabase inev 연결, Auth/Tenant 문서화 완료 ✅
   - Phase 1~5: 기본 스키마 및 모듈 구현 완료 ✅
+  - **Phase 4: 온디맨드 시청 세션 추적 시스템 완료** ✅
+    - `event_playback_sessions` 테이블 생성 및 마이그레이션 적용
+    - 세션 시작/Heartbeat/종료 API 구현
+    - 클라이언트 heartbeat 로직 구현 (재생 상태 추적 포함)
+    - Visit과 PlaybackSession 분리 아키텍처 확정
   - Phase 6: Webinar(Live) 모듈 이식 완료 ✅
   - Phase 7: Short Link(/s) 구현 완료 ✅
   - Phase 8: 전용 Supabase 분리 절차 문서화 완료 ✅
@@ -19,7 +24,17 @@
     - 통계 API 구현 (overview, marketing, registration, survey)
     - RLS 보안 적용 완료
     - Wert Intelligence 브랜딩 적용 (로고 대신 클라이언트명 표시)
+    - **Phase 10-5: 통계 집계 시스템 구현 완료** ✅
+      - `event_stats_daily` 테이블 생성 (일별 집계 데이터 저장)
+      - 크론 작업 구현 (`/api/cron/aggregate-event-stats`, 5분마다 실행)
+      - 통계 API에 집계 테이블 사용 로직 추가 (성능 최적화)
+      - 집계 테이블이 있으면 사용, 없으면 원본 테이블에서 집계하는 fallback 로직
   - **레이아웃 개선**: 전체 사이트 1600px 최대폭 기준 통일 완료 ✅
+  - **UI 개선**: 대시보드 UI 개선 및 아이콘 추가 완료 ✅
+    - 통계 카드에 아이콘 추가 (lucide-react 사용)
+    - 그라데이션 배경 및 호버 효과 추가
+    - 탭 네비게이션에 아이콘 추가
+    - 버튼 및 액션 요소에 아이콘 추가
 - **이전 작업**: 웨비나 추첨 및 통계 기능 개선
 - **상태**: ✅ 완료
   - 사용자 지정 방식 추첨에 저장 기능 추가

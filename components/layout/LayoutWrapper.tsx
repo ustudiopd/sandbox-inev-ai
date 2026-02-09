@@ -55,11 +55,25 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
   const isWebinarAdminPage = isAdminWebinarPage
   const mainPaddingTop = isWebinarAdminPage ? 'pt-[208px]' : 'pt-16'
   
+  // 대시보드 페이지는 흰색 배경 사용
+  const isDashboardPage = pathname.includes('/dashboard') || decodedPathname.includes('/dashboard')
+  // 이벤트 목록 페이지 (상세 페이지 제외)
+  const isEventsListPage = (pathname.match(/\/events$/) || decodedPathname.match(/\/events$/)) && 
+                           !pathname.includes('/events/') && 
+                           !decodedPathname.includes('/events/')
+  // inev-admin 이벤트 관련 페이지들 (목록, 상세 모두)
+  const isInevAdminEventsPage = pathname.startsWith('/inev-admin/clients/') && 
+                                 (pathname.includes('/events') || decodedPathname.includes('/events'))
+  
+  const bgClass = (isDashboardPage || isEventsListPage || isInevAdminEventsPage) 
+    ? 'bg-white dark:bg-gray-900' 
+    : 'bg-gradient-to-br from-gray-50 to-blue-50 dark:from-gray-900 dark:to-gray-800'
+  
   return (
     <>
       <TopNav />
       <main 
-        className={`${mainPaddingTop} min-h-screen w-full bg-gradient-to-br from-gray-50 to-blue-50`}
+        className={`${mainPaddingTop} min-h-screen w-full ${bgClass}`}
       >
         <div className="max-w-[1600px] mx-auto px-4">
           {children}

@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
+import { getOrCreateSessionId } from '@/lib/utils/session'
 
 export function VisitLogger({
   slug,
@@ -26,11 +27,14 @@ export function VisitLogger({
     if (sent.current) return
     sent.current = true
     const ref = typeof window !== 'undefined' ? document.referrer || undefined : undefined
+    // D-OD-10: 30일 TTL (30 * 24 * 60 * 60 * 1000 밀리초)
+    const sessionId = getOrCreateSessionId('ef_session_id', 30 * 24 * 60)
     fetch('/api/inev/visits', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         slug,
+        session_id: sessionId,  // D-OD-9: session_id 전달
         path: path ?? (typeof window !== 'undefined' ? window.location.pathname : null),
         utm_source: utm_source || undefined,
         utm_medium: utm_medium || undefined,

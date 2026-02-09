@@ -427,15 +427,22 @@ CREATE TABLE event_stats_daily (
 
 ---
 
-### Phase 10-5: 통계 집계 시스템 (선택적)
+### Phase 10-5: 통계 집계 시스템 (완료) ✅
 
 **조건**: `event_access_logs` 100만 row 이상 / 응답 2초↑
 
 **작업**:
-1. 집계 테이블 생성 (`event_stats_daily`)
-2. 크론 작업 구현
+1. 집계 테이블 생성 (`event_stats_daily`) ✅
+   - `supabase/inev/007_create_event_stats_daily.sql` 생성 완료
+   - RLS 정책 적용 완료
+2. 크론 작업 구현 ✅
+   - `app/api/cron/aggregate-event-stats/route.ts` 구현 완료
+   - `vercel.json`에 크론 스케줄 추가 완료 (5분마다 실행)
+3. 통계 API에 집계 테이블 사용 로직 추가 ✅
+   - `overview` API에 집계 테이블 우선 사용 로직 추가
+   - 집계 테이블이 없으면 원본 테이블에서 집계하는 fallback 로직
 
-**DoD**: 대용량 데이터에서도 빠른 통계 조회 가능
+**DoD**: 대용량 데이터에서도 빠른 통계 조회 가능 ✅
 
 ---
 
@@ -482,10 +489,10 @@ CREATE TABLE event_stats_daily (
 - `app/api/inev/events/[eventId]/statistics/registration/route.ts` (신규)
 - `app/api/inev/events/[eventId]/statistics/survey/route.ts` (신규)
 
-### 통계 집계 (선택적)
+### 통계 집계 (완료) ✅
 
-- `supabase/inev/007_create_event_stats_daily.sql` (필요 시)
-- `app/api/cron/aggregate-event-stats/route.ts` (필요 시)
+- `supabase/inev/007_create_event_stats_daily.sql` ✅
+- `app/api/cron/aggregate-event-stats/route.ts` ✅
 
 ---
 
@@ -499,4 +506,5 @@ CREATE TABLE event_stats_daily (
 ---
 
 **문서 작성자**: Cursor Agent  
-**최종 업데이트**: 2026-02-09
+**최종 업데이트**: 2026-02-09  
+**Phase 10-5 완료**: 2026-02-09 (통계 집계 시스템 구현 및 UI 개선 완료)

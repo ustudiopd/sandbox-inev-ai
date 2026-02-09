@@ -12,7 +12,7 @@ export async function GET(request: Request) {
   const supabase = createAdminSupabase()
   let query = supabase
     .from('events')
-    .select('id, client_id, code, slug, module_registration, module_survey, module_webinar, module_email, module_utm, module_ondemand')
+    .select('id, client_id, code, slug, module_registration, module_survey, module_webinar, module_email, module_utm, module_ondemand, settings')
     .eq('slug', slug)
     .limit(1)
   if (clientSlug) {

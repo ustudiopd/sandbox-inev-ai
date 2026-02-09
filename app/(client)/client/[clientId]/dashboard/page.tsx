@@ -3,6 +3,7 @@ import { createServerSupabase } from '@/lib/supabase/server'
 import { createAdminSupabase } from '@/lib/supabase/admin'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
+import { Edit, ExternalLink } from 'lucide-react'
 import UnifiedListItem from './components/UnifiedListItem'
 import StatisticsOverview from './components/StatisticsOverview'
 
@@ -145,45 +146,31 @@ export default async function ClientDashboard({
   }))
   
   return (
-    <div className="p-4 sm:p-6 md:p-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="bg-white min-h-screen">
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+        {/* 헤더 영역 */}
         <div className="mb-6 sm:mb-8">
-          <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4 mb-4">
-            <div className="flex-1 min-w-0">
-              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2 bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400 bg-clip-text text-transparent">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-1">
                 {clientName} 대시보드
               </h1>
-              <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">이벤트를 생성하고 관리하세요</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">이벤트를 생성하고 관리하세요</p>
             </div>
-            <div className="bg-white dark:bg-gray-800 px-3 py-2 sm:px-4 sm:py-3 rounded-lg shadow border border-gray-200 dark:border-gray-700 w-full md:w-auto">
-              <div className="flex items-center justify-between">
-                <div className="flex-1 min-w-0">
-                  <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-300">접속 계정</div>
-                  <div className="font-semibold text-gray-900 dark:text-white truncate">{finalProfile?.display_name || finalProfile?.email || user.email}</div>
-                  <div className="text-xs text-blue-600 dark:text-blue-400 mt-1">클라이언트 {roleNames[role] || role}</div>
-                </div>
-                <Link
-                  href="/settings/profile"
-                  className="ml-4 px-3 py-1.5 text-sm bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors min-h-[44px] flex items-center justify-center flex-shrink-0"
-                >
-                  수정
-                </Link>
-              </div>
+            <div className="flex items-center gap-3">
+              <Link
+                href={`/inev-admin/clients/${clientId}/events/new`}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors text-sm font-medium shadow-sm"
+              >
+                + 이벤트 생성
+              </Link>
+              <Link 
+                href={`/client/${clientId}/notes`}
+                className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-medium"
+              >
+                📝 노트
+              </Link>
             </div>
-          </div>
-          <div className="flex flex-col md:flex-row gap-2 md:gap-3">
-            <Link 
-              href={`/inev-admin/clients/${clientId}/events/new`}
-              className="w-full md:w-auto px-4 py-2.5 md:px-6 md:py-3 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-xl hover:from-green-700 hover:to-green-800 shadow-lg hover:shadow-xl transition-all duration-200 font-medium min-h-[44px] flex items-center justify-center"
-            >
-              + 이벤트 생성
-            </Link>
-            <Link 
-              href={`/client/${clientId}/notes`}
-              className="w-full md:w-auto px-4 py-2.5 md:px-6 md:py-3 bg-gradient-to-r from-indigo-600 to-blue-600 text-white rounded-xl hover:from-indigo-700 hover:to-blue-700 shadow-lg hover:shadow-xl transition-all duration-200 font-medium min-h-[44px] flex items-center justify-center"
-            >
-              📝 노트
-            </Link>
           </div>
         </div>
         
@@ -192,54 +179,76 @@ export default async function ClientDashboard({
           <StatisticsOverview clientId={clientId} />
         </div>
         
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
-          <div className="bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-500 dark:to-purple-500 p-4 sm:p-6">
-            <h2 className="text-lg sm:text-xl font-semibold text-white">이벤트 목록</h2>
+        {/* 이벤트 목록 */}
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
+          <div className="border-b border-gray-200 dark:border-gray-700 px-6 py-4">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">이벤트 목록</h2>
           </div>
-          <div className="p-4 sm:p-6">
+          <div className="p-6">
             {unifiedItems.length > 0 ? (
-              <div className="space-y-2 sm:space-y-3">
+              <div className="space-y-2">
                 {unifiedItems.map((item) => (
                   <Link
                     key={`event-${item.id}`}
                     href={`/inev-admin/clients/${clientId}/events/${item.id}`}
-                    className="block p-4 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+                    className="block p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-blue-300 dark:hover:border-blue-600 hover:bg-blue-50/50 dark:hover:bg-blue-900/10 transition-all"
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex-1 min-w-0">
-                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white truncate">
-                          {item.title}
-                        </h3>
-                        <div className="flex items-center gap-2 mt-1">
-                          <span className="text-sm text-gray-600 dark:text-gray-300">코드: {item.code}</span>
+                        <Link
+                          href={`/inev-admin/clients/${clientId}/events/${item.id}`}
+                          className="text-base font-semibold text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer truncate block mb-1"
+                        >
+                          {item.slug || item.title}
+                        </Link>
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm text-gray-500 dark:text-gray-400">코드: {item.code}</span>
                           {item.module_webinar && (
-                            <span className="text-xs px-2 py-1 bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 rounded">
+                            <span className="text-xs px-2 py-0.5 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded">
                               웨비나
                             </span>
                           )}
                           {item.module_survey && (
-                            <span className="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded">
+                            <span className="text-xs px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded">
                               설문
                             </span>
                           )}
                           {item.module_registration && (
-                            <span className="text-xs px-2 py-1 bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 rounded">
+                            <span className="text-xs px-2 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded">
                               등록
                             </span>
                           )}
                         </div>
                       </div>
-                      <div className="text-sm text-gray-500 dark:text-gray-400 ml-4">
-                        {new Date(item.created_at).toLocaleDateString('ko-KR', { timeZone: 'Asia/Seoul' })}
+                      <div className="flex items-center gap-2 ml-4">
+                        <span className="text-sm text-gray-500 dark:text-gray-400 mr-2">
+                          {new Date(item.created_at).toLocaleDateString('ko-KR', { timeZone: 'Asia/Seoul' })}
+                        </span>
+                        <Link
+                          href={`/inev-admin/clients/${clientId}/events/${item.id}`}
+                          className="inline-flex items-center justify-center p-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                          title="편집"
+                        >
+                          <Edit className="w-4 h-4" />
+                        </Link>
+                        <Link
+                          href={`/event/${item.slug || item.code}`}
+                          target="_blank"
+                          rel="noopener"
+                          className="inline-flex items-center justify-center p-2 border border-blue-300 dark:border-blue-600 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors"
+                          title="공개 페이지"
+                        >
+                          <ExternalLink className="w-4 h-4" />
+                        </Link>
                       </div>
                     </div>
                   </Link>
                 ))}
               </div>
             ) : (
-              <div className="text-center text-gray-500 dark:text-gray-400 py-8 sm:py-12">
-                <div className="text-4xl sm:text-5xl mb-4">📋</div>
-                <p className="text-base sm:text-lg">이벤트가 없습니다.</p>
+              <div className="text-center text-gray-500 dark:text-gray-400 py-12">
+                <div className="text-4xl mb-4">📋</div>
+                <p className="text-base">이벤트가 없습니다.</p>
                 <p className="text-sm mt-2">새 이벤트를 생성해주세요.</p>
               </div>
             )}

@@ -31,10 +31,10 @@ export async function POST(request: Request, { params }: RouteParams) {
 
     const supabase = createAdminSupabase()
 
-    // 이벤트 조회
+    // 이벤트 조회 (온디맨드 모듈 확인 포함)
     const { data: event, error: eventErr } = await supabase
       .from('events')
-      .select('id, slug, code, client_id')
+      .select('id, slug, code, client_id, module_ondemand')
       .eq('id', eventId)
       .maybeSingle()
 
@@ -109,6 +109,11 @@ export async function POST(request: Request, { params }: RouteParams) {
     }
 
     // 입장 성공 응답 (세션 생성은 클라이언트에서 처리)
+    // 온디맨드 이벤트인 경우 온디맨드 시청 페이지로 리다이렉트
+    const redirectTo = event.module_ondemand 
+      ? `/event/${event.slug}/ondemand`
+      : `/event/${event.slug}`
+
     return NextResponse.json({
       success: true,
       event: {
@@ -122,7 +127,7 @@ export async function POST(request: Request, { params }: RouteParams) {
         name: displayName,
       },
       displayName, // 표시이름 명시적으로 반환
-      redirectTo: `/event/${event.slug}`, // 이벤트 페이지로 리다이렉트
+      redirectTo, // 온디맨드면 온디맨드 페이지, 아니면 이벤트 페이지로 리다이렉트
     })
   } catch (error: any) {
     console.error('Entry Gate API 오류:', error)

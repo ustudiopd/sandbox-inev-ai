@@ -3,6 +3,20 @@
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { 
+  BarChart3, 
+  UserPlus, 
+  Megaphone, 
+  FileText, 
+  Mail, 
+  Video, 
+  Settings,
+  ExternalLink,
+  Download,
+  RefreshCw,
+  ArrowLeft
+} from 'lucide-react'
+import EventUTMLinksTab from './components/EventUTMLinksTab'
 
 type EventDetail = {
   id: string
@@ -92,41 +106,82 @@ export default function InevAdminEventDetailPage() {
   if (!event) return null
 
   return (
-    <div className="space-y-4">
-      <div>
-        <Link href={`/inev-admin/clients/${clientId}/events`} className="text-sm text-gray-500 hover:text-gray-700">← 이벤트 목록</Link>
-        <h1 className="mt-1 text-xl font-semibold text-gray-900">{event.slug}</h1>
-        <p className="text-sm text-gray-500">코드: {event.code}</p>
+    <div className="bg-white min-h-screen">
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+        <div className="space-y-4">
+          <div className="mb-6">
+        <Link
+          href={`/inev-admin/clients/${clientId}/events`}
+          className="inline-flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-4 transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          이벤트 목록
+        </Link>
+        <div className="flex items-start justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{event.slug}</h1>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">코드: {event.code}</p>
+          </div>
+          <Link
+            href={`/event/${event.slug}`}
+            target="_blank"
+            rel="noopener"
+            className="inline-flex items-center gap-2 rounded-lg border border-gray-300 dark:border-gray-600 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+          >
+            <ExternalLink className="w-4 h-4" />
+            공개 페이지 보기
+          </Link>
+        </div>
       </div>
 
-      <div className="flex gap-2 border-b border-gray-200">
+      <div className="flex gap-1 overflow-x-auto">
         <button
           type="button"
           onClick={() => setActiveTab('overview')}
-          className={`border-b-2 px-3 py-2 text-sm font-medium ${activeTab === 'overview' ? 'border-gray-900 text-gray-900' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+          className={`inline-flex items-center gap-2 border-b-2 px-4 py-3 text-sm font-medium transition-colors ${
+            activeTab === 'overview' 
+              ? 'border-blue-500 text-blue-600 dark:text-blue-400' 
+              : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
+          }`}
         >
+          <BarChart3 className="w-4 h-4" />
           Overview
         </button>
         <button
           type="button"
           onClick={() => setActiveTab('registration')}
-          className={`border-b-2 px-3 py-2 text-sm font-medium ${activeTab === 'registration' ? 'border-gray-900 text-gray-900' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+          className={`inline-flex items-center gap-2 border-b-2 px-4 py-3 text-sm font-medium transition-colors ${
+            activeTab === 'registration' 
+              ? 'border-blue-500 text-blue-600 dark:text-blue-400' 
+              : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
+          }`}
         >
+          <UserPlus className="w-4 h-4" />
           Registration
         </button>
         <button
           type="button"
           onClick={() => setActiveTab('marketing')}
-          className={`border-b-2 px-3 py-2 text-sm font-medium ${activeTab === 'marketing' ? 'border-gray-900 text-gray-900' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+          className={`inline-flex items-center gap-2 border-b-2 px-4 py-3 text-sm font-medium transition-colors ${
+            activeTab === 'marketing' 
+              ? 'border-blue-500 text-blue-600 dark:text-blue-400' 
+              : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
+          }`}
         >
+          <Megaphone className="w-4 h-4" />
           Marketing
         </button>
         {module_survey && (
           <button
             type="button"
             onClick={() => setActiveTab('survey')}
-            className={`border-b-2 px-3 py-2 text-sm font-medium ${activeTab === 'survey' ? 'border-gray-900 text-gray-900' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+            className={`inline-flex items-center gap-2 border-b-2 px-4 py-3 text-sm font-medium transition-colors ${
+              activeTab === 'survey' 
+                ? 'border-blue-500 text-blue-600 dark:text-blue-400' 
+                : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
+            }`}
           >
+            <FileText className="w-4 h-4" />
             Survey
           </button>
         )}
@@ -134,8 +189,13 @@ export default function InevAdminEventDetailPage() {
           <button
             type="button"
             onClick={() => setActiveTab('email')}
-            className={`border-b-2 px-3 py-2 text-sm font-medium ${activeTab === 'email' ? 'border-gray-900 text-gray-900' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+            className={`inline-flex items-center gap-2 border-b-2 px-4 py-3 text-sm font-medium transition-colors ${
+              activeTab === 'email' 
+                ? 'border-blue-500 text-blue-600 dark:text-blue-400' 
+                : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
+            }`}
           >
+            <Mail className="w-4 h-4" />
             Email
           </button>
         )}
@@ -143,16 +203,26 @@ export default function InevAdminEventDetailPage() {
           <button
             type="button"
             onClick={() => setActiveTab('webinar')}
-            className={`border-b-2 px-3 py-2 text-sm font-medium ${activeTab === 'webinar' ? 'border-gray-900 text-gray-900' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+            className={`inline-flex items-center gap-2 border-b-2 px-4 py-3 text-sm font-medium transition-colors ${
+              activeTab === 'webinar' 
+                ? 'border-blue-500 text-blue-600 dark:text-blue-400' 
+                : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
+            }`}
           >
+            <Video className="w-4 h-4" />
             Webinar
           </button>
         )}
         <button
           type="button"
           onClick={() => setActiveTab('settings')}
-          className={`border-b-2 px-3 py-2 text-sm font-medium ${activeTab === 'settings' ? 'border-gray-900 text-gray-900' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+          className={`inline-flex items-center gap-2 border-b-2 px-4 py-3 text-sm font-medium transition-colors ${
+            activeTab === 'settings' 
+              ? 'border-blue-500 text-blue-600 dark:text-blue-400' 
+              : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
+          }`}
         >
+          <Settings className="w-4 h-4" />
           설정
         </button>
       </div>
@@ -251,7 +321,8 @@ export default function InevAdminEventDetailPage() {
           </div>
         </form>
       )}
-
+        </div>
+      </div>
     </div>
   )
 }
@@ -491,26 +562,63 @@ function OverviewTab({ eventId }: { eventId: string }) {
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-        <div className="bg-white rounded-lg border border-gray-200 p-4">
-          <div className="text-sm text-gray-600 mb-1">등록자</div>
-          <div className="text-2xl font-bold text-gray-900">{data.leads.total.toLocaleString()}</div>
-          <div className="text-xs text-gray-500 mt-1">고유: {data.leads.unique_emails.toLocaleString()}</div>
+        <div className="bg-white dark:bg-gray-800 rounded-xl p-5 border-2 border-green-500 shadow-sm hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between mb-2">
+            <div className="text-sm font-medium text-gray-600 dark:text-gray-300">등록자</div>
+            <div className="p-1.5 bg-green-100 dark:bg-green-900/30 rounded-lg">
+              <UserPlus className="w-4 h-4 text-green-600 dark:text-green-400" />
+            </div>
+          </div>
+          <div className="text-3xl font-bold text-green-600 dark:text-green-400 mb-1">
+            {data.leads.total.toLocaleString()}
+          </div>
+          <div className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+            고유: {data.leads.unique_emails.toLocaleString()}
+          </div>
         </div>
-        <div className="bg-white rounded-lg border border-gray-200 p-4">
-          <div className="text-sm text-gray-600 mb-1">Visit</div>
-          <div className="text-2xl font-bold text-gray-900">{data.visits.total.toLocaleString()}</div>
+        <div className="bg-white dark:bg-gray-800 rounded-xl p-5 border-2 border-purple-500 shadow-sm hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between mb-2">
+            <div className="text-sm font-medium text-gray-600 dark:text-gray-300">Visit</div>
+            <div className="p-1.5 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
+              <BarChart3 className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+            </div>
+          </div>
+          <div className="text-3xl font-bold text-purple-600 dark:text-purple-400">
+            {data.visits.total.toLocaleString()}
+          </div>
         </div>
-        <div className="bg-white rounded-lg border border-gray-200 p-4">
-          <div className="text-sm text-gray-600 mb-1">ShortLink 클릭</div>
-          <div className="text-2xl font-bold text-gray-900">{data.shortlink_clicks.total.toLocaleString()}</div>
+        <div className="bg-white dark:bg-gray-800 rounded-xl p-5 border-2 border-orange-500 shadow-sm hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between mb-2">
+            <div className="text-sm font-medium text-gray-600 dark:text-gray-300">ShortLink 클릭</div>
+            <div className="p-1.5 bg-orange-100 dark:bg-orange-900/30 rounded-lg">
+              <Megaphone className="w-4 h-4 text-orange-600 dark:text-orange-400" />
+            </div>
+          </div>
+          <div className="text-3xl font-bold text-orange-600 dark:text-orange-400">
+            {data.shortlink_clicks.total.toLocaleString()}
+          </div>
         </div>
-        <div className="bg-white rounded-lg border border-gray-200 p-4">
-          <div className="text-sm text-gray-600 mb-1">설문 응답</div>
-          <div className="text-2xl font-bold text-gray-900">{data.survey_responses.total.toLocaleString()}</div>
+        <div className="bg-white dark:bg-gray-800 rounded-xl p-5 border-2 border-teal-500 shadow-sm hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between mb-2">
+            <div className="text-sm font-medium text-gray-600 dark:text-gray-300">설문 응답</div>
+            <div className="p-1.5 bg-teal-100 dark:bg-teal-900/30 rounded-lg">
+              <FileText className="w-4 h-4 text-teal-600 dark:text-teal-400" />
+            </div>
+          </div>
+          <div className="text-3xl font-bold text-teal-600 dark:text-teal-400">
+            {data.survey_responses.total.toLocaleString()}
+          </div>
         </div>
-        <div className="bg-white rounded-lg border border-gray-200 p-4">
-          <div className="text-sm text-gray-600 mb-1">참여자</div>
-          <div className="text-2xl font-bold text-gray-900">{data.participations.total.toLocaleString()}</div>
+        <div className="bg-white dark:bg-gray-800 rounded-xl p-5 border-2 border-indigo-500 shadow-sm hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between mb-2">
+            <div className="text-sm font-medium text-gray-600 dark:text-gray-300">참여자</div>
+            <div className="p-1.5 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg">
+              <UserPlus className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+            </div>
+          </div>
+          <div className="text-3xl font-bold text-indigo-600 dark:text-indigo-400">
+            {data.participations.total.toLocaleString()}
+          </div>
         </div>
       </div>
     </div>
@@ -580,18 +688,41 @@ function RegistrationTab({ eventId, activeTab }: { eventId: string; activeTab: s
     <div className="space-y-4">
       {data && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-white rounded-lg border border-gray-200 p-4">
-            <div className="text-sm text-gray-600 mb-1">등록자 수</div>
-            <div className="text-2xl font-bold text-gray-900">{data.leads.total.toLocaleString()}</div>
-            <div className="text-xs text-gray-500 mt-1">고유 이메일: {data.leads.unique_emails.toLocaleString()}</div>
+          <div className="bg-white dark:bg-gray-800 rounded-xl p-5 border-2 border-green-500 shadow-sm hover:shadow-md transition-shadow">
+            <div className="flex items-center justify-between mb-2">
+              <div className="text-sm font-medium text-gray-600 dark:text-gray-300">등록자 수</div>
+              <div className="p-1.5 bg-green-100 dark:bg-green-900/30 rounded-lg">
+                <UserPlus className="w-4 h-4 text-green-600 dark:text-green-400" />
+              </div>
+            </div>
+            <div className="text-3xl font-bold text-green-600 dark:text-green-400 mb-1">
+              {data.leads.total.toLocaleString()}
+            </div>
+            <div className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+              고유 이메일: {data.leads.unique_emails.toLocaleString()}
+            </div>
           </div>
-          <div className="bg-white rounded-lg border border-gray-200 p-4">
-            <div className="text-sm text-gray-600 mb-1">참여자 수</div>
-            <div className="text-2xl font-bold text-gray-900">{data.participations.total.toLocaleString()}</div>
+          <div className="bg-white dark:bg-gray-800 rounded-xl p-5 border-2 border-indigo-500 shadow-sm hover:shadow-md transition-shadow">
+            <div className="flex items-center justify-between mb-2">
+              <div className="text-sm font-medium text-gray-600 dark:text-gray-300">참여자 수</div>
+              <div className="p-1.5 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg">
+                <UserPlus className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+              </div>
+            </div>
+            <div className="text-3xl font-bold text-indigo-600 dark:text-indigo-400">
+              {data.participations.total.toLocaleString()}
+            </div>
           </div>
-          <div className="bg-white rounded-lg border border-gray-200 p-4">
-            <div className="text-sm text-gray-600 mb-1">전환율</div>
-            <div className="text-2xl font-bold text-gray-900">{(data.conversion_rate * 100).toFixed(1)}%</div>
+          <div className="bg-white dark:bg-gray-800 rounded-xl p-5 border-2 border-blue-500 shadow-sm hover:shadow-md transition-shadow">
+            <div className="flex items-center justify-between mb-2">
+              <div className="text-sm font-medium text-gray-600 dark:text-gray-300">전환율</div>
+              <div className="p-1.5 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                <BarChart3 className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+              </div>
+            </div>
+            <div className="text-3xl font-bold text-blue-600 dark:text-blue-400">
+              {(data.conversion_rate * 100).toFixed(1)}%
+            </div>
           </div>
         </div>
       )}
@@ -603,8 +734,9 @@ function RegistrationTab({ eventId, activeTab }: { eventId: string; activeTab: s
             type="button"
             onClick={downloadCsv}
             disabled={leads.length === 0}
-            className="rounded border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+            className="inline-flex items-center gap-2 rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50 transition-colors"
           >
+            <Download className="w-4 h-4" />
             CSV 내보내기
           </button>
         </div>
@@ -630,6 +762,7 @@ function RegistrationTab({ eventId, activeTab }: { eventId: string; activeTab: s
 
 // Phase 10: Marketing Tab (탭 클릭 시에만 API 호출)
 function MarketingTab({ eventId, activeTab }: { eventId: string; activeTab: string }) {
+  const [subTab, setSubTab] = useState<'stats' | 'links'>('links')
   const [groupBy, setGroupBy] = useState<'utm_source' | 'utm_medium' | 'utm_campaign'>('utm_source')
   const [data, setData] = useState<any>(null)
   const [loading, setLoading] = useState(false)
@@ -654,78 +787,116 @@ function MarketingTab({ eventId, activeTab }: { eventId: string; activeTab: stri
 
   // 탭이 활성화되면 자동으로 로드 (탭 클릭 시에만)
   useEffect(() => {
-    if (activeTab === 'marketing' && !hasLoaded) {
+    if (activeTab === 'marketing' && !hasLoaded && subTab === 'stats') {
       loadData()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab])
+  }, [activeTab, subTab])
 
   // groupBy 변경 시 재로드
   useEffect(() => {
-    if (hasLoaded && groupBy) {
+    if (hasLoaded && groupBy && subTab === 'stats') {
       loadData()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [groupBy])
-
-  if (loading) return <div className="text-gray-500">로딩 중...</div>
-  if (error) return <div className="text-red-600">오류: {error}</div>
-  if (!data) return null
+  }, [groupBy, subTab])
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-2">
-        <label className="text-sm font-medium text-gray-700">집계 기준:</label>
-        <select
-          value={groupBy}
-          onChange={(e) => setGroupBy(e.target.value as typeof groupBy)}
-          className="rounded border border-gray-300 px-3 py-1.5 text-sm"
-        >
-          <option value="utm_source">UTM Source</option>
-          <option value="utm_medium">UTM Medium</option>
-          <option value="utm_campaign">UTM Campaign</option>
-        </select>
+      {/* 서브 탭 메뉴 */}
+      <div className="flex gap-1 border-b border-gray-200">
         <button
           type="button"
-          onClick={loadData}
-          disabled={loading}
-          className="px-3 py-1.5 text-sm bg-gray-100 hover:bg-gray-200 rounded disabled:opacity-50"
+          onClick={() => setSubTab('links')}
+          className={`px-4 py-2 text-sm font-medium transition-colors ${
+            subTab === 'links'
+              ? 'border-b-2 border-blue-500 text-blue-600'
+              : 'text-gray-500 hover:text-gray-700'
+          }`}
         >
-          새로고침
+          UTM 링크 관리
+        </button>
+        <button
+          type="button"
+          onClick={() => setSubTab('stats')}
+          className={`px-4 py-2 text-sm font-medium transition-colors ${
+            subTab === 'stats'
+              ? 'border-b-2 border-blue-500 text-blue-600'
+              : 'text-gray-500 hover:text-gray-700'
+          }`}
+        >
+          Marketing 통계
         </button>
       </div>
 
-      <div className="rounded-lg border border-gray-200 bg-white shadow-sm">
-        <div className="border-b border-gray-100 px-4 py-3">
-          <h2 className="text-sm font-medium text-gray-900">Marketing 통계 ({groupBy})</h2>
-        </div>
-        {data.breakdown && data.breakdown.length > 0 ? (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">키</th>
-                  <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Visits</th>
-                  <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Leads</th>
-                  <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">전환율</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {data.breakdown.map((item: any) => (
-                  <tr key={item.key}>
-                    <td className="px-4 py-2 text-sm text-gray-900">{item.key}</td>
-                    <td className="px-4 py-2 text-sm text-gray-900 text-right">{item.visits.toLocaleString()}</td>
-                    <td className="px-4 py-2 text-sm text-gray-900 text-right">{item.leads.toLocaleString()}</td>
-                    <td className="px-4 py-2 text-sm text-gray-900 text-right">{(item.conversions * 100).toFixed(1)}%</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <div className="p-6 text-center text-sm text-gray-500">데이터가 없습니다.</div>
-        )}
-      </div>
+      {/* UTM 링크 관리 탭 */}
+      {subTab === 'links' && (
+        <EventUTMLinksTab eventId={eventId} />
+      )}
+
+      {/* Marketing 통계 탭 */}
+      {subTab === 'stats' && (
+        <>
+          {loading && <div className="text-gray-500">로딩 중...</div>}
+          {error && <div className="text-red-600">오류: {error}</div>}
+          {!loading && !error && data && (
+            <>
+              <div className="flex items-center gap-2">
+                <label className="text-sm font-medium text-gray-700">집계 기준:</label>
+                <select
+                  value={groupBy}
+                  onChange={(e) => setGroupBy(e.target.value as typeof groupBy)}
+                  className="rounded border border-gray-300 px-3 py-1.5 text-sm"
+                >
+                  <option value="utm_source">UTM Source</option>
+                  <option value="utm_medium">UTM Medium</option>
+                  <option value="utm_campaign">UTM Campaign</option>
+                </select>
+                <button
+                  type="button"
+                  onClick={loadData}
+                  disabled={loading}
+                  className="px-3 py-1.5 text-sm bg-gray-100 hover:bg-gray-200 rounded disabled:opacity-50"
+                >
+                  새로고침
+                </button>
+              </div>
+
+              <div className="rounded-lg border border-gray-200 bg-white shadow-sm">
+                <div className="border-b border-gray-100 px-4 py-3">
+                  <h2 className="text-sm font-medium text-gray-900">Marketing 통계 ({groupBy})</h2>
+                </div>
+                {data.breakdown && data.breakdown.length > 0 ? (
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">키</th>
+                          <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Visits</th>
+                          <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Leads</th>
+                          <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">전환율</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-100">
+                        {data.breakdown.map((item: any) => (
+                          <tr key={item.key}>
+                            <td className="px-4 py-2 text-sm text-gray-900">{item.key}</td>
+                            <td className="px-4 py-2 text-sm text-gray-900 text-right">{item.visits.toLocaleString()}</td>
+                            <td className="px-4 py-2 text-sm text-gray-900 text-right">{item.leads.toLocaleString()}</td>
+                            <td className="px-4 py-2 text-sm text-gray-900 text-right">{(item.conversions * 100).toFixed(1)}%</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <div className="p-6 text-center text-sm text-gray-500">데이터가 없습니다.</div>
+                )}
+              </div>
+            </>
+          )}
+        </>
+      )}
     </div>
   )
 }

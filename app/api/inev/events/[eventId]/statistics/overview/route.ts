@@ -68,7 +68,73 @@ export async function GET(
 
     const startTime = Date.now()
 
-    // 병렬 쿼리로 성능 최적화 (가벼운 집계만)
+    // Phase 10-5: 집계 테이블 사용 시도 (성능 최적화)
+    let useAggregatedTable = false
+    let aggregatedStats: any = null
+
+    if (fromParam && toParam) {
+      // 날짜 범위가 명확하면 집계 테이블 사용 시도
+      try {
+        const fromBucketDate = fromParam // YYYY-MM-DD
+        const toBucketDate = toParam // YYYY-MM-DD
+
+        const { data: aggregatedData } = await admin
+          .from('event_stats_daily')
+          .select('*')
+          .eq('event_id', eventId)
+          .gte('bucket_date', fromBucketDate)
+          .lte('bucket_date', toBucketDate)
+
+        if (aggregatedData && aggregatedData.length > 0) {
+          // 집계 데이터 합산
+          aggregatedStats = {
+            visits: aggregatedData.reduce((sum, d) => sum + (d.visits || 0), 0),
+            unique_sessions: aggregatedData.reduce((sum, d) => sum + (d.unique_sessions || 0), 0),
+            leads: aggregatedData.reduce((sum, d) => sum + (d.leads || 0), 0),
+            unique_emails: aggregatedData.reduce((sum, d) => sum + (d.unique_emails || 0), 0),
+            survey_responses: aggregatedData.reduce((sum, d) => sum + (d.survey_responses || 0), 0),
+            participations: aggregatedData.reduce((sum, d) => sum + (d.participations || 0), 0),
+            shortlink_clicks: aggregatedData.reduce((sum, d) => sum + (d.shortlink_clicks || 0), 0),
+          }
+          useAggregatedTable = true
+        }
+      } catch (err) {
+        console.warn('[Statistics API] 집계 테이블 조회 실패, 원본 테이블 사용:', err)
+      }
+    }
+
+    // 집계 테이블이 있으면 사용, 없으면 원본 테이블에서 집계
+    if (useAggregatedTable && aggregatedStats) {
+      const response = {
+        event_id: eventId,
+        leads: {
+          total: aggregatedStats.leads,
+          unique_emails: aggregatedStats.unique_emails,
+        },
+        visits: {
+          total: aggregatedStats.visits,
+          unique_sessions: aggregatedStats.unique_sessions,
+        },
+        survey_responses: {
+          total: aggregatedStats.survey_responses,
+        },
+        participations: {
+          total: aggregatedStats.participations,
+        },
+        shortlink_clicks: {
+          total: aggregatedStats.shortlink_clicks,
+          unique_sessions: 0, // 집계 테이블에는 없음
+        },
+        _metadata: {
+          response_time_ms: Date.now() - startTime,
+          generated_at: new Date().toISOString(),
+          source: 'aggregated_table',
+        },
+      }
+      return NextResponse.json(response)
+    }
+
+    // 원본 테이블에서 집계 (fallback)
     const [
       leadsResult,
       visitsResult,
@@ -229,6 +295,7 @@ export async function GET(
       _metadata: {
         response_time_ms: responseTime,
         generated_at: new Date().toISOString(),
+        source: 'raw_tables',
       },
     }
 

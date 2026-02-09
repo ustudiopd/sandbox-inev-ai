@@ -11,12 +11,30 @@ export default async function PublicEventPage({ params, searchParams }: Props) {
   const supabase = createAdminSupabase()
   const { data: event, error } = await supabase
     .from('events')
-    .select('id, code, slug, module_registration, module_survey, module_webinar, module_utm')
+    .select('id, code, slug, module_registration, module_survey, module_webinar, module_utm, module_ondemand')
     .eq('slug', slug)
     .limit(1)
     .single()
 
   if (error || !event) notFound()
+
+  // 149403 메인 페이지는 WebinarFormWertPage 사용 (온디맨드 모듈이어도 메인 페이지 표시)
+  if (event.code === '149403') {
+    const WebinarFormWertPage = (await import('@/app/webinarform/wert/page')).default
+    return <WebinarFormWertPage />
+  }
+
+  // 185044 메인 페이지는 WebinarFormPatentPage 사용
+  if (event.code === '185044') {
+    const WebinarFormPatentPage = (await import('@/app/webinarform/patent/page')).default
+    return <WebinarFormPatentPage />
+  }
+
+  // 149403이 아닌 다른 온디맨드 이벤트는 온디맨드 시청 페이지로 리다이렉트
+  if (event.module_ondemand && event.code !== '149403') {
+    const { redirect } = await import('next/navigation')
+    redirect(`/event/${event.slug}/ondemand`)
+  }
 
   const utmSource = typeof q?.utm_source === 'string' ? q.utm_source : undefined
   const utmMedium = typeof q?.utm_medium === 'string' ? q.utm_medium : undefined
@@ -61,16 +79,32 @@ export default async function PublicEventPage({ params, searchParams }: Props) {
               웨비나
             </span>
           )}
+          {event.module_ondemand && (
+            <span className="inline-flex items-center rounded border border-gray-200 bg-gray-50 px-2.5 py-1 text-xs font-medium text-gray-700">
+              온디맨드
+            </span>
+          )}
         </div>
 
         {/* 액션 버튼 */}
         <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
-          <Link
-            href={`/event/${event.slug}/enter`}
-            className="inline-flex items-center justify-center rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-900 hover:bg-gray-50"
-          >
-            이벤트 진입
-          </Link>
+          {event.module_ondemand ? (
+            <Link
+              href={`/event/${event.slug}/ondemand`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-900 hover:bg-gray-50"
+            >
+              입장하기
+            </Link>
+          ) : (
+            <Link
+              href={`/event/${event.slug}/enter`}
+              className="inline-flex items-center justify-center rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-900 hover:bg-gray-50"
+            >
+              이벤트 진입
+            </Link>
+          )}
           {event.module_registration && (
             <Link
               href={`/event/${event.slug}/register`}

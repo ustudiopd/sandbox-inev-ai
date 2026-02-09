@@ -15,6 +15,8 @@ interface VimeoPlayerProps {
   onProgress?: (progress: number) => void // 0-100
   onPlayStart?: () => void
   onComplete?: () => void
+  onPlayingStateChange?: (isPlaying: boolean) => void  // 재생 상태 변경 콜백
+  playerRef?: React.MutableRefObject<any>  // 플레이어 인스턴스 ref (옵션)
 }
 
 /**
@@ -34,6 +36,8 @@ export default function VimeoPlayer({
   onProgress,
   onPlayStart,
   onComplete,
+  onPlayingStateChange,
+  playerRef: externalPlayerRef,
 }: VimeoPlayerProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const playerRef = useRef<any>(null)
@@ -129,21 +133,44 @@ export default function VimeoPlayer({
             }
           })
           
-          // 재생 시작 감지
-          if (onPlayStart) {
+          // 재생/일시정지 상태 추적
+          if (onPlayingStateChange) {
             playerRef.current.on('play', () => {
+              onPlayingStateChange(true)
               if (!hasPlayedRef.current) {
                 hasPlayedRef.current = true
-                onPlayStart()
+                onPlayStart?.()
               }
             })
+            playerRef.current.on('pause', () => {
+              onPlayingStateChange(false)
+            })
+            playerRef.current.on('ended', () => {
+              onPlayingStateChange(false)
+              onComplete?.()
+            })
+          } else {
+            // onPlayingStateChange가 없으면 기존 로직 유지
+            if (onPlayStart) {
+              playerRef.current.on('play', () => {
+                if (!hasPlayedRef.current) {
+                  hasPlayedRef.current = true
+                  onPlayStart()
+                }
+              })
+            }
+            
+            // 완료 감지
+            if (onComplete) {
+              playerRef.current.on('ended', () => {
+                onComplete()
+              })
+            }
           }
           
-          // 완료 감지
-          if (onComplete) {
-            playerRef.current.on('ended', () => {
-              onComplete()
-            })
+          // externalPlayerRef에도 할당
+          if (externalPlayerRef) {
+            externalPlayerRef.current = playerRef.current
           }
         }
       }, 100)
@@ -171,7 +198,7 @@ export default function VimeoPlayer({
         iframe?.remove()
       }
     }
-  }, [videoId, autoplay, muted, width, height, onReady, onError, onProgress, onPlayStart, onComplete])
+  }, [videoId, hash, autoplay, muted, width, height, onReady, onError, onProgress, onPlayStart, onComplete, onPlayingStateChange, externalPlayerRef])
   
   return (
     <div 
@@ -196,6 +223,7 @@ declare global {
         ready: () => Promise<void>
         getCurrentTime: () => Promise<number>
         getDuration: () => Promise<number>
+        getPaused: () => Promise<boolean>
         on: (event: string, callback: () => void) => void
       }
     }

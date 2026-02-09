@@ -14,6 +14,8 @@ interface YouTubePlayerProps {
   onProgress?: (progress: number) => void // 0-100
   onPlayStart?: () => void
   onComplete?: () => void
+  onPlayingStateChange?: (isPlaying: boolean) => void  // 재생 상태 변경 콜백
+  playerRef?: React.MutableRefObject<any>  // 플레이어 인스턴스 ref (옵션)
 }
 
 /**
@@ -35,11 +37,19 @@ export default function YouTubePlayer({
   onProgress,
   onPlayStart,
   onComplete,
+  onPlayingStateChange,
+  playerRef: externalPlayerRef,
 }: YouTubePlayerProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const playerRef = useRef<any>(null)
   const progressIntervalRef = useRef<NodeJS.Timeout | null>(null)
   const hasPlayedRef = useRef(false)
+  const onPlayingStateChangeRef = useRef<((isPlaying: boolean) => void) | undefined>(onPlayingStateChange)
+  
+  // ref를 최신 값으로 유지
+  useEffect(() => {
+    onPlayingStateChangeRef.current = onPlayingStateChange
+  }, [onPlayingStateChange])
   
   useEffect(() => {
     if (!containerRef.current) return
@@ -117,7 +127,7 @@ export default function YouTubePlayer({
           clearInterval(checkYT)
           
           // Player 인스턴스 생성
-          playerRef.current = new window.YT.Player(iframe, {
+          const playerInstance = new window.YT.Player(iframe, {
             events: {
               onReady: (event: any) => {
                 onReady?.()
@@ -139,14 +149,21 @@ export default function YouTubePlayer({
                 }
               },
               onStateChange: (event: any) => {
+                const playerState = event.data
+                const isPlaying = playerState === window.YT.PlayerState.PLAYING
+                
+                // 재생 상태 변경 콜백
+                onPlayingStateChangeRef.current?.(isPlaying)
+                
                 // 재생 시작 감지
-                if (event.data === window.YT.PlayerState.PLAYING && !hasPlayedRef.current) {
+                if (isPlaying && !hasPlayedRef.current) {
                   hasPlayedRef.current = true
                   onPlayStart?.()
                 }
                 
                 // 완료 감지
-                if (event.data === window.YT.PlayerState.ENDED) {
+                if (playerState === window.YT.PlayerState.ENDED) {
+                  onPlayingStateChangeRef.current?.(false)
                   onComplete?.()
                 }
               },
@@ -177,7 +194,7 @@ export default function YouTubePlayer({
         iframe?.remove()
       }
     }
-  }, [url, autoplay, muted, width, height, onReady, onError, onProgress, onPlayStart, onComplete])
+  }, [url, autoplay, muted, width, height, onReady, onError, onProgress, onPlayStart, onComplete, onPlayingStateChange, externalPlayerRef])
   
   return (
     <div 
