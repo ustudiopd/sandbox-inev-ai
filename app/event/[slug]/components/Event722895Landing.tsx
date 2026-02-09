@@ -49,8 +49,8 @@ export default function Event722895Landing({ event }: Event722895LandingProps) {
         <div className="w-[1000px] mx-auto h-full relative">
         </div>
       </div>
-      <div className="w-[1000px] mx-auto flex flex-col justify-start items-start">
-        <div className="w-[1000px] h-[1178px] relative bg-slate-100 overflow-hidden">
+      <div className="w-full bg-slate-100">
+        <div className="w-[1000px] mx-auto h-[1178px] relative overflow-hidden">
         <div className="left-[72px] top-[120px] absolute justify-start text-teal-600 text-4xl font-bold font-['Pretendard'] leading-[60px]">이번 웨비나에서는.</div>
         <div className="w-[838px] left-[72px] top-[212px] absolute inline-flex flex-col justify-start items-start gap-16">
           <div className="self-stretch flex flex-col justify-start items-start gap-24">
@@ -80,8 +80,10 @@ export default function Event722895Landing({ event }: Event722895LandingProps) {
             className="w-28 h-20 object-contain"
           />
         </div>
+        </div>
       </div>
-      <div className="self-stretch h-[1812px] relative bg-gradient-to-b from-slate-200 to-stone-50 overflow-hidden">
+      <div className="w-full h-[1812px] relative bg-gradient-to-b from-slate-200 to-stone-50 overflow-hidden">
+        <div className="w-[1000px] mx-auto h-full relative">
         <div className="w-[456px] left-[72px] top-[127px] absolute inline-flex flex-col justify-start items-start gap-3">
           <div className="self-stretch justify-start text-teal-600 text-3xl font-bold font-['Pretendard']">미래를 선점하는 기업의 비밀</div>
           <div className="self-stretch justify-start text-black/80 text-5xl font-bold font-['Pretendard']">이런 분들께 추천합니다</div>
@@ -148,8 +150,8 @@ export default function Event722895Landing({ event }: Event722895LandingProps) {
             </div>
           </div>
         </div>
-        <div className="w-[1000px] h-16 left-0 top-[1748px] absolute bg-gray-700 rounded-tl-[64px] rounded-tr-[64px]" />
-        <div className="w-56 left-[112px] top-[1391.11px] absolute inline-flex flex-col justify-start items-center gap-7">
+        <div className="w-full md:w-screen md:left-[calc(-50vw+500px)] h-16 top-[1748px] absolute bg-gray-700 rounded-tl-[64px] rounded-tr-[64px] md:rounded-none md:rounded-tl-[64px] md:rounded-tr-[64px]" />
+        <div className="w-56 left-[112px] top-[1400px] absolute inline-flex flex-col justify-start items-center gap-7">
           <img 
             src="https://gbkivxdlebdtfudexbga.supabase.co/storage/v1/object/public/webinar-thumbnails/wert/0312_file.png" 
             alt="File icon" 
@@ -160,7 +162,7 @@ export default function Event722895Landing({ event }: Event722895LandingProps) {
             <div className="text-center justify-start text-black text-3xl font-medium font-['Pretendard']">모빌리티</div>
           </div>
         </div>
-        <div className="w-56 left-[378px] top-[1391.11px] absolute inline-flex flex-col justify-start items-center gap-7">
+        <div className="w-56 left-[378px] top-[1400px] absolute inline-flex flex-col justify-start items-center gap-7">
           <img 
             src="https://gbkivxdlebdtfudexbga.supabase.co/storage/v1/object/public/webinar-thumbnails/wert/0312_file.png" 
             alt="File icon" 
@@ -171,7 +173,7 @@ export default function Event722895Landing({ event }: Event722895LandingProps) {
             <div className="text-center justify-start text-black text-3xl font-medium font-['Pretendard']">피지컬 AI</div>
           </div>
         </div>
-        <div className="w-56 left-[644px] top-[1391.11px] absolute inline-flex flex-col justify-start items-center gap-7">
+        <div className="w-56 left-[644px] top-[1400px] absolute inline-flex flex-col justify-start items-center gap-7">
           <img 
             src="https://gbkivxdlebdtfudexbga.supabase.co/storage/v1/object/public/webinar-thumbnails/wert/0312_file.png" 
             alt="File icon" 
@@ -182,7 +184,7 @@ export default function Event722895Landing({ event }: Event722895LandingProps) {
             <div className="text-center justify-start text-black text-3xl font-medium font-['Pretendard']"> 디지털 헬스</div>
           </div>
         </div>
-        <div className="w-56 left-[378.12px] top-[1113px] absolute inline-flex flex-col justify-start items-center gap-7">
+        <div className="w-56 left-[378.12px] top-[1193px] absolute inline-flex flex-col justify-start items-center gap-7">
           <img 
             src="https://gbkivxdlebdtfudexbga.supabase.co/storage/v1/object/public/webinar-thumbnails/wert/0312_file.png" 
             alt="File icon" 
@@ -193,7 +195,7 @@ export default function Event722895Landing({ event }: Event722895LandingProps) {
             <div className="text-center justify-start text-black text-3xl font-medium font-['Pretendard']">첨단 바이오</div>
           </div>
         </div>
-        <div className="w-56 left-[644.24px] top-[1113px] absolute inline-flex flex-col justify-start items-center gap-7">
+        <div className="w-56 left-[644.24px] top-[1193px] absolute inline-flex flex-col justify-start items-center gap-7">
           <img 
             src="https://gbkivxdlebdtfudexbga.supabase.co/storage/v1/object/public/webinar-thumbnails/wert/0312_file.png" 
             alt="File icon" 
@@ -204,7 +206,7 @@ export default function Event722895Landing({ event }: Event722895LandingProps) {
             <div className="text-center justify-start text-black text-3xl font-medium font-['Pretendard']">공간 컴퓨팅</div>
           </div>
         </div>
-        <div className="w-56 left-[112px] top-[1113px] absolute inline-flex flex-col justify-start items-center gap-7">
+        <div className="w-56 left-[112px] top-[1193px] absolute inline-flex flex-col justify-start items-center gap-7">
           <img 
             src="https://gbkivxdlebdtfudexbga.supabase.co/storage/v1/object/public/webinar-thumbnails/wert/0312_file.png" 
             alt="File icon" 
@@ -215,8 +217,10 @@ export default function Event722895Landing({ event }: Event722895LandingProps) {
             <div className="text-center justify-start text-black text-3xl font-medium font-['Pretendard']">핵융합</div>
           </div>
         </div>
+        </div>
       </div>
-      <div className="self-stretch h-[3140px] relative bg-gray-700 overflow-hidden">
+      <div className="w-full h-[3140px] relative bg-gray-700 overflow-hidden">
+        <div className="w-[1000px] mx-auto h-full relative">
         <div className="w-[856px] left-[72px] top-[72px] absolute inline-flex flex-col justify-start items-start gap-3">
           <div className="justify-start text-white text-3xl font-bold font-['Pretendard']">미래를 선점하는 기업의 비밀</div>
           <div className="inline-flex justify-start items-center gap-2.5 flex-nowrap whitespace-nowrap">
@@ -423,8 +427,10 @@ export default function Event722895Landing({ event }: Event722895LandingProps) {
             </div>
           </div>
         </div>
+        </div>
       </div>
-      <div className="w-[1000px] h-[2856px] relative bg-slate-200 overflow-hidden">
+      <div className="w-full h-[2856px] relative bg-slate-200 overflow-hidden">
+        <div className="w-[1000px] mx-auto h-full relative">
         <div className="w-[856px] h-56 left-[72px] top-[928px] absolute bg-yellow-400 rounded-[32px] overflow-hidden">
           <div className="w-[519px] h-[519px] left-[444px] top-[22px] absolute bg-yellow-300 rounded-full" />
           <img className="absolute object-contain" style={{ width: '250px', height: '250px', left: '550px', bottom: '-20px' }} src="https://gbkivxdlebdtfudexbga.supabase.co/storage/v1/object/public/webinar-thumbnails/wert/0312_megacoffee.png" alt="메가MGC커피" />
@@ -539,9 +545,10 @@ export default function Event722895Landing({ event }: Event722895LandingProps) {
           <div className="w-[733px] left-[40px] top-[211px] absolute justify-start text-white/60 text-2xl font-normal font-['Pretendard'] leading-9">*설문조사는 웨비나 종료 후 작성 가능합니다.</div>
           <img className="w-96 h-72 absolute object-contain" style={{ left: '520px', top: '41px' }} src="https://gbkivxdlebdtfudexbga.supabase.co/storage/v1/object/public/webinar-thumbnails/wert/0312_pizza.png" alt="도미노피자" />
         </div>
+        </div>
       </div>
-      <div className="self-stretch px-16 py-28 bg-neutral-50 flex flex-col justify-start items-start gap-16 overflow-hidden">
-        <div className="self-stretch flex flex-col justify-start items-start gap-10">
+      <div className="w-full px-16 py-28 bg-neutral-50 flex flex-col justify-start items-start gap-16 overflow-hidden">
+        <div className="w-[856px] mx-auto flex flex-col justify-start items-start gap-10">
           <div className="self-stretch justify-start text-black/60 text-4xl font-bold font-['Pretendard'] leading-[47.82px]">키워트 인사이트 웨비나 주의사항</div>
           <div className="self-stretch flex flex-col justify-start items-start gap-8">
             <div className="self-stretch flex flex-col justify-start items-start gap-4">
@@ -580,35 +587,32 @@ export default function Event722895Landing({ event }: Event722895LandingProps) {
               </div>
             </div>
           </div>
-        </div>
-        <div className="self-stretch flex flex-col justify-start items-start gap-10">
-          <div className="self-stretch justify-start text-black/60 text-4xl font-bold font-['Pretendard'] leading-[47.82px]">문의 사항</div>
-          <div className="self-stretch flex flex-col justify-start items-start gap-4">
-            <div className="self-stretch inline-flex justify-start items-start">
-              <div className="w-5 self-stretch relative">
-                <div className="w-2 h-2 left-0 top-[13px] absolute bg-black/60 rounded-full" />
+          <div className="self-stretch flex flex-col justify-start items-start gap-10">
+            <div className="self-stretch justify-start text-black/60 text-4xl font-bold font-['Pretendard'] leading-[47.82px]">문의 사항</div>
+            <div className="self-stretch flex flex-col justify-start items-start gap-4">
+              <div className="self-stretch inline-flex justify-start items-start">
+                <div className="w-5 self-stretch relative">
+                  <div className="w-2 h-2 left-0 top-[13px] absolute bg-black/60 rounded-full" />
+                </div>
+                <div className="justify-start text-black/60 text-3xl font-normal font-['Pretendard'] leading-10" style={{ fontSize: '24px' }}>웨비나와 관련된 문의사항이 있으시면 아래 메일로 통해 문의주시기 바랍니다.</div>
               </div>
-              <div className="justify-start text-black/60 text-3xl font-normal font-['Pretendard'] leading-10" style={{ fontSize: '24px' }}>웨비나와 관련된 문의사항이 있으시면 아래 메일로 통해 문의주시기 바랍니다.</div>
-            </div>
-            <div className="self-stretch inline-flex justify-start items-start">
-              <div className="w-5 self-stretch relative">
-                <div className="w-2 h-2 left-0 top-[17px] absolute bg-black/60 rounded-full" />
+              <div className="self-stretch inline-flex justify-start items-start">
+                <div className="w-5 self-stretch relative">
+                  <div className="w-2 h-2 left-0 top-[17px] absolute bg-black/60 rounded-full" />
+                </div>
+                <div className="flex-1 justify-start text-black/60 text-3xl font-normal font-['Pretendard'] leading-10" style={{ fontSize: '24px' }}>메일문의 connect@wert.co.kr</div>
               </div>
-              <div className="flex-1 justify-start text-black/60 text-3xl font-normal font-['Pretendard'] leading-10" style={{ fontSize: '24px' }}>메일문의 connect@wert.co.kr</div>
             </div>
           </div>
         </div>
       </div>
-        <div className="w-[1000px] h-24 bg-neutral-800 flex items-center justify-center">
+      <div className="w-full h-24 bg-neutral-800 flex items-center justify-center">
+        <div className="w-[1000px] mx-auto flex items-center justify-center">
           <img 
             src="https://gbkivxdlebdtfudexbga.supabase.co/storage/v1/object/public/webinar-thumbnails/wert/kewert_logo-w.png" 
             alt="keywert Insight" 
             className="h-8 object-contain"
           />
-        </div>
-        <div className="w-64 h-8 relative overflow-hidden">
-          <div className="w-56 h-7 left-[45.52px] top-[3.13px] absolute bg-white" />
-          <div className="w-10 h-8 left-0 top-0 absolute bg-gradient-to-r from-sky-600 to-teal-400" />
         </div>
       </div>
     </>
