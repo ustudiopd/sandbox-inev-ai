@@ -52,7 +52,7 @@ export async function POST(request: Request) {
   } = body as {
     client_id: string
     code?: string
-    slug: string
+    slug?: string
     title?: string
     campaign_start_date?: string
     campaign_end_date?: string
@@ -67,7 +67,7 @@ export async function POST(request: Request) {
     module_utm?: boolean
     module_ondemand?: boolean
   }
-  if (!client_id || !slug) return NextResponse.json({ error: 'client_id, slug required' }, { status: 400 })
+  if (!client_id) return NextResponse.json({ error: 'client_id required' }, { status: 400 })
   if (!campaign_start_date || !campaign_end_date) return NextResponse.json({ error: 'campaign_start_date, campaign_end_date required' }, { status: 400 })
   if (event_date_type === 'single' && !event_date) return NextResponse.json({ error: 'event_date required when event_date_type is single' }, { status: 400 })
   if (event_date_type === 'range' && (!event_start_date || !event_end_date)) return NextResponse.json({ error: 'event_start_date, event_end_date required when event_date_type is range' }, { status: 400 })
@@ -101,12 +101,15 @@ export async function POST(request: Request) {
     }
   }
   
+  // slug가 없거나 빈 문자열이면 code를 slug로 사용
+  const finalSlug = slug?.trim() || finalCode
+  
   const { data, error } = await supabase
     .from('events')
     .insert({
       client_id,
       code: finalCode,
-      slug: String(slug).trim(),
+      slug: finalSlug,
       title: title ? String(title).trim() : null,
       campaign_start_date: campaign_start_date || null,
       campaign_end_date: campaign_end_date || null,

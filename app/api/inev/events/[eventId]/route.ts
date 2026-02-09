@@ -44,8 +44,26 @@ export async function PATCH(request: Request, { params }: RouteParams) {
     module_ondemand?: boolean
   }
   const supabase = createAdminSupabase()
+  
+  // 현재 이벤트 정보 조회 (code를 slug로 사용하기 위해)
+  const { data: currentEvent } = await supabase
+    .from('events')
+    .select('code')
+    .eq('id', eventId)
+    .single()
+  
+  if (!currentEvent) {
+    return NextResponse.json({ error: 'Event not found' }, { status: 404 })
+  }
+  
   const updates: Record<string, unknown> = { updated_at: new Date().toISOString() }
-  if (slug !== undefined) updates.slug = String(slug).trim()
+  
+  // slug 처리: 없거나 빈 문자열이면 code를 slug로 사용, 있으면 그 slug 사용
+  if (slug !== undefined) {
+    const trimmedSlug = String(slug).trim()
+    updates.slug = trimmedSlug || currentEvent.code
+  }
+  
   if (module_registration !== undefined) updates.module_registration = module_registration
   if (module_survey !== undefined) updates.module_survey = module_survey
   if (module_webinar !== undefined) updates.module_webinar = module_webinar

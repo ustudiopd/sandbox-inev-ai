@@ -15,3 +15,18 @@ alwaysApply: true
 ## 시간대
 - 표시는 항상 KST(한국 표준시). DB 저장은 UTC, 조회 후 표시 시 KST 변환.
 - `toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' })` 사용. UTC를 사용자에게 그대로 표시하지 않는다.
+
+## 스크립트 작성
+- **절대로 `process.exit()`를 즉시 호출하지 않는다.** Supabase 등 비동기 클라이언트의 정리 작업이 완료되기 전에 프로세스가 종료되면 `Assertion failed: !(handle->flags & UV_HANDLE_CLOSING)` 에러가 발생한다.
+- 스크립트 종료 시 반드시 `.then().catch()` 패턴과 `setTimeout`을 사용하여 비동기 작업 완료 후 종료:
+  ```typescript
+  asyncFunction()
+    .then(() => {
+      setTimeout(() => process.exit(0), 100)
+    })
+    .catch((error) => {
+      console.error('예외 발생:', error)
+      setTimeout(() => process.exit(1), 100)
+    })
+  ```
+- 즉시 `process.exit(0)` 호출 금지. 최소 100ms 지연 필수.

@@ -82,14 +82,13 @@ export default function InevAdminNewEventPage() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700">슬러그</label>
+            <label className="block text-sm font-medium text-gray-700">슬러그 (비워두면 코드로 자동 채워짐)</label>
             <input
               type="text"
               value={slug}
               onChange={(e) => setSlug(e.target.value)}
-              placeholder="seminar1"
+              placeholder="비워두면 코드로 자동 채워집니다"
               className="mt-1 w-full rounded border border-gray-300 px-3 py-2 text-gray-900"
-              required
             />
           </div>
           <div>

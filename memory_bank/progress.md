@@ -1,5 +1,36 @@
 # 완료된 작업 내역 (Progress)
 
+## [2026-02-09] 이벤트 랜딩 페이지 UI 개선 (Event722895Landing)
+- ✅ 이벤트 랜딩 페이지 이미지 및 레이아웃 개선
+  - 선물 아이콘 이미지 교체: `🎁` 이모지 → `0312_icon_6_v2.png` (147x109px)
+  - 이미지 위치 조정: `left: 690px, top: 147px` (절대 위치)
+  - 메가MGC커피 이미지 추가: `0312_megacoffee.png` (250px, 하단 정렬)
+  - 치킨 이미지 추가: `0312_chicken.png` (w-80 h-72, 하단 정렬, 회전 제거)
+  - 피자 이미지 추가: `0312_pizza.png` (w-96 h-72, left: 520px)
+- ✅ 폰트 크기 통일 (24px)
+  - "사전등록자 추첨 100명" 텍스트: 28px → 24px
+  - "Q&A 세션에서 좋은 질문을 해주신 분들 중 추첨을 통해" 텍스트: 28px → 24px
+  - "웨비나 참여 후 설문조사를 작성해주신 분들 중 추첨을 통해" 텍스트: 28px → 24px
+  - "적극적으로 참여해주시는 분들에게 소정의 상품을 드립니다." 텍스트: 30px → 24px
+  - "BBQ 기프티콘", "도미노피자 기프티콘", "을 드립니다." 텍스트: 28px → 24px
+  - "키워트 인사이트 웨비나 주의사항" 및 "문의 사항" 설명 텍스트: 30px → 24px
+- ✅ 푸터 로고 추가
+  - 하단 `bg-neutral-800` div에 `kewert_logo-w.png` 이미지 추가
+  - 가운데 정렬 (flex items-center justify-center)
+  - 높이: h-8
+- ✅ 중복 텍스트 제거
+  - "사전 등록 이벤트" 중복 텍스트 제거
+- ✅ 이미지 업로드 스크립트 생성
+  - `scripts/upload-0312-icon-6-v2-image.ts`: 선물 아이콘 이미지 업로드
+  - `scripts/upload-0312-icon-6-image.ts`: 선물 아이콘 이미지 업로드
+  - `scripts/upload-0312-megacoffee-image.ts`: 메가MGC커피 이미지 업로드
+  - `scripts/upload-0312-chicken-image.ts`: 치킨 이미지 업로드
+  - `scripts/upload-0312-pizza-image.ts`: 피자 이미지 업로드
+  - `scripts/upload-kewert-logo-w-image.ts`: 푸터 로고 이미지 업로드
+  - `scripts/upload-0312-icons-78-image.ts`: 아이콘 7, 8 이미지 업로드
+- ✅ 수정된 파일
+  - `app/event/[slug]/components/Event722895Landing.tsx`: 이미지 추가, 폰트 크기 조정, 푸터 로고 추가
+
 ## [2026-02-09] 이벤트 생성 시스템 개선 및 대시보드 UI 개선
 - ✅ 이벤트 생성 폼 개선
   - 제목 필드 추가 (`title` 컬럼)

@@ -7,6 +7,13 @@ import type { Metadata } from 'next'
 type Props = { params: Promise<{ slug: string }>; searchParams: Promise<Record<string, string | string[] | undefined>> }
 
 /**
+ * slug가 숫자 코드인지 확인
+ */
+function isNumericCode(slug: string): boolean {
+  return /^\d+$/.test(slug)
+}
+
+/**
  * 메타데이터 생성 함수
  */
 export async function generateMetadata({
@@ -18,17 +25,18 @@ export async function generateMetadata({
   const admin = createAdminSupabase()
   
   try {
-    const { data: event } = await admin
-      .from('events')
-      .select('id, code, slug')
-      .eq('slug', slug)
-      .maybeSingle()
+    // 숫자 코드면 code로 조회, 아니면 slug로 조회
+    const query = isNumericCode(slug)
+      ? admin.from('events').select('id, code, slug').eq('code', slug).maybeSingle()
+      : admin.from('events').select('id, code, slug').eq('slug', slug).maybeSingle()
+    
+    const { data: event } = await query
     
     // 185044 이벤트에 대한 특별 메타데이터
     if (event?.code === '185044') {
-      const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://dev-inev-ai.vercel.app'
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://gbkivxdlebdtfudexbga.supabase.co'
-      const thumbnailUrl = `${supabaseUrl}/storage/v1/object/public/webinar-thumbnails/wert/thumb_wert2.png`
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://wert.inev.ai'
+      // 로컬 이미지 파일 사용 (public/img/wert/thumb_wert2.png)
+      const thumbnailUrl = `${appUrl}/img/wert/thumb_wert2.png`
       const canonicalUrl = `${appUrl}/event/${slug}`
       
       const metaTitle = '실제 고객사례로 알아보는 AI 특허리서치 실무 활용 웨비나'
@@ -75,14 +83,27 @@ export default async function PublicEventPage({ params, searchParams }: Props) {
   const { slug } = await params
   const q = await searchParams
   const supabase = createAdminSupabase()
-  const { data: event, error } = await supabase
-    .from('events')
-    .select('id, code, slug, module_registration, module_survey, module_webinar, module_utm, module_ondemand')
-    .eq('slug', slug)
-    .limit(1)
-    .single()
+  
+  // 숫자 코드면 code로 조회, 아니면 slug로 조회
+  const query = isNumericCode(slug)
+    ? supabase.from('events').select('id, code, slug, title, module_registration, module_survey, module_webinar, module_utm, module_ondemand, event_date, event_start_date, event_end_date, event_date_type').eq('code', slug).limit(1).single()
+    : supabase.from('events').select('id, code, slug, title, module_registration, module_survey, module_webinar, module_utm, module_ondemand, event_date, event_start_date, event_end_date, event_date_type').eq('slug', slug).limit(1).single()
+  
+  const { data: event, error } = await query
 
   if (error || !event) notFound()
+
+  // 722895 메인 페이지는 Event722895Landing 사용
+  if (event.code === '722895') {
+    const Event722895Landing = (await import('./components/Event722895Landing')).default
+    return <Event722895Landing event={event} />
+  }
+
+  // 175419 메인 페이지는 Event175419Landing 사용
+  if (event.code === '175419') {
+    const Event175419Landing = (await import('./components/Event175419Landing')).default
+    return <Event175419Landing event={event} />
+  }
 
   // 149403 메인 페이지는 WebinarFormWertPage 사용 (온디맨드 모듈이어도 메인 페이지 표시)
   if (event.code === '149403') {
@@ -121,11 +142,15 @@ export default async function PublicEventPage({ params, searchParams }: Props) {
           utm_content={utmContent}
         />
       )}
-      <div className="mx-auto max-w-lg rounded-lg border border-gray-200 bg-white p-8">
+      <div className="mx-auto max-w-lg rounded-lg border border-gray-200 bg-white p-8 shadow-sm">
         {/* 헤더 */}
         <div className="mb-6">
-          <h1 className="text-2xl font-semibold text-gray-900">{event.slug}</h1>
-          <p className="mt-1 text-xs text-gray-500">코드: {event.code}</p>
+          <h1 className="text-2xl font-bold text-gray-900">
+            {event.slug === event.code ? event.code : event.slug}
+          </h1>
+          {event.slug !== event.code && (
+            <p className="mt-2 text-sm text-gray-600">이벤트 코드: {event.code}</p>
+          )}
         </div>
 
         {/* 모듈 배지 */}
