@@ -20,6 +20,21 @@
   - 높이: h-8
 - ✅ 중복 텍스트 제거
   - "사전 등록 이벤트" 중복 텍스트 제거
+- ✅ 이미지 위치 및 크기 조정
+  - 피자 이미지 위치 조정: `md:top-[41px]` → `md:top-[10px]` (위로 이동)
+  - 치킨 이미지 위치 조정: `md:bottom-[-20px]` → `md:bottom-[-50px]` (위로 이동)
+  - 치킨 이미지 크기 확대: `md:w-80 md:h-72` → `md:w-96 md:h-80`
+  - 피자 이미지 크기 확대: `md:w-96 md:h-72` → `md:w-[400px] md:h-80`
+  - 노란색 원 인라인 스타일 추가: `style={{ left: '214px', top: '16px' }}`
+- ✅ EVENT 3 카드 모바일 최적화
+  - 모바일에서도 1줄 2칸 배치: `flex-col md:flex-row` → `flex-row`
+  - 모바일 높이 고정: `h-[120px]` (기존 164px → 120px로 축소)
+  - 모바일 패딩 축소: `p-5` → `p-3`
+  - 모바일 간격 축소: `gap-5` → `gap-2`
+  - 모바일 이미지 크기 축소: `w-16 h-16` → `w-12 h-12`
+  - 모바일 텍스트 크기 축소: `text-sm` → `text-xs`
+  - 모바일 줄간격 축소: `leading-5` → `leading-4`
+  - 모바일 이미지 위치 조정: `-mt-2` 추가 (위로 이동)
 - ✅ 이미지 업로드 스크립트 생성
   - `scripts/upload-0312-icon-6-v2-image.ts`: 선물 아이콘 이미지 업로드
   - `scripts/upload-0312-icon-6-image.ts`: 선물 아이콘 이미지 업로드
@@ -29,7 +44,7 @@
   - `scripts/upload-kewert-logo-w-image.ts`: 푸터 로고 이미지 업로드
   - `scripts/upload-0312-icons-78-image.ts`: 아이콘 7, 8 이미지 업로드
 - ✅ 수정된 파일
-  - `app/event/[slug]/components/Event722895Landing.tsx`: 이미지 추가, 폰트 크기 조정, 푸터 로고 추가
+  - `app/event/[slug]/components/Event722895Landing.tsx`: 이미지 위치/크기 조정, 모바일 최적화, 레이아웃 개선
 
 ## [2026-02-09] 이벤트 생성 시스템 개선 및 대시보드 UI 개선
 - ✅ 이벤트 생성 폼 개선
