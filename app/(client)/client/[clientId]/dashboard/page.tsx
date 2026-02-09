@@ -119,7 +119,7 @@ export default async function ClientDashboard({
     // 이벤트 목록 조회 (최근 50개)
     const { data: eventsData, error: eventsError } = await admin
       .from('events')
-      .select('id, code, slug, created_at, updated_at, module_webinar, module_survey, module_registration')
+      .select('id, code, slug, title, campaign_start_date, campaign_end_date, event_date, event_start_date, event_end_date, event_date_type, created_at, updated_at, module_webinar, module_survey, module_registration, module_ondemand, module_email, module_utm')
       .eq('client_id', clientId)
       .order('created_at', { ascending: false })
       .limit(50)
@@ -130,18 +130,52 @@ export default async function ClientDashboard({
     
     const events = eventsData || []
   
+  // 날짜 포맷 함수
+  const formatDate = (date: string | null) => {
+    if (!date) return null
+    return new Date(date).toLocaleDateString('ko-KR', { 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric',
+      timeZone: 'Asia/Seoul'
+    })
+  }
+
+  // 이벤트 날짜 표시 함수
+  const formatEventDate = (event: any) => {
+    if (event.event_date_type === 'range') {
+      const start = formatDate(event.event_start_date)
+      const end = formatDate(event.event_end_date)
+      if (start && end) return `${start} ~ ${end}`
+      if (start) return `${start} ~`
+      if (end) return `~ ${end}`
+    } else {
+      return formatDate(event.event_date)
+    }
+    return null
+  }
+
   // 이벤트 목록을 통합 리스트로 변환
   const unifiedItems = (events || []).map((event: any) => ({
     type: 'event' as const,
     id: event.id,
     code: event.code,
     slug: event.slug,
-    title: `이벤트 ${event.code}`,
+    title: event.title || `이벤트 ${event.code}`,
+    campaign_start_date: event.campaign_start_date,
+    campaign_end_date: event.campaign_end_date,
+    event_date: event.event_date,
+    event_start_date: event.event_start_date,
+    event_end_date: event.event_end_date,
+    event_date_type: event.event_date_type,
     created_at: event.created_at,
     updated_at: event.updated_at,
     module_webinar: event.module_webinar,
     module_survey: event.module_survey,
     module_registration: event.module_registration,
+    module_ondemand: event.module_ondemand,
+    module_email: event.module_email,
+    module_utm: event.module_utm,
   }))
   
   return (
@@ -192,13 +226,27 @@ export default async function ClientDashboard({
                         className="flex-1 min-w-0"
                       >
                         <div className="text-base font-semibold text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors truncate block mb-1">
-                          {item.slug || item.title}
+                          {item.title || item.slug}
                         </div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm text-gray-500 dark:text-gray-400">코드: {item.code}</span>
-                          {item.module_webinar && (
-                            <span className="text-xs px-2 py-0.5 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded">
-                              웨비나
+                        <div className="flex flex-col gap-1">
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm text-gray-500 dark:text-gray-400">코드: {item.code}</span>
+                            {item.campaign_start_date && (
+                              <span className="text-xs text-gray-500 dark:text-gray-400">
+                                캠페인: {formatDate(item.campaign_start_date)}
+                                {item.campaign_end_date ? ` ~ ${formatDate(item.campaign_end_date)}` : ' ~ 종료 미정'}
+                              </span>
+                            )}
+                            {formatEventDate(item) && (
+                              <span className="text-xs text-gray-500 dark:text-gray-400">
+                                이벤트: {formatEventDate(item)}
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2">
+                          {item.module_registration && (
+                            <span className="text-xs px-2 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded">
+                              등록
                             </span>
                           )}
                           {item.module_survey && (
@@ -206,11 +254,27 @@ export default async function ClientDashboard({
                               설문
                             </span>
                           )}
-                          {item.module_registration && (
-                            <span className="text-xs px-2 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded">
-                              등록
+                          {item.module_webinar && (
+                            <span className="text-xs px-2 py-0.5 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded">
+                              웨비나
                             </span>
                           )}
+                          {item.module_ondemand && (
+                            <span className="text-xs px-2 py-0.5 bg-teal-100 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300 rounded">
+                              온디맨드
+                            </span>
+                          )}
+                          {item.module_email && (
+                            <span className="text-xs px-2 py-0.5 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 rounded">
+                              이메일
+                            </span>
+                          )}
+                          {item.module_utm && (
+                            <span className="text-xs px-2 py-0.5 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 rounded">
+                              UTM
+                            </span>
+                          )}
+                          </div>
                         </div>
                       </Link>
                       <EventItemActions

@@ -2,8 +2,74 @@ import { createAdminSupabase } from '@/lib/supabase/admin'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { VisitLogger } from './VisitLogger'
+import type { Metadata } from 'next'
 
 type Props = { params: Promise<{ slug: string }>; searchParams: Promise<Record<string, string | string[] | undefined>> }
+
+/**
+ * 메타데이터 생성 함수
+ */
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>
+}): Promise<Metadata> {
+  const { slug } = await params
+  const admin = createAdminSupabase()
+  
+  try {
+    const { data: event } = await admin
+      .from('events')
+      .select('id, code, slug')
+      .eq('slug', slug)
+      .maybeSingle()
+    
+    // 185044 이벤트에 대한 특별 메타데이터
+    if (event?.code === '185044') {
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://dev-inev-ai.vercel.app'
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://gbkivxdlebdtfudexbga.supabase.co'
+      const thumbnailUrl = `${supabaseUrl}/storage/v1/object/public/webinar-thumbnails/wert/thumb_wert2.png`
+      const canonicalUrl = `${appUrl}/event/${slug}`
+      
+      const metaTitle = '실제 고객사례로 알아보는 AI 특허리서치 실무 활용 웨비나'
+      const metaDescription = 'IP팀·특허사무소·R&D팀의 키워트 인사이트 활용 방식이 궁금하다면, 2월 6일 웨비나에서 직접 확인하세요.'
+      
+      return {
+        title: `${metaTitle} | keywert Insight`,
+        description: metaDescription,
+        metadataBase: new URL(appUrl),
+        openGraph: {
+          title: metaTitle,
+          description: metaDescription,
+          type: 'website',
+          url: canonicalUrl,
+          siteName: 'keywert Insight',
+          images: [
+            {
+              url: thumbnailUrl,
+              width: 1200,
+              height: 630,
+              alt: metaTitle,
+            },
+          ],
+        },
+        twitter: {
+          card: 'summary_large_image',
+          title: metaTitle,
+          description: metaDescription,
+          images: [thumbnailUrl],
+        },
+        alternates: {
+          canonical: canonicalUrl,
+        },
+      }
+    }
+  } catch (error) {
+    console.error('[generateMetadata] 이벤트 메타데이터 조회 오류:', error)
+  }
+  
+  return {}
+}
 
 export default async function PublicEventPage({ params, searchParams }: Props) {
   const { slug } = await params

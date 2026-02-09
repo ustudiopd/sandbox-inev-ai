@@ -8,9 +8,13 @@ type EventRow = {
   client_id: string
   code: string
   slug: string
+  title?: string | null
   module_registration: boolean
   module_survey: boolean
   module_webinar: boolean
+  module_ondemand?: boolean
+  module_email?: boolean
+  module_utm?: boolean
   created_at: string
   settings?: {
     title?: string
@@ -47,7 +51,7 @@ export default async function InevAdminEventsPage({
   
   const { data: events, error } = await admin
     .from('events')
-    .select('id, client_id, code, slug, module_registration, module_survey, module_webinar, created_at, settings')
+    .select('id, client_id, code, slug, title, campaign_start_date, campaign_end_date, event_date, event_start_date, event_end_date, event_date_type, module_registration, module_survey, module_webinar, module_ondemand, module_email, module_utm, created_at, settings')
     .eq('client_id', clientId)
     .order('created_at', { ascending: false })
     .limit(100) // 최대 100개만 조회 (성능 최적화)
@@ -58,6 +62,31 @@ export default async function InevAdminEventsPage({
 
   const eventsList = events || []
   const isWertIntelligence = client?.name?.includes('Wert Intelligence') || client?.name?.includes('워트 인텔리전스')
+
+  // 날짜 포맷 함수
+  const formatDate = (date: string | null) => {
+    if (!date) return null
+    return new Date(date).toLocaleDateString('ko-KR', { 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric',
+      timeZone: 'Asia/Seoul'
+    })
+  }
+
+  // 이벤트 날짜 표시 함수
+  const formatEventDate = (event: any) => {
+    if (event.event_date_type === 'range') {
+      const start = formatDate(event.event_start_date)
+      const end = formatDate(event.event_end_date)
+      if (start && end) return `${start} ~ ${end}`
+      if (start) return `${start} ~`
+      if (end) return `~ ${end}`
+    } else {
+      return formatDate(event.event_date)
+    }
+    return null
+  }
 
   return (
     <div className="bg-white min-h-screen">
@@ -103,9 +132,22 @@ export default async function InevAdminEventsPage({
                           href={`/inev-admin/clients/${clientId}/events/${e.id}`}
                           className="text-base font-semibold text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer"
                         >
-                          {e.settings?.title || e.slug}
+                          {(e as any).title || e.settings?.title || e.slug}
                         </Link>
                         <span className="text-sm text-gray-500 dark:text-gray-400">코드: {e.code}</span>
+                      </div>
+                      <div className="flex flex-col gap-1 mt-2">
+                        {((e as any).campaign_start_date || (e as any).campaign_end_date) && (
+                          <div className="text-xs text-gray-500 dark:text-gray-400">
+                            캠페인: {(e as any).campaign_start_date ? formatDate((e as any).campaign_start_date) : '시작 미정'}
+                            {(e as any).campaign_end_date ? ` ~ ${formatDate((e as any).campaign_end_date)}` : (e as any).campaign_start_date ? ' ~ 종료 미정' : ''}
+                          </div>
+                        )}
+                        {formatEventDate(e as any) && (
+                          <div className="text-xs text-gray-500 dark:text-gray-400">
+                            이벤트: {formatEventDate(e as any)}
+                          </div>
+                        )}
                       </div>
                       <div className="flex gap-2 mt-2">
                         {e.module_registration && (
@@ -121,6 +163,21 @@ export default async function InevAdminEventsPage({
                         {e.module_webinar && (
                           <span className="text-xs px-2 py-0.5 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded">
                             웨비나
+                          </span>
+                        )}
+                        {(e as any).module_ondemand && (
+                          <span className="text-xs px-2 py-0.5 bg-teal-100 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300 rounded">
+                            온디맨드
+                          </span>
+                        )}
+                        {(e as any).module_email && (
+                          <span className="text-xs px-2 py-0.5 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 rounded">
+                            이메일
+                          </span>
+                        )}
+                        {(e as any).module_utm && (
+                          <span className="text-xs px-2 py-0.5 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 rounded">
+                            UTM
                           </span>
                         )}
                       </div>
