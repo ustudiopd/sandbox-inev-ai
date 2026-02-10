@@ -1,5 +1,18 @@
 # 완료된 작업 내역 (Progress)
 
+## [2026-02-10] 이벤트 222152 랜딩 페이지 생성
+- ✅ Event222152Landing 컴포넌트 생성
+  - `app/event/[slug]/components/Event222152Landing.tsx` 파일 생성
+  - GC녹십자 스타일 랜딩 페이지 (Event175419Landing과 동일한 디자인)
+  - 배경 이미지, 네비게이션 바, 타이틀 이미지, 날짜/장소 표시
+  - 이미지 버킷은 기존 GC녹십자 스토리지 공유 사용
+- ✅ 이벤트 라우팅 분기 추가
+  - `app/event/[slug]/page.tsx`에 `event.code === '222152'` 분기 추가
+  - 222152 이벤트 접속 시 Event222152Landing 컴포넌트 렌더링
+- ✅ 수정된 파일
+  - `app/event/[slug]/components/Event222152Landing.tsx`: 새 파일 생성
+  - `app/event/[slug]/page.tsx`: 222152 분기 추가
+
 ## [2026-02-09] 이벤트 랜딩 페이지 모바일 UI 개선 (Event722895Landing)
 - ✅ 히어로 섹션 모바일 로고 배치 개선
   - 모바일에서도 PC처럼 상단 양쪽에 로고 배치 (`left-5`, `right-5`)

@@ -2,7 +2,9 @@ import { createAdminSupabase } from '@/lib/supabase/admin'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { VisitLogger } from './VisitLogger'
+import { ensureEventBelongsToDeployment } from '@/lib/utils/client-from-domain'
 import type { Metadata } from 'next'
+import { headers } from 'next/headers'
 
 type Props = { params: Promise<{ slug: string }>; searchParams: Promise<Record<string, string | string[] | undefined>> }
 
@@ -86,12 +88,18 @@ export default async function PublicEventPage({ params, searchParams }: Props) {
   
   // 숫자 코드면 code로 조회, 아니면 slug로 조회
   const query = isNumericCode(slug)
-    ? supabase.from('events').select('id, code, slug, title, module_registration, module_survey, module_webinar, module_utm, module_ondemand, event_date, event_start_date, event_end_date, event_date_type').eq('code', slug).limit(1).single()
-    : supabase.from('events').select('id, code, slug, title, module_registration, module_survey, module_webinar, module_utm, module_ondemand, event_date, event_start_date, event_end_date, event_date_type').eq('slug', slug).limit(1).single()
+    ? supabase.from('events').select('id, code, slug, title, client_id, module_registration, module_survey, module_webinar, module_utm, module_ondemand, event_date, event_start_date, event_end_date, event_date_type').eq('code', slug).limit(1).single()
+    : supabase.from('events').select('id, code, slug, title, client_id, module_registration, module_survey, module_webinar, module_utm, module_ondemand, event_date, event_start_date, event_end_date, event_date_type').eq('slug', slug).limit(1).single()
   
   const { data: event, error } = await query
 
   if (error || !event) notFound()
+
+  // sandbox 격리: 배포 도메인(sandbox.inev.ai 등)에서는 해당 client 이벤트만 허용
+  const headersList = await headers()
+  const host = headersList.get('host') || undefined
+  const allowed = event.client_id ? await ensureEventBelongsToDeployment({ eventClientId: event.client_id, host }) : true
+  if (!allowed) notFound()
 
   // 722895 메인 페이지는 Event722895Landing 사용
   if (event.code === '722895') {
@@ -103,6 +111,12 @@ export default async function PublicEventPage({ params, searchParams }: Props) {
   if (event.code === '175419') {
     const Event175419Landing = (await import('./components/Event175419Landing')).default
     return <Event175419Landing event={event} />
+  }
+
+  // 222152 메인 페이지는 Event222152Landing 사용
+  if (event.code === '222152') {
+    const Event222152Landing = (await import('./components/Event222152Landing')).default
+    return <Event222152Landing event={event} />
   }
 
   // 149403 메인 페이지는 WebinarFormWertPage 사용 (온디맨드 모듈이어도 메인 페이지 표시)

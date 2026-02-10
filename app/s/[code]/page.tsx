@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createAdminSupabase } from '@/lib/supabase/admin'
 import { getClientPublicBaseUrl } from '@/lib/utils/client-domain'
+import { ensureEventBelongsToDeployment } from '@/lib/utils/client-from-domain'
 import { extractUTMParams, normalizeUTM } from '@/lib/utils/utm'
 import { generateSessionId } from '@/lib/utils/session'
 import type { Metadata } from 'next'
@@ -173,6 +174,14 @@ export default async function ShortLinkRedirectPage({
       clientId = webinarData.client_id
     } else {
       console.error('[ShortLink] event_id 또는 webinar_id가 없음:', shortLink)
+      redirect('/')
+    }
+
+    // sandbox 격리: 배포 도메인(sandbox.inev.ai 등)에서는 해당 client 이벤트만 허용
+    const host = headersList.get('host') || undefined
+    const allowed = await ensureEventBelongsToDeployment({ eventClientId: clientId!, host })
+    if (!allowed) {
+      console.warn('[ShortLink] 이벤트가 현재 배포 client와 불일치:', { clientId, host })
       redirect('/')
     }
 
