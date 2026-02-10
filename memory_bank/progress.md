@@ -1,5 +1,19 @@
 # 완료된 작업 내역 (Progress)
 
+## [2026-02-10] 이벤트 222152 갤러리 페이지 구현
+- ✅ 갤러리 라우트 및 페이지 추가
+  - `app/event/[slug]/gallery/page.tsx`: 이벤트 조회·code 222152 검증 후 EventGalleryPage 렌더
+  - `app/event/[slug]/gallery/EventGalleryPage.tsx`: 갤러리 클라이언트 컴포넌트
+- ✅ 갤러리 페이지 구성
+  - 상단: 제목 "2026 GCBP Leadership Workshop" (Bebas Neue 70px), 부제 "2026 GCBP Leadership Workshop의 추억을 만나보세요." (Pretendard 24px), 가운데 정렬
+  - Photo 섹션: 4개 이미지·캡션 세트(30px 간격), 이전/다음 버튼으로 세트 전체 반칸(215px)씩 좌우 이동
+  - Video 섹션: 2개 비디오 썸네일(1092×518, 30px 간격) 세트, 이전/다음 버튼으로 세트 전체 반칸 이동
+  - 하단: 1920×495px 그라데이션 막대 (linear-gradient 90deg #36C618 → #FFDF00 → #FF4606)
+- ✅ 헤더 연동: Event222152Header에 `variant="gallery"` 추가, 갤러리 메뉴를 `/event/${slug}/gallery` 링크로 연결
+- ✅ 수정된 파일
+  - `app/event/[slug]/gallery/page.tsx`, `EventGalleryPage.tsx` (신규)
+  - `app/event/[slug]/components/Event222152Header.tsx` (gallery variant·링크 추가)
+
 ## [2026-02-10] 이벤트 222152 랜딩 페이지 생성
 - ✅ Event222152Landing 컴포넌트 생성
   - `app/event/[slug]/components/Event222152Landing.tsx` 파일 생성
