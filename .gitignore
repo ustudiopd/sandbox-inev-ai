@@ -29,6 +29,9 @@ build-output.log
 .env*.local
 .env
 
+# MCP 설정 (토큰 포함 시 보안을 위해 제외)
+.cursor/mcp.json
+
 # vercel
 .vercel
 

@@ -4,13 +4,7 @@ import { useState } from 'react'
 import Image from 'next/image'
 import { Bebas_Neue } from 'next/font/google'
 import Event222152Header from '../components/Event222152Header'
-import button01 from '../../../../img/gcbio/button_01.png'
-import button02 from '../../../../img/gcbio/button_02.png'
-import page4Photo1 from '../../../../img/gcbio/page4_archiving_photo1.png'
-import page4Photo2 from '../../../../img/gcbio/page4_archiving_photo2.png'
-import page4Photo3 from '../../../../img/gcbio/page4_archiving_photo3.png'
-import page4Video1 from '../../../../img/gcbio/page4_archiving_video1.png'
-import page4Video2_2 from '../../../../img/gcbio/page4_archiving_video2_2.png'
+import { getGcbioImageUrl } from '../lib/gcbio-images'
 
 const bebasNeue = Bebas_Neue({ weight: '400', subsets: ['latin'], display: 'swap' })
 
@@ -19,10 +13,10 @@ const GALLERY_SET_WIDTH = 400
 /** 한 칸 = 세트 너비 + 간격. 반칸 이동 시 사용 */
 const GALLERY_HALF_STEP = (GALLERY_SET_WIDTH + GALLERY_SET_GAP) / 2 // 215
 const GALLERY_SETS = [
-  { src: page4Photo1, subtitle: 'KASBP에서 발표 중인 신수경 GC녹십자 의학본부장' },
-  { src: page4Photo2, subtitle: 'KASBP 행사 후 수상자 및 관계자 단체 사진 촬영' },
-  { src: page4Photo3, subtitle: 'KASBP에서 발표 중인 허은철 GC녹십자 대표이사' },
-  { src: page4Photo1, subtitle: 'KASBP에서 발표 중인 허은철 GC녹십자 대표이사' },
+  { src: 'page4_archiving_photo1.png', subtitle: 'KASBP에서 발표 중인 신수경 GC녹십자 의학본부장' },
+  { src: 'page4_archiving_photo2.png', subtitle: 'KASBP 행사 후 수상자 및 관계자 단체 사진 촬영' },
+  { src: 'page4_archiving_photo3.png', subtitle: 'KASBP에서 발표 중인 허은철 GC녹십자 대표이사' },
+  { src: 'page4_archiving_photo1.png', subtitle: 'KASBP에서 발표 중인 허은철 GC녹십자 대표이사' },
 ]
 
 interface EventGalleryPageProps {
@@ -145,7 +139,7 @@ export default function EventGalleryPage({ event, pathSlug }: EventGalleryPagePr
                 {GALLERY_SETS.map((set, i) => (
                   <div key={i} className="flex flex-col flex-shrink-0" style={{ width: `${GALLERY_SET_WIDTH}px` }}>
                     <Image
-                      src={set.src}
+                      src={getGcbioImageUrl(set.src)}
                       alt=""
                       width={GALLERY_SET_WIDTH}
                       height={GALLERY_SET_WIDTH}
@@ -222,14 +216,14 @@ export default function EventGalleryPage({ event, pathSlug }: EventGalleryPagePr
                 }}
               >
                 <Image
-                  src={page4Video1}
+                  src={getGcbioImageUrl('page4_archiving_video1.png')}
                   alt=""
                   width={VIDEO_ITEM_WIDTH}
                   height={518}
                   className="object-cover flex-shrink-0"
                 />
                 <Image
-                  src={page4Video2_2}
+                  src={getGcbioImageUrl('page4_archiving_video2_2.png')}
                   alt=""
                   width={VIDEO_ITEM_WIDTH}
                   height={518}
@@ -262,7 +256,7 @@ export default function EventGalleryPage({ event, pathSlug }: EventGalleryPagePr
                 aria-label="이전"
               >
                 <Image
-                  src={button01}
+                  src={getGcbioImageUrl('button_01.png')}
                   alt=""
                   width={32}
                   height={32}
@@ -276,7 +270,7 @@ export default function EventGalleryPage({ event, pathSlug }: EventGalleryPagePr
                 aria-label="다음"
               >
                 <Image
-                  src={button02}
+                  src={getGcbioImageUrl('button_02.png')}
                   alt=""
                   width={32}
                   height={32}
@@ -298,7 +292,7 @@ export default function EventGalleryPage({ event, pathSlug }: EventGalleryPagePr
                 aria-label="이전"
               >
                 <Image
-                  src={button01}
+                  src={getGcbioImageUrl('button_01.png')}
                   alt=""
                   width={32}
                   height={32}
@@ -312,7 +306,7 @@ export default function EventGalleryPage({ event, pathSlug }: EventGalleryPagePr
                 aria-label="다음"
               >
                 <Image
-                  src={button02}
+                  src={getGcbioImageUrl('button_02.png')}
                   alt=""
                   width={32}
                   height={32}

@@ -2,7 +2,7 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
-import gcbioLogo from '../../../../img/gcbio/gcbio_logo.png'
+import { getGcbioImageUrl } from '../lib/gcbio-images'
 
 interface Event222152HeaderProps {
   slug: string
@@ -33,7 +33,7 @@ export default function Event222152Header({ slug, variant = 'default' }: Event22
         {/* 로고 영역 - 메인으로 링크 */}
         <Link href={`/event/${slug}`} className="w-24 sm:w-32 md:w-40 h-7 sm:h-8 md:h-9 relative overflow-hidden flex-shrink-0 block">
           <Image
-            src={gcbioLogo}
+            src={getGcbioImageUrl('gcbio_logo.png', 2)}
             alt="GC Biopharma"
             className="object-contain"
             fill

@@ -116,7 +116,7 @@ export default async function PublicEventPage({ params, searchParams }: Props) {
   // 222152 메인 페이지는 Event222152Landing 사용
   if (event.code === '222152') {
     const Event222152Landing = (await import('./components/Event222152Landing')).default
-    return <Event222152Landing event={event} />
+    return <Event222152Landing event={event} pathSlug={slug} />
   }
 
   // 149403 메인 페이지는 WebinarFormWertPage 사용 (온디맨드 모듈이어도 메인 페이지 표시)
