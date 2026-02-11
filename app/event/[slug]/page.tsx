@@ -1,6 +1,6 @@
 import { createAdminSupabase } from '@/lib/supabase/admin'
 import Link from 'next/link'
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import { VisitLogger } from './VisitLogger'
 import { ensureEventBelongsToDeployment } from '@/lib/utils/client-from-domain'
 import type { Metadata } from 'next'
@@ -81,8 +81,34 @@ export async function generateMetadata({
   return {}
 }
 
+/** localhost 여부 (로컬에서 DB 없이 222152 랜딩 표시용) */
+function isLocalhost(host: string | undefined): boolean {
+  if (!host) return false
+  const h = host.toLowerCase().split(':')[0]
+  return h === 'localhost' || h === '127.0.0.1'
+}
+
 export default async function PublicEventPage({ params, searchParams }: Props) {
   const { slug } = await params
+  const headersList = await headers()
+  const host = headersList.get('host') || undefined
+
+  // 로컬 개발: localhost + 222152 접속 시 랜딩 표시 (로그인 연동 일시 해제)
+  if (isLocalhost(host) && slug === '222152') {
+    const mockEvent = {
+      id: 'local-222152',
+      code: '222152',
+      slug: '222152',
+      title: 'GCBP Leadership Workshop',
+      event_date: '2026-03-05',
+      event_start_date: null as string | null,
+      event_end_date: null as string | null,
+      event_date_type: 'single' as const,
+    }
+    const Event222152Landing = (await import('./components/Event222152Landing')).default
+    return <Event222152Landing event={mockEvent} pathSlug={slug} />
+  }
+
   const q = await searchParams
   const supabase = createAdminSupabase()
   
@@ -96,43 +122,41 @@ export default async function PublicEventPage({ params, searchParams }: Props) {
   if (error || !event) notFound()
 
   // sandbox 격리: 배포 도메인(sandbox.inev.ai 등)에서는 해당 client 이벤트만 허용
-  const headersList = await headers()
-  const host = headersList.get('host') || undefined
   const allowed = event.client_id ? await ensureEventBelongsToDeployment({ eventClientId: event.client_id, host }) : true
   if (!allowed) notFound()
 
   // 722895 메인 페이지는 Event722895Landing 사용
-  if (event.code === '722895') {
+  if (String(event.code) === '722895') {
     const Event722895Landing = (await import('./components/Event722895Landing')).default
     return <Event722895Landing event={event} />
   }
 
   // 175419 메인 페이지는 Event175419Landing 사용
-  if (event.code === '175419') {
+  if (String(event.code) === '175419') {
     const Event175419Landing = (await import('./components/Event175419Landing')).default
     return <Event175419Landing event={event} />
   }
 
-  // 222152 메인 페이지는 Event222152Landing 사용
-  if (event.code === '222152') {
+  // 222152 메인 페이지는 Event222152Landing 사용 (로그인 연동 일시 해제)
+  if (String(event.code) === '222152') {
     const Event222152Landing = (await import('./components/Event222152Landing')).default
     return <Event222152Landing event={event} pathSlug={slug} />
   }
 
   // 149403 메인 페이지는 WebinarFormWertPage 사용 (온디맨드 모듈이어도 메인 페이지 표시)
-  if (event.code === '149403') {
+  if (String(event.code) === '149403') {
     const WebinarFormWertPage = (await import('@/app/webinarform/wert/page')).default
     return <WebinarFormWertPage />
   }
 
   // 185044 메인 페이지는 WebinarFormPatentPage 사용
-  if (event.code === '185044') {
+  if (String(event.code) === '185044') {
     const WebinarFormPatentPage = (await import('@/app/webinarform/patent/page')).default
     return <WebinarFormPatentPage />
   }
 
   // 149403이 아닌 다른 온디맨드 이벤트는 온디맨드 시청 페이지로 리다이렉트
-  if (event.module_ondemand && event.code !== '149403') {
+  if (event.module_ondemand && String(event.code) !== '149403') {
     const { redirect } = await import('next/navigation')
     redirect(`/event/${event.slug}/ondemand`)
   }

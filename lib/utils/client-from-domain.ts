@@ -92,6 +92,10 @@ export async function ensureEventBelongsToDeployment(params: {
   host?: string
   appUrl?: string
 }): Promise<boolean> {
+  const host = params.host ? normalizeHost(params.host) : null
+  // 로컬 개발(localhost)에서는 DB 조회 없이 항상 허용 (로딩 지연 방지)
+  if (host === 'localhost' || host === '127.0.0.1') return true
+
   const deploymentClientId = await getDeploymentClientId({
     host: params.host,
     appUrl: params.appUrl,

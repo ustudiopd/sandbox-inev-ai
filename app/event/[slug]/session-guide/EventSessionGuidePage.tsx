@@ -29,7 +29,7 @@ export default function EventSessionGuidePage({ event, pathSlug }: EventSessionG
         <main
           className="w-full flex justify-center items-start box-border flex-1"
           style={{
-            padding: '110px 250px 145px 250px',
+            padding: '30px 250px 65px 250px',
           }}
         >
           <div className="flex flex-col justify-center items-center w-full max-w-[1280px] mx-auto">

@@ -1,5 +1,12 @@
 # 완료된 작업 내역 (Progress)
 
+## [2026-02-11] 이벤트 222152 로그인 페이지 및 gcbio 버킷 업로드
+- ✅ 로그인 페이지: `/event/[slug]/login` (예: http://localhost:3000/event/222152/login)
+  - 페이지 1920×960 #F9F9F9, 로그인 프레임 500×540 (250, 210), Login.·아이디|이름·비밀번호|핸드폰 번호 입력, 로그인·회원가입 버튼, 날짜(2026. 03. 05 Thu) 90도 회전, Main_name·Main_poster 이미지.
+  - 홍길동 + 000-1234-5678 입력 시 쿠키(event_222152_attendee) 설정 후 메인 이동 가능 (현재 메인 연동은 일시 해제 상태).
+- ✅ gcbio 버킷 업로드: `npx tsx scripts/upload-gcbio-all-222152.ts` 실행, img/gcbio 55개 파일 Supabase Storage(gcbio) 업로드 완료.
+- ✅ 빌드 성공, memory_bank 반영, Git 푸시.
+
 ## [2026-02-11] 이벤트 222152 갤러리 페이지 빌드·메모리뱅크·푸시
 - ✅ 갤러리 페이지: `/event/[slug]/gallery` (예: http://localhost:3000/event/222152/gallery) 빌드 확인, memory_bank 반영, Git 푸시 완료. EventGalleryPage(Photo/Video 섹션·이전·다음 버튼·하단 그라데이션)·헤더 gallery variant 포함.
 
