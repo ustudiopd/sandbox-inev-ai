@@ -2,7 +2,7 @@
 
 ## [2026-02-11] 이벤트 222152 체험 프로그램·오늘의 메뉴 페이지 및 gcbio 버킷 업로드
 - ✅ EventExperienceProgramPage (`/event/222152/experience-program`): page4_top 히어로(체험 이벤트·부제), 5개 프로그램 블록(01~05: 원+구분선+텍스트+이미지), 번호별 원 색상(01 #EC1F23, 02 #45B652, 03 #F5D327, 04 #006FB7, 05 #EC1F23), 블록 간 17px·하단 200px 여백, 원·구분선 일직선 가운데 정렬.
-- ✅ 오늘의 메뉴 페이지: `/event/[slug]/menu` 라우트·EventTodayMenuPage(헤더 variant today-menu, 본문 "Nothing" 가운데), 헤더 오늘의 메뉴 링크·활성 시 6px+border-b-2.
+- ✅ 오늘의 메뉴 페이지: `/event/[slug]/menu` (예: http://localhost:3000/event/222152/menu) 라우트·EventTodayMenuPage(헤더 variant today-menu, 본문 "Nothing" 가운데), 헤더 오늘의 메뉴 링크·활성 시 6px+border-b-2. 빌드·메모리뱅크·푸시 완료.
 - ✅ gcbio 버킷 업로드 52개, 빌드 성공, memory_bank 반영, Git 푸시.
 
 ## [2026-02-11] 이벤트 222152 세션 안내 페이지(EventSessionGuidePage) 완료 및 gcbio 버킷 업로드
