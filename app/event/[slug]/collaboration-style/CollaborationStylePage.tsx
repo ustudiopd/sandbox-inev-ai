@@ -17,21 +17,11 @@ export default function CollaborationStylePage({ event, pathSlug }: Collaboratio
   const slug = pathSlug ?? event.slug
 
   return (
-    <div
-      className="w-full relative flex flex-col min-h-screen"
-      style={{
-        background: '#F9F9F9',
-      }}
-    >
+    <div className="w-full relative flex flex-col min-h-screen bg-[#F9F9F9] overflow-x-hidden">
       <div className="w-full max-w-[1920px] mx-auto flex flex-col flex-1 min-w-0">
         <Event222152Header slug={slug} variant="collaboration-style" />
 
-        <main
-          className="w-full flex justify-center items-center box-border flex-1"
-          style={{
-            padding: '150px 250px 145px 250px',
-          }}
-        >
+        <main className="w-full flex justify-center items-center box-border flex-1 px-4 sm:px-6 md:px-8 lg:px-16 xl:px-[250px] py-12 sm:py-24 md:py-[150px] pb-12 md:pb-[145px] overflow-x-hidden">
           <div className="flex items-center" style={{ gap: '77px', width: 'fit-content', maxWidth: '100%' }}>
             <div className="relative" style={{ flexShrink: 0 }}>
               <svg

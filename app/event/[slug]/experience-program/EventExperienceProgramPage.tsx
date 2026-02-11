@@ -35,12 +35,7 @@ export default function EventExperienceProgramPage({ event, pathSlug }: EventExp
   const slug = pathSlug ?? event.slug
 
   return (
-    <div
-      className="w-full relative flex flex-col min-h-screen"
-      style={{
-        background: '#F9F9F9',
-      }}
-    >
+    <div className="w-full relative flex flex-col min-h-screen bg-[#F9F9F9] overflow-x-hidden">
       <div className="w-full max-w-[1920px] mx-auto flex flex-col flex-1 min-w-0">
         <Event222152Header slug={slug} variant="experience-program" />
         <div className="w-full flex justify-center" style={{ marginTop: 30 }}>

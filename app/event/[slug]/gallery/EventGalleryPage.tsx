@@ -62,57 +62,21 @@ export default function EventGalleryPage({ event, pathSlug }: EventGalleryPagePr
   const videoCanNext = videoOffsetX > VIDEO_MAX_OFFSET
 
   return (
-    <div
-      className="w-full relative flex flex-col min-h-screen"
-      style={{
-        background: '#F9F9F9',
-      }}
-    >
+    <div className="w-full relative flex flex-col min-h-screen bg-[#F9F9F9] overflow-x-hidden">
       <div className="w-full max-w-[1920px] mx-auto flex flex-col flex-1 min-w-0">
         <Event222152Header slug={slug} variant="gallery" />
 
-        <main
-          className="w-full flex justify-center items-center box-border flex-1"
-          style={{
-            padding: '150px 250px 145px 250px',
-            overflow: 'visible',
-          }}
-        >
+        <main className="w-full flex justify-center items-center box-border flex-1 px-4 sm:px-6 md:px-8 lg:px-16 xl:px-[250px] pt-12 sm:pt-24 md:pt-[150px] pb-12 md:pb-[145px] overflow-x-hidden">
           <div
             className="flex flex-col justify-center items-center w-full relative"
             style={{ marginTop: '-450px', overflow: 'visible' }}
           >
             <h1
-              className={bebasNeue.className}
-              style={{
-                width: '932px',
-                maxWidth: '100%',
-                color: '#111',
-                textAlign: 'center',
-                fontFamily: '"Bebas Neue"',
-                fontSize: '70px',
-                fontStyle: 'normal',
-                fontWeight: 700,
-                lineHeight: '130%',
-                letterSpacing: '-0.7px',
-              }}
+              className={`${bebasNeue.className} w-full max-w-[932px] text-[#111] text-center text-3xl sm:text-4xl md:text-5xl lg:text-[70px] leading-[130%] tracking-[-0.7px]`}
             >
               2026 GCBP Leadership Workshop
             </h1>
-            <p
-              className="font-['Pretendard']"
-              style={{
-                marginTop: '24px',
-                color: '#111',
-                textAlign: 'center',
-                fontFamily: 'Pretendard',
-                fontSize: '24px',
-                fontStyle: 'normal',
-                fontWeight: 500,
-                lineHeight: '140%',
-                letterSpacing: '-0.48px',
-              }}
-            >
+            <p className="font-['Pretendard'] mt-6 text-[#111] text-center text-base sm:text-lg md:text-2xl font-medium leading-[140%] tracking-[-0.48px]">
               2026 GCBP Leadership Workshop의 추억을 만나보세요.
             </p>
             <span

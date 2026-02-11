@@ -20,39 +20,15 @@ export default function EventOverviewPage({ event, pathSlug }: EventOverviewPage
   const slug = pathSlug ?? event.slug
 
   return (
-    <div
-      className="w-full relative flex flex-col"
-      style={{
-        minHeight: '3576px',
-        background: '#FFFFFF',
-      }}
-    >
+    <div className="w-full relative flex flex-col min-h-screen bg-white overflow-x-hidden">
       <div className="w-full max-w-[1920px] mx-auto flex flex-col flex-1 min-w-0">
         <Event222152Header slug={slug} variant="overview" />
 
         {/* 본문 레이아웃: width 1920px, padding 150px 250px 145px 250px, 가운데 정렬 */}
-        <main
-          className="w-full flex justify-center items-center box-border flex-1"
-          style={{
-            padding: '150px 250px 145px 250px',
-          }}
-        >
-          <div
-            className="relative flex flex-col justify-center items-start w-full"
-            style={{ marginTop: '-550px' }}
-          >
-          {/* 배경 블록: 1920x1054, #F2F2F2, TIME TABLE 섹션 뒤에 보이도록 */}
-          <div
-            className="absolute z-0"
-            style={{
-              left: -250,
-              top: 550,
-              width: 1920,
-              height: 1010,
-              background: '#F2F2F2',
-            }}
-            aria-hidden
-          />
+        <main className="w-full flex justify-center items-center box-border flex-1 px-4 sm:px-6 md:px-8 lg:px-16 xl:px-[250px] pt-12 sm:pt-24 md:pt-[150px] pb-12 md:pb-[145px]">
+          <div className="relative flex flex-col justify-center items-start w-full max-w-[1420px] mx-auto min-w-0">
+          {/* 배경 블록: #F2F2F2 — 반응형 full width */}
+          <div className="absolute z-0 top-[550px] bottom-0 h-[1010px] min-h-0 bg-[#F2F2F2] w-screen left-1/2 -translate-x-1/2" aria-hidden />
 
           <div className="relative z-10">
           {/* 1. 초대의 글 + 본문 */}
@@ -71,13 +47,8 @@ export default function EventOverviewPage({ event, pathSlug }: EventOverviewPage
               초대의 글
             </h1>
             <p
-              className="font-['Pretendard']"
+              className="font-['Pretendard'] w-full max-w-[640px] text-[#111] text-base font-medium"
               style={{
-                width: '640px',
-                color: '#111',
-                fontSize: '16px',
-                fontStyle: 'normal',
-                fontWeight: 500,
                 lineHeight: '150%',
                 letterSpacing: '-0.32px',
               }}
@@ -318,7 +289,7 @@ export default function EventOverviewPage({ event, pathSlug }: EventOverviewPage
               <span
                 className="font-['Pretendard']"
                 style={{
-                  color: '#FFF',
+                  color: '#111',
                   textAlign: 'center',
                   fontSize: '16px',
                   fontStyle: 'normal',
