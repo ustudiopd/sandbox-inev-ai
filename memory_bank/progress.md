@@ -1,5 +1,12 @@
 # 완료된 작업 내역 (Progress)
 
+## [2026-02-11] 이벤트 222152 메인(랜딩) 페이지 개편
+- ✅ Event222152Landing: 타이틀/날짜 제거 후 Main_name.png, DATE/LOCATION 텍스트, 행사개요 버튼(overview 링크), Main_poster.png 배치. 스크롤 가능(overflow-x-hidden, min-h-[900px]).
+- ✅ Event222152Header: 로고 → Home_button.png(메인 링크), border-b·bg rgba(249,249,249,0.6), 사용자 영역 제거 후 메뉴 오른쪽 319px→619px에 홍길동 pill(0.8 scale) 추가. 메인에서 헤더 클릭 가능하도록 z-40 적용.
+- ✅ 행사개요 버튼: Link to /event/${slug}/overview. 헤더 메뉴(행사개요·협업스타일 진단·세션 안내·체험 프로그램·갤러리)는 기존대로 각 서브 페이지 링크.
+- ✅ gcbio 버킷: upload-gcbio-all-222152.ts를 img/gcbio 전체 자동 업로드로 변경, 29개 파일 업로드 완료.
+- ✅ 수정된 파일: Event222152Landing.tsx, Event222152Header.tsx, scripts/upload-gcbio-all-222152.ts, public/img/gcbio (Home_button, Main_name, Main_poster 등).
+
 ## [2026-02-10] 이벤트 222152 갤러리 페이지 구현
 - ✅ 갤러리 라우트 및 페이지 추가
   - `app/event/[slug]/gallery/page.tsx`: 이벤트 조회·code 222152 검증 후 EventGalleryPage 렌더

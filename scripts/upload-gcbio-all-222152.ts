@@ -1,8 +1,8 @@
 /**
- * 222152 이벤트 페이지에서 사용하는 gcbio 이미지 전체를 Supabase Storage(gcbio 버킷)에 업로드
+ * img/gcbio 폴더의 모든 이미지를 Supabase Storage(gcbio 버킷)에 업로드
  * 실행: npx tsx scripts/upload-gcbio-all-222152.ts
  */
-import { readFileSync, existsSync } from 'fs'
+import { readFileSync, existsSync, readdirSync } from 'fs'
 import { join } from 'path'
 import { createAdminSupabase } from '../lib/supabase/admin'
 import dotenv from 'dotenv'
@@ -12,27 +12,21 @@ dotenv.config({ path: '.env.local' })
 const BUCKET = 'gcbio'
 const IMG_DIR = join(process.cwd(), 'img', 'gcbio')
 
-/** 업로드할 파일 목록 (222152 관련 페이지에서 참조하는 파일) */
-const FILES: { path: string; contentType: string }[] = [
-  { path: 'gcbio_logo.png', contentType: 'image/png' },
-  { path: 'Title_black.png', contentType: 'image/png' },
-  { path: 'button_01.png', contentType: 'image/png' },
-  { path: 'button_02.png', contentType: 'image/png' },
-  { path: 'page4_archiving_photo1.png', contentType: 'image/png' },
-  { path: 'page4_archiving_photo2.png', contentType: 'image/png' },
-  { path: 'page4_archiving_photo3.png', contentType: 'image/png' },
-  { path: 'page4_archiving_video1.png', contentType: 'image/png' },
-  { path: 'page4_archiving_video2_2.png', contentType: 'image/png' },
-  { path: 'page3_program_2.png', contentType: 'image/png' },
-  { path: 'page3_program_3.png', contentType: 'image/png' },
-  { path: 'page3_program_4.png', contentType: 'image/png' },
-  { path: 'page3_program_5.png', contentType: 'image/png' },
-  { path: 'page3_program_6.png', contentType: 'image/png' },
-  { path: 'person1.png', contentType: 'image/png' },
-  { path: 'person2.png', contentType: 'image/png' },
-  { path: 'person3.png', contentType: 'image/png' },
-  { path: 'Timetable.svg', contentType: 'image/svg+xml' },
-]
+function getContentType(filename: string): string {
+  const ext = filename.slice(filename.lastIndexOf('.')).toLowerCase()
+  if (ext === '.svg') return 'image/svg+xml'
+  if (ext === '.jpg' || ext === '.jpeg') return 'image/jpeg'
+  if (ext === '.gif') return 'image/gif'
+  if (ext === '.webp') return 'image/webp'
+  return 'image/png'
+}
+
+function listAllFiles(dir: string): string[] {
+  if (!existsSync(dir)) return []
+  return readdirSync(dir).filter(
+    (f) => f.endsWith('.png') || f.endsWith('.jpg') || f.endsWith('.jpeg') || f.endsWith('.gif') || f.endsWith('.webp') || f.endsWith('.svg')
+  )
+}
 
 async function ensureBucket(admin: ReturnType<typeof createAdminSupabase>) {
   const { data: buckets, error: listError } = await admin.storage.listBuckets()
@@ -59,12 +53,16 @@ async function uploadAll() {
   const admin = createAdminSupabase()
   await ensureBucket(admin)
 
-  for (const { path: filePath, contentType } of FILES) {
+  const files = listAllFiles(IMG_DIR)
+  if (files.length === 0) {
+    console.warn('img/gcbio에 업로드할 이미지가 없습니다.')
+    return
+  }
+  console.log('업로드 대상:', files.length, '개')
+
+  for (const filePath of files) {
     const localPath = join(IMG_DIR, filePath)
-    if (!existsSync(localPath)) {
-      console.warn('파일 없음, 스킵:', filePath)
-      continue
-    }
+    const contentType = getContentType(filePath)
     const buffer = readFileSync(localPath)
     const { error } = await admin.storage.from(BUCKET).upload(filePath, buffer, {
       contentType,

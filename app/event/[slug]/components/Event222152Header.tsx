@@ -2,7 +2,6 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
-import { getGcbioImageUrl } from '../lib/gcbio-images'
 
 interface Event222152HeaderProps {
   slug: string
@@ -22,22 +21,22 @@ export default function Event222152Header({ slug, variant = 'default' }: Event22
 
   const headerWrapperClass = isSubPage
     ? 'sticky top-0 w-full max-w-[1920px] h-[80px] mx-auto border border-black overflow-hidden z-20'
-    : 'w-full h-[80px] left-0 top-0 absolute bg-white border-b border-gray-200 overflow-hidden z-10'
+    : 'w-full h-[80px] left-0 top-0 absolute overflow-hidden border-b border-black bg-[rgba(249,249,249,0.6)] z-40'
 
   const headerBgStyle = isSubPage ? { background: 'rgba(249, 249, 249, 0.60)' } : undefined
-  const innerBorderClass = isSubPage ? '' : 'border border-black'
+  const innerBorderClass = isSubPage ? '' : ''
 
   return (
     <div className={headerWrapperClass} style={headerBgStyle}>
       <div className={`w-full max-w-[1920px] h-full mx-auto px-4 sm:px-8 md:px-16 lg:px-[250px] relative flex items-center justify-between ${innerBorderClass}`}>
-        {/* 로고 영역 - 메인으로 링크 */}
-        <Link href={`/event/${slug}`} className="w-24 sm:w-32 md:w-40 h-7 sm:h-8 md:h-9 relative overflow-hidden flex-shrink-0 block">
+        {/* 홈 버튼 - 메인으로 링크 */}
+        <Link href={`/event/${slug}`} className="w-12 h-12 sm:w-14 sm:h-14 relative overflow-hidden flex-shrink-0 block" aria-label="메인으로">
           <Image
-            src={getGcbioImageUrl('gcbio_logo.png', 2)}
-            alt="GC Biopharma"
+            src="/img/gcbio/Home_button.png"
+            alt="메인으로"
             className="object-contain"
             fill
-            sizes="(max-width: 640px) 96px, (max-width: 768px) 128px, 160px"
+            sizes="56px"
             priority
           />
         </Link>
@@ -114,13 +113,20 @@ export default function Event222152Header({ slug, variant = 'default' }: Event22
           </div>
         </div>
 
-        {/* 사용자 영역 */}
-        <div className="w-20 sm:w-24 md:w-32 flex items-center justify-end flex-shrink-0">
-          <div className="w-10 sm:w-12 md:w-14 h-5 sm:h-5 md:h-6 rounded-[100px] border border-gray-300 bg-transparent flex items-center justify-center">
-            <div className="text-center text-gray-700 text-[9px] sm:text-[10px] md:text-[11px] font-medium font-['Pretendard'] leading-5 whitespace-nowrap">
-              홍길동
-            </div>
-          </div>
+        {/* 메뉴 오른쪽 819px, 홍길동 (0.8배 축소) */}
+        <div
+          className="absolute top-1/2 hidden h-7 w-[68px] items-center justify-center rounded-[100px] border border-[#111] md:flex"
+          style={{
+            left: 'calc(50% + 619px)',
+            transform: 'translateY(-50%) scale(0.8)',
+          }}
+        >
+          <span
+            className="text-center font-['Pretendard'] text-base font-medium leading-[140%] text-[#111]"
+            style={{ letterSpacing: '-0.4px' }}
+          >
+            홍길동
+          </span>
         </div>
       </div>
     </div>
