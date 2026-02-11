@@ -1,5 +1,10 @@
 # 완료된 작업 내역 (Progress)
 
+## [2026-02-11] 빌드·메모리뱅크·푸시
+- ✅ Next.js 프로덕션 빌드 성공 (Next.js 16.0.10).
+- ✅ GCBio(222152) 엑스트라 페이지 추가 후 제거 완료(요청에 따라 롤백). Event222152Header extra variant·메뉴 및 extra 라우트/페이지 삭제 반영.
+- ✅ memory_bank/progress.md 반영, Git 푸시.
+
 ## [2026-02-11] 이벤트 222152 세션 안내·프로필 페이지 UI 수정 및 빌드·메모리뱅크 반영
 - ✅ EventSessionGuidePage (`/event/[slug]/session-guide`)
   - M1 대표이사 특강 첫 카드(허은철): 이미지+말풍선을 한 세트로 페이지 가운데 정렬. 섹션 wrapper `max-w-[644px]` → `max-w-[860px]`, 행에 `justify-center` 추가.

@@ -1,10 +1,12 @@
 import { createAdminSupabase } from '@/lib/supabase/admin'
 import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
+import { cache } from 'react'
 import { VisitLogger } from './VisitLogger'
 import { ensureEventBelongsToDeployment } from '@/lib/utils/client-from-domain'
 import type { Metadata } from 'next'
 import { headers } from 'next/headers'
+import Event222152Landing from './components/Event222152Landing'
 
 type Props = { params: Promise<{ slug: string }>; searchParams: Promise<Record<string, string | string[] | undefined>> }
 
@@ -15,6 +17,16 @@ function isNumericCode(slug: string): boolean {
   return /^\d+$/.test(slug)
 }
 
+/** 요청 단위 캐시: 동일 요청에서 이벤트 조회 1회만 수행 (메타데이터·페이지 공유) */
+const getCachedEventBySlug = cache(async (slug: string) => {
+  const admin = createAdminSupabase()
+  const query = isNumericCode(slug)
+    ? admin.from('events').select('id, code, slug, title, client_id, module_registration, module_survey, module_webinar, module_utm, module_ondemand, event_date, event_start_date, event_end_date, event_date_type').eq('code', slug).limit(1).maybeSingle()
+    : admin.from('events').select('id, code, slug, title, client_id, module_registration, module_survey, module_webinar, module_utm, module_ondemand, event_date, event_start_date, event_end_date, event_date_type').eq('slug', slug).limit(1).maybeSingle()
+  const { data } = await query
+  return data
+})
+
 /**
  * 메타데이터 생성 함수
  */
@@ -24,15 +36,9 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>
 }): Promise<Metadata> {
   const { slug } = await params
-  const admin = createAdminSupabase()
   
   try {
-    // 숫자 코드면 code로 조회, 아니면 slug로 조회
-    const query = isNumericCode(slug)
-      ? admin.from('events').select('id, code, slug').eq('code', slug).maybeSingle()
-      : admin.from('events').select('id, code, slug').eq('slug', slug).maybeSingle()
-    
-    const { data: event } = await query
+    const event = await getCachedEventBySlug(slug)
     
     // 185044 이벤트에 대한 특별 메타데이터
     if (event?.code === '185044') {
@@ -93,7 +99,7 @@ export default async function PublicEventPage({ params, searchParams }: Props) {
   const headersList = await headers()
   const host = headersList.get('host') || undefined
 
-  // 로컬 개발: localhost + 222152 접속 시 랜딩 표시 (로그인 연동 일시 해제)
+  // 로컬 개발: localhost + 222152 접속 시 DB 없이 즉시 랜딩 표시
   if (isLocalhost(host) && slug === '222152') {
     const mockEvent = {
       id: 'local-222152',
@@ -105,21 +111,13 @@ export default async function PublicEventPage({ params, searchParams }: Props) {
       event_end_date: null as string | null,
       event_date_type: 'single' as const,
     }
-    const Event222152Landing = (await import('./components/Event222152Landing')).default
     return <Event222152Landing event={mockEvent} pathSlug={slug} />
   }
 
   const q = await searchParams
-  const supabase = createAdminSupabase()
-  
-  // 숫자 코드면 code로 조회, 아니면 slug로 조회
-  const query = isNumericCode(slug)
-    ? supabase.from('events').select('id, code, slug, title, client_id, module_registration, module_survey, module_webinar, module_utm, module_ondemand, event_date, event_start_date, event_end_date, event_date_type').eq('code', slug).limit(1).single()
-    : supabase.from('events').select('id, code, slug, title, client_id, module_registration, module_survey, module_webinar, module_utm, module_ondemand, event_date, event_start_date, event_end_date, event_date_type').eq('slug', slug).limit(1).single()
-  
-  const { data: event, error } = await query
+  const event = await getCachedEventBySlug(slug)
 
-  if (error || !event) notFound()
+  if (!event) notFound()
 
   // sandbox 격리: 배포 도메인(sandbox.inev.ai 등)에서는 해당 client 이벤트만 허용
   const allowed = event.client_id ? await ensureEventBelongsToDeployment({ eventClientId: event.client_id, host }) : true
@@ -137,9 +135,8 @@ export default async function PublicEventPage({ params, searchParams }: Props) {
     return <Event175419Landing event={event} />
   }
 
-  // 222152 메인 페이지는 Event222152Landing 사용 (로그인 연동 일시 해제)
+  // 222152 메인 페이지는 Event222152Landing 사용
   if (String(event.code) === '222152') {
-    const Event222152Landing = (await import('./components/Event222152Landing')).default
     return <Event222152Landing event={event} pathSlug={slug} />
   }
 
