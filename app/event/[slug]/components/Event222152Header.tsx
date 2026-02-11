@@ -5,7 +5,7 @@ import Link from 'next/link'
 
 interface Event222152HeaderProps {
   slug: string
-  variant?: 'default' | 'overview' | 'collaboration-style' | 'session-guide' | 'experience-program' | 'gallery'
+  variant?: 'default' | 'overview' | 'collaboration-style' | 'session-guide' | 'experience-program' | 'today-menu' | 'gallery'
 }
 
 const menuItemClass =
@@ -16,8 +16,9 @@ export default function Event222152Header({ slug, variant = 'default' }: Event22
   const isCollaborationStyle = variant === 'collaboration-style'
   const isSessionGuide = variant === 'session-guide'
   const isExperienceProgram = variant === 'experience-program'
+  const isTodayMenu = variant === 'today-menu'
   const isGallery = variant === 'gallery'
-  const isSubPage = isOverview || isCollaborationStyle || isSessionGuide || isExperienceProgram || isGallery
+  const isSubPage = isOverview || isCollaborationStyle || isSessionGuide || isExperienceProgram || isTodayMenu || isGallery
 
   const headerWrapperClass = isSubPage
     ? 'sticky top-0 h-[80px] w-[1920px] max-w-full mx-auto border-b border-black overflow-hidden z-20'
@@ -82,7 +83,7 @@ export default function Event222152Header({ slug, variant = 'default' }: Event22
               </Link>
             )}
           </div>
-          <div className="h-8 py-1.5 flex justify-center items-center">
+          <div className={`h-8 py-1.5 flex justify-center items-center ${isExperienceProgram ? 'pb-[6px] border-b-2 border-black' : ''}`}>
             {isExperienceProgram ? (
               <span className={`${menuItemClass} text-gray-900`}>체험 프로그램</span>
             ) : (
@@ -95,8 +96,18 @@ export default function Event222152Header({ slug, variant = 'default' }: Event22
               </Link>
             )}
           </div>
-          <div className="h-8 py-1.5 flex justify-center items-center">
-            <div className={`${menuItemClass} text-gray-700`}>오늘의 메뉴</div>
+          <div className={`h-8 py-1.5 flex justify-center items-center ${isTodayMenu ? 'pb-[6px] border-b-2 border-black' : ''}`}>
+            {isTodayMenu ? (
+              <span className={`${menuItemClass} text-gray-900`}>오늘의 메뉴</span>
+            ) : (
+              <Link
+                href={`/event/${slug}/menu`}
+                className={`${menuItemClass} text-gray-700 cursor-pointer block w-full h-full flex items-center justify-center hover:text-gray-900`}
+                scroll={true}
+              >
+                오늘의 메뉴
+              </Link>
+            )}
           </div>
           <div className="h-8 py-1.5 flex justify-center items-center">
             {isGallery ? (

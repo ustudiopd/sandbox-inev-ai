@@ -1,10 +1,25 @@
 'use client'
 
-import { Outfit } from 'next/font/google'
+import Image from 'next/image'
+import { Bebas_Neue } from 'next/font/google'
 import Event222152Header from '../components/Event222152Header'
 import { getGcbioImageUrl } from '../lib/gcbio-images'
 
-const outfit = Outfit({ weight: '500', subsets: ['latin'], display: 'swap' })
+const bebasNeue = Bebas_Neue({ weight: '400', subsets: ['latin'], display: 'swap' })
+
+const LINE_SVG = (
+  <svg xmlns="http://www.w3.org/2000/svg" width={8} height={305} viewBox="0 0 8 305" fill="none" className="flex-shrink-0 block" style={{ marginTop: 24 }}>
+    <path d="M3.32807 304.354C3.52334 304.549 3.83992 304.549 4.03518 304.354L7.21716 301.172C7.41242 300.976 7.41242 300.66 7.21716 300.464C7.0219 300.269 6.70532 300.269 6.51005 300.464L3.68163 303.293L0.8532 300.464C0.657938 300.269 0.341356 300.269 0.146094 300.464C-0.0491686 300.66 -0.0491686 300.976 0.146094 301.172L3.32807 304.354ZM3.68164 0L3.18164 -2.18557e-08L3.18163 304L3.68163 304L4.18163 304L4.18164 2.18557e-08L3.68164 0Z" fill="black" />
+  </svg>
+)
+
+const PROGRAM_ITEMS = [
+  { num: '01', circleFill: '#EC1F23', title: '역사의 주인공', body: <>모든 리더가 주연이 되어 직접 GC녹십자의 히스토리인<br />&apos;필모그래피&apos;를 따라가보세요!<br />우리 모두가 함께 만든 필모그래피의 주연은<br />바로 당신입니다.</>, tip: '*TIP : 삐!! 앗 부딪히지 않게 조심조심 움직이셔야 합니다!', image: 'page4_program2.png' },
+  { num: '02', circleFill: '#45B652', title: '모두가 주인공', body: <>모든 리더가 주연이 되어 하나의 GC녹십자를 만들어갑니다.<br />포토 키오스크 앞에서 사진을 촬영 후 출력되는 사진을 나누어<br />한 장은 포토월에, 한 장은 개인 소장하세요!</>, tip: '*Tip : 촬영된 이미지로 사원증 이미지를 바꿔보는 것은 어때요?', image: 'page4_program3.png' },
+  { num: '03', circleFill: '#F5D327', title: '홀인원 주인공', body: <>골프 퍼팅샷을 통해 GC녹십자가 달성한 3억불과<br />앞으로 달성할 4억불, 5억불 홀에 공을 차례로 넣는<br />퍼팅 골프 게임.</>, tip: '*TIP : 골프는 자세와 호흡이라고 배웠습니다. 실력 발휘 부탁드립니다.', image: 'page4_program4.png' },
+  { num: '04', circleFill: '#006FB7', title: '오늘의 주인공', body: <>주연인 당신을 위해 준비한<br />레드카펫과 프레스월을 모티브로 한 포토존 공간으로</>, tip: '*TIP : 우리의 주연은 바로 당신! 포즈는 자신감!', image: 'page4_program5.png' },
+  { num: '05', circleFill: '#EC1F23', title: '럭키 드로우', body: <>진짜 주연으로 거듭나는 순간은<br />놓칠 수 없는 경품의 당첨 순간 아닐까요?<br />다양한 경품과 함께하는 럭키드로우입니다.</>, tip: '*TIP : 체험 프로그램에 모두 참여하시면 응모기회가 한번 더 생긴다는 사실! 놓치지 마세요', image: 'page4_program6.png' },
+]
 
 interface EventExperienceProgramPageProps {
   event: {
@@ -28,546 +43,149 @@ export default function EventExperienceProgramPage({ event, pathSlug }: EventExp
     >
       <div className="w-full max-w-[1920px] mx-auto flex flex-col flex-1 min-w-0">
         <Event222152Header slug={slug} variant="experience-program" />
-
-        <main
-          className="w-full flex justify-center items-center box-border flex-1"
-          style={{
-            padding: '150px 250px 145px 250px',
-          }}
-        >
-          <div
-            className="flex flex-col justify-center items-center w-full self-stretch"
-            style={{ marginTop: '-30px' }}
-          >
-            <h1
-              className="font-['Pretendard'] self-stretch"
-              style={{
-                color: '#111',
-                textAlign: 'center',
-                fontFamily: 'Pretendard',
-                fontSize: '44px',
-                fontStyle: 'normal',
-                fontWeight: 600,
-                lineHeight: '140%',
-                letterSpacing: '-0.88px',
-              }}
-            >
-              체험 이벤트
-            </h1>
-            <p
-              className="font-['Pretendard'] mt-6"
-              style={{
-                color: '#111',
-                textAlign: 'center',
-                fontFamily: 'Pretendard',
-                fontSize: '24px',
-                fontStyle: 'normal',
-                fontWeight: 500,
-                lineHeight: '140%',
-                letterSpacing: '-0.48px',
-              }}
-            >
-              체험 이벤트에 모두 참여하시면 럭키드로우 추첨권 1장을 더 드립니다! 확률을 높여보세요!
-            </p>
-
-            {/* 이미지 + 다크 박스 섹션: 부제 아래 70px, 가운데 정렬 */}
+        <div className="w-full flex justify-center" style={{ marginTop: 30 }}>
+          <div className="relative w-full flex justify-center">
+            <Image
+              src={getGcbioImageUrl('page4_top.png')}
+              alt=""
+              width={1421}
+              height={320}
+              className="max-w-full h-auto object-cover object-center"
+              unoptimized
+            />
             <div
-              className="flex flex-col sm:flex-row justify-center items-center flex-shrink-0"
-              style={{ marginTop: '70px', gap: 0 }}
+              className="absolute inset-0 flex flex-col items-center justify-center text-center"
+              style={{ width: 1421, maxWidth: '100%', left: '50%', transform: 'translateX(-50%)' }}
             >
-              {/* 왼쪽: 이미지 640x340, cover */}
-              <div
-                className="relative flex-shrink-0 overflow-hidden bg-[#d3d3d3]"
+              <h1
+                className="font-['Pretendard'] self-stretch"
                 style={{
-                  width: 640,
-                  height: 340,
-                  backgroundImage: `url(${getGcbioImageUrl('page3_program_2.png')})`,
-                  backgroundSize: 'cover',
-                  backgroundPosition: '50%',
-                  backgroundRepeat: 'no-repeat',
-                }}
-              />
-              {/* 오른쪽: 다크 박스 - 콘텐츠 그룹 가로 가운데 정렬 */}
-              <div
-                className="flex flex-shrink-0 flex-col justify-center items-center"
-                style={{
-                  width: 640,
-                  height: 340,
-                  padding: '91px 80px',
-                  gap: 20,
-                  background: '#242424',
+                  color: '#FFF',
+                  textAlign: 'center',
+                  fontSize: 44,
+                  fontStyle: 'normal',
+                  fontWeight: 600,
+                  lineHeight: '140%',
+                  letterSpacing: '-0.88px',
                 }}
               >
+                체험 이벤트
+              </h1>
+              <p
+                className="font-['Pretendard'] self-stretch mt-6"
+                style={{
+                  color: '#FFF',
+                  textAlign: 'center',
+                  fontSize: 24,
+                  fontStyle: 'normal',
+                  fontWeight: 500,
+                  lineHeight: '140%',
+                  letterSpacing: '-0.48px',
+                }}
+              >
+                체험 이벤트에 모두 참여하시면 럭키드로우 추첨권 1장을 더 드립니다! 확률을 높여보세요!
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* 체험 프로그램 5개: 원+구분선 일직선 가운데 정렬, 블록 간 17px */}
+        <section className="w-full flex flex-col items-center" style={{ marginTop: 170 }}>
+          <div className="w-full flex flex-col items-center" style={{ width: 64 + 79 + 420 + 80 + 565 }}>
+            {PROGRAM_ITEMS.map((item, index) => (
+              <div
+                key={item.num}
+                className="flex flex-row items-start w-full"
+                style={{ marginTop: index === 0 ? 0 : 17 }}
+              >
+                {/* 원 + 원 아래 24px에 세로 구분선 */}
+                <div className="flex-shrink-0 flex flex-col items-center">
+                  <div className="relative flex items-center justify-center" style={{ width: 64, height: 64 }}>
+                    <svg xmlns="http://www.w3.org/2000/svg" width={64} height={64} viewBox="0 0 64 64" fill="none" className="flex-shrink-0 block">
+                      <circle cx="32" cy="32" r="32" fill={item.circleFill} />
+                    </svg>
+                    <span
+                      className={`${bebasNeue.className} absolute inset-0 flex items-center justify-center text-white`}
+                      style={{
+                        fontSize: 34,
+                        fontStyle: 'normal',
+                        fontWeight: 700,
+                        lineHeight: '140%',
+                        letterSpacing: '-0.68px',
+                        marginTop: 1,
+                      }}
+                    >
+                      {item.num}
+                    </span>
+                  </div>
+                  {index < PROGRAM_ITEMS.length - 1 ? LINE_SVG : null}
+                </div>
+
+                {/* 텍스트 블록: 원으로부터 79px 오른쪽, 32px 위 (박스만 넓혀 글자 잘림 방지) */}
                 <div
-                  className="flex flex-col items-start"
-                  style={{ transform: 'translate(-50px, -5px)', maxWidth: 328 }}
+                  className="flex-shrink-0 flex flex-col"
+                  style={{ marginLeft: 79, marginTop: -32, minWidth: 347, maxWidth: 420 }}
                 >
-                  <div className="flex w-full max-w-[328px] flex-col items-start" style={{ gap: 0 }}>
-                  <span
-                    className={outfit.className}
+                  <h2
+                    className="font-['Pretendard']"
                     style={{
-                      color: '#949494',
-                      fontSize: '42px',
-                      fontStyle: 'normal',
-                      fontWeight: 500,
-                      lineHeight: '140%',
-                      letterSpacing: '-0.84px',
-                    }}
-                  >
-                    01
-                  </span>
-                  <span
-                    style={{
-                      marginTop: -2,
-                      color: '#FFF',
-                      fontFamily: 'Pretendard',
-                      fontSize: '24px',
+                      color: '#111',
+                      fontSize: 24,
                       fontStyle: 'normal',
                       fontWeight: 600,
                       lineHeight: '140%',
                       letterSpacing: '-0.48px',
                     }}
                   >
-                    역사의 주인공
-                  </span>
-                  </div>
-                <p
-                  className="font-['Pretendard'] m-0 w-full max-w-[328px]"
-                  style={{
-                    marginTop: 18,
-                    color: '#FFF',
-                    fontFamily: 'Pretendard',
-                    fontSize: '16px',
-                    fontStyle: 'normal',
-                    fontWeight: 400,
-                    lineHeight: '140%',
-                    letterSpacing: '-0.32px',
-                    textAlign: 'left',
-                  }}
-                >
-                  모든 리더가 주연이 되어 직접 GC녹십자의 히스토리인
-                  <br />
-                  &apos;필모그래피&apos;를 따라가보세요!
-                  <br />
-                  우리 모두가 함께 만든 필모그래피의 주연은
-                  <br />
-                  바로 당신입니다.
-                </p>
-                <p
-                  className="font-['Pretendard'] m-0 w-full max-w-[328px]"
-                  style={{
-                    marginTop: 8,
-                    color: '#F0F0F0',
-                    fontFamily: 'Pretendard',
-                    fontSize: '14px',
-                    fontStyle: 'normal',
-                    fontWeight: 200,
-                    lineHeight: '140%',
-                    letterSpacing: '-0.28px',
-                    textAlign: 'left',
-                  }}
-                >
-                  *TIP : 삐!! 앗 부딪히지 않게 조심조심 움직이셔야 합니다!
-                </p>
-                </div>
-              </div>
-            </div>
-
-            {/* 두 번째 블록: 70px 간격 */}
-            <div
-              className="flex flex-col sm:flex-row justify-center items-center flex-shrink-0"
-              style={{ marginTop: '70px', gap: 0 }}
-            >
-              <div
-                className="relative flex-shrink-0 overflow-hidden bg-[#d3d3d3]"
-                style={{
-                  width: 640,
-                  height: 340,
-                  backgroundImage: `url(${getGcbioImageUrl('page3_program_3.png')})`,
-                  backgroundSize: 'cover',
-                  backgroundPosition: '50%',
-                  backgroundRepeat: 'no-repeat',
-                }}
-              />
-              <div
-                className="flex flex-shrink-0 flex-col justify-center items-center"
-                style={{
-                  width: 640,
-                  height: 340,
-                  padding: '91px 80px',
-                  gap: 20,
-                  background: '#242424',
-                }}
-              >
-                <div
-                  className="flex flex-col items-start"
-                  style={{ transform: 'translate(-30px, -5px)', maxWidth: 480 }}
-                >
-                  <div className="flex w-full max-w-[480px] flex-col items-start" style={{ gap: 0 }}>
-                    <span
-                      className={outfit.className}
-                      style={{
-                        color: '#949494',
-                        fontSize: '42px',
-                        fontStyle: 'normal',
-                        fontWeight: 500,
-                        lineHeight: '140%',
-                        letterSpacing: '-0.84px',
-                      }}
-                    >
-                      02
-                    </span>
-                    <span
-                      style={{
-                        marginTop: -2,
-                        color: '#FFF',
-                        fontFamily: 'Pretendard',
-                        fontSize: '24px',
-                        fontStyle: 'normal',
-                        fontWeight: 600,
-                        lineHeight: '140%',
-                        letterSpacing: '-0.48px',
-                      }}
-                    >
-                      모두가 주인공
-                    </span>
-                  </div>
+                    {item.title}
+                  </h2>
                   <p
-                    className="font-['Pretendard'] m-0 w-full max-w-[480px]"
+                    className="font-['Pretendard'] mt-5"
                     style={{
-                      marginTop: 18,
-                      color: '#FFF',
-                      fontFamily: 'Pretendard',
-                      fontSize: '16px',
+                      color: '#111',
+                      fontSize: 16,
                       fontStyle: 'normal',
-                      fontWeight: 400,
+                      fontWeight: 500,
                       lineHeight: '140%',
                       letterSpacing: '-0.32px',
-                      textAlign: 'left',
+                      maxWidth: 420,
                     }}
                   >
-                    모든 리더가 주연이 되어 하나의 GC녹십자를 만들어갑니다.
-                    <br />
-                    포토 키오스크 앞에서 사진을 촬영 후 출력되는 사진을 나누어
-                    <br />
-                    한 장은 포토월에, 한 장은 개인 소장하세요!
+                    {item.body}
                   </p>
                   <p
-                    className="font-['Pretendard'] m-0 w-full max-w-[480px]"
+                    className="font-['Pretendard']"
                     style={{
-                      marginTop: 8,
-                      color: '#F0F0F0',
-                      fontFamily: 'Pretendard',
-                      fontSize: '14px',
+                      marginTop: 17,
+                      color: '#949494',
+                      fontSize: 14,
                       fontStyle: 'normal',
-                      fontWeight: 200,
+                      fontWeight: 300,
                       lineHeight: '140%',
                       letterSpacing: '-0.28px',
-                      textAlign: 'left',
+                      maxWidth: 400,
                     }}
                   >
-                    *Tip : 촬영된 이미지로 사원증 이미지를 바꿔보는 것은 어때요?
+                    {item.tip}
                   </p>
                 </div>
-              </div>
-            </div>
 
-            {/* 세 번째 블록: 70px 간격 */}
-            <div
-              className="flex flex-col sm:flex-row justify-center items-center flex-shrink-0"
-              style={{ marginTop: '70px', gap: 0 }}
-            >
-              <div
-                className="relative flex-shrink-0 overflow-hidden bg-[#d3d3d3]"
-                style={{
-                  width: 640,
-                  height: 340,
-                  backgroundImage: `url(${getGcbioImageUrl('page3_program_4.png')})`,
-                  backgroundSize: 'cover',
-                  backgroundPosition: '50%',
-                  backgroundRepeat: 'no-repeat',
-                }}
-              />
-              <div
-                className="flex flex-shrink-0 flex-col justify-center items-center"
-                style={{
-                  width: 640,
-                  height: 340,
-                  padding: '91px 80px',
-                  gap: 20,
-                  background: '#242424',
-                }}
-              >
-                <div
-                  className="flex flex-col items-start"
-                  style={{ transform: 'translate(-31px, -5px)', maxWidth: 480 }}
-                >
-                  <div className="flex w-full max-w-[480px] flex-col items-start" style={{ gap: 0 }}>
-                    <span
-                      className={outfit.className}
-                      style={{
-                        color: '#949494',
-                        fontSize: '42px',
-                        fontStyle: 'normal',
-                        fontWeight: 500,
-                        lineHeight: '140%',
-                        letterSpacing: '-0.84px',
-                      }}
-                    >
-                      03
-                    </span>
-                    <span
-                      style={{
-                        marginTop: -2,
-                        color: '#FFF',
-                        fontFamily: 'Pretendard',
-                        fontSize: '24px',
-                        fontStyle: 'normal',
-                        fontWeight: 600,
-                        lineHeight: '140%',
-                        letterSpacing: '-0.48px',
-                      }}
-                    >
-                      홀인원 주인공
-                    </span>
-                  </div>
-                  <p
-                    className="font-['Pretendard'] m-0 w-full max-w-[480px]"
-                    style={{
-                      marginTop: 18,
-                      color: '#FFF',
-                      fontFamily: 'Pretendard',
-                      fontSize: '16px',
-                      fontStyle: 'normal',
-                      fontWeight: 400,
-                      lineHeight: '140%',
-                      letterSpacing: '-0.32px',
-                      textAlign: 'left',
-                    }}
-                  >
-                    골프 퍼팅샷을 통해 GC녹십자가 달성한 3억불과
-                    <br />
-                    앞으로 달성할 4억불, 5억불 홀에 공을 차례로 넣는
-                    <br />
-                    퍼팅 골프 게임.
-                  </p>
-                  <p
-                    className="font-['Pretendard'] m-0 w-full max-w-[480px]"
-                    style={{
-                      marginTop: 8,
-                      color: '#F0F0F0',
-                      fontFamily: 'Pretendard',
-                      fontSize: '14px',
-                      fontStyle: 'normal',
-                      fontWeight: 200,
-                      lineHeight: '140%',
-                      letterSpacing: '-0.28px',
-                      textAlign: 'left',
-                    }}
-                  >
-                    *TIP : 골프는 자세와 호흡이라고 배웠습니다. 실력 발휘 부탁드립니다.
-                  </p>
+                {/* 이미지: 텍스트로부터 80px 오른쪽, 565×270 */}
+                <div className="flex-shrink-0 overflow-hidden" style={{ marginLeft: 80, marginTop: -60, width: 565, height: 270 }}>
+                  <Image
+                    src={getGcbioImageUrl(item.image)}
+                    alt=""
+                    width={565}
+                    height={270}
+                    className="w-full h-full object-cover"
+                    unoptimized
+                  />
                 </div>
               </div>
-            </div>
-
-            {/* 네 번째 블록: 70px 간격 */}
-            <div
-              className="flex flex-col sm:flex-row justify-center items-center flex-shrink-0"
-              style={{ marginTop: '70px', gap: 0 }}
-            >
-              <div
-                className="relative flex-shrink-0 overflow-hidden bg-[#d3d3d3]"
-                style={{
-                  width: 640,
-                  height: 340,
-                  backgroundImage: `url(${getGcbioImageUrl('page3_program_5.png')})`,
-                  backgroundSize: 'cover',
-                  backgroundPosition: '50%',
-                  backgroundRepeat: 'no-repeat',
-                }}
-              />
-              <div
-                className="flex flex-shrink-0 flex-col justify-center items-center"
-                style={{
-                  width: 640,
-                  height: 340,
-                  padding: '91px 80px',
-                  gap: 20,
-                  background: '#242424',
-                }}
-              >
-                <div
-                  className="flex flex-col items-start"
-                  style={{ transform: 'translate(-56px, -5px)', maxWidth: 480 }}
-                >
-                  <div className="flex w-full max-w-[480px] flex-col items-start" style={{ gap: 0 }}>
-                    <span
-                      className={outfit.className}
-                      style={{
-                        color: '#949494',
-                        fontSize: '42px',
-                        fontStyle: 'normal',
-                        fontWeight: 500,
-                        lineHeight: '140%',
-                        letterSpacing: '-0.84px',
-                      }}
-                    >
-                      04
-                    </span>
-                    <span
-                      style={{
-                        marginTop: -2,
-                        color: '#FFF',
-                        fontFamily: 'Pretendard',
-                        fontSize: '24px',
-                        fontStyle: 'normal',
-                        fontWeight: 600,
-                        lineHeight: '140%',
-                        letterSpacing: '-0.48px',
-                      }}
-                    >
-                      오늘의 주인공
-                    </span>
-                  </div>
-                  <p
-                    className="font-['Pretendard'] m-0 w-full max-w-[480px]"
-                    style={{
-                      marginTop: 18,
-                      color: '#FFF',
-                      fontFamily: 'Pretendard',
-                      fontSize: '16px',
-                      fontStyle: 'normal',
-                      fontWeight: 400,
-                      lineHeight: '140%',
-                      letterSpacing: '-0.32px',
-                      textAlign: 'left',
-                    }}
-                  >
-                    주연인 당신을 위해 준비한
-                    <br />
-                    레드카펫과 프레스월을 모티브로 한 포토존 공간으로
-                  </p>
-                  <p
-                    className="font-['Pretendard'] m-0 w-full max-w-[480px]"
-                    style={{
-                      marginTop: 8,
-                      color: '#F0F0F0',
-                      fontFamily: 'Pretendard',
-                      fontSize: '14px',
-                      fontStyle: 'normal',
-                      fontWeight: 200,
-                      lineHeight: '140%',
-                      letterSpacing: '-0.28px',
-                      textAlign: 'left',
-                    }}
-                  >
-                    *TIP : 우리의 주연은 바로 당신! 포즈는 자신감!
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* 다섯 번째 블록: 70px 간격 */}
-            <div
-              className="flex flex-col sm:flex-row justify-center items-center flex-shrink-0"
-              style={{ marginTop: '70px', gap: 0 }}
-            >
-              <div
-                className="relative flex-shrink-0 overflow-hidden bg-[#d3d3d3]"
-                style={{
-                  width: 640,
-                  height: 340,
-                  backgroundImage: `url(${getGcbioImageUrl('page3_program_6.png')})`,
-                  backgroundSize: 'cover',
-                  backgroundPosition: '50%',
-                  backgroundRepeat: 'no-repeat',
-                }}
-              />
-              <div
-                className="flex flex-shrink-0 flex-col justify-center items-center"
-                style={{
-                  width: 640,
-                  height: 340,
-                  padding: '91px 80px',
-                  gap: 20,
-                  background: '#242424',
-                }}
-              >
-                <div
-                  className="flex flex-col items-start"
-                  style={{ transform: 'translate(21px, -5px)', maxWidth: 480 }}
-                >
-                  <div className="flex w-full max-w-[480px] flex-col items-start" style={{ gap: 0 }}>
-                    <span
-                      className={outfit.className}
-                      style={{
-                        color: '#949494',
-                        fontSize: '42px',
-                        fontStyle: 'normal',
-                        fontWeight: 500,
-                        lineHeight: '140%',
-                        letterSpacing: '-0.84px',
-                      }}
-                    >
-                      05
-                    </span>
-                    <span
-                      style={{
-                        marginTop: -2,
-                        color: '#FFF',
-                        fontFamily: 'Pretendard',
-                        fontSize: '24px',
-                        fontStyle: 'normal',
-                        fontWeight: 600,
-                        lineHeight: '140%',
-                        letterSpacing: '-0.48px',
-                      }}
-                    >
-                      럭키 드로우
-                    </span>
-                  </div>
-                  <p
-                    className="font-['Pretendard'] m-0 w-full max-w-[480px]"
-                    style={{
-                      marginTop: 18,
-                      color: '#FFF',
-                      fontFamily: 'Pretendard',
-                      fontSize: '16px',
-                      fontStyle: 'normal',
-                      fontWeight: 400,
-                      lineHeight: '140%',
-                      letterSpacing: '-0.32px',
-                      textAlign: 'left',
-                    }}
-                  >
-                    진짜 주연으로 거듭나는 순간은
-                    <br />
-                    놓칠 수 없는 경품의 당첨 순간 아닐까요?
-                    <br />
-                    다양한 경품과 함께하는 럭키드로우입니다.
-                  </p>
-                  <p
-                    className="font-['Pretendard'] m-0 w-full max-w-[480px]"
-                    style={{
-                      marginTop: 8,
-                      color: '#F0F0F0',
-                      fontFamily: 'Pretendard',
-                      fontSize: '14px',
-                      fontStyle: 'normal',
-                      fontWeight: 200,
-                      lineHeight: '140%',
-                      letterSpacing: '-0.28px',
-                      textAlign: 'left',
-                    }}
-                  >
-                    *TIP : 체험 프로그램에 모두 참여하시면 응모기회가 한번 더 생긴다는 사실! 놓치지 마세요
-                  </p>
-                </div>
-              </div>
-            </div>
+            ))}
           </div>
-        </main>
+          <div style={{ height: 200 }} aria-hidden />
+        </section>
       </div>
     </div>
   )
