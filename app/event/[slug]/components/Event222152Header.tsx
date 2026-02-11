@@ -69,7 +69,7 @@ export default function Event222152Header({ slug, variant = 'default' }: Event22
               </Link>
             )}
           </div>
-          <div className="h-8 py-1.5 flex justify-center items-center">
+          <div className={`h-8 py-1.5 flex justify-center items-center ${isSessionGuide ? 'border-b-2 border-black' : ''}`}>
             {isSessionGuide ? (
               <span className={`${menuItemClass} text-gray-900`}>세션 안내</span>
             ) : (

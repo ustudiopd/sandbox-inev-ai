@@ -1,5 +1,10 @@
 # 완료된 작업 내역 (Progress)
 
+## [2026-02-11] 이벤트 222152 세션 안내 페이지(EventSessionGuidePage) 완료 및 gcbio 버킷 업로드
+- ✅ EventSessionGuidePage (`/event/222152/session-guide`): 세션 안내 히어로, M1 대표이사 특강(허은철·배백식 카드), 구분선, M3 GCBP 우수사례발표(3행: 유성근·황정운·안기범), 크로스 스테이지 ㅣ 무대 프로그램(황성현 연사 카드·현/전 직함 2열 배치). 이미지 getGcbioImageUrl(page3_person1~6, page2_photo2 등). 구분선 1420×1px #EBEBEC 가운데 정렬·배백식–M3·안기범–크로스스테이지 간격 조정.
+- ✅ gcbio 버킷 업로드: `npx tsx scripts/upload-gcbio-all-222152.ts` 실행, img/gcbio 45개 파일 Supabase Storage(gcbio) 업로드 완료.
+- ✅ 빌드 성공, memory_bank 반영, Git 푸시.
+
 ## [2026-02-11] 이벤트 222152 협업스타일 진단 페이지 구현 및 gcbio 버킷 업로드
 - ✅ CollaborationStylePage: 제목/부제 왼쪽 정렬, 구분선(437px), Click 버튼, 원형 이미지(page2_photo2, getGcbioImageUrl), 말풍선·빨간원·초록파란곡선·노란원 등 장식 SVG 배치. 헤더 협업스타일 선택 시 하단 2px 선.
 - ✅ gcbio 버킷 업로드: img/gcbio 42개 파일 Supabase Storage(gcbio) 업로드 완료. 빌드 성공, memory_bank 반영, Git 푸시.

@@ -9,6 +9,7 @@ const FALLBACK_BASE = 'https://gbkivxdlebdtfudexbga.supabase.co'
 
 export function getGcbioImageUrl(filename: string, cacheVersion?: number): string {
   const base = process.env.NEXT_PUBLIC_SUPABASE_URL || FALLBACK_BASE
-  const url = `${base}/storage/v1/object/public/${BUCKET}/${filename}`
+  const encoded = encodeURIComponent(filename)
+  const url = `${base}/storage/v1/object/public/${BUCKET}/${encoded}`
   return cacheVersion != null ? `${url}?v=${cacheVersion}` : url
 }
