@@ -1,5 +1,9 @@
 # 완료된 작업 내역 (Progress)
 
+## [2026-02-11] 이벤트 222152 협업스타일 진단 페이지 구현 및 gcbio 버킷 업로드
+- ✅ CollaborationStylePage: 제목/부제 왼쪽 정렬, 구분선(437px), Click 버튼, 원형 이미지(page2_photo2, getGcbioImageUrl), 말풍선·빨간원·초록파란곡선·노란원 등 장식 SVG 배치. 헤더 협업스타일 선택 시 하단 2px 선.
+- ✅ gcbio 버킷 업로드: img/gcbio 42개 파일 Supabase Storage(gcbio) 업로드 완료. 빌드 성공, memory_bank 반영, Git 푸시.
+
 ## [2026-02-11] 이벤트 222152 행사개요 페이지 UI 조정 및 gcbio 버킷 업로드
 - ✅ EventOverviewPage UI 조정
   - "스케쥴 변경 예정" 오버레이 글씨 50px → 45px

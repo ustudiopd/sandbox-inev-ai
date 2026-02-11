@@ -56,7 +56,7 @@ export default function Event222152Header({ slug, variant = 'default' }: Event22
               </Link>
             )}
           </div>
-          <div className="h-8 py-1.5 flex justify-center items-center">
+          <div className={`h-8 py-1.5 flex justify-center items-center ${isCollaborationStyle ? 'border-b-2 border-black' : ''}`}>
             {isCollaborationStyle ? (
               <span className={`${menuItemClass} text-gray-900`}>협업스타일 진단</span>
             ) : (
