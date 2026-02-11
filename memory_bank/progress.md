@@ -1,5 +1,14 @@
 # 완료된 작업 내역 (Progress)
 
+## [2026-02-11] 이벤트 222152 프로필(About Me) 페이지 및 홍길동 버튼 연동
+- ✅ 프로필 라우트·페이지: `/event/[slug]/profile` (예: http://localhost:3000/event/222152/profile)
+  - `app/event/[slug]/profile/page.tsx`: 이벤트 조회·code 222152 검증·EventProfilePage 렌더
+  - `app/event/[slug]/profile/EventProfilePage.tsx`: About Me 제목(가운데), 원형 카드 4개(페이지 가운데 정렬), Home 버튼(메인 홈 링크)
+- ✅ 원형 카드 4개: 240×239px, 20px 간격, 테두리 색 1번 #F5D327 / 2번 #006FB7 / 3번 #EC1F23 / 4번 #45B652. 1번 부서 소속·디자인팀, 2번 이름(동명이인 1,2로 표시)·홍길동(1), 3번 조 편성 내용·-, 4번 협업 진단 테스트 결과·-.
+- ✅ Home 버튼: 원 세트 아래 98px, 500×60px·border-radius 100px·bg #111, "Home" 텍스트(흰색), 클릭 시 `/event/${slug}` 메인 랜딩으로 이동.
+- ✅ Event222152Header: `variant="profile"` 추가, 홍길동 영역을 Link(`/event/${slug}/profile`)로 변경. 프로필 페이지일 때만 버튼 채워진 스타일(bg #111, text white). 모든 서브페이지에서 동일 링크.
+- ✅ 빌드 성공, memory_bank 반영, Git 푸시.
+
 ## [2026-02-11] 이벤트 222152 체험 프로그램·오늘의 메뉴 페이지 및 gcbio 버킷 업로드
 - ✅ EventExperienceProgramPage (`/event/222152/experience-program`): page4_top 히어로(체험 이벤트·부제), 5개 프로그램 블록(01~05: 원+구분선+텍스트+이미지), 번호별 원 색상(01 #EC1F23, 02 #45B652, 03 #F5D327, 04 #006FB7, 05 #EC1F23), 블록 간 17px·하단 200px 여백, 원·구분선 일직선 가운데 정렬.
 - ✅ 오늘의 메뉴 페이지: `/event/[slug]/menu` (예: http://localhost:3000/event/222152/menu) 라우트·EventTodayMenuPage(헤더 variant today-menu, 본문 "Nothing" 가운데), 헤더 오늘의 메뉴 링크·활성 시 6px+border-b-2. 빌드·메모리뱅크·푸시 완료.

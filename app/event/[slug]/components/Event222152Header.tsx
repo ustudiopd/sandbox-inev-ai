@@ -5,7 +5,7 @@ import Link from 'next/link'
 
 interface Event222152HeaderProps {
   slug: string
-  variant?: 'default' | 'overview' | 'collaboration-style' | 'session-guide' | 'experience-program' | 'today-menu' | 'gallery'
+  variant?: 'default' | 'overview' | 'collaboration-style' | 'session-guide' | 'experience-program' | 'today-menu' | 'gallery' | 'profile'
 }
 
 const menuItemClass =
@@ -18,10 +18,11 @@ export default function Event222152Header({ slug, variant = 'default' }: Event22
   const isExperienceProgram = variant === 'experience-program'
   const isTodayMenu = variant === 'today-menu'
   const isGallery = variant === 'gallery'
-  const isSubPage = isOverview || isCollaborationStyle || isSessionGuide || isExperienceProgram || isTodayMenu || isGallery
+  const isProfile = variant === 'profile'
+  const isSubPage = isOverview || isCollaborationStyle || isSessionGuide || isExperienceProgram || isTodayMenu || isGallery || isProfile
 
   const headerWrapperClass = isSubPage
-    ? 'sticky top-0 h-[80px] w-[1920px] max-w-full mx-auto border-b border-black overflow-hidden z-20'
+    ? 'sticky top-0 h-[80px] w-full max-w-[1920px] mx-auto border-b border-black z-20 bg-[rgba(249,249,249,0.60)]'
     : 'w-full h-[80px] left-0 top-0 absolute overflow-hidden border-b border-black bg-[rgba(249,249,249,0.6)] z-40'
 
   const headerBgStyle = isSubPage ? { background: 'rgba(249, 249, 249, 0.60)' } : undefined
@@ -109,7 +110,7 @@ export default function Event222152Header({ slug, variant = 'default' }: Event22
               </Link>
             )}
           </div>
-          <div className="h-8 py-1.5 flex justify-center items-center">
+          <div className={`h-8 py-1.5 flex justify-center items-center ${isGallery ? 'pb-[6px] border-b-2 border-black' : ''}`}>
             {isGallery ? (
               <span className={`${menuItemClass} text-gray-900`}>갤러리</span>
             ) : (
@@ -124,21 +125,27 @@ export default function Event222152Header({ slug, variant = 'default' }: Event22
           </div>
         </div>
 
-        {/* 메뉴 오른쪽 819px, 홍길동 (0.8배 축소) */}
-        <div
-          className="absolute top-1/2 hidden h-7 w-[68px] items-center justify-center rounded-[100px] border border-[#111] md:flex"
+        {/* 메뉴 오른쪽, 홍길동 → 프로필 페이지 링크 (해당 페이지일 때만 채워진 스타일) */}
+        <Link
+          href={`/event/${slug}/profile`}
+          className={`absolute top-1/2 hidden h-7 w-[68px] items-center justify-center rounded-[100px] border border-[#111] md:flex ${
+            isProfile ? 'bg-[#111]' : ''
+          }`}
           style={{
             left: 'calc(50% + 619px)',
             transform: 'translateY(-50%) scale(0.8)',
           }}
+          aria-label="홍길동 프로필"
         >
           <span
-            className="text-center font-['Pretendard'] text-base font-medium leading-[140%] text-[#111]"
+            className={`text-center font-['Pretendard'] text-base font-medium leading-[140%] ${
+              isProfile ? 'text-white' : 'text-[#111]'
+            }`}
             style={{ letterSpacing: '-0.4px' }}
           >
             홍길동
           </span>
-        </div>
+        </Link>
       </div>
     </div>
   )

@@ -13,10 +13,10 @@ const GALLERY_SET_WIDTH = 400
 /** 한 칸 = 세트 너비 + 간격. 반칸 이동 시 사용 */
 const GALLERY_HALF_STEP = (GALLERY_SET_WIDTH + GALLERY_SET_GAP) / 2 // 215
 const GALLERY_SETS = [
-  { src: 'page4_archiving_photo1.png', subtitle: 'KASBP에서 발표 중인 신수경 GC녹십자 의학본부장' },
-  { src: 'page4_archiving_photo2.png', subtitle: 'KASBP 행사 후 수상자 및 관계자 단체 사진 촬영' },
-  { src: 'page4_archiving_photo3.png', subtitle: 'KASBP에서 발표 중인 허은철 GC녹십자 대표이사' },
-  { src: 'page4_archiving_photo1.png', subtitle: 'KASBP에서 발표 중인 허은철 GC녹십자 대표이사' },
+  { src: 'page5_photo1.png', subtitle: 'KASBP에서 발표 중인 신수경 GC녹십자 의학본부장' },
+  { src: 'page5_photo2.png', subtitle: 'KASBP 행사 후 수상자 및 관계자 단체 사진 촬영' },
+  { src: 'page5_photo3.png', subtitle: 'KASBP에서 발표 중인 허은철 GC녹십자 대표이사' },
+  { src: 'page5_photo1.png', subtitle: 'KASBP에서 발표 중인 신수경 GC녹십자 의학본부장' },
 ]
 
 interface EventGalleryPageProps {
@@ -29,10 +29,14 @@ interface EventGalleryPageProps {
   pathSlug?: string
 }
 
-const VIDEO_ITEM_WIDTH = 1092
+/** 가시 영역 1682px에 두 장+간격이 들어가도록 (826*2+30=1682) → 슬라이더가 이미지를 잘라내지 않음 */
+const VIDEO_ITEM_WIDTH = 826
+const VIDEO_ITEM_HEIGHT = 418
 const VIDEO_ITEM_GAP = 30
 
 const VIDEO_HALF_STEP = (VIDEO_ITEM_WIDTH + VIDEO_ITEM_GAP) / 2
+const GALLERY_MAX_OFFSET = -(GALLERY_SET_WIDTH + GALLERY_SET_GAP) * (GALLERY_SETS.length - 1)
+const VIDEO_MAX_OFFSET = -(VIDEO_ITEM_WIDTH + VIDEO_ITEM_GAP)
 
 export default function EventGalleryPage({ event, pathSlug }: EventGalleryPageProps) {
   const slug = pathSlug ?? event.slug
@@ -43,15 +47,19 @@ export default function EventGalleryPage({ event, pathSlug }: EventGalleryPagePr
     setGalleryOffsetX((px) => Math.min(0, px + GALLERY_HALF_STEP))
   }
   const goNext = () => {
-    setGalleryOffsetX((px) => Math.max(-(GALLERY_SET_WIDTH + GALLERY_SET_GAP) * (GALLERY_SETS.length - 1), px - GALLERY_HALF_STEP))
+    setGalleryOffsetX((px) => Math.max(GALLERY_MAX_OFFSET, px - GALLERY_HALF_STEP))
   }
-
   const goPrevVideo = () => {
     setVideoOffsetX((px) => Math.min(0, px + VIDEO_HALF_STEP))
   }
   const goNextVideo = () => {
-    setVideoOffsetX((px) => Math.max(-(VIDEO_ITEM_WIDTH + VIDEO_ITEM_GAP), px - VIDEO_HALF_STEP))
+    setVideoOffsetX((px) => Math.max(VIDEO_MAX_OFFSET, px - VIDEO_HALF_STEP))
   }
+
+  const galleryCanPrev = galleryOffsetX < 0
+  const galleryCanNext = galleryOffsetX > GALLERY_MAX_OFFSET
+  const videoCanPrev = videoOffsetX < 0
+  const videoCanNext = videoOffsetX > VIDEO_MAX_OFFSET
 
   return (
     <div
@@ -67,11 +75,12 @@ export default function EventGalleryPage({ event, pathSlug }: EventGalleryPagePr
           className="w-full flex justify-center items-center box-border flex-1"
           style={{
             padding: '150px 250px 145px 250px',
+            overflow: 'visible',
           }}
         >
           <div
             className="flex flex-col justify-center items-center w-full relative"
-            style={{ marginTop: '-200px' }}
+            style={{ marginTop: '-450px', overflow: 'visible' }}
           >
             <h1
               className={bebasNeue.className}
@@ -123,10 +132,15 @@ export default function EventGalleryPage({ event, pathSlug }: EventGalleryPagePr
             >
               Photo
             </span>
-            {/* 갤러리 4세트: 30px 간격 한 줄, 이전/다음 시 전체가 반칸씩 좌우 이동 */}
+            {/* 갤러리 4세트: 30px 간격 한 줄, 이전/다음 시 전체가 반칸씩 좌우 이동. 홍길동 pill 오른쪽 끝 기준 가시 영역, 밖은 잘림 */}
             <div
               className="absolute"
-              style={{ left: '-35px', top: '483px' }}
+              style={{
+                left: '-35px',
+                top: '483px',
+                width: 'min(1682px, calc(50% + 722px))',
+                overflowX: 'hidden',
+              }}
             >
               <div
                 className="flex flex-shrink-0"
@@ -138,13 +152,15 @@ export default function EventGalleryPage({ event, pathSlug }: EventGalleryPagePr
               >
                 {GALLERY_SETS.map((set, i) => (
                   <div key={i} className="flex flex-col flex-shrink-0" style={{ width: `${GALLERY_SET_WIDTH}px` }}>
-                    <Image
-                      src={getGcbioImageUrl(set.src)}
-                      alt=""
-                      width={GALLERY_SET_WIDTH}
-                      height={GALLERY_SET_WIDTH}
-                      className="object-cover flex-shrink-0"
-                    />
+                    <div className="flex-shrink-0 overflow-hidden" style={{ width: GALLERY_SET_WIDTH, height: GALLERY_SET_WIDTH }}>
+                      <Image
+                        src={getGcbioImageUrl(set.src)}
+                        alt=""
+                        width={GALLERY_SET_WIDTH}
+                        height={GALLERY_SET_WIDTH}
+                        className="object-cover w-full h-full"
+                      />
+                    </div>
                     <div className="flex flex-col" style={{ marginTop: '26px', gap: '10px' }}>
                       <p
                         className="font-['Pretendard']"
@@ -203,9 +219,29 @@ export default function EventGalleryPage({ event, pathSlug }: EventGalleryPagePr
             >
               Video
             </span>
+            {/* 그라데이션: Video 이미지 뒤 레이어 (DOM 순서로 뒤에 있음) */}
             <div
               className="absolute"
-              style={{ left: '-35px', top: '1261px' }}
+              style={{
+                left: '50%',
+                transform: 'translateX(-50%)',
+                top: '1579px',
+                width: '1920px',
+                height: '495px',
+                background: 'linear-gradient(180deg, #ffffff 0%, rgba(255, 255, 255, 0) 100%), linear-gradient(90deg, #36C618 0%, #FFDF00 50%, #FF4606 100%)',
+                zIndex: 0,
+              }}
+            />
+            {/* Video 슬라이드: Photo와 동일한 가시 영역, 이전/다음 시 좌우 이동 (그라데이션 앞에 표시) */}
+            <div
+              className="absolute"
+              style={{
+                left: '-35px',
+                top: '1261px',
+                width: 'min(1682px, calc(50% + 722px))',
+                overflowX: 'hidden',
+                zIndex: 1,
+              }}
             >
               <div
                 className="flex flex-shrink-0"
@@ -215,34 +251,33 @@ export default function EventGalleryPage({ event, pathSlug }: EventGalleryPagePr
                   transition: 'transform 0.3s ease',
                 }}
               >
-                <Image
-                  src={getGcbioImageUrl('page4_archiving_video1.png')}
-                  alt=""
-                  width={VIDEO_ITEM_WIDTH}
-                  height={518}
-                  className="object-cover flex-shrink-0"
-                />
-                <Image
-                  src={getGcbioImageUrl('page4_archiving_video2_2.png')}
-                  alt=""
-                  width={VIDEO_ITEM_WIDTH}
-                  height={518}
-                  className="object-cover flex-shrink-0"
-                />
+                <div
+                  className="flex-shrink-0 flex items-center justify-center"
+                  style={{ width: VIDEO_ITEM_WIDTH, height: VIDEO_ITEM_HEIGHT }}
+                >
+                  <Image
+                    src={getGcbioImageUrl('page5_video1.png')}
+                    alt=""
+                    width={VIDEO_ITEM_WIDTH}
+                    height={VIDEO_ITEM_HEIGHT}
+                    className="object-contain w-full h-full"
+                  />
+                </div>
+                <div
+                  className="flex-shrink-0 flex items-center justify-center"
+                  style={{ width: VIDEO_ITEM_WIDTH, height: VIDEO_ITEM_HEIGHT }}
+                >
+                  <Image
+                    src={getGcbioImageUrl('Frame 24_1.png')}
+                    alt=""
+                    width={VIDEO_ITEM_WIDTH}
+                    height={VIDEO_ITEM_HEIGHT}
+                    className="object-contain w-full h-full"
+                  />
+                </div>
               </div>
             </div>
-            <div
-              className="absolute"
-              style={{
-                left: '50%',
-                transform: 'translateX(-50%)',
-                top: '1779px',
-                width: '1920px',
-                height: '495px',
-                background: 'linear-gradient(90deg, #36C618 0%, #FFDF00 50%, #FF4606 100%)',
-              }}
-            />
-            {/* Video 섹션 버튼: 2개 이미지 세트가 함께 좌우 이동 */}
+            {/* Video 섹션 버튼: 이전 / 다음 */}
             <div
               className="absolute flex items-center"
               style={{ left: '1187px', top: '1160px', gap: '10px' }}
@@ -252,30 +287,26 @@ export default function EventGalleryPage({ event, pathSlug }: EventGalleryPagePr
               <button
                 type="button"
                 onClick={goPrevVideo}
-                className="p-0 border-0 bg-transparent cursor-pointer"
+                className="p-0 border-0 bg-transparent cursor-pointer disabled:cursor-default"
                 aria-label="이전"
+                disabled={!videoCanPrev}
               >
-                <Image
-                  src={getGcbioImageUrl('button_01.png')}
-                  alt=""
-                  width={32}
-                  height={32}
-                  className="object-contain"
-                />
+                <svg xmlns="http://www.w3.org/2000/svg" width={32} height={32} viewBox="0 0 32 32" fill="none">
+                  <circle cx="16" cy="16" r="15.5" stroke={videoCanPrev ? '#747474' : '#D9D9D9'} />
+                  <path d="M21.5 16H10M10 16L15 12M10 16L15 20" stroke={videoCanPrev ? '#747474' : '#D9D9D9'} strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
               </button>
               <button
                 type="button"
                 onClick={goNextVideo}
-                className="p-0 border-0 bg-transparent cursor-pointer"
+                className="p-0 border-0 bg-transparent cursor-pointer disabled:cursor-default"
                 aria-label="다음"
+                disabled={!videoCanNext}
               >
-                <Image
-                  src={getGcbioImageUrl('button_02.png')}
-                  alt=""
-                  width={32}
-                  height={32}
-                  className="object-contain"
-                />
+                <svg xmlns="http://www.w3.org/2000/svg" width={32} height={32} viewBox="0 0 32 32" fill="none">
+                  <circle cx="16" cy="16" r="15.5" stroke={videoCanNext ? '#747474' : '#D9D9D9'} />
+                  <path d="M10 16H21.5M21.5 16L16.5 12M21.5 16L16.5 20" stroke={videoCanNext ? '#747474' : '#D9D9D9'} strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
               </button>
             </div>
             {/* 버튼 모듈: 이전 / 다음 (Photo) */}
@@ -288,30 +319,26 @@ export default function EventGalleryPage({ event, pathSlug }: EventGalleryPagePr
               <button
                 type="button"
                 onClick={goPrev}
-                className="p-0 border-0 bg-transparent cursor-pointer"
+                className="p-0 border-0 bg-transparent cursor-pointer disabled:cursor-default"
                 aria-label="이전"
+                disabled={!galleryCanPrev}
               >
-                <Image
-                  src={getGcbioImageUrl('button_01.png')}
-                  alt=""
-                  width={32}
-                  height={32}
-                  className="object-contain"
-                />
+                <svg xmlns="http://www.w3.org/2000/svg" width={32} height={32} viewBox="0 0 32 32" fill="none">
+                  <circle cx="16" cy="16" r="15.5" stroke={galleryCanPrev ? '#747474' : '#D9D9D9'} />
+                  <path d="M21.5 16H10M10 16L15 12M10 16L15 20" stroke={galleryCanPrev ? '#747474' : '#D9D9D9'} strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
               </button>
               <button
                 type="button"
                 onClick={goNext}
-                className="p-0 border-0 bg-transparent cursor-pointer"
+                className="p-0 border-0 bg-transparent cursor-pointer disabled:cursor-default"
                 aria-label="다음"
+                disabled={!galleryCanNext}
               >
-                <Image
-                  src={getGcbioImageUrl('button_02.png')}
-                  alt=""
-                  width={32}
-                  height={32}
-                  className="object-contain"
-                />
+                <svg xmlns="http://www.w3.org/2000/svg" width={32} height={32} viewBox="0 0 32 32" fill="none">
+                  <circle cx="16" cy="16" r="15.5" stroke={galleryCanNext ? '#747474' : '#D9D9D9'} />
+                  <path d="M10 16H21.5M21.5 16L16.5 12M21.5 16L16.5 20" stroke={galleryCanNext ? '#747474' : '#D9D9D9'} strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
               </button>
             </div>
           </div>
