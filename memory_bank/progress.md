@@ -1,5 +1,8 @@
 # 완료된 작업 내역 (Progress)
 
+## [2026-02-11] 이벤트 222152 갤러리 페이지 빌드·메모리뱅크·푸시
+- ✅ 갤러리 페이지: `/event/[slug]/gallery` (예: http://localhost:3000/event/222152/gallery) 빌드 확인, memory_bank 반영, Git 푸시 완료. EventGalleryPage(Photo/Video 섹션·이전·다음 버튼·하단 그라데이션)·헤더 gallery variant 포함.
+
 ## [2026-02-11] 이벤트 222152 프로필(About Me) 페이지 및 홍길동 버튼 연동
 - ✅ 프로필 라우트·페이지: `/event/[slug]/profile` (예: http://localhost:3000/event/222152/profile)
   - `app/event/[slug]/profile/page.tsx`: 이벤트 조회·code 222152 검증·EventProfilePage 렌더
