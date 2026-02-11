@@ -3,11 +3,25 @@
 ## 서비스 정보
 - **서비스 이름**: Inev.ai
 - **도메인**: inev.ai
+- **메인 URL**: https://inev.ai/ (EventFlow - Enterprise Edition)
+- **원프레딕트 세미나/웨비나 관련 사이트**:
+  - https://inev.ai/ — EventFlow/Inev 메인 (웨비나·이벤트 플랫폼)
+  - https://eventflow.kr — 동일 플랫폼 별도 배포 (원프레딕트 웨비나 426307 등)
+  - https://ko.onepredict.ai/ — 원프레딕트 공식 사이트 (세미나 안내·링크)
 
 ## 1. 현재 집중하고 있는 작업  
 - **작업명**: inev.ai 리빌딩 (Phase 0–10)
 - **상태**: Phase 4 완료 (온디맨드 시청 세션 추적), Phase 10 완료 (필수 작업), Wert Intelligence 전용 배포 준비
-- **최근 작업 (2026-02-09)**:
+- **최근 작업 (2026-02-11)**:
+  - ✅ 원프레딕트 웨비나 전용 랜딩 페이지 (`/webinar_onepredict`) 구현
+    - 배경: `background_1.5x.png` (public/img/onepredict), 세로 2500px, 가로 1200px 컨테이너
+    - 상단: webinar_logo.png (64px 아래, 가운데)
+    - 검은 둥근 사각형(반투명 50%) + 흰 둥근 사각형(42px 간격) + INVITATION 이미지(박스 안 42px, 좌우 68px 패딩)
+    - 흰 박스 위 77px·왼쪽 47px: 텍스트 SVG 2개 + 원형 아이콘 SVG
+    - 그 아래: 검은 원 + 파란 캡슐(#2959FF) + AI_New.png 이미지(768px, left -16, top 445.15)
+    - LayoutWrapper에 `/webinar_onepredict` 공개 페이지 추가(메인 TopNav 비표시)
+    - 사용 에셋: Invitation.png, AI_New.png, AI_Ready_Data.png → public/img/onepredict 버킷
+- **이전 작업 (2026-02-09)**:
   - ✅ 워트인텔리전스 관리자 계정 추가 스크립트 수정 (inev 스키마 호환)
     - `scripts/add-wert-admin.ts`: `agency_id` 제거, `profiles`/`agency_members` 테이블 선택적 처리
   - ✅ Wert Intelligence 대시보드 메인 화면 개선

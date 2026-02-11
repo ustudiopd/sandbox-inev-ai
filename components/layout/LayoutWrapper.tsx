@@ -14,7 +14,8 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
     pathname.startsWith('/signup') || 
     pathname.startsWith('/privacy') ||
     pathname.startsWith('/unsubscribe') ||
-    pathname.startsWith('/event/')
+    pathname.startsWith('/event/') ||
+    pathname.startsWith('/webinar_onepredict')
   
   // /admin 페이지는 네비게이션 없음
   const isAdminPage = pathname.startsWith('/admin')
