@@ -24,7 +24,7 @@ export default function EventOverviewPage({ event, pathSlug }: EventOverviewPage
       className="w-full relative flex flex-col"
       style={{
         minHeight: '3576px',
-        background: '#F9F9F9',
+        background: '#FFFFFF',
       }}
     >
       <div className="w-full max-w-[1920px] mx-auto flex flex-col flex-1 min-w-0">
@@ -38,9 +38,23 @@ export default function EventOverviewPage({ event, pathSlug }: EventOverviewPage
           }}
         >
           <div
-            className="flex flex-col justify-center items-start w-full"
+            className="relative flex flex-col justify-center items-start w-full"
             style={{ marginTop: '-550px' }}
           >
+          {/* 배경 블록: 1920x1054, #F2F2F2, TIME TABLE 섹션 뒤에 보이도록 */}
+          <div
+            className="absolute z-0"
+            style={{
+              left: -250,
+              top: 550,
+              width: 1920,
+              height: 1010,
+              background: '#F2F2F2',
+            }}
+            aria-hidden
+          />
+
+          <div className="relative z-10">
           {/* 1. 초대의 글 + 본문 */}
           <div className="flex flex-col items-start gap-2 mb-10">
             <h1
@@ -73,6 +87,89 @@ export default function EventOverviewPage({ event, pathSlug }: EventOverviewPage
               에서 리더의 협업이 만들어낸 성과와 실패를 통해, 그 결과와 가능성을 함께 확인하고자 합니다.
             </p>
           </div>
+
+          {/* 파란 원: 144x144, #006FB7 (겹침 시 앞에 표시) */}
+          <div
+            className="absolute z-10 flex-shrink-0"
+            style={{ left: 852, top: 0 }}
+            aria-hidden
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="144" height="144" viewBox="0 0 144 144" fill="none">
+              <circle cx="72" cy="72" r="72" fill="#006FB7" />
+            </svg>
+          </div>
+
+          {/* 회색 Photo 원: 294x294, #5E5E5E, 파란 원과 살짝 겹침 */}
+          <div
+            className="absolute z-0 flex flex-shrink-0 items-center justify-center rounded-full"
+            style={{
+              left: 916,
+              top: 60,
+              width: 294,
+              height: 294,
+              background: '#5E5E5E',
+            }}
+            aria-hidden
+          >
+            <span
+              className="font-['Pretendard'] text-white"
+              style={{
+                fontSize: '24px',
+                fontStyle: 'normal',
+                fontWeight: 500,
+                lineHeight: '150%',
+                letterSpacing: '-0.48px',
+              }}
+            >
+              Photo
+            </span>
+          </div>
+
+          {/* 빨간 원: 144x144, #EC1F23, 회색 원 오른쪽 40px */}
+          <div
+            className="absolute z-10 flex-shrink-0"
+            style={{ left: 1210 + 40, top: 40 }}
+            aria-hidden
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="144" height="144" viewBox="0 0 144 144" fill="none">
+              <circle cx="72" cy="72" r="72" fill="#EC1F23" />
+            </svg>
+          </div>
+
+          {/* stroke 원: 62x62, 노란 원 뒤(아래·왼쪽) 살짝 겹침 */}
+          <div
+            className="absolute z-0 flex-shrink-0"
+            style={{ left: 1015, top: 435 }}
+            aria-hidden
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="62" height="62" viewBox="0 0 62 62" fill="none">
+              <circle cx="31" cy="31" r="30.5" stroke="#111111" strokeWidth={1} />
+            </svg>
+          </div>
+
+          {/* 노란 원: 108x108, #F5D327, 회색 Photo 아래 25px · page1_photo1 왼쪽 42px */}
+          <div
+            className="absolute z-10 flex-shrink-0"
+            style={{ left: 1207 - 42 - 108, top: 60 + 294 + 25 }}
+            aria-hidden
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="108" height="108" viewBox="0 0 108 108" fill="none">
+              <circle cx="54" cy="54" r="54" fill="#F5D327" />
+            </svg>
+          </div>
+
+          {/* page1_photo1: 빨간 원 아래 64px, 210x210 원형 */}
+          <div
+            className="absolute flex-shrink-0 rounded-full"
+            style={{
+              left: 1207,
+              top: 40 + 144 + 64,
+              width: 210,
+              height: 210,
+              background: `url(${getGcbioImageUrl('page1_photo1.png')}) lightgray -32.243px 0px / 125% 100% no-repeat`,
+            }}
+            aria-hidden
+          />
 
           {/* 2. 워크샵 타이틀 */}
           <h2
@@ -136,26 +233,35 @@ export default function EventOverviewPage({ event, pathSlug }: EventOverviewPage
           </div>
 
           {/* 타임테이블 SVG - 확대 시 선명, TIME TABLE과 10px 간격 */}
-          <div className="w-full max-w-[1420px] mt-2.5 bg-[#d3d3d3] overflow-hidden" style={{ aspectRatio: '142/63' }}>
+          <div className="relative w-full max-w-[1420px] mt-2.5 bg-[#d3d3d3] overflow-hidden" style={{ aspectRatio: '142/63' }}>
             <img
               src={getGcbioImageUrl('Timetable.svg')}
               alt="2026 GCBP Leadership Workshop 타임테이블"
               className="w-full h-full object-contain"
             />
+            {/* 오버레이: 같은 크기, 가운데 "스케쥴 변경 예정" */}
+            <div
+              className="absolute inset-0 flex items-center justify-center bg-[rgba(10,10,10,0.7)]"
+              aria-hidden
+            >
+              <span
+                className="font-['Pretendard'] text-center text-white"
+                style={{
+                  fontSize: '45px',
+                  fontStyle: 'normal',
+                  fontWeight: 600,
+                  lineHeight: '140%',
+                  letterSpacing: '-1px',
+                }}
+              >
+                스케쥴 변경 예정
+              </span>
+            </div>
           </div>
 
-          {/* 구분선 - 이미지 아래 100px */}
+          {/* 네이버 지도 영역 - 타임테이블 아래 250px */}
           <div
-            className="w-full max-w-[1420px] mt-[100px]"
-            style={{
-              height: '1px',
-              background: '#242424',
-            }}
-          />
-
-          {/* 네이버 지도 영역 - 선 아래 100px */}
-          <div
-            className="w-full max-w-[1420px] mt-[100px] flex items-center justify-center"
+            className="w-full max-w-[1420px] mt-[250px] flex items-center justify-center"
             style={{
               height: '700px',
               background: '#444',
@@ -177,7 +283,7 @@ export default function EventOverviewPage({ event, pathSlug }: EventOverviewPage
             </span>
           </div>
 
-          {/* 버튼 두 개 - 네이버 지도 박스 아래 50px, 합쳐서 1420px 이하(박스 너비 맞춤) */}
+          {/* 버튼 두 개 - 네이버 지도 박스 아래 50px, 합쳐서 1420px 이하 */}
           <div className="w-full max-w-[1420px] mt-[50px] flex flex-nowrap">
             <div
               className="flex justify-center items-center flex-1 min-w-0 max-w-[710px]"
@@ -376,6 +482,7 @@ export default function EventOverviewPage({ event, pathSlug }: EventOverviewPage
               background: '#242424',
             }}
           />
+          </div>
         </div>
         </main>
       </div>

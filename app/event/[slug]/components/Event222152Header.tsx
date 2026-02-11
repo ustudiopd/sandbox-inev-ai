@@ -20,7 +20,7 @@ export default function Event222152Header({ slug, variant = 'default' }: Event22
   const isSubPage = isOverview || isCollaborationStyle || isSessionGuide || isExperienceProgram || isGallery
 
   const headerWrapperClass = isSubPage
-    ? 'sticky top-0 w-full max-w-[1920px] h-[80px] mx-auto border border-black overflow-hidden z-20'
+    ? 'sticky top-0 h-[80px] w-[1920px] max-w-full mx-auto border-b border-black overflow-hidden z-20'
     : 'w-full h-[80px] left-0 top-0 absolute overflow-hidden border-b border-black bg-[rgba(249,249,249,0.6)] z-40'
 
   const headerBgStyle = isSubPage ? { background: 'rgba(249, 249, 249, 0.60)' } : undefined
@@ -43,7 +43,7 @@ export default function Event222152Header({ slug, variant = 'default' }: Event22
 
         {/* 메뉴 - 가운데 정렬, 반응형 */}
         <div className="hidden md:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 items-center justify-center gap-4 lg:gap-8 xl:gap-12">
-          <div className="h-8 py-1.5 flex justify-center items-center">
+          <div className={`h-8 py-1.5 flex justify-center items-center ${isOverview ? 'border-b-2 border-black' : ''}`}>
             {isOverview ? (
               <span className={`${menuItemClass} text-gray-900`}>행사개요</span>
             ) : (

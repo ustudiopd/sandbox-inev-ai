@@ -1,5 +1,13 @@
 # 완료된 작업 내역 (Progress)
 
+## [2026-02-11] 이벤트 222152 행사개요 페이지 UI 조정 및 gcbio 버킷 업로드
+- ✅ EventOverviewPage UI 조정
+  - "스케쥴 변경 예정" 오버레이 글씨 50px → 45px
+  - 행사개요 헤더 메뉴 선택 시 하단 2px 검정선(border-b-2, 약 6px 아래)
+  - 회색 배경 블록(#F2F2F2) 높이 860px → 1060px 연장 후 1010px로 하단 50px 절단
+- ✅ gcbio 버킷 이미지 업로드: `npx tsx scripts/upload-gcbio-all-222152.ts` 실행, img/gcbio 41개 파일 Supabase Storage(gcbio 버킷) 업로드 완료
+- ✅ 빌드 성공, memory_bank/progress.md 반영, Git 푸시
+
 ## [2026-02-11] 이벤트 222152 메인(랜딩) 페이지 개편
 - ✅ Event222152Landing: 타이틀/날짜 제거 후 Main_name.png, DATE/LOCATION 텍스트, 행사개요 버튼(overview 링크), Main_poster.png 배치. 스크롤 가능(overflow-x-hidden, min-h-[900px]).
 - ✅ Event222152Header: 로고 → Home_button.png(메인 링크), border-b·bg rgba(249,249,249,0.6), 사용자 영역 제거 후 메뉴 오른쪽 319px→619px에 홍길동 pill(0.8 scale) 추가. 메인에서 헤더 클릭 가능하도록 z-40 적용.
