@@ -13,6 +13,9 @@
 - **작업명**: inev.ai 리빌딩 (Phase 0–10)
 - **상태**: Phase 4 완료 (온디맨드 시청 세션 추적), Phase 10 완료 (필수 작업), Wert Intelligence 전용 배포 준비
 - **최근 작업 (2026-02-11)**:
+  - ✅ 이벤트 222152 체험 프로그램 페이지 콘텐츠·레이아웃 개선
+    - `/event/[slug]/experience-program`: 5개 블록(01~05) 제목·본문·TIP 개별 문구 적용(역사의 주인공, 모두가 주인공, 홀인원 주인공, 오늘의 주인공, 럭키 드로우)
+    - 다크 박스 텍스트 영역 480px·x축 정렬(transform), Outfit 폰트(01), 본문/TIP 굵기 조정
   - ✅ 원프레딕트 웨비나 전용 랜딩 페이지 (`/webinar_onepredict`) 구현
     - 배경: `background_1.5x.png` (public/img/onepredict), 세로 2500px, 가로 1200px 컨테이너
     - 상단: webinar_logo.png (64px 아래, 가운데)
