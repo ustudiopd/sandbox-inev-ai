@@ -1,5 +1,13 @@
 # 완료된 작업 내역 (Progress)
 
+## [2026-02-11] 이벤트 222152 세션 안내·프로필 페이지 UI 수정 및 빌드·메모리뱅크 반영
+- ✅ EventSessionGuidePage (`/event/[slug]/session-guide`)
+  - M1 대표이사 특강 첫 카드(허은철): 이미지+말풍선을 한 세트로 페이지 가운데 정렬. 섹션 wrapper `max-w-[644px]` → `max-w-[860px]`, 행에 `justify-center` 추가.
+- ✅ EventProfilePage (`/event/[slug]/profile`)
+  - 원형 카드 4개: 원 크기 동일 유지(200/220/240px 정원), `borderRadius: '50%'`, 4개 한 줄 배치(`flex-nowrap`, `overflow-x-auto`).
+  - 원 안 텍스트 한 줄 표시: 라벨·값 글자 크기 2px씩 축소(라벨 text-xs/sm, 값 text-base/lg/22px), 원 내부 패딩 축소(px-4 sm:px-5 md:px-6, py-6 sm:py-7 md:py-8), `whitespace-nowrap`·`max-w-full` 적용.
+- ✅ 빌드 성공, memory_bank/progress.md 반영.
+
 ## [2026-02-11] 이벤트 222152 로그인 페이지 및 gcbio 버킷 업로드
 - ✅ 로그인 페이지: `/event/[slug]/login` (예: http://localhost:3000/event/222152/login)
   - 페이지 1920×960 #F9F9F9, 로그인 프레임 500×540 (250, 210), Login.·아이디|이름·비밀번호|핸드폰 번호 입력, 로그인·회원가입 버튼, 날짜(2026. 03. 05 Thu) 90도 회전, Main_name·Main_poster 이미지.

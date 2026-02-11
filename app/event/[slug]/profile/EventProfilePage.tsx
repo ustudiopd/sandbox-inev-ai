@@ -19,30 +19,19 @@ export default function EventProfilePage({ event, pathSlug }: EventProfilePagePr
   const slug = pathSlug ?? event.slug
 
   return (
-    <div className="w-full relative flex flex-col min-h-screen" style={{ background: '#F9F9F9' }}>
+    <div className="w-full relative flex flex-col min-h-screen bg-[#F9F9F9] overflow-x-hidden">
       <div className="w-full max-w-[1920px] mx-auto flex flex-col flex-1 min-w-0">
         <Event222152Header slug={slug} variant="profile" />
-        <main className="w-full flex-1 flex flex-col items-center px-4" style={{ paddingTop: '140px' }}>
-          <div className="relative w-full" style={{ minHeight: '200px' }}>
+        <main className="w-full flex-1 flex flex-col items-center px-4 sm:px-6 pt-16 sm:pt-24 md:pt-[140px] pb-12">
+          <div className="w-full max-w-[1060px] mx-auto">
             {/* About Me 가운데 정렬 */}
-            <div className="flex justify-center w-full">
-              <h1
-                className={bebasNeue.className}
-                style={{
-                  color: '#111',
-                  textAlign: 'center',
-                  fontFamily: '"Bebas Neue"',
-                  fontSize: '48px',
-                  fontStyle: 'normal',
-                  fontWeight: 700,
-                  lineHeight: '130%',
-                  letterSpacing: '-0.48px',
-                }}
-              >
+            <div className="flex justify-center w-full mb-8 sm:mb-12">
+              <h1 className={`${bebasNeue.className} text-[#111] text-center text-3xl sm:text-4xl md:text-[48px] font-bold leading-[130%] tracking-[-0.48px]`}>
                 About Me
               </h1>
             </div>
-            {/* 원 4개 한 세트: 페이지 가운데 정렬 (총 너비 240*4 + 20*3 = 1020px) */}
+            {/* 원 4개: 한 줄 가로 배치, 동그란 원 크기 유지 */}
+            <div className="flex flex-nowrap justify-center gap-4 sm:gap-5 overflow-x-auto">
             {[
               { borderColor: '#F5D327', label: '부서 소속', value: '디자인팀', labelWidth: 142 },
               { borderColor: '#006FB7', label: '이름(동명이인 1,2로 표시)', value: '홍길동(1)', labelWidth: 172 },
@@ -51,79 +40,28 @@ export default function EventProfilePage({ event, pathSlug }: EventProfilePagePr
             ].map((item, i) => (
               <div
                 key={i}
-                className="absolute flex flex-col items-center rounded-full border"
+                className="flex flex-col items-center justify-center rounded-full border flex-shrink-0 w-[200px] h-[200px] sm:w-[220px] sm:h-[220px] md:w-[240px] md:h-[240px] px-4 sm:px-5 md:px-6 py-6 sm:py-7 md:py-8"
                 style={{
-                  width: '240px',
-                  padding: '89px 79px',
-                  gap: '5px',
-                  aspectRatio: '240 / 239',
-                  borderRadius: '200px',
                   border: `1px solid ${item.borderColor}`,
-                  left: `calc(50% - 510px + ${(240 + 20) * i}px)`,
-                  top: '131px',
+                  borderRadius: '50%',
                 }}
               >
-                <span
-                  className="font-['Pretendard'] text-center"
-                  style={{
-                    width: `${item.labelWidth}px`,
-                    color: '#111',
-                    fontFamily: 'Pretendard',
-                    fontSize: '16px',
-                    fontStyle: 'normal',
-                    fontWeight: 500,
-                    lineHeight: '140%',
-                    letterSpacing: '-0.32px',
-                  }}
-                >
+                <span className="font-['Pretendard'] text-center max-w-full text-[#111] text-xs sm:text-sm font-medium leading-[140%] tracking-[-0.32px] whitespace-nowrap">
                   {item.label}
                 </span>
-                <span
-                  className="font-['Pretendard'] text-center"
-                  style={{
-                    width: '142px',
-                    color: '#111',
-                    fontFamily: 'Pretendard',
-                    fontSize: '24px',
-                    fontStyle: 'normal',
-                    fontWeight: 600,
-                    lineHeight: '140%',
-                    letterSpacing: '-0.48px',
-                  }}
-                >
+                <span className="font-['Pretendard'] text-center text-[#111] text-base sm:text-lg md:text-[22px] font-semibold leading-[140%] tracking-[-0.48px] whitespace-nowrap">
                   {item.value}
                 </span>
               </div>
             ))}
+            </div>
             {/* 원 세트 아래 98px · Home 버튼 → 메인 홈 */}
             <Link
               href={`/event/${slug}`}
-              className="absolute flex items-center justify-center rounded-full"
-              style={{
-                left: '50%',
-                transform: 'translateX(-50%)',
-                top: '470px',
-                width: '500px',
-                height: '60px',
-                borderRadius: '100px',
-                background: '#111',
-              }}
+              className="mt-12 sm:mt-16 flex items-center justify-center w-full max-w-[500px] mx-auto h-14 rounded-[100px] bg-[#111] font-['Pretendard'] text-white text-base font-bold"
               aria-label="메인 홈으로"
             >
-              <span
-                className="font-['Pretendard'] text-center"
-                style={{
-                  width: '143px',
-                  color: '#FFF',
-                  fontFamily: 'Pretendard',
-                  fontSize: '16px',
-                  fontStyle: 'normal',
-                  fontWeight: 700,
-                  lineHeight: '100%',
-                }}
-              >
-                Home
-              </span>
+              Home
             </Link>
           </div>
         </main>
