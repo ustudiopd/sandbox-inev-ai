@@ -52,13 +52,27 @@ export default function Event222152Landing({ event, pathSlug }: Event222152Landi
               className="object-contain w-full h-full"
             />
           </div>
-          <div className="w-full max-w-[545px] text-[#111] font-['Pretendard'] text-lg sm:text-xl md:text-2xl font-medium leading-[140%] mt-6 md:mt-10" style={{ letterSpacing: '-0.48px' }}>
+          <p
+            className="w-full max-w-[545px]"
+            style={{
+              marginTop: 25,
+              color: '#111',
+              fontFamily: '"Bebas Neue", sans-serif',
+              fontSize: 42,
+              fontStyle: 'normal',
+              fontWeight: 700,
+              lineHeight: '130%',
+            }}
+          >
+            2026 GCBP Leadership Workshop
+          </p>
+          <div className="w-full max-w-[545px] text-[#111] font-['Pretendard'] text-lg sm:text-xl md:text-2xl font-medium leading-[140%]" style={{ letterSpacing: '-0.48px', marginTop: 10 }}>
             <span className="block">DATE  |  {eventDate}</span>
             <span className="block">LOCATION  |  {location}</span>
           </div>
           <Link
             href={`/event/${pathSlug ?? event.slug}/overview`}
-            className="mt-8 md:mt-[68px] flex w-full max-w-[235px] mx-auto lg:mx-0 items-center justify-center gap-[25px] rounded-[100px] bg-[#111] py-3 px-[39px] hover:opacity-90 transition-opacity"
+            className="mt-3 md:mt-12 flex w-full max-w-[235px] mx-auto lg:mx-0 items-center justify-center gap-[25px] rounded-[100px] bg-[#111] py-3 px-[39px] hover:opacity-90 transition-opacity"
           >
             <span className="text-white font-['Pretendard'] text-lg md:text-2xl font-medium leading-[140%]" style={{ letterSpacing: '-0.48px' }}>
               행사개요

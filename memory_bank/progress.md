@@ -1,5 +1,10 @@
 # 완료된 작업 내역 (Progress)
 
+## [2026-02-12] 이벤트 222152 랜딩 페이지 레이아웃 수정·gcbio 버킷 업로드·빌드·메모리뱅크·푸시
+- ✅ Event222152Landing: Main_name.png 아래 25px에 제목 "2026 GCBP Leadership Workshop" 추가(Bebas Neue 42px, 700, line-height 130%). DATE/LOCATION 블록을 제목 아래 10px로 배치. 행사개요 버튼 20px 위로(mt-3, md:mt-12).
+- ✅ img/gcbio 70개 gcbio 버킷 업로드 실행.
+- ✅ Next.js 프로덕션 빌드 성공. memory_bank/progress.md 반영, Git 푸시.
+
 ## [2026-02-12] 이벤트 222152 오늘의 메뉴 페이지(중식/석식) 완성·빌드·메모리뱅크·푸시
 - ✅ `/event/222152/menu` (EventTodayMenuPage): 히어로 이미지(page6_session.png)·"오늘의 메뉴" 오버레이, 중식/석식 탭 버튼(선택 시 #111 배경·흰 글씨).
 - ✅ 중식: JAPANESE BENTO BOX 제목·구분선·메뉴 7세트(영문/한글)·page6_menu1.png(1420×674)·하단 192px 여백. LUNCH_MENU_ITEMS 데이터 적용.
