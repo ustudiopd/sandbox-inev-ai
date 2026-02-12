@@ -1,5 +1,12 @@
 # 완료된 작업 내역 (Progress)
 
+## [2026-02-12] 이벤트 222152 전 페이지 반응형·헤더 모바일 메뉴·빌드·메모리뱅크·푸시
+- ✅ **헤더(Event222152Header)**: 모바일에서 햄버거 메뉴 추가, 탭 시 메뉴 패널(행사개요·협업스타일 진단·세션 안내·체험 프로그램·오늘의 메뉴·갤러리) 표시. 모바일에서 프로필(홍길동) 버튼 노출. 데스크톱 레이아웃 유지.
+- ✅ **세션 안내·체험 프로그램·오늘의 메뉴·갤러리**: 기존 반응형 유지(620px 카드/644px 제목·히어로·버튼·갤러리 가로스크롤 등).
+- ✅ **행사개요(EventOverviewPage)**: 장식 요소(파란/회색/빨간/노란 원, page1_photo1) 모바일에서 `hidden md:block`. 워크샵 타이틀·행사 정보·TIME TABLE 제목 반응형 폰트. 타임테이블 `overflow-x-auto` + `min-w-[800px]`로 모바일 가로 스크롤.
+- ✅ **협업스타일 진단(CollaborationStylePage)**: 모바일 `flex-col`, 데스크톱 `md:flex-row`. 이미지 278px → `max-w-[278px]`·aspect-square. 텍스트 블록 437px → `w-full max-w-full md:max-w-[437px]`. 장식 SVG 모바일 `hidden md:block`. 제목·구분선·Click 버튼 반응형.
+- ✅ Next.js 프로덕션 빌드 성공. memory_bank/progress.md 반영, Git 푸시.
+
 ## [2026-02-12] 이벤트 222152 개요 페이지 헤더 고정·메인 100px 상향·gcbio 버킷·빌드·메모리뱅크·푸시
 - ✅ EventOverviewPage: 루트에서 overflow-x-hidden 제거해 헤더 sticky 유지(스크롤 시 상단 고정). main에만 overflow-x-hidden 적용. 메인 콘텐츠 100px 상향(pt-0, md:pt-[50px]).
 - ✅ img/gcbio 70개 gcbio 버킷 업로드 실행.

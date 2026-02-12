@@ -63,9 +63,9 @@ export default function EventOverviewPage({ event, pathSlug }: EventOverviewPage
             </p>
           </div>
 
-          {/* 파란 원: 144x144, #006FB7 (겹침 시 앞에 표시) */}
+          {/* 장식 요소: 모바일에서 숨김(레이아웃 깨짐 방지) */}
           <div
-            className="absolute z-10 flex-shrink-0"
+            className="hidden md:block absolute z-10 flex-shrink-0"
             style={{ left: 852, top: 0 }}
             aria-hidden
           >
@@ -73,36 +73,15 @@ export default function EventOverviewPage({ event, pathSlug }: EventOverviewPage
               <circle cx="72" cy="72" r="72" fill="#006FB7" />
             </svg>
           </div>
-
-          {/* 회색 Photo 원: 294x294, #5E5E5E, 파란 원과 살짝 겹침 */}
           <div
-            className="absolute z-0 flex flex-shrink-0 items-center justify-center rounded-full"
-            style={{
-              left: 916,
-              top: 60,
-              width: 294,
-              height: 294,
-              background: '#5E5E5E',
-            }}
+            className="hidden md:flex absolute z-0 flex-shrink-0 items-center justify-center rounded-full"
+            style={{ left: 916, top: 60, width: 294, height: 294, background: '#5E5E5E' }}
             aria-hidden
           >
-            <span
-              className="font-['Pretendard'] text-white"
-              style={{
-                fontSize: '24px',
-                fontStyle: 'normal',
-                fontWeight: 500,
-                lineHeight: '150%',
-                letterSpacing: '-0.48px',
-              }}
-            >
-              Photo
-            </span>
+            <span className="font-['Pretendard'] text-white text-xl font-medium leading-[150%] tracking-[-0.48px]">Photo</span>
           </div>
-
-          {/* 빨간 원: 144x144, #EC1F23, 회색 원 오른쪽 40px */}
           <div
-            className="absolute z-10 flex-shrink-0"
+            className="hidden md:block absolute z-10 flex-shrink-0"
             style={{ left: 1210 + 40, top: 40 }}
             aria-hidden
           >
@@ -110,10 +89,8 @@ export default function EventOverviewPage({ event, pathSlug }: EventOverviewPage
               <circle cx="72" cy="72" r="72" fill="#EC1F23" />
             </svg>
           </div>
-
-          {/* stroke 원: 62x62, 노란 원 뒤(아래·왼쪽) 살짝 겹침 */}
           <div
-            className="absolute z-0 flex-shrink-0"
+            className="hidden md:block absolute z-0 flex-shrink-0"
             style={{ left: 1015, top: 435 }}
             aria-hidden
           >
@@ -121,10 +98,8 @@ export default function EventOverviewPage({ event, pathSlug }: EventOverviewPage
               <circle cx="31" cy="31" r="30.5" stroke="#111111" strokeWidth={1} />
             </svg>
           </div>
-
-          {/* 노란 원: 108x108, #F5D327, 회색 Photo 아래 25px · page1_photo1 왼쪽 42px */}
           <div
-            className="absolute z-10 flex-shrink-0"
+            className="hidden md:block absolute z-10 flex-shrink-0"
             style={{ left: 1207 - 42 - 108, top: 60 + 294 + 25 }}
             aria-hidden
           >
@@ -132,15 +107,11 @@ export default function EventOverviewPage({ event, pathSlug }: EventOverviewPage
               <circle cx="54" cy="54" r="54" fill="#F5D327" />
             </svg>
           </div>
-
-          {/* page1_photo1: 빨간 원 아래 64px, 210x210 원형 */}
           <div
-            className="absolute flex-shrink-0 rounded-full"
+            className="hidden md:block absolute flex-shrink-0 rounded-full w-[210px] h-[210px]"
             style={{
               left: 1207,
               top: 40 + 144 + 64,
-              width: 210,
-              height: 210,
               background: `url(${getGcbioImageUrl('page1_photo1.png')}) lightgray -32.243px 0px / 125% 100% no-repeat`,
             }}
             aria-hidden
@@ -148,33 +119,14 @@ export default function EventOverviewPage({ event, pathSlug }: EventOverviewPage
 
           {/* 2. 워크샵 타이틀 */}
           <h2
-            className={bebasNeue.className}
-            style={{
-              height: '75px',
-              alignSelf: 'stretch',
-              color: '#111',
-              fontSize: '70px',
-              fontStyle: 'normal',
-              fontWeight: 700,
-              lineHeight: '130%',
-              letterSpacing: '-0.7px',
-              marginBottom: '48px',
-            }}
+            className={`${bebasNeue.className} w-full text-[#111] font-bold leading-[130%] tracking-[-0.7px] mb-8 md:mb-12 text-2xl sm:text-4xl md:text-5xl lg:text-[70px]`}
           >
             2026 GCBP LEADERSHIP WORKSHOP
           </h2>
 
           {/* 3. 행사 정보 */}
           <div
-            className="font-['Pretendard'] flex flex-col gap-0"
-            style={{
-              color: '#111',
-              fontSize: '24px',
-              fontStyle: 'normal',
-              fontWeight: 500,
-              lineHeight: '140%',
-              letterSpacing: '-0.48px',
-            }}
+            className="font-['Pretendard'] flex flex-col gap-0 text-base sm:text-lg md:text-2xl font-medium text-[#111] leading-[140%] tracking-[-0.48px]"
           >
             <span>DATE | 2026.03.05. (목)</span>
             <span>LOCATION | 노보텔 앰배서더 서울 용산 한라홀(3F)</span>
@@ -189,30 +141,18 @@ export default function EventOverviewPage({ event, pathSlug }: EventOverviewPage
             </span>
           </div>
 
-          {/* 4. TIME TABLE 섹션 제목 - 문의 210px 아래 */}
+          {/* 4. TIME TABLE 섹션 제목 */}
           <div
-            className={bebasNeue.className}
-            style={{
-              marginTop: '210px',
-              color: '#111',
-              fontSize: '50px',
-              fontStyle: 'normal',
-              lineHeight: '120%',
-            }}
+            className={`${bebasNeue.className} mt-16 md:mt-[210px] text-[#111] text-2xl sm:text-4xl md:text-5xl leading-[120%]`}
           >
-            <span className="block" style={{ fontWeight: 700 }}>
-              2026 GCBP
-            </span>
-            <span className="block" style={{ fontWeight: 300, color: '#444' }}>
-              LEADERSHIP WORKSHOP
-            </span>
-            <span className="block" style={{ fontWeight: 300, color: '#444' }}>
-              TIME TABLE
-            </span>
+            <span className="block font-bold">2026 GCBP</span>
+            <span className="block font-light text-[#444]">LEADERSHIP WORKSHOP</span>
+            <span className="block font-light text-[#444]">TIME TABLE</span>
           </div>
 
-          {/* 타임테이블 - TIME TABLE 제목 아래 41px */}
-          <div className="flex flex-col w-full max-w-[1420px] mt-[41px]">
+          {/* 타임테이블: 모바일 가로 스크롤 */}
+          <div className="w-full max-w-[1420px] mt-6 md:mt-[41px] overflow-x-auto">
+            <div className="flex flex-col min-w-[800px]">
             {/* 헤더 행 */}
             <div className="flex">
               {[
@@ -568,6 +508,7 @@ export default function EventOverviewPage({ event, pathSlug }: EventOverviewPage
                 }
                 return items
               })()}
+            </div>
             </div>
           </div>
 

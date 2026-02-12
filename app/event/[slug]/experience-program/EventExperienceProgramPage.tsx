@@ -40,13 +40,13 @@ export default function EventExperienceProgramPage({ event, pathSlug }: EventExp
         <Event222152Header slug={slug} variant="experience-program" />
         {/* 헤더와 오른쪽 끝 맞춤: 헤더와 동일한 패딩 */}
         <div className="w-full max-w-[1920px] mx-auto px-4 sm:px-8 md:px-16 lg:px-[250px] flex justify-center" style={{ marginTop: 30 }}>
-          <div className="relative w-full max-w-[1420px] flex justify-center">
+          <div className="relative w-full max-w-[1420px] flex justify-center rounded-2xl sm:rounded-[32px] overflow-hidden h-[320px]">
             <Image
               src={getGcbioImageUrl('page4_top.png')}
               alt=""
-              width={1421}
+              width={1420}
               height={320}
-              className="w-full h-auto object-cover object-center"
+              className="w-full h-full object-cover object-center"
               unoptimized
             />
             <div
@@ -54,30 +54,12 @@ export default function EventExperienceProgramPage({ event, pathSlug }: EventExp
               style={{ left: 0, right: 0, width: '100%' }}
             >
               <h1
-                className="font-['Pretendard'] self-stretch"
-                style={{
-                  color: '#FFF',
-                  textAlign: 'center',
-                  fontSize: 44,
-                  fontStyle: 'normal',
-                  fontWeight: 600,
-                  lineHeight: '140%',
-                  letterSpacing: '-0.88px',
-                }}
+                className="font-['Pretendard'] self-stretch text-2xl sm:text-3xl md:text-[44px] text-center font-semibold leading-[140%] tracking-[-0.88px] text-white px-2"
               >
                 체험 이벤트
               </h1>
               <p
-                className="font-['Pretendard'] self-stretch mt-6"
-                style={{
-                  color: '#FFF',
-                  textAlign: 'center',
-                  fontSize: 24,
-                  fontStyle: 'normal',
-                  fontWeight: 500,
-                  lineHeight: '140%',
-                  letterSpacing: '-0.48px',
-                }}
+                className="font-['Pretendard'] self-stretch mt-4 md:mt-6 text-sm sm:text-base md:text-2xl text-center font-medium leading-[140%] tracking-[-0.48px] text-white px-2"
               >
                 체험 이벤트에 모두 참여하시면 럭키드로우 추첨권 1장을 더 드립니다! 확률을 높여보세요!
               </p>
@@ -91,11 +73,11 @@ export default function EventExperienceProgramPage({ event, pathSlug }: EventExp
             {PROGRAM_ITEMS.map((item, index) => (
               <div
                 key={item.num}
-                className="flex flex-row items-start w-full"
+                className="flex flex-col md:flex-row items-center md:items-start w-full max-w-full"
                 style={{ marginTop: index === 0 ? 0 : 17 }}
               >
                 {/* 원 + 원 아래 24px에 세로 구분선 */}
-                <div className="flex-shrink-0 flex flex-col items-center">
+                <div className="flex-shrink-0 flex flex-col items-center md:block">
                   <div className="relative flex items-center justify-center" style={{ width: 64, height: 64 }}>
                     <svg xmlns="http://www.w3.org/2000/svg" width={64} height={64} viewBox="0 0 64 64" fill="none" className="flex-shrink-0 block">
                       <circle cx="32" cy="32" r="32" fill={item.circleFill} />
@@ -119,8 +101,7 @@ export default function EventExperienceProgramPage({ event, pathSlug }: EventExp
 
                 {/* 텍스트 블록: 원으로부터 79px 오른쪽, 32px 위, 고정 너비로 이미지 열 위치 통일 */}
                 <div
-                  className="flex-shrink-0 flex flex-col"
-                  style={{ marginLeft: 79, marginTop: -32, width: 420 }}
+                  className="flex-shrink-0 flex flex-col w-full min-w-0 max-w-full md:max-w-[420px] mt-4 md:mt-0 md:ml-[79px] md:-mt-8"
                 >
                   <h2
                     className="font-['Pretendard']"
@@ -136,38 +117,26 @@ export default function EventExperienceProgramPage({ event, pathSlug }: EventExp
                     {item.title}
                   </h2>
                   <p
-                    className="font-['Pretendard'] mt-5"
+                    className="font-['Pretendard'] mt-5 w-full max-w-full text-sm sm:text-base"
                     style={{
                       color: '#111',
-                      fontSize: 16,
                       fontStyle: 'normal',
                       fontWeight: 500,
                       lineHeight: '140%',
                       letterSpacing: '-0.32px',
-                      maxWidth: 420,
                     }}
                   >
                     {item.body}
                   </p>
                   <p
-                    className="font-['Pretendard']"
-                    style={{
-                      marginTop: 17,
-                      color: '#949494',
-                      fontSize: 14,
-                      fontStyle: 'normal',
-                      fontWeight: 300,
-                      lineHeight: '140%',
-                      letterSpacing: '-0.28px',
-                      maxWidth: 400,
-                    }}
+                    className="font-['Pretendard'] mt-4 text-xs sm:text-sm text-[#949494] font-light leading-[140%] tracking-[-0.28px] max-w-full"
                   >
                     {item.tip}
                   </p>
                 </div>
 
                 {/* 이미지: 텍스트로부터 80px 오른쪽, 565×270, 잘리지 않게 contain·가운데 */}
-                <div className="flex-shrink-0 flex items-center justify-center" style={{ marginLeft: 80, marginTop: -60, width: 565, height: 270 }}>
+                <div className="flex-shrink-0 flex items-center justify-center w-full max-w-full md:max-w-[565px] mt-4 md:mt-0 md:ml-[80px] md:-mt-[60px] aspect-[565/270] md:w-[565px] md:h-[270px]">
                   <Image
                     src={getGcbioImageUrl(item.image)}
                     alt=""

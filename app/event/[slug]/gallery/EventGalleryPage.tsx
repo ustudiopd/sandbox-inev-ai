@@ -66,57 +66,35 @@ export default function EventGalleryPage({ event, pathSlug }: EventGalleryPagePr
       <div className="w-full max-w-[1920px] mx-auto flex flex-col flex-1 min-w-0">
         <Event222152Header slug={slug} variant="gallery" />
 
-        <main className="w-full flex justify-center items-center box-border flex-1 px-4 sm:px-6 md:px-8 lg:px-16 xl:px-[250px] pt-12 sm:pt-24 md:pt-[150px] pb-12 md:pb-[145px] overflow-x-hidden">
+        <main className="w-full flex justify-center items-center box-border flex-1 px-4 sm:px-6 md:px-8 lg:px-16 xl:px-[250px] pt-0 sm:pt-0 md:pt-[50px] pb-12 md:pb-[145px] overflow-x-hidden">
           <div
-            className="flex flex-col justify-center items-center w-full relative"
-            style={{ marginTop: '-450px', overflow: 'visible' }}
+            className="flex flex-col justify-center items-center w-full relative mt-0 md:mt-[-450px] overflow-visible"
           >
             <h1
-              className={`${bebasNeue.className} w-full max-w-[932px] text-[#111] text-center text-3xl sm:text-4xl md:text-5xl lg:text-[70px] leading-[130%] tracking-[-0.7px]`}
+              className={`${bebasNeue.className} w-full max-w-[932px] text-[#111] text-center text-3xl sm:text-4xl md:text-5xl lg:text-[70px] leading-[130%] tracking-[-0.7px] px-2`}
             >
               2026 GCBP Leadership Workshop
             </h1>
-            <p className="font-['Pretendard'] mt-6 text-[#111] text-center text-base sm:text-lg md:text-2xl font-medium leading-[140%] tracking-[-0.48px]">
+            <p className="font-['Pretendard'] mt-6 text-[#111] text-center text-base sm:text-lg md:text-2xl font-medium leading-[140%] tracking-[-0.48px] px-2">
               2026 GCBP Leadership Workshop의 추억을 만나보세요.
             </p>
             <span
-              className={bebasNeue.className}
-              style={{
-                position: 'absolute',
-                left: '-35px',
-                top: '363px',
-                color: '#111',
-                fontFamily: '"Bebas Neue"',
-                fontSize: '50px',
-                fontStyle: 'normal',
-                fontWeight: 700,
-                lineHeight: '140%',
-                letterSpacing: '-0.5px',
-              }}
+              className={`${bebasNeue.className} block mt-8 md:mt-0 text-[#111] text-4xl md:text-5xl font-bold leading-[140%] tracking-[-0.5px] md:absolute md:left-[-35px] md:top-[363px]`}
             >
               Photo
             </span>
-            {/* 갤러리 4세트: 30px 간격 한 줄, 이전/다음 시 전체가 반칸씩 좌우 이동. 홍길동 pill 오른쪽 끝 기준 가시 영역, 밖은 잘림 */}
-            <div
-              className="absolute"
-              style={{
-                left: '-35px',
-                top: '483px',
-                width: 'min(1682px, calc(50% + 722px))',
-                overflowX: 'hidden',
-              }}
-            >
+            {/* 갤러리: 모바일 가로 스크롤, 데스크톱 절대위치 */}
+            <div className="w-full overflow-x-auto md:overflow-x-hidden px-4 mt-4 md:px-0 md:absolute md:left-[-35px] md:top-[483px] md:w-[min(1682px,calc(50%+722px))]">
               <div
-                className="flex flex-shrink-0"
+                className="flex flex-shrink-0 gap-4 md:gap-[30px]"
                 style={{
-                  gap: `${GALLERY_SET_GAP}px`,
                   transform: `translateX(${galleryOffsetX}px)`,
                   transition: 'transform 0.3s ease',
                 }}
               >
                 {GALLERY_SETS.map((set, i) => (
-                  <div key={i} className="flex flex-col flex-shrink-0" style={{ width: `${GALLERY_SET_WIDTH}px` }}>
-                    <div className="flex-shrink-0 overflow-hidden" style={{ width: GALLERY_SET_WIDTH, height: GALLERY_SET_WIDTH }}>
+                  <div key={i} className="flex flex-col flex-shrink-0 w-[260px] min-w-[260px] md:w-[400px] md:min-w-0">
+                    <div className="flex-shrink-0 overflow-hidden w-full aspect-square">
                       <Image
                         src={getGcbioImageUrl(set.src)}
                         alt=""
@@ -125,40 +103,11 @@ export default function EventGalleryPage({ event, pathSlug }: EventGalleryPagePr
                         className="object-cover w-full h-full"
                       />
                     </div>
-                    <div className="flex flex-col" style={{ marginTop: '26px', gap: '10px' }}>
-                      <p
-                        className="font-['Pretendard']"
-                        style={{
-                          width: '400px',
-                          color: '#111',
-                          fontFamily: 'Pretendard',
-                          fontSize: '18px',
-                          fontStyle: 'normal',
-                          fontWeight: 700,
-                          lineHeight: '140%',
-                          letterSpacing: '-0.18px',
-                          textAlign: 'left',
-                          wordBreak: 'keep-all',
-                          overflowWrap: 'break-word',
-                        }}
-                      >
+                    <div className="flex flex-col mt-4 md:mt-[26px] gap-2 md:gap-[10px]">
+                      <p className="font-['Pretendard'] w-full max-w-full text-[#111] text-base md:text-lg font-bold leading-[140%] tracking-[-0.18px] text-left break-words">
                         2025 KASBP 춘계 심포지엄
                       </p>
-                      <p
-                        className="font-['Pretendard']"
-                        style={{
-                          width: '400px',
-                          color: '#111',
-                          fontFamily: 'Pretendard',
-                          fontSize: '16px',
-                          fontStyle: 'normal',
-                          fontWeight: 500,
-                          lineHeight: '140%',
-                          letterSpacing: '-0.16px',
-                          textAlign: 'left',
-                          whiteSpace: 'nowrap',
-                        }}
-                      >
+                      <p className="font-['Pretendard'] w-full max-w-full text-[#111] text-sm md:text-base font-medium leading-[140%] tracking-[-0.16px] text-left break-words md:whitespace-nowrap">
                         {set.subtitle}
                       </p>
                     </div>
@@ -166,117 +115,10 @@ export default function EventGalleryPage({ event, pathSlug }: EventGalleryPagePr
                 ))}
               </div>
             </div>
-            <span
-              className={bebasNeue.className}
-              style={{
-                position: 'absolute',
-                left: '-35px',
-                top: '1141px',
-                color: '#111',
-                fontFamily: '"Bebas Neue"',
-                fontSize: '50px',
-                fontStyle: 'normal',
-                fontWeight: 700,
-                lineHeight: '140%',
-                letterSpacing: '-0.5px',
-              }}
-            >
-              Video
-            </span>
-            {/* 그라데이션: Video 이미지 뒤 레이어 (DOM 순서로 뒤에 있음) */}
+            {/* Photo 버튼: 모바일에서는 갤러리 아래 플로우 */}
             <div
-              className="absolute"
-              style={{
-                left: '50%',
-                transform: 'translateX(-50%)',
-                top: '1579px',
-                width: '1920px',
-                height: '495px',
-                background: 'linear-gradient(180deg, #ffffff 0%, rgba(255, 255, 255, 0) 100%), linear-gradient(90deg, #36C618 0%, #FFDF00 50%, #FF4606 100%)',
-                zIndex: 0,
-              }}
-            />
-            {/* Video 슬라이드: Photo와 동일한 가시 영역, 이전/다음 시 좌우 이동 (그라데이션 앞에 표시) */}
-            <div
-              className="absolute"
-              style={{
-                left: '-35px',
-                top: '1261px',
-                width: 'min(1682px, calc(50% + 722px))',
-                overflowX: 'hidden',
-                zIndex: 1,
-              }}
-            >
-              <div
-                className="flex flex-shrink-0"
-                style={{
-                  gap: `${VIDEO_ITEM_GAP}px`,
-                  transform: `translateX(${videoOffsetX}px)`,
-                  transition: 'transform 0.3s ease',
-                }}
-              >
-                <div
-                  className="flex-shrink-0 flex items-center justify-center"
-                  style={{ width: VIDEO_ITEM_WIDTH, height: VIDEO_ITEM_HEIGHT }}
-                >
-                  <Image
-                    src={getGcbioImageUrl('page5_video1.png')}
-                    alt=""
-                    width={VIDEO_ITEM_WIDTH}
-                    height={VIDEO_ITEM_HEIGHT}
-                    className="object-contain w-full h-full"
-                  />
-                </div>
-                <div
-                  className="flex-shrink-0 flex items-center justify-center"
-                  style={{ width: VIDEO_ITEM_WIDTH, height: VIDEO_ITEM_HEIGHT }}
-                >
-                  <Image
-                    src={getGcbioImageUrl('Frame 24_1.png')}
-                    alt=""
-                    width={VIDEO_ITEM_WIDTH}
-                    height={VIDEO_ITEM_HEIGHT}
-                    className="object-contain w-full h-full"
-                  />
-                </div>
-              </div>
-            </div>
-            {/* Video 섹션 버튼: 이전 / 다음 */}
-            <div
-              className="absolute flex items-center"
-              style={{ left: '1187px', top: '1160px', gap: '10px' }}
-              role="group"
-              aria-label="비디오 이전 / 다음"
-            >
-              <button
-                type="button"
-                onClick={goPrevVideo}
-                className="p-0 border-0 bg-transparent cursor-pointer disabled:cursor-default"
-                aria-label="이전"
-                disabled={!videoCanPrev}
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" width={32} height={32} viewBox="0 0 32 32" fill="none">
-                  <circle cx="16" cy="16" r="15.5" stroke={videoCanPrev ? '#747474' : '#D9D9D9'} />
-                  <path d="M21.5 16H10M10 16L15 12M10 16L15 20" stroke={videoCanPrev ? '#747474' : '#D9D9D9'} strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </button>
-              <button
-                type="button"
-                onClick={goNextVideo}
-                className="p-0 border-0 bg-transparent cursor-pointer disabled:cursor-default"
-                aria-label="다음"
-                disabled={!videoCanNext}
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" width={32} height={32} viewBox="0 0 32 32" fill="none">
-                  <circle cx="16" cy="16" r="15.5" stroke={videoCanNext ? '#747474' : '#D9D9D9'} />
-                  <path d="M10 16H21.5M21.5 16L16.5 12M21.5 16L16.5 20" stroke={videoCanNext ? '#747474' : '#D9D9D9'} strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </button>
-            </div>
-            {/* 버튼 모듈: 이전 / 다음 (Photo) */}
-            <div
-              className="absolute flex items-center"
-              style={{ left: '1198px', top: '382px', gap: '10px' }}
+              className="flex items-center justify-center gap-2 mt-4 md:absolute md:left-[1198px] md:top-[382px] md:justify-start"
+              style={{ gap: '10px' }}
               role="group"
               aria-label="이전 / 다음"
             >
@@ -302,6 +144,79 @@ export default function EventGalleryPage({ event, pathSlug }: EventGalleryPagePr
                 <svg xmlns="http://www.w3.org/2000/svg" width={32} height={32} viewBox="0 0 32 32" fill="none">
                   <circle cx="16" cy="16" r="15.5" stroke={galleryCanNext ? '#747474' : '#D9D9D9'} />
                   <path d="M10 16H21.5M21.5 16L16.5 12M21.5 16L16.5 20" stroke={galleryCanNext ? '#747474' : '#D9D9D9'} strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </button>
+            </div>
+            <span
+              className={`${bebasNeue.className} block mt-12 md:mt-0 text-[#111] text-4xl md:text-5xl font-bold leading-[140%] tracking-[-0.5px] md:absolute md:left-[-35px] md:top-[1141px]`}
+            >
+              Video
+            </span>
+            {/* 그라데이션: 데스크톱만 절대위치, 모바일 숨김 */}
+            <div
+              className="hidden md:block absolute left-1/2 -translate-x-1/2 top-[1579px] w-[1920px] h-[495px] z-0"
+              style={{
+                background: 'linear-gradient(180deg, #ffffff 0%, rgba(255, 255, 255, 0) 100%), linear-gradient(90deg, #36C618 0%, #FFDF00 50%, #FF4606 100%)',
+              }}
+            />
+            {/* Video 슬라이드 */}
+            <div className="w-full overflow-x-auto md:overflow-x-hidden px-4 mt-4 md:px-0 md:absolute md:left-[-35px] md:top-[1261px] md:w-[min(1682px,calc(50%+722px))] z-[1]">
+              <div
+                className="flex flex-shrink-0 gap-4 md:gap-[30px]"
+                style={{
+                  transform: `translateX(${videoOffsetX}px)`,
+                  transition: 'transform 0.3s ease',
+                }}
+              >
+                <div className="flex-shrink-0 flex items-center justify-center w-[280px] min-w-[280px] aspect-[826/418] md:w-[826px] md:min-w-0 md:h-[418px]">
+                  <Image
+                    src={getGcbioImageUrl('page5_video1.png')}
+                    alt=""
+                    width={VIDEO_ITEM_WIDTH}
+                    height={VIDEO_ITEM_HEIGHT}
+                    className="object-contain w-full h-full"
+                  />
+                </div>
+                <div className="flex-shrink-0 flex items-center justify-center w-[280px] min-w-[280px] aspect-[826/418] md:w-[826px] md:min-w-0 md:h-[418px]">
+                  <Image
+                    src={getGcbioImageUrl('Frame 24_1.png')}
+                    alt=""
+                    width={VIDEO_ITEM_WIDTH}
+                    height={VIDEO_ITEM_HEIGHT}
+                    className="object-contain w-full h-full"
+                  />
+                </div>
+              </div>
+            </div>
+            {/* Video 섹션 버튼 */}
+            <div
+              className="flex items-center justify-center gap-2 mt-4 md:absolute md:left-[1187px] md:top-[1160px] md:justify-start"
+              style={{ gap: '10px' }}
+              role="group"
+              aria-label="비디오 이전 / 다음"
+            >
+              <button
+                type="button"
+                onClick={goPrevVideo}
+                className="p-0 border-0 bg-transparent cursor-pointer disabled:cursor-default"
+                aria-label="이전"
+                disabled={!videoCanPrev}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width={32} height={32} viewBox="0 0 32 32" fill="none">
+                  <circle cx="16" cy="16" r="15.5" stroke={videoCanPrev ? '#747474' : '#D9D9D9'} />
+                  <path d="M21.5 16H10M10 16L15 12M10 16L15 20" stroke={videoCanPrev ? '#747474' : '#D9D9D9'} strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </button>
+              <button
+                type="button"
+                onClick={goNextVideo}
+                className="p-0 border-0 bg-transparent cursor-pointer disabled:cursor-default"
+                aria-label="다음"
+                disabled={!videoCanNext}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width={32} height={32} viewBox="0 0 32 32" fill="none">
+                  <circle cx="16" cy="16" r="15.5" stroke={videoCanNext ? '#747474' : '#D9D9D9'} />
+                  <path d="M10 16H21.5M21.5 16L16.5 12M21.5 16L16.5 20" stroke={videoCanNext ? '#747474' : '#D9D9D9'} strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
               </button>
             </div>

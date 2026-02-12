@@ -80,41 +80,39 @@ export default function EventTodayMenuPage({ event, pathSlug }: EventTodayMenuPa
   const [selected, setSelected] = useState<'lunch' | 'dinner'>('lunch')
 
   return (
-    <div className="w-full relative flex flex-col min-h-screen bg-[#F9F9F9]">
+    <div className="w-full relative flex flex-col min-h-screen bg-[#F9F9F9] overflow-x-hidden">
       <div className="w-full max-w-[1920px] mx-auto flex flex-col flex-1 min-w-0">
         <Event222152Header slug={slug} variant="today-menu" />
         <main className="w-full flex-1 flex flex-col items-center justify-center" style={{ marginTop: 30 }}>
-          <div className="relative flex justify-center items-center w-full">
+          <div className="relative w-full max-w-[1420px] flex justify-center items-center rounded-2xl sm:rounded-[32px] overflow-hidden h-[320px]">
             <Image
               src={getGcbioImageUrl('page6_session.png')}
               alt=""
-              width={1421}
-              height={800}
-              className="max-w-full h-auto object-contain"
-              style={{ marginTop: 0, marginLeft: -12, transform: 'scale(0.99)' }}
+              width={1420}
+              height={320}
+              className="w-full h-full object-cover object-center"
               unoptimized
             />
             <span
-              className="absolute inset-0 flex items-center justify-center pointer-events-none"
+              className="absolute inset-0 flex items-center justify-center pointer-events-none text-white font-semibold leading-[140%] text-2xl sm:text-3xl md:text-[44px] px-2"
               style={{
-                color: '#FFF',
                 fontFamily: 'Pretendard, sans-serif',
-                fontSize: 44,
                 fontStyle: 'normal',
-                fontWeight: 600,
-                lineHeight: '140%',
                 letterSpacing: -1.1,
               }}
             >
               오늘의 메뉴
             </span>
           </div>
-          <div className="flex justify-center items-center gap-0" style={{ marginTop: 80 }}>
+          <div className="flex flex-col sm:flex-row justify-center items-stretch sm:items-center gap-2 sm:gap-0 w-full max-w-[1420px] px-4" style={{ marginTop: 80 }}>
             <button
               type="button"
               onClick={() => setSelected('lunch')}
+              className="w-full sm:w-[355px] md:w-[710px] min-w-0 flex-1 sm:flex-none"
               style={{
                 ...buttonBase,
+                width: undefined,
+                maxWidth: '100%',
                 background: selected === 'lunch' ? '#111' : 'transparent',
                 color: selected === 'lunch' ? '#FFF' : '#111',
               }}
@@ -124,8 +122,11 @@ export default function EventTodayMenuPage({ event, pathSlug }: EventTodayMenuPa
             <button
               type="button"
               onClick={() => setSelected('dinner')}
+              className="w-full sm:w-[355px] md:w-[710px] min-w-0 flex-1 sm:flex-none"
               style={{
                 ...buttonBase,
+                width: undefined,
+                maxWidth: '100%',
                 background: selected === 'dinner' ? '#111' : 'transparent',
                 color: selected === 'dinner' ? '#FFF' : '#111',
               }}
@@ -135,20 +136,12 @@ export default function EventTodayMenuPage({ event, pathSlug }: EventTodayMenuPa
           </div>
           {selected === 'lunch' && (
             <div
-              className="flex flex-col items-center"
-              style={{ marginTop: 40, width: 'max-content' }}
+              className="flex flex-col items-center w-full max-w-full px-4"
+              style={{ marginTop: 40 }}
             >
               <p
-                style={{
-                  color: '#111',
-                  textAlign: 'center',
-                  fontFamily: 'Pretendard, sans-serif',
-                  fontSize: 32,
-                  fontStyle: 'normal',
-                  fontWeight: 700,
-                  lineHeight: '140%',
-                  whiteSpace: 'nowrap',
-                }}
+                className="text-[#111] text-center font-bold leading-[140%] text-xl sm:text-2xl md:text-[32px] break-words max-w-full"
+                style={{ fontFamily: 'Pretendard, sans-serif', fontStyle: 'normal' }}
               >
                 JAPANESE BENTO BOX
               </p>
@@ -156,35 +149,18 @@ export default function EventTodayMenuPage({ event, pathSlug }: EventTodayMenuPa
               {LUNCH_MENU_ITEMS.map((item, i) => (
                 <div
                   key={item.titleEn + i}
-                  className="flex flex-col items-center"
-                  style={{ marginTop: 40, width: 'max-content' }}
+                  className="flex flex-col items-center w-full max-w-full px-2"
+                  style={{ marginTop: 40 }}
                 >
                   <p
-                    style={{
-                      color: '#949494',
-                      textAlign: 'center',
-                      fontFamily: 'Pretendard, sans-serif',
-                      fontSize: 16,
-                      fontStyle: 'normal',
-                      fontWeight: 600,
-                      lineHeight: '140%',
-                      whiteSpace: 'nowrap',
-                    }}
+                    className="text-[#949494] text-center font-semibold text-sm sm:text-base leading-[140%] break-words max-w-full"
+                    style={{ fontFamily: 'Pretendard, sans-serif', fontStyle: 'normal' }}
                   >
                     {item.titleEn}
                   </p>
                   <p
-                    style={{
-                      color: '#949494',
-                      textAlign: 'center',
-                      fontFamily: 'Pretendard, sans-serif',
-                      fontSize: 16,
-                      fontStyle: 'normal',
-                      fontWeight: 500,
-                      lineHeight: '140%',
-                      marginTop: 5,
-                      whiteSpace: 'nowrap',
-                    }}
+                    className="text-[#949494] text-center font-medium text-sm sm:text-base leading-[140%] mt-1 break-words max-w-full"
+                    style={{ fontFamily: 'Pretendard, sans-serif', fontStyle: 'normal' }}
                   >
                     {item.titleKo}
                   </p>
@@ -195,7 +171,7 @@ export default function EventTodayMenuPage({ event, pathSlug }: EventTodayMenuPa
                 alt=""
                 width={1420}
                 height={674}
-                className="object-contain"
+                className="object-contain w-full max-w-full h-auto"
                 style={{ marginTop: 106 }}
                 unoptimized
               />
@@ -208,21 +184,11 @@ export default function EventTodayMenuPage({ event, pathSlug }: EventTodayMenuPa
               style={{ marginTop: 40 }}
             >
               <div
-                className="flex flex-col items-stretch"
-                style={{ width: 'max-content' }}
+                className="flex flex-col items-stretch w-full max-w-full px-4"
               >
                 <p
-                  className="block w-full"
-                  style={{
-                    color: '#111',
-                    textAlign: 'center',
-                    fontFamily: 'Pretendard, sans-serif',
-                    fontSize: 32,
-                    fontStyle: 'normal',
-                    fontWeight: 700,
-                    lineHeight: '140%',
-                    whiteSpace: 'nowrap',
-                  }}
+                  className="block w-full text-[#111] text-center font-bold text-xl sm:text-2xl md:text-[32px] leading-[140%] break-words max-w-full"
+                  style={{ fontFamily: 'Pretendard, sans-serif', fontStyle: 'normal' }}
                 >
                   INTERNATIONAL BUFFET
                 </p>
@@ -230,37 +196,22 @@ export default function EventTodayMenuPage({ event, pathSlug }: EventTodayMenuPa
                 {DINNER_MENU_ITEMS.map((item, i) => (
                   <div
                     key={item.titleEn + i}
-                    className="flex flex-col items-stretch"
+                    className="flex flex-col items-stretch w-full max-w-full px-2"
                     style={{ marginTop: 26 }}
                   >
                     <p
-                      className="block w-full"
+                      className="block w-full text-[#949494] text-center font-semibold text-sm sm:text-base leading-[140%] break-words max-w-full"
                       style={{
-                        color: '#949494',
-                        textAlign: 'center',
                         fontFamily: 'Pretendard, sans-serif',
-                        fontSize: 16,
                         fontStyle: 'normal',
-                        fontWeight: 600,
-                        lineHeight: '140%',
-                        whiteSpace: item.titleEn.includes('\n') ? 'pre-line' : 'nowrap',
+                        whiteSpace: item.titleEn.includes('\n') ? 'pre-line' : 'normal',
                       }}
                     >
                       {item.titleEn}
                     </p>
                     <p
-                      className="block w-full"
-                      style={{
-                        color: '#949494',
-                        textAlign: 'center',
-                        fontFamily: 'Pretendard, sans-serif',
-                        fontSize: 16,
-                        fontStyle: 'normal',
-                        fontWeight: 500,
-                        lineHeight: '140%',
-                        marginTop: 5,
-                        whiteSpace: 'nowrap',
-                      }}
+                      className="block w-full text-[#949494] text-center font-medium text-sm sm:text-base leading-[140%] mt-1 break-words max-w-full"
+                      style={{ fontFamily: 'Pretendard, sans-serif', fontStyle: 'normal' }}
                     >
                       {item.titleKo}
                     </p>
@@ -272,7 +223,7 @@ export default function EventTodayMenuPage({ event, pathSlug }: EventTodayMenuPa
                 alt=""
                 width={1420}
                 height={674}
-                className="object-contain"
+                className="object-contain w-full max-w-full h-auto"
                 style={{ marginTop: 192 }}
                 unoptimized
               />

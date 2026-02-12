@@ -22,10 +22,10 @@ export default function EventSessionGuidePage({ event, pathSlug }: EventSessionG
         <Event222152Header slug={slug} variant="session-guide" />
 
         <main className="w-full flex justify-center items-start box-border flex-1 px-4 sm:px-6 md:px-8 lg:px-16 xl:px-[250px] pt-6 sm:pt-8 pb-12 sm:pb-16">
-          <div className="flex flex-col justify-center items-center w-full max-w-[1280px] mx-auto min-w-0">
+          <div className="flex flex-col justify-center items-center w-full max-w-[1420px] mx-auto min-w-0">
             <div
-              className="w-full max-w-[1481px] flex items-center justify-center rounded-2xl sm:rounded-[32px] bg-cover bg-center"
-              style={{ backgroundImage: `url(${getGcbioImageUrl('page3_again.png')})`, width: 1481, maxWidth: '100%', height: 320 }}
+              className="w-full max-w-[1420px] flex items-center justify-center rounded-2xl sm:rounded-[32px] bg-cover bg-center overflow-hidden"
+              style={{ backgroundImage: `url(${getGcbioImageUrl('page3_again.png')})`, width: 1420, maxWidth: '100%', height: 320 }}
             >
               <span className="font-['Pretendard'] text-white text-center text-2xl sm:text-3xl md:text-[44px] font-semibold leading-[140%] tracking-[-1.1px] px-4">
                 세션 안내
@@ -50,23 +50,17 @@ export default function EventSessionGuidePage({ event, pathSlug }: EventSessionG
                   className="rounded-full object-cover flex-shrink-0 w-40 h-40 sm:w-52 sm:h-52 md:w-[216px] md:h-[216px]"
                 />
                 <div
-                  className="font-['Pretendard'] flex flex-col justify-center flex-shrink-0"
+                  className="font-['Pretendard'] flex flex-col justify-center flex-shrink-0 w-full min-w-0 max-w-full md:w-[620px] md:min-w-[620px] pl-4 pr-4 pt-[11px] md:pl-[88px] md:pr-[24px] min-h-[180px] md:min-h-0 md:h-[240px]"
                   style={{
-                    width: '620px',
-                    minWidth: '620px',
-                    height: '240px',
                     borderRadius: '744.118px',
                     background: '#F0F0F0',
-                    paddingLeft: '88px',
-                    paddingRight: '24px',
-                    paddingTop: '11px',
                   }}
                 >
                   <div
+                    className="text-lg md:text-2xl"
                     style={{
                       color: '#111',
                       fontFamily: 'Pretendard',
-                      fontSize: '24px',
                       fontStyle: 'normal',
                       fontWeight: 700,
                       lineHeight: '140%',
@@ -133,13 +127,12 @@ export default function EventSessionGuidePage({ event, pathSlug }: EventSessionG
             {/* 구분선 아래 100px — 배백식 섹션 (M2) */}
             <div style={{ marginTop: '50px' }} className="flex flex-col items-center">
               <h2
-                className="font-['Pretendard']"
+                className="font-['Pretendard'] w-full max-w-full md:w-[644px]"
                 style={{
-                  width: '644px',
                   color: '#111',
                   textAlign: 'center',
                   fontFamily: 'Pretendard',
-                  fontSize: '44px',
+                  fontSize: 'clamp(1.5rem, 5vw, 44px)',
                   fontStyle: 'normal',
                   fontWeight: 600,
                   lineHeight: '140%',
@@ -150,33 +143,26 @@ export default function EventSessionGuidePage({ event, pathSlug }: EventSessionG
                 M2. 2026 GCBP 사업전략 발표
               </h2>
               <div
-                className="flex items-center"
+                className="flex flex-col md:flex-row items-center"
                 style={{ marginTop: '42px', gap: '15px' }}
               >
                 <img
                   src={getGcbioImageUrl('page3_person2.png')}
                   alt="대표이사 특강"
-                  className="rounded-full object-cover flex-shrink-0"
-                  style={{ width: '216px', height: '216px' }}
+                  className="rounded-full object-cover flex-shrink-0 w-40 h-40 sm:w-52 sm:h-52 md:w-[216px] md:h-[216px]"
                 />
                 <div
-                  className="font-['Pretendard'] flex flex-col justify-center flex-shrink-0"
+                  className="font-['Pretendard'] flex flex-col justify-center flex-shrink-0 w-full min-w-0 max-w-full md:w-[620px] md:min-w-[620px] pl-4 pr-4 pt-[11px] md:pl-[88px] md:pr-[24px] min-h-[180px] md:min-h-0 md:h-[240px]"
                   style={{
-                    width: '620px',
-                    minWidth: '620px',
-                    height: '240px',
                     borderRadius: '744.118px',
                     background: '#F0F0F0',
-                    paddingLeft: '88px',
-                    paddingRight: '24px',
-                    paddingTop: '11px',
                   }}
                 >
                   <div
+                    className="text-lg md:text-2xl"
                     style={{
                       color: '#111',
                       fontFamily: 'Pretendard',
-                      fontSize: '24px',
                       fontStyle: 'normal',
                       fontWeight: 700,
                       lineHeight: '140%',
@@ -257,13 +243,12 @@ export default function EventSessionGuidePage({ event, pathSlug }: EventSessionG
             {/* M3. GCBP 우수사례발표 — 구분선 아래 50px */}
             <div className="flex flex-col items-center" style={{ marginTop: '50px' }}>
               <h2
-                className="font-['Pretendard']"
+                className="font-['Pretendard'] w-full max-w-full md:w-[644px]"
                 style={{
-                  width: '644px',
                   color: '#111',
                   textAlign: 'center',
                   fontFamily: 'Pretendard',
-                  fontSize: '44px',
+                  fontSize: 'clamp(1.5rem, 5vw, 44px)',
                   fontStyle: 'normal',
                   fontWeight: 600,
                   lineHeight: '140%',
@@ -307,64 +292,20 @@ export default function EventSessionGuidePage({ event, pathSlug }: EventSessionG
                 ].map((row, i) => (
                   <div
                     key={i}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                    }}
+                    className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-0"
                   >
                     <img
                       src={getGcbioImageUrl(row.image)}
                       alt={row.name}
-                      style={{
-                        width: '160px',
-                        height: '90px',
-                        objectFit: 'cover',
-                        marginRight: '11px',
-                        flexShrink: 0,
-                      }}
+                      className="w-full max-w-[160px] h-[90px] object-cover flex-shrink-0 sm:mr-[11px] mx-auto sm:mx-0"
                     />
                     <div
-                      className="font-['Pretendard']"
-                      style={{
-                        display: 'inline-flex',
-                        width: '240px',
-                        height: '90px',
-                        padding: '0 26px 0 24px',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        borderRadius: '200px',
-                        background: '#EBEBEC',
-                        color: '#000',
-                        textAlign: 'center',
-                        fontFamily: 'Pretendard',
-                        fontSize: '16px',
-                        fontStyle: 'normal',
-                        fontWeight: 600,
-                        lineHeight: '140%',
-                        letterSpacing: '-0.32px',
-                      }}
+                      className="font-['Pretendard'] flex items-center justify-center min-h-[90px] px-4 sm:px-6 py-2 sm:w-[240px] sm:min-w-[240px] w-full max-w-full rounded-full bg-[#EBEBEC] text-center text-sm sm:text-base font-semibold leading-[140%] tracking-[-0.32px] text-[#000]"
                     >
                       {row.name}
                     </div>
                     <div
-                      className="font-['Pretendard']"
-                      style={{
-                        marginLeft: '10px',
-                        display: 'flex',
-                        width: '423px',
-                        height: '90px',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        borderRadius: '200px',
-                        border: '1px solid #CACACA',
-                        color: '#000',
-                        fontFamily: 'Pretendard',
-                        fontSize: '16px',
-                        fontStyle: 'normal',
-                        fontWeight: 500,
-                        lineHeight: '140%',
-                        letterSpacing: '-0.32px',
-                      }}
+                      className="font-['Pretendard'] flex items-center justify-center min-h-[90px] px-4 sm:px-6 py-2 sm:w-[423px] sm:min-w-[423px] w-full max-w-full rounded-full border border-[#CACACA] text-center text-sm sm:text-base font-medium leading-[140%] tracking-[-0.32px] text-[#000] sm:ml-[10px]"
                     >
                       {row.title}
                     </div>
@@ -374,18 +315,19 @@ export default function EventSessionGuidePage({ event, pathSlug }: EventSessionG
             </div>
 
             {/* 구분선: 안기범 행 아래 132px */}
-            <div style={{ marginTop: '132px', width: '1420px', height: '1px', background: '#EBEBEC' }} />
+            <div className="w-full flex justify-center" style={{ marginTop: '132px' }}>
+                <div className="w-full max-w-[1420px] h-px bg-[#EBEBEC]" />
+              </div>
 
             {/* 구분선 아래 50px — M4 협업 인사이트(특강) */}
             <div className="flex flex-col items-center" style={{ marginTop: '50px' }}>
               <h2
-                className="font-['Pretendard']"
+                className="font-['Pretendard'] w-full max-w-full md:w-[796px] px-2"
                 style={{
-                  width: '796px',
                   color: '#111',
                   textAlign: 'center',
                   fontFamily: 'Pretendard',
-                  fontSize: '44px',
+                  fontSize: 'clamp(1.25rem, 4vw, 44px)',
                   fontStyle: 'normal',
                   fontWeight: 600,
                   lineHeight: '140%',
@@ -398,33 +340,26 @@ export default function EventSessionGuidePage({ event, pathSlug }: EventSessionG
                 Cross Functional Collaboration 명사 특강
               </h2>
               <div
-                className="flex items-center"
+                className="flex flex-col md:flex-row items-center"
                 style={{ marginTop: '42px', gap: '15px' }}
               >
                 <img
                   src={getGcbioImageUrl('page3_person11.png')}
                   alt="황성현 연사"
-                  className="rounded-full object-cover flex-shrink-0"
-                  style={{ width: '216px', height: '216px' }}
+                  className="rounded-full object-cover flex-shrink-0 w-40 h-40 sm:w-52 sm:h-52 md:w-[216px] md:h-[216px]"
                 />
                 <div
-                  className="font-['Pretendard'] flex flex-col justify-center flex-shrink-0"
+                  className="font-['Pretendard'] flex flex-col justify-center flex-shrink-0 w-full min-w-0 max-w-full md:w-[620px] md:min-w-[620px] pl-4 pr-4 pt-[11px] md:pl-[88px] md:pr-[24px] min-h-[180px] md:min-h-0 md:h-[240px]"
                   style={{
-                    width: '620px',
-                    minWidth: '620px',
-                    height: '240px',
                     borderRadius: '744.118px',
                     background: '#F0F0F0',
-                    paddingLeft: '88px',
-                    paddingRight: '24px',
-                    paddingTop: '11px',
                   }}
                 >
                   <div
+                    className="text-lg md:text-2xl"
                     style={{
                       color: '#111',
                       fontFamily: 'Pretendard',
-                      fontSize: '24px',
                       fontStyle: 'normal',
                       fontWeight: 700,
                       lineHeight: '140%',
@@ -512,13 +447,12 @@ export default function EventSessionGuidePage({ event, pathSlug }: EventSessionG
               {/* 구분선 아래 102px — M4 미니 워크숍 */}
               <div style={{ marginTop: '102px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                 <h2
-                  className="font-['Pretendard']"
+                  className="font-['Pretendard'] w-full max-w-full md:w-[644px]"
                   style={{
-                    width: '644px',
                     color: '#111',
                     textAlign: 'center',
                     fontFamily: 'Pretendard',
-                    fontSize: '44px',
+                    fontSize: 'clamp(1.5rem, 5vw, 44px)',
                     fontStyle: 'normal',
                     fontWeight: 600,
                     lineHeight: '140%',
@@ -550,22 +484,15 @@ export default function EventSessionGuidePage({ event, pathSlug }: EventSessionG
                   marginTop: '60px',
                   marginBottom: '220px',
                   display: 'flex',
-                  flexDirection: 'row',
-                  alignItems: 'flex-start',
+                  flexDirection: 'column',
+                  alignItems: 'center',
                   justifyContent: 'center',
                   gap: '16px',
                 }}
+                className="md:flex-row md:items-start"
               >
                 <div
-                  style={{
-                    width: '864px',
-                    height: '509px',
-                    borderRadius: '8px',
-                    background: '#D9D9D9',
-                    display: 'flex',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                  }}
+                  className="w-full max-w-full md:w-[864px] md:h-[509px] min-h-[200px] rounded-lg flex justify-center items-center bg-[#D9D9D9]"
                 >
                   <span
                     className="font-['Bebas_Neue']"
@@ -593,15 +520,11 @@ export default function EventSessionGuidePage({ event, pathSlug }: EventSessionG
                 >
                 {/* 540×159 비디오 카드 1 */}
                 <div
+                  className="w-full max-w-full md:w-[540px] min-h-[159px] rounded-lg overflow-hidden relative"
                   style={{
-                    width: '540px',
-                    height: '159px',
-                    borderRadius: '8px',
                     backgroundImage: `url(${getGcbioImageUrl('page3_session1.png')})`,
                     backgroundSize: 'cover',
                     backgroundPosition: 'center',
-                    position: 'relative',
-                    overflow: 'hidden',
                   }}
                 >
                   <div
@@ -642,9 +565,8 @@ export default function EventSessionGuidePage({ event, pathSlug }: EventSessionG
                       천 명이 한 자리에서 일하는 회사!
                     </span>
                     <p
-                      className="font-['Pretendard']"
+                      className="font-['Pretendard'] w-full max-w-full md:max-w-[492px]"
                       style={{
-                        width: '492px',
                         margin: 0,
                         color: '#FFF',
                         fontFamily: 'Pretendard, sans-serif',
@@ -704,15 +626,11 @@ export default function EventSessionGuidePage({ event, pathSlug }: EventSessionG
                 </div>
                 {/* 540×159 비디오 카드 2 */}
                 <div
+                  className="w-full max-w-full md:w-[540px] min-h-[159px] rounded-lg overflow-hidden relative"
                   style={{
-                    width: '540px',
-                    height: '159px',
-                    borderRadius: '8px',
                     backgroundImage: `url(${getGcbioImageUrl('page3_session2.png')})`,
                     backgroundSize: 'cover',
                     backgroundPosition: 'center',
-                    position: 'relative',
-                    overflow: 'hidden',
                   }}
                 >
                   <div
@@ -753,9 +671,8 @@ export default function EventSessionGuidePage({ event, pathSlug }: EventSessionG
                       지나친 내부 경쟁이 기업을 맟니다! 지금 당장 '협업 지수'를 높여라!
                     </span>
                     <p
-                      className="font-['Pretendard']"
+                      className="font-['Pretendard'] w-full max-w-full md:max-w-[492px]"
                       style={{
-                        width: '492px',
                         margin: 0,
                         color: '#FFF',
                         fontFamily: 'Pretendard, sans-serif',
@@ -815,15 +732,11 @@ export default function EventSessionGuidePage({ event, pathSlug }: EventSessionG
                 </div>
                 {/* 540×159 비디오 카드 3 */}
                 <div
+                  className="w-full max-w-full md:w-[540px] min-h-[159px] rounded-lg overflow-hidden relative"
                   style={{
-                    width: '540px',
-                    height: '159px',
-                    borderRadius: '8px',
                     backgroundImage: `url(${getGcbioImageUrl('page3_session3.png')})`,
                     backgroundSize: 'cover',
                     backgroundPosition: 'center',
-                    position: 'relative',
-                    overflow: 'hidden',
                   }}
                 >
                   <div
@@ -864,9 +777,8 @@ export default function EventSessionGuidePage({ event, pathSlug }: EventSessionG
                       업무 협조를 잘 받아내는 것도 능력이다! 요청의 기술 3가지
                     </span>
                     <p
-                      className="font-['Pretendard']"
+                      className="font-['Pretendard'] w-full max-w-full md:max-w-[492px]"
                       style={{
-                        width: '492px',
                         margin: 0,
                         color: '#FFF',
                         fontFamily: 'Pretendard, sans-serif',

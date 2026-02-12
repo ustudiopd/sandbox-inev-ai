@@ -22,15 +22,15 @@ export default function CollaborationStylePage({ event, pathSlug }: Collaboratio
         <Event222152Header slug={slug} variant="collaboration-style" />
 
         <main className="w-full flex justify-center items-center box-border flex-1 px-4 sm:px-6 md:px-8 lg:px-16 xl:px-[250px] py-12 sm:py-24 md:py-[150px] pb-12 md:pb-[145px] overflow-x-hidden">
-          <div className="flex items-center" style={{ gap: '77px', width: 'fit-content', maxWidth: '100%' }}>
-            <div className="relative" style={{ flexShrink: 0 }}>
+          <div className="flex flex-col md:flex-row items-center w-full max-w-full gap-8 md:gap-[77px]">
+            <div className="relative flex-shrink-0 w-full max-w-[278px] mx-auto md:mx-0 md:max-w-none">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width="119.5"
                 height="60.256"
                 viewBox="0 0 120 61"
                 fill="none"
-                className="absolute"
+                className="absolute hidden md:block"
                 style={{
                   left: '-40px',
                   top: '-173.256px',
@@ -46,7 +46,7 @@ export default function CollaborationStylePage({ event, pathSlug }: Collaboratio
                 height="105.756"
                 viewBox="0 0 110 107"
                 fill="none"
-                className="absolute"
+                className="absolute hidden md:block"
                 style={{
                   left: '-340px',
                   top: '33px',
@@ -62,7 +62,7 @@ export default function CollaborationStylePage({ event, pathSlug }: Collaboratio
                 height="138.837"
                 viewBox="0 0 130 139"
                 fill="none"
-                className="absolute"
+                className="absolute hidden md:block"
                 style={{
                   left: '-174px',
                   top: '393px',
@@ -75,22 +75,21 @@ export default function CollaborationStylePage({ event, pathSlug }: Collaboratio
               </svg>
               <div
                 aria-hidden
+                className="w-full max-w-[278px] aspect-square rounded-full mx-auto md:mx-0 md:w-[278px] md:h-[278px]"
                 style={{
-                  width: '278px',
-                  height: '278px',
                   borderRadius: '197.5px',
                   background: `lightgray url(${getGcbioImageUrl('page2_photo2.png')}) -87.32px -0.334px / 151.381% 100.12% no-repeat`,
                 }}
               />
             </div>
-            <div className="relative flex flex-col justify-center items-start flex-1 min-w-0" style={{ width: '437px', maxWidth: '437px' }}>
+            <div className="relative flex flex-col justify-center items-start flex-1 min-w-0 w-full max-w-full md:max-w-[437px] px-2 md:px-0">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width="131.292"
                 height="134.256"
                 viewBox="0 0 132 135"
                 fill="none"
-                className="absolute"
+                className="absolute hidden md:block"
                 style={{
                   left: '503px',
                   top: '-154.256px',
@@ -107,7 +106,7 @@ export default function CollaborationStylePage({ event, pathSlug }: Collaboratio
                 height="68"
                 viewBox="0 0 124 69"
                 fill="none"
-                className="absolute"
+                className="absolute hidden md:block"
                 style={{
                   left: '614px',
                   top: '265px',
@@ -118,68 +117,25 @@ export default function CollaborationStylePage({ event, pathSlug }: Collaboratio
                 <path d="M14.1461 28.2555C21.9588 28.2555 28.2922 21.9303 28.2922 14.1278C28.2922 6.32521 21.9588 0 14.1461 0C6.33343 0 0 6.32521 0 14.1278C0 21.9303 6.33343 28.2555 14.1461 28.2555Z" fill="#F5D327"/>
               </svg>
             <h1
-              className="font-['Pretendard']"
-              style={{
-                color: '#111',
-                textAlign: 'left',
-                fontFamily: 'Pretendard',
-                fontSize: '41px',
-                fontStyle: 'normal',
-                fontWeight: 600,
-                lineHeight: '140%',
-                letterSpacing: '-0.44px',
-              }}
+              className="font-['Pretendard'] text-[#111] text-left font-semibold leading-[140%] tracking-[-0.44px] text-2xl sm:text-3xl md:text-[41px]"
             >
               협업 스타일 진단
             </h1>
             <div
               aria-hidden
-              style={{
-                width: '437px',
-                height: '1px',
-                background: '#000',
-                marginTop: '24px',
-                marginBottom: '24px',
-              }}
+              className="w-full max-w-full md:w-[437px] h-px bg-black my-6"
             />
             <p
-              className="font-['Pretendard']"
-              style={{
-                color: '#111',
-                textAlign: 'left',
-                fontFamily: 'Pretendard',
-                fontSize: '21px',
-                fontStyle: 'normal',
-                fontWeight: 600,
-                lineHeight: '140%',
-                letterSpacing: '-0.48px',
-              }}
+              className="font-['Pretendard'] text-[#111] text-left font-semibold leading-[140%] tracking-[-0.48px] text-base sm:text-lg md:text-[21px]"
             >
               당신은 어떤 리더인가요? 지금 한번 알아볼까요?
             </p>
-            <div className="relative" style={{ display: 'inline-block', marginTop: '40px' }}>
+            <div className="relative inline-block mt-8 md:mt-10">
               <div
-                style={{
-                  display: 'flex',
-                  width: '235px',
-                  padding: '12px 39px',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  gap: '25px',
-                  borderRadius: '100px',
-                  background: '#111',
-                }}
+                className="flex justify-center items-center gap-4 md:gap-6 rounded-[100px] bg-[#111] py-3 px-6 md:py-3 md:px-[39px] w-full max-w-[280px] md:w-[235px]"
               >
                 <span
-                  className="font-['Pretendard']"
-                  style={{
-                    color: '#FFF',
-                    fontFamily: 'Pretendard',
-                    fontSize: '24px',
-                    fontStyle: 'normal',
-                    fontWeight: 500,
-                    lineHeight: '140%',
-                  }}
+                  className="font-['Pretendard'] text-white text-lg md:text-2xl font-medium leading-[140%]"
                 >
                   Click
                 </span>
@@ -206,7 +162,7 @@ export default function CollaborationStylePage({ event, pathSlug }: Collaboratio
                 height="78.959"
                 viewBox="0 0 111 83"
                 fill="none"
-                className="absolute"
+                className="absolute hidden md:block"
                 style={{
                   left: '318px',
                   top: '250px',
