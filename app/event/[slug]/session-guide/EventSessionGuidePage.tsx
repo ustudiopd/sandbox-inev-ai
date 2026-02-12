@@ -17,17 +17,21 @@ export default function EventSessionGuidePage({ event, pathSlug }: EventSessionG
   const slug = pathSlug ?? event.slug
 
   return (
-    <div className="w-full relative flex flex-col min-h-screen bg-[#F9F9F9] overflow-x-hidden">
-      <div className="w-full max-w-[1920px] mx-auto flex flex-col flex-1 min-w-0">
+    <>
+      {/* PC·모바일 공통: 스크롤 시에도 헤더 상단 고정 (overflow 바깥에 두어 sticky 동작 보장) */}
+      <div className="sticky top-0 z-50 w-full bg-[#F9F9F9]">
         <Event222152Header slug={slug} variant="session-guide" />
+      </div>
 
-        <main className="w-full flex justify-center items-start box-border flex-1 px-4 sm:px-6 md:px-8 lg:px-16 xl:px-[250px] pt-6 sm:pt-8 pb-12 sm:pb-16">
+      <div className="w-full relative flex flex-col min-h-screen bg-[#F9F9F9] overflow-x-hidden">
+        <div className="w-full max-w-[1920px] mx-auto flex flex-col flex-1 min-w-0">
+          <main className="w-full flex justify-center items-start box-border flex-1 px-4 sm:px-6 md:px-8 lg:px-16 xl:px-[250px] pt-6 sm:pt-8 pb-12 sm:pb-16">
           <div className="flex flex-col justify-center items-center w-full max-w-[1420px] mx-auto min-w-0">
             <div
-              className="w-full max-w-[1420px] flex items-center justify-center rounded-2xl sm:rounded-[32px] bg-cover bg-center overflow-hidden"
-              style={{ backgroundImage: `url(${getGcbioImageUrl('page3_again.png')})`, width: 1420, maxWidth: '100%', height: 320 }}
+              className="w-full max-w-[1420px] flex items-center justify-center rounded-2xl sm:rounded-[32px] bg-cover bg-center overflow-hidden h-[270px] md:h-[320px]"
+              style={{ backgroundImage: `url(${getGcbioImageUrl('page3_again.png')})`, width: 1420, maxWidth: '100%' }}
             >
-              <span className="font-['Pretendard'] text-white text-center text-2xl sm:text-3xl md:text-[44px] font-semibold leading-[140%] tracking-[-1.1px] px-4">
+              <span className="hidden md:inline font-['Pretendard'] text-white text-center text-2xl sm:text-3xl md:text-[44px] font-semibold leading-[140%] tracking-[-1.1px] px-4">
                 세션 안내
               </span>
             </div>
@@ -38,8 +42,8 @@ export default function EventSessionGuidePage({ event, pathSlug }: EventSessionG
               >
                 M1. 대표이사 특강
               </h2>
-              <p className="font-['Pretendard'] text-[#111] text-center text-lg sm:text-xl md:text-2xl font-medium leading-[140%] tracking-[-0.48px] mt-6">
-                2026 GCBP Leadership Workshop의 문을 열고
+              <p className="font-['Pretendard'] text-[#111] text-center text-base sm:text-lg md:text-2xl font-medium leading-[140%] tracking-[-0.48px] mt-6 max-w-full px-1">
+                2026 GCBP Leadership Workshop의 문을 <span className="whitespace-nowrap">열고</span>
                 <br />
                 미래를 향한 발걸음을 위한 한마디
               </p>
@@ -50,14 +54,14 @@ export default function EventSessionGuidePage({ event, pathSlug }: EventSessionG
                   className="rounded-full object-cover flex-shrink-0 w-40 h-40 sm:w-52 sm:h-52 md:w-[216px] md:h-[216px]"
                 />
                 <div
-                  className="font-['Pretendard'] flex flex-col justify-center flex-shrink-0 w-full min-w-0 max-w-full md:w-[620px] md:min-w-[620px] pl-4 pr-4 pt-[11px] md:pl-[88px] md:pr-[24px] min-h-[180px] md:min-h-0 md:h-[240px]"
+                  className="font-['Pretendard'] flex flex-col justify-center flex-shrink-0 w-[340px] min-w-[340px] max-w-full mx-auto md:w-[620px] md:min-w-[620px] md:mx-0 pl-4 pr-4 pt-[11px] md:pl-[88px] md:pr-[24px] min-h-[180px] md:min-h-0 md:h-[240px]"
                   style={{
                     borderRadius: '744.118px',
                     background: '#F0F0F0',
                   }}
                 >
                   <div
-                    className="text-lg md:text-2xl"
+                    className="text-sm md:text-2xl"
                     style={{
                       color: '#111',
                       fontFamily: 'Pretendard',
@@ -71,24 +75,24 @@ export default function EventSessionGuidePage({ event, pathSlug }: EventSessionG
                   </div>
                   <div style={{ height: '5px' }} />
                   <div
+                    className="text-sm md:text-base"
                     style={{
                       color: '#111',
                       fontFamily: 'Pretendard',
-                      fontSize: '16px',
                       fontStyle: 'normal',
                       fontWeight: 600,
                       lineHeight: '140%',
                       letterSpacing: '-0.32px',
                     }}
                   >
-                    특강: 2026 GCBP 리더들의 마음가짐 (더미 텍스트)
+                    Title : 대표이사 Keynote
                   </div>
                   <div style={{ height: '21px' }} />
                   <div
+                    className="text-xs md:text-sm"
                     style={{
                       color: '#111',
                       fontFamily: 'Pretendard',
-                      fontSize: '14px',
                       fontStyle: 'normal',
                       fontWeight: 500,
                       lineHeight: '140%',
@@ -152,14 +156,14 @@ export default function EventSessionGuidePage({ event, pathSlug }: EventSessionG
                   className="rounded-full object-cover flex-shrink-0 w-40 h-40 sm:w-52 sm:h-52 md:w-[216px] md:h-[216px]"
                 />
                 <div
-                  className="font-['Pretendard'] flex flex-col justify-center flex-shrink-0 w-full min-w-0 max-w-full md:w-[620px] md:min-w-[620px] pl-4 pr-4 pt-[11px] md:pl-[88px] md:pr-[24px] min-h-[180px] md:min-h-0 md:h-[240px]"
+                  className="font-['Pretendard'] flex flex-col justify-center flex-shrink-0 w-[340px] min-w-[340px] max-w-full mx-auto md:w-[620px] md:min-w-[620px] md:mx-0 pl-4 pr-4 pt-[11px] md:pl-[88px] md:pr-[24px] min-h-[180px] md:min-h-0 md:h-[240px]"
                   style={{
                     borderRadius: '744.118px',
                     background: '#F0F0F0',
                   }}
                 >
                   <div
-                    className="text-lg md:text-2xl"
+                    className="text-sm md:text-2xl"
                     style={{
                       color: '#111',
                       fontFamily: 'Pretendard',
@@ -173,10 +177,10 @@ export default function EventSessionGuidePage({ event, pathSlug }: EventSessionG
                   </div>
                   <div style={{ height: '5px' }} />
                   <div
+                    className="text-sm md:text-base"
                     style={{
                       color: '#111',
                       fontFamily: 'Pretendard',
-                      fontSize: '16px',
                       fontStyle: 'normal',
                       fontWeight: 600,
                       lineHeight: '140%',
@@ -187,10 +191,10 @@ export default function EventSessionGuidePage({ event, pathSlug }: EventSessionG
                   </div>
                   <div style={{ height: '21px' }} />
                   <div
+                    className="text-xs md:text-sm"
                     style={{
                       color: '#111',
                       fontFamily: 'Pretendard',
-                      fontSize: '14px',
                       fontStyle: 'normal',
                       fontWeight: 500,
                       lineHeight: '140%',
@@ -203,10 +207,10 @@ export default function EventSessionGuidePage({ event, pathSlug }: EventSessionG
                   </div>
                   <div style={{ height: '10px' }} />
                   <div
+                    className="text-xs md:text-sm"
                     style={{
                       color: '#111',
                       fontFamily: 'Pretendard',
-                      fontSize: '14px',
                       fontStyle: 'normal',
                       fontWeight: 500,
                       lineHeight: '140%',
@@ -349,14 +353,14 @@ export default function EventSessionGuidePage({ event, pathSlug }: EventSessionG
                   className="rounded-full object-cover flex-shrink-0 w-40 h-40 sm:w-52 sm:h-52 md:w-[216px] md:h-[216px]"
                 />
                 <div
-                  className="font-['Pretendard'] flex flex-col justify-center flex-shrink-0 w-full min-w-0 max-w-full md:w-[620px] md:min-w-[620px] pl-4 pr-4 pt-[11px] md:pl-[88px] md:pr-[24px] min-h-[180px] md:min-h-0 md:h-[240px]"
+                  className="font-['Pretendard'] flex flex-col justify-center flex-shrink-0 w-[340px] min-w-[340px] max-w-full mx-auto md:w-[620px] md:min-w-[620px] md:mx-0 pl-4 pr-4 pt-[11px] md:pl-[88px] md:pr-[24px] min-h-[180px] md:min-h-0 md:h-[240px]"
                   style={{
                     borderRadius: '744.118px',
                     background: '#F0F0F0',
                   }}
                 >
                   <div
-                    className="text-lg md:text-2xl"
+                    className="text-sm md:text-2xl"
                     style={{
                       color: '#111',
                       fontFamily: 'Pretendard',
@@ -369,70 +373,22 @@ export default function EventSessionGuidePage({ event, pathSlug }: EventSessionG
                     황성현 / 연사
                   </div>
                   <div style={{ height: '5px' }} />
-                  <div
-                    style={{
-                      color: '#111',
-                      fontFamily: 'Pretendard',
-                      fontSize: '16px',
-                      fontStyle: 'normal',
-                      fontWeight: 600,
-                      lineHeight: '140%',
-                      letterSpacing: '-0.32px',
-                    }}
-                  >
-                    강연 주제:{' '}
-                    <span
-                      style={{
-                        color: '#111',
-                        fontFamily: 'Pretendard',
-                        fontSize: '14px',
-                        fontStyle: 'normal',
-                        fontWeight: 400,
-                        lineHeight: '140%',
-                        letterSpacing: '-0.32px',
-                      }}
-                    >
-                      조직의 사일로 현상을 극복하고 공동의 목표를 달성
-                      <br />
+                  <div className="text-sm md:text-base block" style={{ color: '#111', fontFamily: 'Pretendard', fontStyle: 'normal', fontWeight: 600, lineHeight: '140%', letterSpacing: '-0.32px' }}>
+                    <span className="block text-xs md:text-sm break-keep" style={{ color: '#111', fontFamily: 'Pretendard', fontStyle: 'normal', fontWeight: 400, lineHeight: '140%', letterSpacing: '-0.32px', wordBreak: 'keep-all' }}>
+                      강연 주제: 조직의 사일로 현상을 극복하고 공동의 목표를 달성
+                    </span>
+                    <span className="block text-xs md:text-sm break-keep" style={{ color: '#111', fontFamily: 'Pretendard', fontStyle: 'normal', fontWeight: 400, lineHeight: '140%', letterSpacing: '-0.32px', wordBreak: 'keep-all' }}>
                       할 수 있도록 리더들에게 마인드 셋
                     </span>
                   </div>
                   <div style={{ height: '21px' }} />
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'flex-start',
-                      gap: '32px',
-                    }}
-                  >
-                    <div
-                      className="font-['Pretendard']"
-                      style={{
-                        color: '#111',
-                        fontFamily: 'Pretendard',
-                        fontSize: '14px',
-                        fontStyle: 'normal',
-                        fontWeight: 500,
-                        lineHeight: '140%',
-                        letterSpacing: '-0.28px',
-                      }}
-                    >
+                  <div className="flex flex-row items-start gap-2 md:gap-8">
+                    <div className="font-['Pretendard'] text-xs md:text-sm break-keep shrink-0" style={{ color: '#111', fontFamily: 'Pretendard', fontStyle: 'normal', fontWeight: 500, lineHeight: '140%', letterSpacing: '-0.28px', wordBreak: 'keep-all' }}>
                       현) 퀸텀사이트 대표
                       <br />
                       현) 한글과 컴퓨터 사외이사
                     </div>
-                    <div
-                      className="font-['Pretendard']"
-                      style={{
-                        color: '#111',
-                        fontFamily: 'Pretendard',
-                        fontSize: '14px',
-                        fontStyle: 'normal',
-                        fontWeight: 500,
-                        lineHeight: '140%',
-                        letterSpacing: '-0.28px',
-                      }}
-                    >
+                    <div className="font-['Pretendard'] text-xs md:text-sm break-keep shrink-0" style={{ color: '#111', fontFamily: 'Pretendard', fontStyle: 'normal', fontWeight: 500, lineHeight: '140%', letterSpacing: '-0.28px', wordBreak: 'keep-all' }}>
                       전) 카카오 인사총괄 부사장
                       <br />
                       전) 구글코리아 인사총괄
@@ -445,7 +401,7 @@ export default function EventSessionGuidePage({ event, pathSlug }: EventSessionG
                 <div style={{ width: '1420px', maxWidth: '100%', height: '1px', background: '#EBEBEC' }} />
               </div>
               {/* 구분선 아래 102px — M4 미니 워크숍 */}
-              <div style={{ marginTop: '102px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+              <div className="w-full max-w-full min-w-0 px-4 box-border" style={{ marginTop: '102px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                 <h2
                   className="font-['Pretendard'] w-full max-w-full md:w-[644px]"
                   style={{
@@ -462,13 +418,12 @@ export default function EventSessionGuidePage({ event, pathSlug }: EventSessionG
                   M4. 협업 인사이트(미니 워크숍)
                 </h2>
                 <p
-                  className="font-['Pretendard']"
+                  className="font-['Pretendard'] text-sm md:text-2xl max-w-full px-4 box-border min-w-0"
                   style={{
                     marginTop: '24px',
                     color: '#111',
                     textAlign: 'center',
                     fontFamily: 'Pretendard',
-                    fontSize: '24px',
                     fontStyle: 'normal',
                     fontWeight: 500,
                     lineHeight: '140%',
@@ -480,19 +435,10 @@ export default function EventSessionGuidePage({ event, pathSlug }: EventSessionG
               </div>
               {/* 부제 아래 60px — 플레이스홀더 + 비디오 카드 */}
               <div
-                style={{
-                  marginTop: '60px',
-                  marginBottom: '220px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '16px',
-                }}
-                className="md:flex-row md:items-start"
+                className="flex flex-col md:flex-row items-center md:items-start justify-center gap-4 mt-[60px] mb-[220px] w-full max-w-full"
               >
                 <div
-                  className="w-full max-w-full md:w-[864px] md:h-[509px] min-h-[200px] rounded-lg flex justify-center items-center bg-[#D9D9D9]"
+                  className="order-1 md:order-none w-[340px] h-[180px] min-h-[180px] max-w-full mx-auto md:w-[864px] md:h-[509px] md:min-h-0 rounded-lg flex justify-center items-center bg-[#D9D9D9]"
                 >
                   <span
                     className="font-['Bebas_Neue']"
@@ -510,329 +456,84 @@ export default function EventSessionGuidePage({ event, pathSlug }: EventSessionG
                     일정 전달 예정
                   </span>
                 </div>
-                {/* 비디오 카드 3개 — 세로 배치, 16px 간격 */}
+                {/* 비디오 카드 3개 — 모바일: 플레이스홀더와 동일 340px, 아래 16px 간격 */}
                 <div
-                  style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '16px',
-                  }}
+                  className="order-2 md:order-none w-[340px] max-w-full mx-auto min-w-0 flex flex-col gap-4 md:w-auto md:mx-0"
                 >
                 {/* 540×159 비디오 카드 1 */}
                 <div
-                  className="w-full max-w-full md:w-[540px] min-h-[159px] rounded-lg overflow-hidden relative"
+                  className="w-full max-w-full md:w-[540px] min-h-[100px] md:min-h-[159px] rounded-lg overflow-hidden relative"
                   style={{
                     backgroundImage: `url(${getGcbioImageUrl('page3_session1.png')})`,
                     backgroundSize: 'cover',
                     backgroundPosition: 'center',
                   }}
                 >
-                  <div
-                    style={{
-                      position: 'absolute',
-                      left: '24px',
-                      top: '32px',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: '10px',
-                    }}
-                  >
-                    <span
-                      className="font-['Bebas_Neue']"
-                      style={{
-                        color: '#FFF',
-                        fontFamily: '"Bebas Neue", sans-serif',
-                        fontSize: '16px',
-                        fontStyle: 'normal',
-                        fontWeight: 700,
-                        lineHeight: '100%',
-                      }}
-                    >
+                  <div className="absolute left-3 top-2 md:left-6 md:top-8 flex flex-col gap-0.5 md:gap-2.5 pr-16 md:pr-0">
+                    <span className="font-['Bebas_Neue'] text-[10px] md:text-base text-white font-bold leading-none">
                       Video 01
                     </span>
-                    <span
-                      className="font-['Pretendard']"
-                      style={{
-                        color: '#FFF',
-                        fontFamily: 'Pretendard, sans-serif',
-                        fontSize: '16px',
-                        fontStyle: 'normal',
-                        fontWeight: 600,
-                        lineHeight: '100%',
-                        letterSpacing: '-0.32px',
-                      }}
-                    >
+                    <span className="font-['Pretendard'] text-xs md:text-base text-white font-semibold leading-tight tracking-tight md:tracking-normal">
                       천 명이 한 자리에서 일하는 회사!
                     </span>
-                    <p
-                      className="font-['Pretendard'] w-full max-w-full md:max-w-[492px]"
-                      style={{
-                        margin: 0,
-                        color: '#FFF',
-                        fontFamily: 'Pretendard, sans-serif',
-                        fontSize: '13px',
-                        fontStyle: 'normal',
-                        fontWeight: 500,
-                        lineHeight: '140%',
-                        letterSpacing: '-0.26px',
-                      }}
-                    >
+                    <p className="font-['Pretendard'] text-[10px] md:text-[13px] text-white font-medium leading-snug tracking-tight md:tracking-normal mt-0.5 md:mt-0 max-w-full md:max-w-[492px]">
                       같은 팀 아니면 이야기 한 마디 나누기도 힘들죠? 그런데 여기 전 직원이 한 팀처럼 소통하며 일하는 회사가 있습니다. 비결이 뭘까요?
                     </p>
                   </div>
-                  <div
-                    style={{
-                      position: 'absolute',
-                      left: '433px',
-                      top: '24px',
-                      display: 'inline-flex',
-                      padding: '5px 14px',
-                      alignItems: 'center',
-                      gap: '6px',
-                      borderRadius: '100px',
-                      border: '1px solid #FFF',
-                    }}
-                  >
-                    <span
-                      className="font-['Pretendard']"
-                      style={{
-                        color: '#FFF',
-                        fontFamily: 'Pretendard, sans-serif',
-                        fontSize: '14px',
-                        fontStyle: 'normal',
-                        fontWeight: 500,
-                        lineHeight: '100%',
-                      }}
-                    >
-                      Play
-                    </span>
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="13"
-                      height="9"
-                      viewBox="0 0 13 9"
-                      fill="none"
-                      style={{ display: 'block' }}
-                    >
-                      <path
-                        d="M0.5 4.5H12M12 4.5L7 0.5M12 4.5L7 8.5"
-                        stroke="white"
-                        strokeWidth="1"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
+                  <div className="absolute right-2 top-2 md:right-auto md:left-[433px] md:top-6 inline-flex py-1 px-2 md:py-1.5 md:px-3.5 items-center gap-1 md:gap-1.5 rounded-full border border-white">
+                    <span className="font-['Pretendard'] text-[10px] md:text-sm text-white font-medium leading-none">Play</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="8" height="6" viewBox="0 0 13 9" fill="none" className="md:w-[13px] md:h-[9px]">
+                      <path d="M0.5 4.5H12M12 4.5L7 0.5M12 4.5L7 8.5" stroke="white" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
                   </div>
                 </div>
                 {/* 540×159 비디오 카드 2 */}
                 <div
-                  className="w-full max-w-full md:w-[540px] min-h-[159px] rounded-lg overflow-hidden relative"
+                  className="w-full max-w-full md:w-[540px] min-h-[100px] md:min-h-[159px] rounded-lg overflow-hidden relative"
                   style={{
                     backgroundImage: `url(${getGcbioImageUrl('page3_session2.png')})`,
                     backgroundSize: 'cover',
                     backgroundPosition: 'center',
                   }}
                 >
-                  <div
-                    style={{
-                      position: 'absolute',
-                      left: '24px',
-                      top: '32px',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: '10px',
-                    }}
-                  >
-                    <span
-                      className="font-['Bebas_Neue']"
-                      style={{
-                        color: '#FFF',
-                        fontFamily: '"Bebas Neue", sans-serif',
-                        fontSize: '16px',
-                        fontStyle: 'normal',
-                        fontWeight: 700,
-                        lineHeight: '100%',
-                      }}
-                    >
-                      Video 02
-                    </span>
-                    <span
-                      className="font-['Pretendard']"
-                      style={{
-                        color: '#FFF',
-                        fontFamily: 'Pretendard, sans-serif',
-                        fontSize: '16px',
-                        fontStyle: 'normal',
-                        fontWeight: 600,
-                        lineHeight: '100%',
-                        letterSpacing: '-0.32px',
-                      }}
-                    >
+                  <div className="absolute left-3 top-2 md:left-6 md:top-8 flex flex-col gap-0.5 md:gap-2.5 pr-16 md:pr-0">
+                    <span className="font-['Bebas_Neue'] text-[10px] md:text-base text-white font-bold leading-none">Video 02</span>
+                    <span className="font-['Pretendard'] text-xs md:text-base text-white font-semibold leading-tight tracking-tight md:tracking-normal">
                       지나친 내부 경쟁이 기업을 맟니다! 지금 당장 '협업 지수'를 높여라!
                     </span>
-                    <p
-                      className="font-['Pretendard'] w-full max-w-full md:max-w-[492px]"
-                      style={{
-                        margin: 0,
-                        color: '#FFF',
-                        fontFamily: 'Pretendard, sans-serif',
-                        fontSize: '13px',
-                        fontStyle: 'normal',
-                        fontWeight: 500,
-                        lineHeight: '140%',
-                        letterSpacing: '-0.26px',
-                      }}
-                    >
+                    <p className="font-['Pretendard'] text-[10px] md:text-[13px] text-white font-medium leading-snug tracking-tight md:tracking-normal mt-0.5 md:mt-0 max-w-full md:max-w-[492px]">
                       경쟁이 있어야 발전이 있다! 하지만 경쟁도 지나치면 독이 되는 법이죠? 경쟁의 긍정적인 에너지를 그대로 가져 가면서도 부정적인 요소는 막는 방법, 어디 없을까요?
                     </p>
                   </div>
-                  <div
-                    style={{
-                      position: 'absolute',
-                      left: '433px',
-                      top: '24px',
-                      display: 'inline-flex',
-                      padding: '5px 14px',
-                      alignItems: 'center',
-                      gap: '6px',
-                      borderRadius: '100px',
-                      border: '1px solid #FFF',
-                    }}
-                  >
-                    <span
-                      className="font-['Pretendard']"
-                      style={{
-                        color: '#FFF',
-                        fontFamily: 'Pretendard, sans-serif',
-                        fontSize: '14px',
-                        fontStyle: 'normal',
-                        fontWeight: 500,
-                        lineHeight: '100%',
-                      }}
-                    >
-                      Play
-                    </span>
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="13"
-                      height="9"
-                      viewBox="0 0 13 9"
-                      fill="none"
-                      style={{ display: 'block' }}
-                    >
-                      <path
-                        d="M0.5 4.5H12M12 4.5L7 0.5M12 4.5L7 8.5"
-                        stroke="white"
-                        strokeWidth="1"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
+                  <div className="absolute right-2 top-2 md:right-auto md:left-[433px] md:top-6 inline-flex py-1 px-2 md:py-1.5 md:px-3.5 items-center gap-1 md:gap-1.5 rounded-full border border-white">
+                    <span className="font-['Pretendard'] text-[10px] md:text-sm text-white font-medium leading-none">Play</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="8" height="6" viewBox="0 0 13 9" fill="none" className="md:w-[13px] md:h-[9px]">
+                      <path d="M0.5 4.5H12M12 4.5L7 0.5M12 4.5L7 8.5" stroke="white" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
                   </div>
                 </div>
                 {/* 540×159 비디오 카드 3 */}
                 <div
-                  className="w-full max-w-full md:w-[540px] min-h-[159px] rounded-lg overflow-hidden relative"
+                  className="w-full max-w-full md:w-[540px] min-h-[100px] md:min-h-[159px] rounded-lg overflow-hidden relative"
                   style={{
                     backgroundImage: `url(${getGcbioImageUrl('page3_session3.png')})`,
                     backgroundSize: 'cover',
                     backgroundPosition: 'center',
                   }}
                 >
-                  <div
-                    style={{
-                      position: 'absolute',
-                      left: '24px',
-                      top: '32px',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: '10px',
-                    }}
-                  >
-                    <span
-                      className="font-['Bebas_Neue']"
-                      style={{
-                        color: '#FFF',
-                        fontFamily: '"Bebas Neue", sans-serif',
-                        fontSize: '16px',
-                        fontStyle: 'normal',
-                        fontWeight: 700,
-                        lineHeight: '100%',
-                      }}
-                    >
-                      Video 03
-                    </span>
-                    <span
-                      className="font-['Pretendard']"
-                      style={{
-                        color: '#FFF',
-                        fontFamily: 'Pretendard, sans-serif',
-                        fontSize: '16px',
-                        fontStyle: 'normal',
-                        fontWeight: 600,
-                        lineHeight: '100%',
-                        letterSpacing: '-0.32px',
-                      }}
-                    >
+                  <div className="absolute left-3 top-2 md:left-6 md:top-8 flex flex-col gap-0.5 md:gap-2.5 pr-16 md:pr-0">
+                    <span className="font-['Bebas_Neue'] text-[10px] md:text-base text-white font-bold leading-none">Video 03</span>
+                    <span className="font-['Pretendard'] text-xs md:text-base text-white font-semibold leading-tight tracking-tight md:tracking-normal">
                       업무 협조를 잘 받아내는 것도 능력이다! 요청의 기술 3가지
                     </span>
-                    <p
-                      className="font-['Pretendard'] w-full max-w-full md:max-w-[492px]"
-                      style={{
-                        margin: 0,
-                        color: '#FFF',
-                        fontFamily: 'Pretendard, sans-serif',
-                        fontSize: '13px',
-                        fontStyle: 'normal',
-                        fontWeight: 500,
-                        lineHeight: '140%',
-                        letterSpacing: '-0.26px',
-                      }}
-                    >
+                    <p className="font-['Pretendard'] text-[10px] md:text-[13px] text-white font-medium leading-snug tracking-tight md:tracking-normal mt-0.5 md:mt-0 max-w-full md:max-w-[492px]">
                       업무를 하다 보면 동료나 상사게에, 또 타 부서에 협조를 요청해야 하는 일이 비일비재하죠. 그런제 누구는 매번 척척 협조를 잘 구해내는 반면 누구는 그렇지 못한데요. 왜 그럴까요? 요청의 기술 세 가지를 기억하세요.
                     </p>
                   </div>
-                  <div
-                    style={{
-                      position: 'absolute',
-                      left: '433px',
-                      top: '24px',
-                      display: 'inline-flex',
-                      padding: '5px 14px',
-                      alignItems: 'center',
-                      gap: '6px',
-                      borderRadius: '100px',
-                      border: '1px solid #FFF',
-                    }}
-                  >
-                    <span
-                      className="font-['Pretendard']"
-                      style={{
-                        color: '#FFF',
-                        fontFamily: 'Pretendard, sans-serif',
-                        fontSize: '14px',
-                        fontStyle: 'normal',
-                        fontWeight: 500,
-                        lineHeight: '100%',
-                      }}
-                    >
-                      Play
-                    </span>
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="13"
-                      height="9"
-                      viewBox="0 0 13 9"
-                      fill="none"
-                      style={{ display: 'block' }}
-                    >
-                      <path
-                        d="M0.5 4.5H12M12 4.5L7 0.5M12 4.5L7 8.5"
-                        stroke="white"
-                        strokeWidth="1"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
+                  <div className="absolute right-2 top-2 md:right-auto md:left-[433px] md:top-6 inline-flex py-1 px-2 md:py-1.5 md:px-3.5 items-center gap-1 md:gap-1.5 rounded-full border border-white">
+                    <span className="font-['Pretendard'] text-[10px] md:text-sm text-white font-medium leading-none">Play</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="8" height="6" viewBox="0 0 13 9" fill="none" className="md:w-[13px] md:h-[9px]">
+                      <path d="M0.5 4.5H12M12 4.5L7 0.5M12 4.5L7 8.5" stroke="white" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
                   </div>
                 </div>
@@ -841,7 +542,8 @@ export default function EventSessionGuidePage({ event, pathSlug }: EventSessionG
             </div>
           </div>
         </main>
+        </div>
       </div>
-    </div>
+    </>
   )
 }

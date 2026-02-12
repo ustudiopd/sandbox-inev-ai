@@ -1,5 +1,11 @@
 # 완료된 작업 내역 (Progress)
 
+## [2026-02-12] 이벤트 222152 전 페이지 이미지 버킷·헤더 스크롤 고정·빌드·메모리뱅크·푸시
+- ✅ **이미지 버킷**: img/gcbio 70개 Supabase Storage(gcbio 버킷) 업로드 완료 (`npx tsx scripts/upload-gcbio-all-222152.ts`). 메인 홈·행사개요·협업스타일진단·세션 안내·체험 프로그램·오늘의 메뉴·갤러리·프로필·로그인 등 전 페이지 이미지 반영.
+- ✅ **헤더 스크롤 고정**: 세션 안내·오늘의 메뉴·행사 개요·체험 프로그램 페이지에서 스크롤 시 헤더 상단 고정(sticky). overflow-x-hidden 바깥에 헤더 배치로 sticky 동작 보장.
+- ✅ Next.js 프로덕션 빌드 성공.
+- ✅ memory_bank/progress.md 반영, Git 푸시.
+
 ## [2026-02-12] webinar_onepredict 이미지 버킷 업로드·빌드·메모리뱅크·푸시
 - ✅ **업로드 스크립트**: `scripts/upload-onepredict-all.ts` 추가. public/img/onepredict 전체(서브폴더 onepredict_logo 포함) 이미지를 재귀 스캔해 Supabase Storage **webinar-thumbnails** 버킷 **onepredict/** 경로에 업로드.
 - ✅ **버킷 업로드 실행**: `npx tsx scripts/upload-onepredict-all.ts` 실행, 82개 중 79개 업로드 완료(2건 API 응답 오류, 1건 파일명 공백으로 스킵).

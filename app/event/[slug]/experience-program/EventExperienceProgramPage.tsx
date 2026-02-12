@@ -13,6 +13,12 @@ const LINE_SVG = (
   </svg>
 )
 
+const ARROW_DOWN_SVG = (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" className="flex-shrink-0 text-[#111] w-6 h-[30px]" style={{ width: 24, height: 30 }}>
+    <path d="M12 5V19M12 19L5 12M12 19L19 12" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+)
+
 const PROGRAM_ITEMS = [
   { num: '01', circleFill: '#EC1F23', title: '역사의 주인공', body: <>모든 리더가 주연이 되어 직접 GC녹십자의 히스토리인<br />&apos;필모그래피&apos;를 따라가보세요!<br />우리 모두가 함께 만든 필모그래피의 주연은<br />바로 당신입니다.</>, tip: '*TIP : 삐!! 앗 부딪히지 않게 조심조심 움직이셔야 합니다!', image: 'page4_program2.png' },
   { num: '02', circleFill: '#006FB7', title: '모두가 주인공', body: <>모든 리더가 주연이 되어 하나의 GC녹십자를 만들어갑니다.<br />포토 키오스크 앞에서 사진을 촬영 후 출력되는 사진을 나누어<br />한 장은 포토월에, 한 장은 개인 소장하세요!</>, tip: '*Tip : 촬영된 이미지로 사원증 이미지를 바꿔보는 것은 어때요?', image: 'page4_program3.png' },
@@ -35,11 +41,14 @@ export default function EventExperienceProgramPage({ event, pathSlug }: EventExp
   const slug = pathSlug ?? event.slug
 
   return (
-    <div className="w-full relative flex flex-col min-h-screen bg-[#F9F9F9] overflow-x-hidden">
-      <div className="w-full max-w-[1920px] mx-auto flex flex-col flex-1 min-w-0">
+    <>
+      <div className="sticky top-0 z-50 w-full bg-[#F9F9F9]">
         <Event222152Header slug={slug} variant="experience-program" />
-        {/* 헤더와 오른쪽 끝 맞춤: 헤더와 동일한 패딩 */}
-        <div className="w-full max-w-[1920px] mx-auto px-4 sm:px-8 md:px-16 lg:px-[250px] flex justify-center" style={{ marginTop: 30 }}>
+      </div>
+      <div className="w-full relative flex flex-col min-h-screen bg-[#F9F9F9] overflow-x-hidden">
+        <div className="w-full max-w-[1920px] mx-auto flex flex-col flex-1 min-w-0">
+          {/* 헤더와 오른쪽 끝 맞춤: 헤더와 동일한 패딩 */}
+          <div className="w-full max-w-[1920px] mx-auto px-4 sm:px-8 md:px-16 lg:px-[250px] flex justify-center" style={{ marginTop: 30 }}>
           <div className="relative w-full max-w-[1420px] flex justify-center rounded-2xl sm:rounded-[32px] overflow-hidden h-[320px]">
             <Image
               src={getGcbioImageUrl('page4_top.png')}
@@ -76,8 +85,8 @@ export default function EventExperienceProgramPage({ event, pathSlug }: EventExp
                 className="flex flex-col md:flex-row items-center md:items-start w-full max-w-full"
                 style={{ marginTop: index === 0 ? 0 : 17 }}
               >
-                {/* 원 + 원 아래 24px에 세로 구분선 */}
-                <div className="flex-shrink-0 flex flex-col items-center md:block">
+                {/* 모바일: 숫자 원 → 텍스트 → 이미지 → 화살표 순. PC: 원+구분선 가운데 정렬 */}
+                <div className="flex flex-col w-full md:w-auto flex-shrink-0 items-center order-1">
                   <div className="relative flex items-center justify-center" style={{ width: 64, height: 64 }}>
                     <svg xmlns="http://www.w3.org/2000/svg" width={64} height={64} viewBox="0 0 64 64" fill="none" className="flex-shrink-0 block">
                       <circle cx="32" cy="32" r="32" fill={item.circleFill} />
@@ -96,12 +105,12 @@ export default function EventExperienceProgramPage({ event, pathSlug }: EventExp
                       {item.num}
                     </span>
                   </div>
-                  {index < PROGRAM_ITEMS.length - 1 ? LINE_SVG : null}
+                  <span className="hidden md:flex md:justify-center md:w-full">{index < PROGRAM_ITEMS.length - 1 ? LINE_SVG : null}</span>
                 </div>
 
-                {/* 텍스트 블록: 원으로부터 79px 오른쪽, 32px 위, 고정 너비로 이미지 열 위치 통일 */}
+                {/* 텍스트 블록: 모바일 원 아래·가운데 정렬, PC 원 오른쪽·왼쪽 정렬 */}
                 <div
-                  className="flex-shrink-0 flex flex-col w-full min-w-0 max-w-full md:max-w-[420px] mt-4 md:mt-0 md:ml-[79px] md:-mt-8"
+                  className="flex-shrink-0 flex flex-col w-full min-w-0 max-w-full md:max-w-[420px] mt-4 md:mt-0 md:ml-[79px] md:-mt-8 order-2 text-center md:text-left"
                 >
                   <h2
                     className="font-['Pretendard']"
@@ -135,8 +144,8 @@ export default function EventExperienceProgramPage({ event, pathSlug }: EventExp
                   </p>
                 </div>
 
-                {/* 이미지: 텍스트로부터 80px 오른쪽, 565×270, 잘리지 않게 contain·가운데 */}
-                <div className="flex-shrink-0 flex items-center justify-center w-full max-w-full md:max-w-[565px] mt-4 md:mt-0 md:ml-[80px] md:-mt-[60px] aspect-[565/270] md:w-[565px] md:h-[270px]">
+                {/* 이미지: 모바일 텍스트 아래, PC 텍스트 오른쪽 */}
+                <div className="flex-shrink-0 flex items-center justify-center w-full max-w-full md:max-w-[565px] mt-4 md:mt-0 md:ml-[80px] md:-mt-[60px] aspect-[565/270] md:w-[565px] md:h-[270px] order-3">
                   <Image
                     src={getGcbioImageUrl(item.image)}
                     alt=""
@@ -146,12 +155,20 @@ export default function EventExperienceProgramPage({ event, pathSlug }: EventExp
                     unoptimized
                   />
                 </div>
+
+                {/* 모바일 전용: 이미지 아래 화살표 (마지막 항목 제외) */}
+                {index < PROGRAM_ITEMS.length - 1 && (
+                  <div className="flex justify-center w-full mt-4 md:hidden order-4" aria-hidden>
+                    {ARROW_DOWN_SVG}
+                  </div>
+                )}
               </div>
             ))}
           </div>
           <div style={{ height: 200 }} aria-hidden />
         </section>
+        </div>
       </div>
-    </div>
+    </>
   )
 }

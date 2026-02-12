@@ -80,11 +80,14 @@ export default function EventTodayMenuPage({ event, pathSlug }: EventTodayMenuPa
   const [selected, setSelected] = useState<'lunch' | 'dinner'>('lunch')
 
   return (
-    <div className="w-full relative flex flex-col min-h-screen bg-[#F9F9F9] overflow-x-hidden">
-      <div className="w-full max-w-[1920px] mx-auto flex flex-col flex-1 min-w-0">
+    <>
+      <div className="sticky top-0 z-50 w-full bg-[#F9F9F9]">
         <Event222152Header slug={slug} variant="today-menu" />
-        <main className="w-full flex-1 flex flex-col items-center justify-center" style={{ marginTop: 30 }}>
-          <div className="relative w-full max-w-[1420px] flex justify-center items-center rounded-2xl sm:rounded-[32px] overflow-hidden h-[320px]">
+      </div>
+      <div className="w-full relative flex flex-col min-h-screen bg-[#F9F9F9] overflow-x-hidden">
+        <div className="w-full max-w-[1920px] mx-auto flex flex-col flex-1 min-w-0">
+          <main className="w-full flex-1 flex flex-col items-center justify-center" style={{ marginTop: 30 }}>
+          <div className="relative w-full max-w-[1420px] flex justify-center items-center rounded-2xl sm:rounded-[32px] overflow-hidden h-[270px] sm:h-[320px]">
             <Image
               src={getGcbioImageUrl('page6_session.png')}
               alt=""
@@ -153,13 +156,13 @@ export default function EventTodayMenuPage({ event, pathSlug }: EventTodayMenuPa
                   style={{ marginTop: 40 }}
                 >
                   <p
-                    className="text-[#949494] text-center font-semibold text-sm sm:text-base leading-[140%] break-words max-w-full"
+                    className="text-[#949494] text-center font-semibold text-sm sm:text-base leading-[140%] whitespace-nowrap sm:whitespace-normal sm:break-words max-w-full"
                     style={{ fontFamily: 'Pretendard, sans-serif', fontStyle: 'normal' }}
                   >
                     {item.titleEn}
                   </p>
                   <p
-                    className="text-[#949494] text-center font-medium text-sm sm:text-base leading-[140%] mt-1 break-words max-w-full"
+                    className="text-[#949494] text-center font-medium text-sm sm:text-base leading-[140%] mt-1 whitespace-nowrap sm:whitespace-normal sm:break-words max-w-full"
                     style={{ fontFamily: 'Pretendard, sans-serif', fontStyle: 'normal' }}
                   >
                     {item.titleKo}
@@ -171,7 +174,7 @@ export default function EventTodayMenuPage({ event, pathSlug }: EventTodayMenuPa
                 alt=""
                 width={1420}
                 height={674}
-                className="object-contain w-full max-w-full h-auto"
+                className="object-contain w-full max-w-full h-auto md:w-[1420px] md:h-[674px] md:max-w-[1420px]"
                 style={{ marginTop: 106 }}
                 unoptimized
               />
@@ -200,17 +203,18 @@ export default function EventTodayMenuPage({ event, pathSlug }: EventTodayMenuPa
                     style={{ marginTop: 26 }}
                   >
                     <p
-                      className="block w-full text-[#949494] text-center font-semibold text-sm sm:text-base leading-[140%] break-words max-w-full"
+                      className={`block w-full text-[#949494] text-center font-semibold text-sm sm:text-base leading-[140%] whitespace-nowrap max-w-full ${
+                        item.titleEn.includes('\n') ? 'sm:whitespace-pre-line' : 'sm:whitespace-normal sm:break-words'
+                      }`}
                       style={{
                         fontFamily: 'Pretendard, sans-serif',
                         fontStyle: 'normal',
-                        whiteSpace: item.titleEn.includes('\n') ? 'pre-line' : 'normal',
                       }}
                     >
                       {item.titleEn}
                     </p>
                     <p
-                      className="block w-full text-[#949494] text-center font-medium text-sm sm:text-base leading-[140%] mt-1 break-words max-w-full"
+                      className="block w-full text-[#949494] text-center font-medium text-sm sm:text-base leading-[140%] mt-1 whitespace-nowrap sm:whitespace-normal sm:break-words max-w-full"
                       style={{ fontFamily: 'Pretendard, sans-serif', fontStyle: 'normal' }}
                     >
                       {item.titleKo}
@@ -223,7 +227,7 @@ export default function EventTodayMenuPage({ event, pathSlug }: EventTodayMenuPa
                 alt=""
                 width={1420}
                 height={674}
-                className="object-contain w-full max-w-full h-auto"
+                className="object-contain w-full max-w-full h-auto md:w-[1420px] md:h-[674px] md:max-w-[1420px]"
                 style={{ marginTop: 192 }}
                 unoptimized
               />
@@ -231,7 +235,8 @@ export default function EventTodayMenuPage({ event, pathSlug }: EventTodayMenuPa
             </div>
           )}
         </main>
+        </div>
       </div>
-    </div>
+    </>
   )
 }

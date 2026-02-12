@@ -46,18 +46,20 @@ export default function EventOverviewPage({ event, pathSlug }: EventOverviewPage
   }, [])
 
   return (
-    <div className="w-full max-w-full overflow-x-hidden relative flex flex-col min-h-screen bg-white">
-      <div className="w-full max-w-[1920px] max-w-full mx-auto flex flex-col flex-1 min-w-0 box-border">
+    <>
+      <div className="sticky top-0 z-50 w-full bg-white">
         <Event222152Header slug={slug} variant="overview" />
-
-        {/* 본문 레이아웃: width 1920px, padding 50px 250px 145px 250px (상단 100px 축소), 가운데 정렬 */}
-        <main className="w-full max-w-full flex justify-center items-center box-border flex-1 px-4 sm:px-6 md:px-8 lg:px-16 xl:px-[250px] pt-0 sm:pt-0 md:pt-[50px] pb-12 md:pb-[145px] overflow-x-hidden overflow-y-visible min-h-0 min-w-0">
+      </div>
+      <div className="w-full max-w-full overflow-x-hidden relative flex flex-col min-h-screen bg-white">
+        <div className="w-full max-w-[1920px] max-w-full mx-auto flex flex-col flex-1 min-w-0 box-border">
+          {/* 본문 레이아웃: width 1920px, padding 50px 250px 145px 250px (상단 100px 축소), 가운데 정렬 */}
+          <main className="w-full max-w-full flex justify-center items-center box-border flex-1 px-4 sm:px-6 md:px-8 lg:px-16 xl:px-[250px] pt-0 sm:pt-0 md:pt-[50px] pb-12 md:pb-[145px] overflow-x-hidden overflow-y-visible min-h-0 min-w-0">
           <div className="relative flex flex-col justify-center items-start w-full max-w-[1420px] max-w-full mx-auto min-w-0 min-h-0">
-          {/* 배경 블록: #F2F2F2 — 반응형 full width */}
-          <div className="absolute z-0 top-[550px] bottom-0 h-[1240px] min-h-0 bg-[#F2F2F2] w-full left-0 right-0 min-w-0" aria-hidden />
+          {/* 배경 블록: #F2F2F2 — 모바일에서 높이 350px 축소(1240→890) */}
+          <div className="absolute z-0 top-[550px] bottom-0 h-[890px] md:h-[1240px] min-h-0 bg-[#F2F2F2] w-full left-0 right-0 min-w-0" aria-hidden />
 
-          <div className="relative z-10 overflow-visible min-h-0 min-w-0 w-full max-w-full">
-          {/* 1. 초대의 글 + 본문 */}
+          <div className="relative z-10 overflow-visible min-h-0 min-w-0 w-full max-w-full mt-[50px] md:mt-0">
+          {/* 1. 초대의 글 + 본문 — 모바일에서만 50px 위 여백 */}
           <div className="flex flex-col items-start gap-2 mb-10 overflow-visible min-h-0 shrink-0">
             <h1
               className="font-['Pretendard']"
@@ -87,7 +89,7 @@ export default function EventOverviewPage({ event, pathSlug }: EventOverviewPage
             </p>
           </div>
 
-          {/* 장식 요소: 모바일에서 숨김(레이아웃 깨짐 방지) */}
+          {/* 장식 요소: 모바일에서 숨김 */}
           <div
             className="hidden md:block absolute z-10 flex-shrink-0"
             style={{ left: 852, top: 0 }}
@@ -165,9 +167,9 @@ export default function EventOverviewPage({ event, pathSlug }: EventOverviewPage
             </span>
           </div>
 
-          {/* 4. TIME TABLE 섹션 제목 */}
+          {/* 4. TIME TABLE 섹션 제목 — 모바일에서 폰트 약간 확대 */}
           <div
-            className={`${bebasNeue.className} mt-16 md:mt-[210px] text-[#111] text-2xl sm:text-4xl md:text-5xl leading-[120%] w-full max-w-full break-words`}
+            className={`${bebasNeue.className} mt-16 md:mt-[210px] text-[#111] text-3xl sm:text-4xl md:text-5xl leading-[120%] w-full max-w-full break-words`}
           >
             <span className="block font-bold">2026 GCBP</span>
             <span className="block font-light text-[#444]">LEADERSHIP WORKSHOP</span>
@@ -1042,12 +1044,10 @@ export default function EventOverviewPage({ event, pathSlug }: EventOverviewPage
                   }}
                 >
                   <div
-                    className="flex items-center shrink-0 w-full md:w-[200px] min-h-[50px] md:min-h-0 py-3 md:py-0"
+                    className="flex items-center shrink-0 w-full md:w-[200px] min-h-[50px] md:min-h-0 py-3 md:py-0 border-l-0 border-r-0 border-t border-b border-[#949494] md:border-t-0 md:border-b-0 md:border-l md:border-r"
                     style={{
                       padding: '14px 16px',
                       gap: 10,
-                      borderRight: '1px solid #949494',
-                      borderLeft: '1px solid #949494',
                       background: '#FFF',
                       boxSizing: 'border-box',
                     }}
@@ -1092,7 +1092,8 @@ export default function EventOverviewPage({ event, pathSlug }: EventOverviewPage
           </div>
         </div>
         </main>
+        </div>
       </div>
-    </div>
+    </>
   )
 }

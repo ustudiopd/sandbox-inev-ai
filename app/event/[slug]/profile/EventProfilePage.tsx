@@ -30,8 +30,8 @@ export default function EventProfilePage({ event, pathSlug }: EventProfilePagePr
                 About Me
               </h1>
             </div>
-            {/* 원 4개: 한 줄 가로 배치, 동그란 원 크기 유지 */}
-            <div className="flex flex-nowrap justify-center gap-4 sm:gap-5 overflow-x-auto">
+            {/* 원 4개: 모바일 세로 가운데 정렬, sm 이상 가로 배치 */}
+            <div className="flex flex-col sm:flex-row flex-nowrap items-center justify-center gap-4 sm:gap-5 overflow-x-visible sm:overflow-x-auto">
             {[
               { borderColor: '#F5D327', label: '부서 소속', value: '디자인팀', labelWidth: 142 },
               { borderColor: '#006FB7', label: '이름(동명이인 1,2로 표시)', value: '홍길동(1)', labelWidth: 172 },
