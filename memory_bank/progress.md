@@ -1,5 +1,11 @@
 # 완료된 작업 내역 (Progress)
 
+## [2026-02-12] 이벤트 222152 체험 프로그램 페이지 이미지 버킷 업로드·원 색상 변경·빌드·메모리뱅크·푸시
+- ✅ `/event/222152/experience-program` 페이지 사용 이미지: img/gcbio 전체(68개) Supabase Storage(gcbio 버킷) 업로드 실행 (`npx tsx scripts/upload-gcbio-all-222152.ts`). page4_top, page4_program2~6 등 체험 프로그램 블록 이미지 포함.
+- ✅ EventExperienceProgramPage 원 색상: 02번 #006FB7, 03번 #45B652, 04번 #F5D327 적용.
+- ✅ Next.js 프로덕션 빌드 성공.
+- ✅ memory_bank/progress.md 반영, Git 푸시.
+
 ## [2026-02-12] 이벤트 222152 세션 안내 페이지 이미지 버킷 업로드·빌드·메모리뱅크·푸시
 - ✅ `/event/222152/session-guide` 페이지 사용 이미지: img/gcbio 전체(67개) Supabase Storage(gcbio 버킷) 업로드 완료 (`npx tsx scripts/upload-gcbio-all-222152.ts`). page3_session1/2/3.png, page3_person·program·background 등 세션 안내·비디오 카드 이미지 포함.
 - ✅ Next.js 프로덕션 빌드 성공.
