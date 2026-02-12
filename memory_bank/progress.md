@@ -1,5 +1,11 @@
 # 완료된 작업 내역 (Progress)
 
+## [2026-02-12] webinar_onepredict 이미지 버킷 업로드·빌드·메모리뱅크·푸시
+- ✅ **업로드 스크립트**: `scripts/upload-onepredict-all.ts` 추가. public/img/onepredict 전체(서브폴더 onepredict_logo 포함) 이미지를 재귀 스캔해 Supabase Storage **webinar-thumbnails** 버킷 **onepredict/** 경로에 업로드.
+- ✅ **버킷 업로드 실행**: `npx tsx scripts/upload-onepredict-all.ts` 실행, 82개 중 79개 업로드 완료(2건 API 응답 오류, 1건 파일명 공백으로 스킵).
+- ✅ Next.js 프로덕션 빌드 성공.
+- ✅ memory_bank/progress.md 반영, Git 푸시.
+
 ## [2026-02-12] 이벤트 222152 전 페이지 반응형·헤더 모바일 메뉴·빌드·메모리뱅크·푸시
 - ✅ **헤더(Event222152Header)**: 모바일에서 햄버거 메뉴 추가, 탭 시 메뉴 패널(행사개요·협업스타일 진단·세션 안내·체험 프로그램·오늘의 메뉴·갤러리) 표시. 모바일에서 프로필(홍길동) 버튼 노출. 데스크톱 레이아웃 유지.
 - ✅ **세션 안내·체험 프로그램·오늘의 메뉴·갤러리**: 기존 반응형 유지(620px 카드/644px 제목·히어로·버튼·갤러리 가로스크롤 등).
