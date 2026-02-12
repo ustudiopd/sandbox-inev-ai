@@ -24,12 +24,12 @@ export default function EventOverviewPage({ event, pathSlug }: EventOverviewPage
   const [transportTab, setTransportTab] = useState<TransportTab>('publicTransport')
 
   return (
-    <div className="w-full relative flex flex-col min-h-screen bg-white overflow-x-hidden">
+    <div className="w-full relative flex flex-col min-h-screen bg-white">
       <div className="w-full max-w-[1920px] mx-auto flex flex-col flex-1 min-w-0">
         <Event222152Header slug={slug} variant="overview" />
 
-        {/* 본문 레이아웃: width 1920px, padding 150px 250px 145px 250px, 가운데 정렬 */}
-        <main className="w-full flex justify-center items-center box-border flex-1 px-4 sm:px-6 md:px-8 lg:px-16 xl:px-[250px] pt-12 sm:pt-24 md:pt-[150px] pb-12 md:pb-[145px]">
+        {/* 본문 레이아웃: width 1920px, padding 50px 250px 145px 250px (상단 100px 축소), 가운데 정렬 */}
+        <main className="w-full flex justify-center items-center box-border flex-1 px-4 sm:px-6 md:px-8 lg:px-16 xl:px-[250px] pt-0 sm:pt-0 md:pt-[50px] pb-12 md:pb-[145px] overflow-x-hidden">
           <div className="relative flex flex-col justify-center items-start w-full max-w-[1420px] mx-auto min-w-0">
           {/* 배경 블록: #F2F2F2 — 반응형 full width */}
           <div className="absolute z-0 top-[550px] bottom-0 h-[1240px] min-h-0 bg-[#F2F2F2] w-screen left-1/2 -translate-x-1/2" aria-hidden />

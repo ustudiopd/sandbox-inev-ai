@@ -1,5 +1,10 @@
 # 완료된 작업 내역 (Progress)
 
+## [2026-02-12] 이벤트 222152 개요 페이지 헤더 고정·메인 100px 상향·gcbio 버킷·빌드·메모리뱅크·푸시
+- ✅ EventOverviewPage: 루트에서 overflow-x-hidden 제거해 헤더 sticky 유지(스크롤 시 상단 고정). main에만 overflow-x-hidden 적용. 메인 콘텐츠 100px 상향(pt-0, md:pt-[50px]).
+- ✅ img/gcbio 70개 gcbio 버킷 업로드 실행.
+- ✅ Next.js 프로덕션 빌드 성공. memory_bank/progress.md 반영, Git 푸시.
+
 ## [2026-02-12] 이벤트 222152 랜딩 페이지 레이아웃 수정·gcbio 버킷 업로드·빌드·메모리뱅크·푸시
 - ✅ Event222152Landing: Main_name.png 아래 25px에 제목 "2026 GCBP Leadership Workshop" 추가(Bebas Neue 42px, 700, line-height 130%). DATE/LOCATION 블록을 제목 아래 10px로 배치. 행사개요 버튼 20px 위로(mt-3, md:mt-12).
 - ✅ img/gcbio 70개 gcbio 버킷 업로드 실행.
