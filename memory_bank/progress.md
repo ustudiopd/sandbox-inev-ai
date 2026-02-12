@@ -1,5 +1,10 @@
 # 완료된 작업 내역 (Progress)
 
+## [2026-02-12] 이벤트 222152 체험 프로그램 페이지 이미지 정렬·object-contain·빌드·메모리뱅크·푸시
+- ✅ EventExperienceProgramPage: 이미지 열 위치 통일(텍스트 블록 고정 너비 420px), 이미지 잘리지 않도록 object-contain·object-center 적용, 섹션 블록 mx-auto·maxWidth 100%로 가운데 정렬.
+- ✅ Next.js 프로덕션 빌드 성공.
+- ✅ memory_bank/progress.md 반영, Git 푸시.
+
 ## [2026-02-12] 이벤트 222152 체험 프로그램 페이지 이미지 버킷 업로드·원 색상 변경·빌드·메모리뱅크·푸시
 - ✅ `/event/222152/experience-program` 페이지 사용 이미지: img/gcbio 전체(68개) Supabase Storage(gcbio 버킷) 업로드 실행 (`npx tsx scripts/upload-gcbio-all-222152.ts`). page4_top, page4_program2~6 등 체험 프로그램 블록 이미지 포함.
 - ✅ EventExperienceProgramPage 원 색상: 02번 #006FB7, 03번 #45B652, 04번 #F5D327 적용.

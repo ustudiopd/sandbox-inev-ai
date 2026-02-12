@@ -86,7 +86,7 @@ export default function EventExperienceProgramPage({ event, pathSlug }: EventExp
 
         {/* 체험 프로그램 5개: 원+구분선 일직선 가운데 정렬, 블록 간 17px */}
         <section className="w-full flex flex-col items-center" style={{ marginTop: 170 }}>
-          <div className="w-full flex flex-col items-center" style={{ width: 64 + 79 + 420 + 80 + 565 }}>
+          <div className="w-full flex flex-col items-center mx-auto" style={{ width: 64 + 79 + 420 + 80 + 565, maxWidth: '100%' }}>
             {PROGRAM_ITEMS.map((item, index) => (
               <div
                 key={item.num}
@@ -116,10 +116,10 @@ export default function EventExperienceProgramPage({ event, pathSlug }: EventExp
                   {index < PROGRAM_ITEMS.length - 1 ? LINE_SVG : null}
                 </div>
 
-                {/* 텍스트 블록: 원으로부터 79px 오른쪽, 32px 위 (박스만 넓혀 글자 잘림 방지) */}
+                {/* 텍스트 블록: 원으로부터 79px 오른쪽, 32px 위, 고정 너비로 이미지 열 위치 통일 */}
                 <div
                   className="flex-shrink-0 flex flex-col"
-                  style={{ marginLeft: 79, marginTop: -32, minWidth: 347, maxWidth: 420 }}
+                  style={{ marginLeft: 79, marginTop: -32, width: 420 }}
                 >
                   <h2
                     className="font-['Pretendard']"
@@ -165,14 +165,14 @@ export default function EventExperienceProgramPage({ event, pathSlug }: EventExp
                   </p>
                 </div>
 
-                {/* 이미지: 텍스트로부터 80px 오른쪽, 565×270 */}
-                <div className="flex-shrink-0 overflow-hidden" style={{ marginLeft: 80, marginTop: -60, width: 565, height: 270 }}>
+                {/* 이미지: 텍스트로부터 80px 오른쪽, 565×270, 잘리지 않게 contain·가운데 */}
+                <div className="flex-shrink-0 flex items-center justify-center" style={{ marginLeft: 80, marginTop: -60, width: 565, height: 270 }}>
                   <Image
                     src={getGcbioImageUrl(item.image)}
                     alt=""
                     width={565}
                     height={270}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-contain object-center"
                     unoptimized
                   />
                 </div>
