@@ -24,7 +24,7 @@ const PROGRAM_ITEMS = [
   { num: '02', circleFill: '#006FB7', title: '모두가 주인공', body: <>모든 리더가 주연이 되어 하나의 GC녹십자를 만들어갑니다.<br />포토 키오스크 앞에서 사진을 촬영 후 출력되는 사진을 나누어<br />한 장은 포토월에, 한 장은 개인 소장하세요!</>, tip: '*Tip : 촬영된 이미지로 사원증 이미지를 바꿔보는 것은 어때요?', image: 'page4_program3.png' },
   { num: '03', circleFill: '#45B652', title: '홀인원 주인공', body: <>골프 퍼팅샷을 통해 GC녹십자가 달성한 3억불과<br />앞으로 달성할 4억불, 5억불 홀에 공을 차례로 넣는<br />퍼팅 골프 게임.</>, tip: '*TIP : 골프는 자세와 호흡이라고 배웠습니다. 실력 발휘 부탁드립니다.', image: 'page4_program4.png' },
   { num: '04', circleFill: '#F5D327', title: '오늘의 주인공', body: <>주연인 당신을 위해 준비한<br />레드카펫과 프레스월을 모티브로 한 포토존 공간으로</>, tip: '*TIP : 우리의 주연은 바로 당신! 포즈는 자신감!', image: 'page4_program5.png' },
-  { num: '05', circleFill: '#EC1F23', title: '럭키 드로우', body: <>진짜 주연으로 거듭나는 순간은<br />놓칠 수 없는 경품의 당첨 순간 아닐까요?<br />다양한 경품과 함께하는 럭키드로우입니다.</>, tip: '*TIP : 체험 프로그램에 모두 참여하시면 응모기회가 한번 더 생긴다는 사실! 놓치지 마세요', image: 'page4_program6.png' },
+  { num: '05', circleFill: '#EC1F23', title: '럭키 드로우', body: <>진짜 주연으로 거듭나는 순간은<br />놓칠 수 없는 경품의 당첨 순간 아닐까요?<br />다양한 경품과 함께하는 럭키드로우입니다.</>, tip: <>*TIP : 체험 프로그램에 모두 참여하시면 응모기회가 한번 더 생긴다는 사실!<br className="hidden md:inline" /> 놓치지 마세요</>, image: 'page4_program6.png' },
 ]
 
 interface EventExperienceProgramPageProps {

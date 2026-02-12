@@ -167,9 +167,9 @@ export default function EventOverviewPage({ event, pathSlug }: EventOverviewPage
             </span>
           </div>
 
-          {/* 4. TIME TABLE 섹션 제목 — 모바일에서 폰트 약간 확대 */}
+          {/* 4. TIME TABLE 섹션 제목 — 모바일에서 폰트 약간 확대, PC에서만 30px 오른쪽 */}
           <div
-            className={`${bebasNeue.className} mt-16 md:mt-[210px] text-[#111] text-3xl sm:text-4xl md:text-5xl leading-[120%] w-full max-w-full break-words`}
+            className={`${bebasNeue.className} mt-16 md:mt-[210px] md:ml-[30px] text-[#111] text-3xl sm:text-4xl md:text-5xl leading-[120%] w-full max-w-full break-words`}
           >
             <span className="block font-bold">2026 GCBP</span>
             <span className="block font-light text-[#444]">LEADERSHIP WORKSHOP</span>
@@ -973,9 +973,9 @@ export default function EventOverviewPage({ event, pathSlug }: EventOverviewPage
 
           {transportTab === 'airport' && (
           <div className="w-full max-w-[1420px] flex flex-col md:flex-row md:flex-nowrap font-['Pretendard']">
-            {/* 왼쪽 고정 열: 인천국제공항 */}
+            {/* 왼쪽 고정 열: 인천국제공항 — PC에서 오른쪽 행 끝(택시 등)과 아래 끝 맞춤 */}
             <div
-              className="flex items-center justify-center shrink-0 w-full md:w-[200px] min-h-[80px] md:min-h-0 md:h-[386px]"
+              className="flex items-center justify-center shrink-0 w-full md:w-[200px] min-h-[80px] md:min-h-0 md:h-auto md:self-stretch"
               style={{
                 padding: 14,
                 gap: 10,

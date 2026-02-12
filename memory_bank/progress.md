@@ -1,5 +1,11 @@
 # 완료된 작업 내역 (Progress)
 
+## [2026-02-12] 이벤트 222152 행사개요·체험 프로그램 수정·빌드·메모리뱅크·푸시
+- ✅ **행사개요(EventOverviewPage)**: TIME TABLE 섹션 제목 PC에서 30px 오른쪽(md:ml-[30px]). 공항 탭 인천국제공항 열 PC에서 오른쪽 행(택시 등)과 아래 끝 맞춤(md:h-auto md:self-stretch). 네이버 지도 영역 회색 박스+가운데 "네이버 지도" 텍스트 유지.
+- ✅ **체험 프로그램(EventExperienceProgramPage)**: 05 럭키드로우 TIP PC에서 "사실!" 다음 줄에 "놓치지 마세요" 줄바꿈(JSX+hidden md:inline br).
+- ✅ Next.js 프로덕션 빌드 성공.
+- ✅ memory_bank/progress.md 반영, Git 푸시.
+
 ## [2026-02-12] 이벤트 222152 전 페이지 이미지 버킷·헤더 스크롤 고정·빌드·메모리뱅크·푸시
 - ✅ **이미지 버킷**: img/gcbio 70개 Supabase Storage(gcbio 버킷) 업로드 완료 (`npx tsx scripts/upload-gcbio-all-222152.ts`). 메인 홈·행사개요·협업스타일진단·세션 안내·체험 프로그램·오늘의 메뉴·갤러리·프로필·로그인 등 전 페이지 이미지 반영.
 - ✅ **헤더 스크롤 고정**: 세션 안내·오늘의 메뉴·행사 개요·체험 프로그램 페이지에서 스크롤 시 헤더 상단 고정(sticky). overflow-x-hidden 바깥에 헤더 배치로 sticky 동작 보장.
