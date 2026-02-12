@@ -1,5 +1,10 @@
 # 완료된 작업 내역 (Progress)
 
+## [2026-02-12] 이벤트 222152 세션 안내 페이지 이미지 버킷 업로드·빌드·메모리뱅크·푸시
+- ✅ `/event/222152/session-guide` 페이지 사용 이미지: img/gcbio 전체(67개) Supabase Storage(gcbio 버킷) 업로드 완료 (`npx tsx scripts/upload-gcbio-all-222152.ts`). page3_session1/2/3.png, page3_person·program·background 등 세션 안내·비디오 카드 이미지 포함.
+- ✅ Next.js 프로덕션 빌드 성공.
+- ✅ memory_bank/progress.md 반영, Git 푸시.
+
 ## [2026-02-12] 이벤트 222152 개요 페이지 이미지 버킷 업로드·빌드·메모리뱅크·푸시
 - ✅ `/event/222152/overview` 페이지 이미지: page1_photo1.png(배경), page1_location.png(지도) 등 gcbio 이미지 사용. img/gcbio 전체(66개) Supabase Storage(gcbio 버킷) 업로드 완료 (`npx tsx scripts/upload-gcbio-all-222152.ts`).
 - ✅ Next.js 프로덕션 빌드 성공.
