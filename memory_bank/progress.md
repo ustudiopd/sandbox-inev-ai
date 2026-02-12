@@ -1,5 +1,13 @@
 # 완료된 작업 내역 (Progress)
 
+## [2026-02-12] 이벤트 222152 오늘의 메뉴 페이지(중식/석식) 완성·빌드·메모리뱅크·푸시
+- ✅ `/event/222152/menu` (EventTodayMenuPage): 히어로 이미지(page6_session.png)·"오늘의 메뉴" 오버레이, 중식/석식 탭 버튼(선택 시 #111 배경·흰 글씨).
+- ✅ 중식: JAPANESE BENTO BOX 제목·구분선·메뉴 7세트(영문/한글)·page6_menu1.png(1420×674)·하단 192px 여백. LUNCH_MENU_ITEMS 데이터 적용.
+- ✅ 석식: INTERNATIONAL BUFFET 제목·구분선·메뉴 32세트(영문/한글)·page6_menu2.png(1420×674)·하단 192px 여백. DINNER_MENU_ITEMS 전체 메뉴명 적용. 14번 Carving Station 2줄 표시(pre-line).
+- ✅ 석식 메뉴 열: width max-content·items-stretch로 한 열 가운데 정렬, 제목·각 줄 block w-full·text-align center.
+- ✅ 이미지: page6_menu1.png·page6_menu2.png img/gcbio 추가 후 gcbio 버킷 업로드 완료.
+- ✅ Next.js 프로덕션 빌드 성공. memory_bank/progress.md 반영, Git 푸시.
+
 ## [2026-02-12] 이벤트 222152 체험 프로그램 페이지 이미지 정렬·object-contain·빌드·메모리뱅크·푸시
 - ✅ EventExperienceProgramPage: 이미지 열 위치 통일(텍스트 블록 고정 너비 420px), 이미지 잘리지 않도록 object-contain·object-center 적용, 섹션 블록 mx-auto·maxWidth 100%로 가운데 정렬.
 - ✅ Next.js 프로덕션 빌드 성공.

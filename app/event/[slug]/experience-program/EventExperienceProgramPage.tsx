@@ -38,19 +38,20 @@ export default function EventExperienceProgramPage({ event, pathSlug }: EventExp
     <div className="w-full relative flex flex-col min-h-screen bg-[#F9F9F9] overflow-x-hidden">
       <div className="w-full max-w-[1920px] mx-auto flex flex-col flex-1 min-w-0">
         <Event222152Header slug={slug} variant="experience-program" />
-        <div className="w-full flex justify-center" style={{ marginTop: 30 }}>
-          <div className="relative w-full flex justify-center">
+        {/* 헤더와 오른쪽 끝 맞춤: 헤더와 동일한 패딩 */}
+        <div className="w-full max-w-[1920px] mx-auto px-4 sm:px-8 md:px-16 lg:px-[250px] flex justify-center" style={{ marginTop: 30 }}>
+          <div className="relative w-full max-w-[1420px] flex justify-center">
             <Image
               src={getGcbioImageUrl('page4_top.png')}
               alt=""
               width={1421}
               height={320}
-              className="max-w-full h-auto object-cover object-center"
+              className="w-full h-auto object-cover object-center"
               unoptimized
             />
             <div
               className="absolute inset-0 flex flex-col items-center justify-center text-center"
-              style={{ width: 1421, maxWidth: '100%', left: '50%', transform: 'translateX(-50%)' }}
+              style={{ left: 0, right: 0, width: '100%' }}
             >
               <h1
                 className="font-['Pretendard'] self-stretch"

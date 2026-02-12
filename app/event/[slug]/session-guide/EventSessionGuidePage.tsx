@@ -24,8 +24,8 @@ export default function EventSessionGuidePage({ event, pathSlug }: EventSessionG
         <main className="w-full flex justify-center items-start box-border flex-1 px-4 sm:px-6 md:px-8 lg:px-16 xl:px-[250px] pt-6 sm:pt-8 pb-12 sm:pb-16">
           <div className="flex flex-col justify-center items-center w-full max-w-[1280px] mx-auto min-w-0">
             <div
-              className="w-full max-w-[1421px] aspect-[1421/320] min-h-[200px] sm:min-h-[280px] flex items-center justify-center rounded-2xl sm:rounded-[32px] bg-cover bg-center"
-              style={{ backgroundImage: `url(${getGcbioImageUrl('Frame 41.png')})` }}
+              className="w-full max-w-[1481px] flex items-center justify-center rounded-2xl sm:rounded-[32px] bg-cover bg-center"
+              style={{ backgroundImage: `url(${getGcbioImageUrl('page3_again.png')})`, width: 1481, maxWidth: '100%', height: 320 }}
             >
               <span className="font-['Pretendard'] text-white text-center text-2xl sm:text-3xl md:text-[44px] font-semibold leading-[140%] tracking-[-1.1px] px-4">
                 세션 안내
