@@ -40,9 +40,9 @@ export default function Event222152Landing({ event, pathSlug }: Event222152Landi
       <Event222152Header slug={pathSlug ?? event.slug} variant="default" />
 
       {/* 메인 콘텐츠 — 반응형: 모바일 세로 스택, 데스크톱 가로 배치 */}
-      <div className="w-full min-h-screen flex flex-col lg:flex-row items-center justify-center pt-20 lg:pt-[80px] px-4 sm:px-6 md:px-8 pb-12 relative z-20">
-        {/* 왼쪽: Main_name + DATE/LOCATION + 행사개요 버튼 */}
-        <div className="w-full max-w-[560px] flex flex-col items-center lg:items-start text-center lg:text-left order-2 lg:order-1">
+      <div className="w-full min-h-screen flex flex-col lg:flex-row items-center justify-center pt-[150px] lg:pt-[80px] px-4 sm:px-6 md:px-8 pb-12 relative z-20">
+        {/* 왼쪽: Main_name + DATE/LOCATION + 행사개요 버튼 — 모바일에서 먼저, 데스크톱 왼쪽 */}
+        <div className="w-full max-w-[560px] flex flex-col items-center lg:items-start text-center lg:text-left order-1 lg:order-1">
           <div className="w-full max-w-[377px] aspect-[377/406.575] relative">
             <Image
               src="/img/gcbio/Main_name.png"
@@ -82,8 +82,8 @@ export default function Event222152Landing({ event, pathSlug }: Event222152Landi
             </svg>
           </Link>
         </div>
-        {/* 오른쪽: Main_poster — 모바일에서는 아래, 데스크톱에서는 옆 */}
-        <div className="w-full max-w-[552px] flex-shrink-0 mt-8 lg:mt-0 lg:ml-8 xl:ml-16 order-1 lg:order-2">
+        {/* 오른쪽: Main_poster — 모바일에서는 행사개요 버튼 아래, 데스크톱에서는 옆 */}
+        <div className="w-full max-w-[552px] flex-shrink-0 mt-8 lg:mt-0 lg:ml-8 xl:ml-16 order-2 lg:order-2">
           <div className="w-full aspect-[552/769] relative">
             <Image
               src="/img/gcbio/Main_poster.png"

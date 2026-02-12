@@ -34,7 +34,7 @@ export default function Event222152Header({ slug, variant = 'default' }: Event22
 
   const headerWrapperClass = isSubPage
     ? 'sticky top-0 h-[80px] w-full max-w-[1920px] mx-auto border-b border-black z-20 bg-[rgba(249,249,249,0.60)]'
-    : 'w-full h-[80px] left-0 top-0 absolute overflow-hidden border-b border-black bg-[rgba(249,249,249,0.6)] z-40'
+    : `w-full h-[80px] left-0 top-0 absolute border-b border-black bg-[rgba(249,249,249,0.6)] z-40 ${mobileMenuOpen ? 'overflow-visible' : 'overflow-hidden'}`
 
   const headerBgStyle = isSubPage ? { background: 'rgba(249, 249, 249, 0.60)' } : undefined
   const innerBorderClass = isSubPage ? '' : ''

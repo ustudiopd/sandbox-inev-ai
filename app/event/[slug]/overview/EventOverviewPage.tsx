@@ -1,11 +1,24 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Bebas_Neue } from 'next/font/google'
 import Event222152Header from '../components/Event222152Header'
 import { getGcbioImageUrl } from '../lib/gcbio-images'
 
 const bebasNeue = Bebas_Neue({ weight: '400', subsets: ['latin'], display: 'swap' })
+
+/** 모바일에서 시간표 컴팩트 모드 (열/행/폰트 축소) */
+const TIMETABLE_BREAKPOINT = 768
+const COLS_DESKTOP = [254, 244, 430, 215, 104, 173] as const
+const COLS_MOBILE = [183, 176, 310, 155, 75, 125] as const // ~0.72 scale
+const ROW_H_DESKTOP = 48
+const ROW_H_MOBILE = 35
+const FONT_DESKTOP = 16
+const FONT_MOBILE = 11
+const MERGED_H_2_DESKTOP = 96
+const MERGED_H_2_MOBILE = 70
+const MERGED_H_3_DESKTOP = 144
+const MERGED_H_3_MOBILE = 104
 
 type TransportTab = 'publicTransport' | 'airport'
 
@@ -22,21 +35,30 @@ interface EventOverviewPageProps {
 export default function EventOverviewPage({ event, pathSlug }: EventOverviewPageProps) {
   const slug = pathSlug ?? event.slug
   const [transportTab, setTransportTab] = useState<TransportTab>('publicTransport')
+  const [timetableCompact, setTimetableCompact] = useState(false)
+
+  useEffect(() => {
+    const mq = window.matchMedia(`(max-width: ${TIMETABLE_BREAKPOINT}px)`)
+    const update = () => setTimetableCompact(mq.matches)
+    update()
+    mq.addEventListener('change', update)
+    return () => mq.removeEventListener('change', update)
+  }, [])
 
   return (
-    <div className="w-full relative flex flex-col min-h-screen bg-white">
-      <div className="w-full max-w-[1920px] mx-auto flex flex-col flex-1 min-w-0">
+    <div className="w-full max-w-full overflow-x-hidden relative flex flex-col min-h-screen bg-white">
+      <div className="w-full max-w-[1920px] max-w-full mx-auto flex flex-col flex-1 min-w-0 box-border">
         <Event222152Header slug={slug} variant="overview" />
 
         {/* 본문 레이아웃: width 1920px, padding 50px 250px 145px 250px (상단 100px 축소), 가운데 정렬 */}
-        <main className="w-full flex justify-center items-center box-border flex-1 px-4 sm:px-6 md:px-8 lg:px-16 xl:px-[250px] pt-0 sm:pt-0 md:pt-[50px] pb-12 md:pb-[145px] overflow-x-hidden">
-          <div className="relative flex flex-col justify-center items-start w-full max-w-[1420px] mx-auto min-w-0">
+        <main className="w-full max-w-full flex justify-center items-center box-border flex-1 px-4 sm:px-6 md:px-8 lg:px-16 xl:px-[250px] pt-0 sm:pt-0 md:pt-[50px] pb-12 md:pb-[145px] overflow-x-hidden overflow-y-visible min-h-0 min-w-0">
+          <div className="relative flex flex-col justify-center items-start w-full max-w-[1420px] max-w-full mx-auto min-w-0 min-h-0">
           {/* 배경 블록: #F2F2F2 — 반응형 full width */}
-          <div className="absolute z-0 top-[550px] bottom-0 h-[1240px] min-h-0 bg-[#F2F2F2] w-screen left-1/2 -translate-x-1/2" aria-hidden />
+          <div className="absolute z-0 top-[550px] bottom-0 h-[1240px] min-h-0 bg-[#F2F2F2] w-full left-0 right-0 min-w-0" aria-hidden />
 
-          <div className="relative z-10">
+          <div className="relative z-10 overflow-visible min-h-0 min-w-0 w-full max-w-full">
           {/* 1. 초대의 글 + 본문 */}
-          <div className="flex flex-col items-start gap-2 mb-10">
+          <div className="flex flex-col items-start gap-2 mb-10 overflow-visible min-h-0 shrink-0">
             <h1
               className="font-['Pretendard']"
               style={{
@@ -51,10 +73,12 @@ export default function EventOverviewPage({ event, pathSlug }: EventOverviewPage
               초대의 글
             </h1>
             <p
-              className="font-['Pretendard'] w-full max-w-[640px] text-[#111] text-base font-medium"
+              className="font-['Pretendard'] w-full max-w-full md:max-w-[640px] text-base font-medium overflow-visible shrink-0 break-words"
               style={{
+                color: '#111',
                 lineHeight: '150%',
                 letterSpacing: '-0.32px',
+                paddingBottom: 4,
               }}
             >
               조연에서 주연으로 나아가기 위한 힘은 개인에게서 나오지 않습니다. 국내와 글로벌, R&D와 생산, 영업과
@@ -119,14 +143,14 @@ export default function EventOverviewPage({ event, pathSlug }: EventOverviewPage
 
           {/* 2. 워크샵 타이틀 */}
           <h2
-            className={`${bebasNeue.className} w-full text-[#111] font-bold leading-[130%] tracking-[-0.7px] mb-8 md:mb-12 text-2xl sm:text-4xl md:text-5xl lg:text-[70px]`}
+            className={`${bebasNeue.className} w-full max-w-full text-[#111] font-bold leading-[130%] tracking-[-0.7px] mb-8 md:mb-12 text-4xl sm:text-4xl md:text-5xl lg:text-[70px] break-words`}
           >
             2026 GCBP LEADERSHIP WORKSHOP
           </h2>
 
           {/* 3. 행사 정보 */}
           <div
-            className="font-['Pretendard'] flex flex-col gap-0 text-base sm:text-lg md:text-2xl font-medium text-[#111] leading-[140%] tracking-[-0.48px]"
+            className="font-['Pretendard'] flex flex-col gap-0 text-base sm:text-lg md:text-2xl font-medium text-[#111] leading-[140%] tracking-[-0.48px] w-full max-w-full break-words"
           >
             <span>DATE | 2026.03.05. (목)</span>
             <span>LOCATION | 노보텔 앰배서더 서울 용산 한라홀(3F)</span>
@@ -143,41 +167,50 @@ export default function EventOverviewPage({ event, pathSlug }: EventOverviewPage
 
           {/* 4. TIME TABLE 섹션 제목 */}
           <div
-            className={`${bebasNeue.className} mt-16 md:mt-[210px] text-[#111] text-2xl sm:text-4xl md:text-5xl leading-[120%]`}
+            className={`${bebasNeue.className} mt-16 md:mt-[210px] text-[#111] text-2xl sm:text-4xl md:text-5xl leading-[120%] w-full max-w-full break-words`}
           >
             <span className="block font-bold">2026 GCBP</span>
             <span className="block font-light text-[#444]">LEADERSHIP WORKSHOP</span>
             <span className="block font-light text-[#444]">TIME TABLE</span>
           </div>
 
-          {/* 타임테이블: 모바일 가로 스크롤 */}
-          <div className="w-full max-w-[1420px] mt-6 md:mt-[41px] overflow-x-auto">
-            <div className="flex flex-col min-w-[800px]">
+          {/* 타임테이블: 모바일에서 컴팩트(축소), 가로 스크롤 */}
+          <div className="w-full max-w-[1420px] max-w-full min-w-0 mt-6 md:mt-[41px] overflow-x-auto">
+            {(() => {
+              const colWidths = timetableCompact ? COLS_MOBILE : COLS_DESKTOP
+              const rowH = timetableCompact ? ROW_H_MOBILE : ROW_H_DESKTOP
+              const fontSize = timetableCompact ? FONT_MOBILE : FONT_DESKTOP
+              const mergedH2 = timetableCompact ? MERGED_H_2_MOBILE : MERGED_H_2_DESKTOP
+              const mergedH3 = timetableCompact ? MERGED_H_3_MOBILE : MERGED_H_3_DESKTOP
+              const gridCols = colWidths.map((w) => `${w}px`).join(' ')
+              const tableMinW = colWidths.reduce((a, b) => a + b, 0)
+              return (
+            <div className="flex flex-col" style={{ minWidth: tableMinW }}>
             {/* 헤더 행 */}
             <div className="flex">
               {[
-                { width: 254, label: '테마' },
-                { width: 244, label: '세션' },
-                { width: 430, label: '세부내용' },
-                { width: 215, label: '연사' },
-                { width: 104, label: '진행기간' },
-                { width: 173, label: '시간', noRightBorder: true },
-              ].map((col) => (
+                { label: '테마', noRightBorder: false },
+                { label: '세션', noRightBorder: false },
+                { label: '세부내용', noRightBorder: false },
+                { label: '연사', noRightBorder: false },
+                { label: '진행기간', noRightBorder: false },
+                { label: '시간', noRightBorder: true },
+              ].map((col, i) => (
                 <div
                   key={col.label}
                   className="flex justify-center items-center shrink-0 font-['Pretendard'] text-center whitespace-nowrap"
                   style={{
                     boxSizing: 'border-box',
-                    width: col.width,
-                    height: 48,
-                    padding: '6px 16px',
+                    width: colWidths[i],
+                    height: rowH,
+                    padding: timetableCompact ? '4px 8px' : '6px 16px',
                     gap: 10,
                     borderTop: '2px solid #949494',
                     borderRight: col.noRightBorder ? undefined : '1px solid #949494',
                     borderBottom: '1px solid #949494',
                     background: '#E4E4E4',
                     color: '#111',
-                    fontSize: 16,
+                    fontSize,
                     fontWeight: 600,
                     lineHeight: '140%',
                     letterSpacing: '-0.32px',
@@ -187,12 +220,12 @@ export default function EventOverviewPage({ event, pathSlug }: EventOverviewPage
                 </div>
               ))}
             </div>
-            {/* 데이터 행 16개: 테마 3·4, 5·세션5, 6·7·8, 9·세션9, 11·세션11, 테마13·14, 세션13·14, 15·세션15 병합 */}
+            {/* 데이터 행 16개 */}
             <div
               className="grid"
               style={{
-                gridTemplateColumns: '254px 244px 430px 215px 104px 173px',
-                gridTemplateRows: 'repeat(16, 48px)',
+                gridTemplateColumns: gridCols,
+                gridTemplateRows: `repeat(16, ${rowH}px)`,
               }}
             >
               {(() => {
@@ -209,7 +242,7 @@ export default function EventOverviewPage({ event, pathSlug }: EventOverviewPage
                   color: '#000',
                   textAlign: 'center' as const,
                   fontFamily: 'Pretendard',
-                  fontSize: 16,
+                  fontSize,
                   fontStyle: 'normal' as const,
                   fontWeight: 500,
                   lineHeight: '140%',
@@ -329,12 +362,13 @@ export default function EventOverviewPage({ event, pathSlug }: EventOverviewPage
                         ...(isDetailColumn
                           ? {
                               justifyContent: 'flex-start',
-                              paddingLeft: 12,
+                              paddingLeft: timetableCompact ? 8 : 12,
                             }
                           : { justifyContent: 'center' }),
                       }}
                     >
                       <span
+                        className="whitespace-nowrap"
                         style={{
                           ...tableCellTextStyle,
                           ...(isDetailColumn
@@ -365,7 +399,7 @@ export default function EventOverviewPage({ event, pathSlug }: EventOverviewPage
                             ...cellStyle,
                             gridColumn: colIndex,
                             gridRow: rowIndex + 1,
-                            height: 48,
+                            height: rowH,
                           },
                           contents[colIndex - 3],
                           colIndex === 3
@@ -394,7 +428,7 @@ export default function EventOverviewPage({ event, pathSlug }: EventOverviewPage
                             ...cellStyle,
                             gridColumn: colIndex + 1,
                             gridRow: rowIndex + 1,
-                            height: 48,
+                            height: rowH,
                           },
                           content,
                           colIndex === 2
@@ -409,7 +443,7 @@ export default function EventOverviewPage({ event, pathSlug }: EventOverviewPage
                           ...cellStyle,
                           gridColumn: '1 / span 2',
                           gridRow: rowIndex + 1,
-                          height: 48,
+                          height: rowH,
                         },
                         themeLabels[rowIndex]
                       )
@@ -428,7 +462,7 @@ export default function EventOverviewPage({ event, pathSlug }: EventOverviewPage
                             ...cellStyle,
                             gridColumn: colIndex,
                             gridRow: rowIndex + 1,
-                            height: 48,
+                            height: rowH,
                           },
                           mergeDataContents[colIndex - 3],
                           colIndex === 3
@@ -453,9 +487,9 @@ export default function EventOverviewPage({ event, pathSlug }: EventOverviewPage
                               : rowIndex + 1
                       const mergedHeight =
                         isThemeRowSpan2 || isThemeRowSpan2Row12 || isSessionRowSpan2
-                          ? 96
+                          ? mergedH2
                           : (isThemeRowSpan3 || isSessionRowSpan3)
-                            ? 144
+                            ? mergedH3
                             : null
                       const dataContent =
                         colIndex === 2
@@ -494,10 +528,10 @@ export default function EventOverviewPage({ event, pathSlug }: EventOverviewPage
                                     colIndex === 2 ? 'flex-start' : 'center',
                                   alignItems: 'center',
                                   ...(colIndex === 2
-                                    ? { paddingLeft: 12 }
+                                    ? { paddingLeft: timetableCompact ? 8 : 12 }
                                     : {}),
                                 }
-                              : { height: 48 }),
+                              : { height: rowH }),
                           },
                           content,
                           colIndex === 2
@@ -510,13 +544,14 @@ export default function EventOverviewPage({ event, pathSlug }: EventOverviewPage
               })()}
             </div>
             </div>
+            )
+          })()}
           </div>
 
-          {/* 네이버 지도 영역 - 타임테이블 아래 250px */}
+          {/* 네이버 지도 영역 - 타임테이블 아래 250px, 모바일에서 높이 축소 */}
           <div
-            className="w-full max-w-[1420px] mt-[250px] flex items-center justify-center"
+            className="w-full max-w-[1420px] max-w-full mt-[250px] flex items-center justify-center h-[280px] sm:h-[400px] md:h-[550px] lg:h-[700px]"
             style={{
-              height: '700px',
               background: '#444',
             }}
           >
@@ -537,13 +572,12 @@ export default function EventOverviewPage({ event, pathSlug }: EventOverviewPage
           </div>
 
           {/* 버튼 두 개 - 네이버 지도 박스 아래 50px, 탭 전환 */}
-          <div className="w-full max-w-[1420px] mt-[50px] flex flex-nowrap">
+          <div className="w-full max-w-[1420px] mt-[50px] flex flex-col md:flex-row md:flex-nowrap">
             <button
               type="button"
               onClick={() => setTransportTab('publicTransport')}
-              className="flex justify-center items-center flex-1 min-w-0 max-w-[710px] cursor-pointer font-['Pretendard']"
+              className="flex justify-center items-center w-full md:flex-1 min-w-0 md:max-w-[710px] cursor-pointer font-['Pretendard']"
               style={{
-                width: 710,
                 padding: '19px 0',
                 borderTop: '2px solid #949494',
                 borderBottom: '2px solid #949494',
@@ -564,9 +598,8 @@ export default function EventOverviewPage({ event, pathSlug }: EventOverviewPage
             <button
               type="button"
               onClick={() => setTransportTab('airport')}
-              className="flex justify-center items-center flex-1 min-w-0 max-w-[710px] cursor-pointer font-['Pretendard']"
+              className="flex justify-center items-center w-full md:flex-1 min-w-0 md:max-w-[710px] cursor-pointer font-['Pretendard']"
               style={{
-                width: 710,
                 padding: '19px 0',
                 borderTop: '2px solid #949494',
                 borderBottom: '2px solid #949494',
@@ -589,12 +622,10 @@ export default function EventOverviewPage({ event, pathSlug }: EventOverviewPage
           {transportTab === 'publicTransport' && (
           <>
           {/* 리무진 버스 안내 - 버튼 행 바로 아래, 왼쪽 정렬 */}
-          <div className="w-full max-w-[1420px] flex flex-nowrap">
+          <div className="w-full max-w-[1420px] flex flex-col md:flex-row md:flex-nowrap">
             <div
-              className="flex items-center justify-center shrink-0"
+              className="flex items-center justify-center shrink-0 w-full md:w-[200px] min-h-[80px] md:min-h-0 md:h-[120px]"
               style={{
-                width: 200,
-                height: 120,
                 padding: 14,
                 gap: 10,
                 borderBottom: '1px solid #949494',
@@ -602,10 +633,8 @@ export default function EventOverviewPage({ event, pathSlug }: EventOverviewPage
               }}
             >
               <div
-                className="flex flex-col justify-center shrink-0 font-['Pretendard']"
+                className="flex flex-col justify-center font-['Pretendard'] text-center md:text-left max-w-full"
                 style={{
-                  width: 172,
-                  height: 92,
                   color: '#111',
                   fontSize: 16,
                   fontStyle: 'normal',
@@ -618,10 +647,8 @@ export default function EventOverviewPage({ event, pathSlug }: EventOverviewPage
               </div>
             </div>
             <div
-              className="flex items-center shrink-0 font-['Pretendard']"
+              className="flex items-center min-w-0 flex-1 font-['Pretendard'] w-full md:w-[1220px] min-h-[80px] md:min-h-0 md:h-[120px]"
               style={{
-                width: 1220,
-                height: 120,
                 padding: '14px 16px',
                 gap: 10,
                 borderBottom: '1px solid #949494',
@@ -647,12 +674,10 @@ export default function EventOverviewPage({ event, pathSlug }: EventOverviewPage
           </div>
 
           {/* 자가용 안내 - 리무진 버스 행 바로 아래 */}
-          <div className="w-full max-w-[1420px] flex flex-nowrap">
+          <div className="w-full max-w-[1420px] flex flex-col md:flex-row md:flex-nowrap">
             <div
-              className="flex items-center justify-center shrink-0"
+              className="flex items-center justify-center shrink-0 w-full md:w-[200px] min-h-[60px] md:min-h-0 md:h-[70px]"
               style={{
-                width: 200,
-                height: 70,
                 padding: 14,
                 gap: 10,
                 borderBottom: '1px solid #949494',
@@ -660,10 +685,8 @@ export default function EventOverviewPage({ event, pathSlug }: EventOverviewPage
               }}
             >
               <div
-                className="flex flex-col justify-center shrink-0 font-['Pretendard']"
+                className="flex flex-col justify-center font-['Pretendard'] text-center md:text-left max-w-full"
                 style={{
-                  width: 172,
-                  height: 46,
                   color: '#111',
                   fontSize: 16,
                   fontStyle: 'normal',
@@ -676,10 +699,8 @@ export default function EventOverviewPage({ event, pathSlug }: EventOverviewPage
               </div>
             </div>
             <div
-              className="flex items-center shrink-0 font-['Pretendard']"
+              className="flex items-center min-w-0 flex-1 font-['Pretendard'] w-full md:w-[1220px] min-h-[60px] md:min-h-0 md:h-[70px] py-3 md:py-0"
               style={{
-                width: 1220,
-                height: 70,
                 padding: '14px 16px',
                 gap: 10,
                 borderBottom: '1px solid #949494',
@@ -692,7 +713,7 @@ export default function EventOverviewPage({ event, pathSlug }: EventOverviewPage
                 textAlign: 'left',
               }}
             >
-              <span>
+              <span className="break-words">
                 -인천공항 → 북인천IC → 김포공항IC → 방화대교 → 강변북로 → 원효로
                 → 용산전자상가 사거리 → 서울드래곤시티
               </span>
@@ -700,12 +721,10 @@ export default function EventOverviewPage({ event, pathSlug }: EventOverviewPage
           </div>
 
           {/* 열차/지하철 안내 - 자가용 행 바로 아래 */}
-          <div className="w-full max-w-[1420px] flex flex-nowrap">
+          <div className="w-full max-w-[1420px] flex flex-col md:flex-row md:flex-nowrap">
             <div
-              className="flex items-center justify-center shrink-0"
+              className="flex items-center justify-center shrink-0 w-full md:w-[200px] min-h-[60px] md:min-h-0 md:h-[120px]"
               style={{
-                width: 200,
-                height: 120,
                 padding: 14,
                 gap: 10,
                 borderBottom: '1px solid #949494',
@@ -713,10 +732,8 @@ export default function EventOverviewPage({ event, pathSlug }: EventOverviewPage
               }}
             >
               <div
-                className="flex flex-col justify-center shrink-0 font-['Pretendard']"
+                className="flex flex-col justify-center font-['Pretendard'] text-center md:text-left max-w-full"
                 style={{
-                  width: 172,
-                  height: 46,
                   color: '#111',
                   fontSize: 16,
                   fontStyle: 'normal',
@@ -729,10 +746,8 @@ export default function EventOverviewPage({ event, pathSlug }: EventOverviewPage
               </div>
             </div>
             <div
-              className="flex items-center shrink-0 font-['Pretendard']"
+              className="flex items-center min-w-0 flex-1 font-['Pretendard'] w-full md:w-[1220px] min-h-[80px] md:min-h-0 md:h-[120px] py-3 md:py-0"
               style={{
-                width: 1220,
-                height: 120,
                 padding: '14px 16px',
                 gap: 10,
                 borderBottom: '1px solid #949494',
@@ -758,12 +773,10 @@ export default function EventOverviewPage({ event, pathSlug }: EventOverviewPage
           </div>
 
           {/* 택시 안내 - 열차/지하철 행 바로 아래 */}
-          <div className="w-full max-w-[1420px] flex flex-nowrap">
+          <div className="w-full max-w-[1420px] flex flex-col md:flex-row md:flex-nowrap">
             <div
-              className="flex items-center justify-center shrink-0"
+              className="flex items-center justify-center shrink-0 w-full md:w-[200px] min-h-[60px] md:min-h-0 md:h-[70px]"
               style={{
-                width: 200,
-                height: 70,
                 padding: 14,
                 gap: 10,
                 borderBottom: '2px solid #949494',
@@ -771,9 +784,8 @@ export default function EventOverviewPage({ event, pathSlug }: EventOverviewPage
               }}
             >
               <div
-                className="shrink-0 font-['Pretendard']"
+                className="font-['Pretendard'] text-center md:text-left max-w-full"
                 style={{
-                  width: 172,
                   color: '#111',
                   fontSize: 16,
                   fontStyle: 'normal',
@@ -786,10 +798,8 @@ export default function EventOverviewPage({ event, pathSlug }: EventOverviewPage
               </div>
             </div>
             <div
-              className="flex items-center shrink-0 font-['Pretendard']"
+              className="flex items-center min-w-0 flex-1 font-['Pretendard'] w-full md:w-[1220px] min-h-[50px] md:min-h-0 md:h-[70px] py-3 md:py-0"
               style={{
-                width: 1220,
-                height: 70,
                 padding: '14px 16px',
                 gap: 10,
                 borderBottom: '2px solid #949494',
@@ -802,21 +812,20 @@ export default function EventOverviewPage({ event, pathSlug }: EventOverviewPage
                 textAlign: 'left',
               }}
             >
-              <span>-요금: 약 45,000원~50,000원 (일반)</span>
+              <span className="break-words">-요금: 약 45,000원~50,000원 (일반)</span>
             </div>
           </div>
 
           {/* 버스 탑승 안내 - 택시 행 아래 50px, 좌우 2열(20px 간격) */}
           <div
-            className="w-full max-w-[1420px] flex flex-nowrap"
+            className="w-full max-w-[1420px] flex flex-col md:flex-row flex-nowrap"
             style={{ marginTop: 50, gap: 20 }}
           >
             {/* 왼쪽 블록 */}
-            <div className="flex flex-col shrink-0">
+            <div className="flex flex-col shrink-0 w-full md:max-w-[700px] min-w-0">
               <div
-                className="flex items-center font-['Pretendard']"
+                className="flex items-center font-['Pretendard'] w-full"
                 style={{
-                  width: 700,
                   height: 50,
                   padding: '0 30px',
                   gap: 10,
@@ -834,10 +843,9 @@ export default function EventOverviewPage({ event, pathSlug }: EventOverviewPage
                 버스 탑승 안내
               </div>
               <div
-                className="font-['Pretendard'] shrink-0"
+                className="font-['Pretendard'] shrink-0 w-full min-w-0"
                 style={{
-                  width: 700,
-                  height: 280,
+                  minHeight: 280,
                   padding: '20px 30px',
                   display: 'flex',
                   alignItems: 'flex-start',
@@ -847,9 +855,8 @@ export default function EventOverviewPage({ event, pathSlug }: EventOverviewPage
                 }}
               >
                 <span
+                  className="block w-full max-w-full break-words"
                   style={{
-                    width: 640,
-                    flexShrink: 0,
                     color: '#000',
                     fontSize: 14,
                     fontStyle: 'normal',
@@ -872,11 +879,10 @@ export default function EventOverviewPage({ event, pathSlug }: EventOverviewPage
               </div>
             </div>
             {/* 오른쪽 블록 - 호텔 주차장 안내 */}
-            <div className="flex flex-col shrink-0">
+            <div className="flex flex-col shrink-0 w-full md:max-w-[700px] min-w-0">
               <div
-                className="flex items-center font-['Pretendard']"
+                className="flex items-center font-['Pretendard'] w-full"
                 style={{
-                  width: 700,
                   height: 50,
                   padding: '0 30px',
                   gap: 10,
@@ -894,10 +900,9 @@ export default function EventOverviewPage({ event, pathSlug }: EventOverviewPage
                 호텔 주차장 안내
               </div>
               <div
-                className="font-['Pretendard'] shrink-0 flex flex-col"
+                className="font-['Pretendard'] shrink-0 flex flex-col w-full min-w-0"
                 style={{
-                  width: 700,
-                  height: 280,
+                  minHeight: 280,
                   padding: '20px 30px',
                   alignItems: 'flex-start',
                   gap: 2,
@@ -906,9 +911,8 @@ export default function EventOverviewPage({ event, pathSlug }: EventOverviewPage
                 }}
               >
                 <span
+                  className="block w-full max-w-full break-words"
                   style={{
-                    width: 640,
-                    flexShrink: 0,
                     color: '#000',
                     fontSize: 14,
                     fontStyle: 'normal',
@@ -920,9 +924,8 @@ export default function EventOverviewPage({ event, pathSlug }: EventOverviewPage
                   노보텔엠버서더 서울 용산 지하 주차장 이용(무료)
                 </span>
                 <span
+                  className="block w-full max-w-full break-words"
                   style={{
-                    width: 640,
-                    flexShrink: 0,
                     color: '#000',
                     fontSize: 14,
                     fontStyle: 'normal',
@@ -935,9 +938,8 @@ export default function EventOverviewPage({ event, pathSlug }: EventOverviewPage
                   메인 로비)
                 </span>
                 <span
+                  className="block w-full max-w-full break-words"
                   style={{
-                    width: 640,
-                    flexShrink: 0,
                     color: '#000',
                     fontSize: 14,
                     fontStyle: 'normal',
@@ -948,19 +950,16 @@ export default function EventOverviewPage({ event, pathSlug }: EventOverviewPage
                 >
                   지하 주차장 가는 길
                 </span>
-                <div style={{ marginTop: 6 }}>
+                <div className="w-full max-w-full mt-2" style={{ marginTop: 6 }}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={getGcbioImageUrl('page1_location.png')}
                     alt="호텔 주차장 위치"
                     width={704}
                     height={176}
+                    className="w-full max-w-full h-auto block rounded-2xl"
                     style={{
-                      width: 704,
-                      height: 176,
-                      display: 'block',
                       objectFit: 'cover',
-                      borderRadius: 16,
                     }}
                   />
                 </div>
@@ -971,13 +970,11 @@ export default function EventOverviewPage({ event, pathSlug }: EventOverviewPage
           )}
 
           {transportTab === 'airport' && (
-          <div className="w-full max-w-[1420px] flex flex-nowrap font-['Pretendard']">
+          <div className="w-full max-w-[1420px] flex flex-col md:flex-row md:flex-nowrap font-['Pretendard']">
             {/* 왼쪽 고정 열: 인천국제공항 */}
             <div
-              className="flex items-center shrink-0"
+              className="flex items-center justify-center shrink-0 w-full md:w-[200px] min-h-[80px] md:min-h-0 md:h-[386px]"
               style={{
-                width: 200,
-                height: 386,
                 padding: 14,
                 gap: 10,
                 borderTop: '1px solid #949494',
@@ -986,10 +983,8 @@ export default function EventOverviewPage({ event, pathSlug }: EventOverviewPage
               }}
             >
             <div
-              className="flex flex-col justify-center shrink-0"
+              className="flex flex-col justify-center text-center md:text-left max-w-full"
               style={{
-                width: 172,
-                height: 92,
                   color: '#111',
                   fontSize: 16,
                   fontStyle: 'normal',
@@ -1003,7 +998,7 @@ export default function EventOverviewPage({ event, pathSlug }: EventOverviewPage
             </div>
             {/* 오른쪽: 수단·안내 테이블 */}
             <div
-              className="flex flex-col min-w-0 flex-1"
+              className="flex flex-col min-w-0 flex-1 w-full"
               style={{
                 borderTop: '1px solid #949494',
                 borderBottom: 'none',
@@ -1038,7 +1033,7 @@ export default function EventOverviewPage({ event, pathSlug }: EventOverviewPage
               ].map((row, i) => (
                 <div
                   key={i}
-                  className="flex flex-nowrap"
+                  className="flex flex-col md:flex-row md:flex-nowrap w-full"
                   style={{
                     borderBottom:
                       i < 3
@@ -1047,10 +1042,8 @@ export default function EventOverviewPage({ event, pathSlug }: EventOverviewPage
                   }}
                 >
                   <div
-                    className="flex items-center shrink-0"
+                    className="flex items-center shrink-0 w-full md:w-[200px] min-h-[50px] md:min-h-0 py-3 md:py-0"
                     style={{
-                      width: 200,
-                      height: row.methodHeight,
                       padding: '14px 16px',
                       gap: 10,
                       borderRight: '1px solid #949494',
@@ -1060,9 +1053,8 @@ export default function EventOverviewPage({ event, pathSlug }: EventOverviewPage
                     }}
                   >
                     <span
-                      className="shrink-0"
+                      className="max-w-full break-words"
                       style={{
-                        width: 168,
                         color: '#111',
                         fontSize: 14,
                         fontStyle: 'normal',
@@ -1075,9 +1067,9 @@ export default function EventOverviewPage({ event, pathSlug }: EventOverviewPage
                     </span>
                   </div>
                   <div
-                    className="flex items-center min-w-0 flex-1"
+                    className="flex items-center min-w-0 flex-1 w-full py-3 md:py-0 break-words"
                     style={{
-                      height: row.methodHeight,
+                      minHeight: 50,
                       padding: '19px 16px 14px',
                       background: '#FFF',
                       color: '#111',
