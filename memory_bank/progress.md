@@ -1,5 +1,10 @@
 # 완료된 작업 내역 (Progress)
 
+## [2026-02-12] 이벤트 222152 개요 페이지 이미지 버킷 업로드·빌드·메모리뱅크·푸시
+- ✅ `/event/222152/overview` 페이지 이미지: page1_photo1.png(배경), page1_location.png(지도) 등 gcbio 이미지 사용. img/gcbio 전체(66개) Supabase Storage(gcbio 버킷) 업로드 완료 (`npx tsx scripts/upload-gcbio-all-222152.ts`).
+- ✅ Next.js 프로덕션 빌드 성공.
+- ✅ memory_bank/progress.md 반영, Git 푸시.
+
 ## [2026-02-11] 이벤트 222152 체험 프로그램 페이지 콘텐츠·레이아웃 개선 및 빌드·메모리뱅크·푸시
 - ✅ EventExperienceProgramPage (`/event/[slug]/experience-program`): 5개 블록(01~05) 이미지+다크박스 레이아웃 유지, 블록별 제목·본문·TIP 문구 개별 적용.
   - 01 역사의 주인공 (필모그래피), 02 모두가 주인공 (포토 키오스크·포토월), 03 홀인원 주인공 (퍼팅 골프 게임), 04 오늘의 주인공 (레드카펫·프레스월 포토존), 05 럭키 드로우 (경품·응모기회).

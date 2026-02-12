@@ -9,7 +9,7 @@ interface Event222152HeaderProps {
 }
 
 const menuItemClass =
-  "text-center text-[8px] lg:text-[10px] xl:text-[12px] font-medium font-['Pretendard'] leading-6 whitespace-nowrap"
+  "text-center text-[9px] lg:text-[11px] xl:text-[13px] font-medium font-['Pretendard'] leading-6 whitespace-nowrap"
 
 export default function Event222152Header({ slug, variant = 'default' }: Event222152HeaderProps) {
   const isOverview = variant === 'overview'
