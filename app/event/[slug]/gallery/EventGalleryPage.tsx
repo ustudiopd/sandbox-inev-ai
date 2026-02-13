@@ -62,32 +62,51 @@ export default function EventGalleryPage({ event, pathSlug }: EventGalleryPagePr
   const videoCanNext = videoOffsetX > VIDEO_MAX_OFFSET
 
   return (
-    <div className="w-full relative flex flex-col min-h-screen bg-[#F9F9F9] overflow-x-hidden">
-      <div className="w-full max-w-[1920px] mx-auto flex flex-col flex-1 min-w-0">
+    <>
+      {/* 헤더 - sticky로 상단 고정 */}
+      <div className="sticky top-0 z-50 w-full">
         <Event222152Header slug={slug} variant="gallery" />
-
-        <main className="w-full flex justify-center items-center box-border flex-1 px-4 sm:px-6 md:px-8 lg:px-16 xl:px-[250px] pt-0 sm:pt-0 md:pt-[50px] pb-12 md:pb-[145px] overflow-x-hidden">
-          <div
-            className="flex flex-col justify-center items-center w-full relative mt-[50px] md:mt-[-450px] overflow-visible"
+      </div>
+      {/* 배너 이미지 - 헤더 위치까지 올려서 헤더 뒤에 살짝 보이도록 */}
+      <div className="relative w-full flex justify-center items-center overflow-hidden" style={{ width: '100%', height: '360px', marginTop: '-80px' }}>
+        <Image
+          src={getGcbioImageUrl('banner4.png')}
+          alt=""
+          width={1927}
+          height={360}
+          className="w-full h-full object-cover object-center"
+          unoptimized
+        />
+        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none" style={{ paddingTop: '70px' }}>
+          <h1
+            className={`${bebasNeue.className} w-full max-w-[932px] text-center text-3xl sm:text-4xl md:text-5xl lg:text-[70px] leading-[130%] tracking-[-0.7px] px-2`}
+            style={{ color: '#FFF' }}
           >
-            <h1
-              className={`${bebasNeue.className} w-full max-w-[932px] text-[#111] text-center text-3xl sm:text-4xl md:text-5xl lg:text-[70px] leading-[130%] tracking-[-0.7px] px-2`}
-            >
-              2026 GCBP Leadership Workshop
-            </h1>
-            <p className="font-['Pretendard'] mt-6 text-[#111] text-center text-base sm:text-lg md:text-2xl font-medium leading-[140%] tracking-[-0.48px] px-2">
-              2026 GCBP Leadership Workshop의 추억을 만나보세요.
-            </p>
+            2026 GCBP Leadership Workshop
+          </h1>
+          <p 
+            className="font-['Pretendard'] mt-6 text-center text-base sm:text-lg md:text-2xl font-medium leading-[140%] tracking-[-0.48px] px-2"
+            style={{ color: '#FFF' }}
+          >
+            2026 GCBP Leadership Workshop의 추억을 만나보세요.
+          </p>
+        </div>
+      </div>
+      <div className="w-full relative flex flex-col bg-[#F9F9F9] overflow-x-hidden min-h-screen">
+        <main className="w-full max-w-[1920px] mx-auto flex justify-center items-center box-border px-4 sm:px-6 md:px-8 lg:px-16 xl:px-[250px] pt-0 sm:pt-0 md:pt-[50px] pb-12 md:pb-[145px] overflow-x-hidden md:min-h-[1654px]">
+          <div
+            className="flex flex-col justify-center items-center w-full relative mt-[50px] md:mt-[-1250px] overflow-visible"
+          >
             {/* 모바일: Photo 레이블과 버튼 같은 줄(Y축 맞춤), PC: md:contents로 플로우 복원 */}
             <div className="flex flex-row items-center justify-between w-full px-4 mt-8 md:contents">
               <span
-                className={`${bebasNeue.className} block mt-0 text-[#111] text-4xl md:text-5xl font-bold leading-[140%] tracking-[-0.5px] self-start ml-0 md:mt-0 md:ml-0 md:absolute md:left-[-35px] md:top-[363px]`}
+                className={`${bebasNeue.className} block mt-0 text-[#111] text-4xl md:text-5xl font-bold leading-[140%] tracking-[-0.5px] self-start ml-0 md:mt-0 md:ml-0 md:absolute md:left-[-35px] md:top-[-57px]`}
               >
                 Photo
               </span>
               {/* Photo 버튼: 모바일에서는 Photo와 같은 줄 오른쪽 끝 */}
               <div
-                className="flex items-center justify-center gap-2 mt-0 self-end md:mt-4 md:self-auto md:absolute md:left-[1198px] md:top-[382px] md:justify-start"
+                className="flex items-center justify-center gap-2 mt-0 self-end md:mt-4 md:self-auto md:absolute md:left-[1198px] md:top-[-38px] md:justify-start"
                 style={{ gap: '10px' }}
                 role="group"
                 aria-label="이전 / 다음"
@@ -119,7 +138,7 @@ export default function EventGalleryPage({ event, pathSlug }: EventGalleryPagePr
               </div>
             </div>
             {/* 갤러리: 모바일 가로 스크롤, 데스크톱 절대위치 */}
-            <div className="w-full overflow-x-auto md:overflow-x-hidden px-4 mt-4 md:px-0 md:absolute md:left-[-35px] md:top-[483px] md:w-[min(1682px,calc(50%+722px))]">
+            <div className="w-full overflow-x-auto md:overflow-x-hidden px-4 mt-4 md:px-0 md:absolute md:left-[-35px] md:top-[63px] md:w-[min(1682px,calc(50%+722px))]">
               <div
                 className="flex flex-shrink-0 gap-4 md:gap-[30px]"
                 style={{
@@ -153,13 +172,13 @@ export default function EventGalleryPage({ event, pathSlug }: EventGalleryPagePr
             {/* 모바일: Video 레이블과 버튼 같은 줄(Y축 맞춤), PC: md:contents로 플로우 복원 */}
             <div className="flex flex-row items-center justify-between w-full px-4 mt-12 md:contents">
               <span
-                className={`${bebasNeue.className} block mt-0 text-[#111] text-4xl md:text-5xl font-bold leading-[140%] tracking-[-0.5px] self-start ml-0 md:mt-0 md:ml-0 md:absolute md:left-[-35px] md:top-[1141px]`}
+                className={`${bebasNeue.className} block mt-0 text-[#111] text-4xl md:text-5xl font-bold leading-[140%] tracking-[-0.5px] self-start ml-0 md:mt-0 md:ml-0 md:absolute md:left-[-35px] md:top-[721px]`}
               >
                 Video
               </span>
               {/* Video 섹션 버튼: 모바일에서는 Video와 같은 줄 오른쪽 끝 */}
               <div
-                className="flex items-center justify-center gap-2 mt-0 self-end md:mt-4 md:self-auto md:absolute md:left-[1187px] md:top-[1160px] md:justify-start"
+                className="flex items-center justify-center gap-2 mt-0 self-end md:mt-4 md:self-auto md:absolute md:left-[1187px] md:top-[740px] md:justify-start"
                 style={{ gap: '10px' }}
                 role="group"
                 aria-label="비디오 이전 / 다음"
@@ -190,15 +209,40 @@ export default function EventGalleryPage({ event, pathSlug }: EventGalleryPagePr
                 </button>
               </div>
             </div>
+            {/* Main_poster 배경 이미지: 비디오 이미지들 뒤에 배치 */}
+            <div
+              className="hidden md:block absolute"
+              style={{
+                left: '565px',
+                top: '601px',
+                width: '490px',
+                height: '684px',
+                opacity: 0.1,
+                zIndex: 0,
+                pointerEvents: 'none',
+              }}
+            >
+              <img
+                src={getGcbioImageUrl('Main_poster.png')}
+                alt=""
+                width={490}
+                height={684}
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover',
+                }}
+              />
+            </div>
             {/* 그라데이션: 데스크톱만 절대위치, 모바일 숨김 */}
             <div
-              className="hidden md:block absolute left-1/2 -translate-x-1/2 top-[1579px] w-[1920px] h-[495px] z-0"
+              className="hidden md:block absolute left-1/2 -translate-x-1/2 top-[1159px] w-[1920px] h-[495px] z-0"
               style={{
                 background: 'linear-gradient(180deg, #ffffff 0%, rgba(255, 255, 255, 0) 100%), linear-gradient(90deg, #36C618 0%, #FFDF00 50%, #FF4606 100%)',
               }}
             />
             {/* Video 슬라이드 */}
-            <div className="w-full overflow-x-auto md:overflow-x-hidden px-4 mt-4 md:px-0 md:absolute md:left-[-35px] md:top-[1261px] md:w-[min(1682px,calc(50%+722px))] z-[1]">
+            <div className="w-full overflow-x-auto md:overflow-x-hidden px-4 mt-4 md:px-0 md:absolute md:left-[-35px] md:top-[841px] md:w-[min(1682px,calc(50%+722px))] z-[2]">
               <div
                 className="flex flex-shrink-0 gap-4 md:gap-[30px]"
                 style={{
@@ -229,6 +273,6 @@ export default function EventGalleryPage({ event, pathSlug }: EventGalleryPagePr
           </div>
         </main>
       </div>
-    </div>
+    </>
   )
 }

@@ -1,8 +1,10 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { Bebas_Neue } from 'next/font/google'
 import Event222152Header from '../components/Event222152Header'
+import { getGcbioImageUrl } from '../lib/gcbio-images'
 
 const bebasNeue = Bebas_Neue({ weight: '400', subsets: ['latin'], display: 'swap' })
 
@@ -30,39 +32,156 @@ export default function EventProfilePage({ event, pathSlug }: EventProfilePagePr
                 About Me
               </h1>
             </div>
-            {/* 원 4개: 모바일 세로 가운데 정렬, sm 이상 가로 배치 */}
-            <div className="flex flex-col sm:flex-row flex-nowrap items-center justify-center gap-4 sm:gap-5 overflow-x-visible sm:overflow-x-auto">
-            {[
-              { borderColor: '#F5D327', label: '부서 소속', value: '디자인팀', labelWidth: 142 },
-              { borderColor: '#006FB7', label: '이름(동명이인 1,2로 표시)', value: '홍길동(1)', labelWidth: 172 },
-              { borderColor: '#EC1F23', label: '조 편성 내용', value: '-', labelWidth: 142 },
-              { borderColor: '#45B652', label: '협업 진단 테스트 결과', value: '-', labelWidth: 142 },
-            ].map((item, i) => (
-              <div
-                key={i}
-                className="flex flex-col items-center justify-center rounded-full border flex-shrink-0 w-[200px] h-[200px] sm:w-[220px] sm:h-[220px] md:w-[240px] md:h-[240px] px-4 sm:px-5 md:px-6 py-6 sm:py-7 md:py-8"
-                style={{
-                  border: `1px solid ${item.borderColor}`,
-                  borderRadius: '50%',
-                }}
-              >
-                <span className="font-['Pretendard'] text-center max-w-full text-[#111] text-xs sm:text-sm font-medium leading-[140%] tracking-[-0.32px] whitespace-nowrap">
-                  {item.label}
-                </span>
-                <span className="font-['Pretendard'] text-center text-[#111] text-base sm:text-lg md:text-[22px] font-semibold leading-[140%] tracking-[-0.48px] whitespace-nowrap">
-                  {item.value}
-                </span>
-              </div>
-            ))}
+            {/* 프로필 표: About Me로부터 33px 아래 */}
+            <div className="mt-[33px] w-full max-w-[588px] mx-auto">
+              {[
+                { label: '부서 소속', value: '디자인팀', subLabel: null },
+                { label: '부서 소속', value: '디자인팀', subLabel: null },
+                { label: '이름', value: '홍길동(1)', subLabel: '(동명이인 1,2로 표시)' },
+                { label: '조 편성 내용', value: '-', subLabel: null },
+                { label: '협업 진단\n테스트 결과', value: '-', subLabel: null },
+              ].map((item, i) => (
+                <div key={i} className="flex flex-row w-full">
+                  {/* 왼쪽 열: 라벨 */}
+                  <div
+                    className={`flex flex-shrink-0 relative ${item.subLabel ? 'flex-col' : 'justify-center items-center'}`}
+                    style={{
+                      width: '171px',
+                      height: '70px',
+                      padding: '14px',
+                      gap: '10px',
+                      borderTop: i === 0 ? '2px solid #949494' : '1px solid #949494',
+                      borderBottom: i === 4 ? '2px solid #949494' : '1px solid #949494',
+                      background: '#E9E9E9',
+                      color: '#111',
+                      textAlign: 'center',
+                      fontFamily: 'Pretendard',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                    }}
+                  >
+                    <span
+                      style={{
+                        width: '171px',
+                        height: item.subLabel ? '22px' : 'auto',
+                        flexDirection: 'column',
+                        justifyContent: 'center',
+                        flexShrink: 0,
+                        color: '#111',
+                        textAlign: 'center',
+                        fontFamily: 'Pretendard',
+                        fontSize: '16px',
+                        fontStyle: 'normal',
+                        fontWeight: 600,
+                        lineHeight: '140%',
+                        letterSpacing: '-0.32px',
+                        whiteSpace: 'pre-line',
+                      }}
+                    >
+                      {item.label}
+                    </span>
+                    {item.subLabel && (
+                      <span
+                        style={{
+                          width: '171px',
+                          height: '22px',
+                          flexDirection: 'column',
+                          justifyContent: 'center',
+                          flexShrink: 0,
+                          color: '#111',
+                          textAlign: 'center',
+                          fontFamily: 'Pretendard',
+                          fontSize: '14px',
+                          fontStyle: 'normal',
+                          fontWeight: 400,
+                          lineHeight: '140%',
+                          letterSpacing: '-0.28px',
+                        }}
+                      >
+                        {item.subLabel}
+                      </span>
+                    )}
+                  </div>
+                  {/* 오른쪽 열: 값 */}
+                  <div
+                    className="flex items-center flex-1 relative"
+                    style={{
+                      width: '417px',
+                      height: '70px',
+                      padding: '14px 16px',
+                      gap: '10px',
+                      borderTop: i === 0 ? '2px solid #949494' : '1px solid #949494',
+                      borderBottom: i === 4 ? '2px solid #949494' : '1px solid #949494',
+                    }}
+                  >
+                    <span
+                      style={{
+                        width: '385px',
+                        flexShrink: 0,
+                        color: '#000',
+                        fontFamily: 'Pretendard',
+                        fontSize: '14px',
+                        fontStyle: 'normal',
+                        fontWeight: 500,
+                        lineHeight: '140%',
+                        letterSpacing: '-0.28px',
+                        textAlign: 'left',
+                      }}
+                    >
+                      {item.value}
+                    </span>
+                  </div>
+                </div>
+              ))}
             </div>
             {/* 원 세트 아래 98px · Home 버튼 → 메인 홈 */}
-            <Link
-              href={`/event/${slug}`}
-              className="mt-12 sm:mt-16 flex items-center justify-center w-full max-w-[500px] mx-auto h-14 rounded-[100px] bg-[#111] font-['Pretendard'] text-white text-base font-bold"
-              aria-label="메인 홈으로"
-            >
-              Home
-            </Link>
+            <div className="relative mt-12 sm:mt-16 flex justify-center w-full max-w-[500px] mx-auto">
+              <Link
+                href={`/event/${slug}`}
+                className="flex items-center justify-center w-full h-14 rounded-[100px] bg-[#111] font-['Pretendard'] text-white text-base font-bold"
+                aria-label="메인 홈으로"
+              >
+                Home
+              </Link>
+              {/* deco2.png 이미지 - Home 버튼 왼쪽 아래에 배치 */}
+              <div
+                className="absolute pointer-events-none"
+                style={{
+                  left: '-363.654px',
+                  top: 'calc(100% - 30px)',
+                  width: '303.654px',
+                  height: '167.3px',
+                }}
+              >
+                <Image
+                  src={getGcbioImageUrl('deco2.png')}
+                  alt=""
+                  width={303.654}
+                  height={167.3}
+                  className="object-contain w-full h-full"
+                  unoptimized
+                />
+              </div>
+              {/* deco4.png 이미지 - Home 버튼 오른쪽 위에 배치 */}
+              <div
+                className="absolute pointer-events-none"
+                style={{
+                  left: 'calc(100% + 200px)',
+                  top: '-370px',
+                  width: '344px',
+                  height: '521px',
+                }}
+              >
+                <Image
+                  src={getGcbioImageUrl('deco4.png')}
+                  alt=""
+                  width={344}
+                  height={521}
+                  className="object-contain w-full h-full"
+                  unoptimized
+                />
+              </div>
+            </div>
           </div>
         </main>
       </div>

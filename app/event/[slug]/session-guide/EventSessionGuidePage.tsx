@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import Event222152Header from '../components/Event222152Header'
 import { getGcbioImageUrl } from '../lib/gcbio-images'
 
@@ -18,23 +19,59 @@ export default function EventSessionGuidePage({ event, pathSlug }: EventSessionG
 
   return (
     <>
-      {/* PC·모바일 공통: 스크롤 시에도 헤더 상단 고정 (overflow 바깥에 두어 sticky 동작 보장) */}
-      <div className="sticky top-0 z-50 w-full bg-[#F9F9F9]">
-        <Event222152Header slug={slug} variant="session-guide" />
+      <div className="relative w-full">
+        {/* 배너 이미지 */}
+        <div className="relative w-full flex justify-center items-center overflow-hidden" style={{ width: '100%', height: '360px' }}>
+          <Image
+            src={getGcbioImageUrl('banner1.png')}
+            alt=""
+            width={1927}
+            height={360}
+            className="w-full h-full object-cover object-center"
+            unoptimized
+          />
+          <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none" style={{ paddingTop: '70px' }}>
+            <span
+              style={{
+                color: '#FFF',
+                textAlign: 'center',
+                fontFamily: 'Pretendard, sans-serif',
+                fontSize: '44px',
+                fontStyle: 'normal',
+                fontWeight: 600,
+                lineHeight: '140%',
+                letterSpacing: '-0.88px',
+              }}
+            >
+              세션 안내
+            </span>
+            <span
+              style={{
+                color: '#FFF',
+                textAlign: 'center',
+                fontFamily: 'Pretendard, sans-serif',
+                fontSize: '24px',
+                fontStyle: 'normal',
+                fontWeight: 500,
+                lineHeight: '140%',
+                letterSpacing: '-0.48px',
+                marginTop: 24,
+              }}
+            >
+              Session Guide
+            </span>
+          </div>
+        </div>
+        {/* 헤더 - 배너 위에 오버레이 */}
+        <div className="absolute top-0 left-0 right-0 z-50 w-full">
+          <Event222152Header slug={slug} variant="session-guide" />
+        </div>
       </div>
 
       <div className="w-full relative flex flex-col min-h-screen bg-[#F9F9F9] overflow-x-hidden">
         <div className="w-full max-w-[1920px] mx-auto flex flex-col flex-1 min-w-0">
           <main className="w-full flex justify-center items-start box-border flex-1 px-4 sm:px-6 md:px-8 lg:px-16 xl:px-[250px] pt-6 sm:pt-8 pb-12 sm:pb-16">
           <div className="flex flex-col justify-center items-center w-full max-w-[1420px] mx-auto min-w-0">
-            <div
-              className="w-full max-w-[1420px] flex items-center justify-center rounded-2xl sm:rounded-[32px] bg-cover bg-center overflow-hidden h-[270px] md:h-[320px]"
-              style={{ backgroundImage: `url(${getGcbioImageUrl('page3_again.png')})`, width: 1420, maxWidth: '100%' }}
-            >
-              <span className="hidden md:inline font-['Pretendard'] text-white text-center text-2xl sm:text-3xl md:text-[44px] font-semibold leading-[140%] tracking-[-1.1px] px-4">
-                세션 안내
-              </span>
-            </div>
             {/* 첫 번째 섹션: M1 + 허은철 카드 */}
             <div className="flex flex-col items-center w-full max-w-[860px]">
               <h2
@@ -47,19 +84,42 @@ export default function EventSessionGuidePage({ event, pathSlug }: EventSessionG
                 <br />
                 미래를 향한 발걸음을 위한 한마디
               </p>
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-4 mt-8 sm:mt-10 w-full max-w-[860px]">
-                <img
-                  src={getGcbioImageUrl('page3_person10.png')}
-                  alt="허은철 대표이사"
-                  className="rounded-full object-cover flex-shrink-0 w-40 h-40 sm:w-52 sm:h-52 md:w-[216px] md:h-[216px]"
-                />
-                <div
-                  className="font-['Pretendard'] flex flex-col justify-center flex-shrink-0 w-[340px] min-w-[340px] max-w-full mx-auto md:w-[620px] md:min-w-[620px] md:mx-0 pl-4 pr-4 pt-[11px] md:pl-[88px] md:pr-[24px] min-h-[180px] md:min-h-0 md:h-[240px]"
-                  style={{
-                    borderRadius: '744.118px',
-                    background: '#F0F0F0',
-                  }}
-                >
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-4 mt-8 sm:mt-10 w-full max-w-[860px] relative">
+                <div className="relative">
+                  <img
+                    src={getGcbioImageUrl('page3_person10.png')}
+                    alt="허은철 대표이사"
+                    className="rounded-full object-cover flex-shrink-0 w-40 h-40 sm:w-52 sm:h-52 md:w-[216px] md:h-[216px]"
+                  />
+                  {/* deco_c.png 이미지 - page3_person10.png 왼쪽 380px, 위로 220px */}
+                  <div
+                    className="absolute pointer-events-none hidden md:block"
+                    style={{
+                      left: '-380px',
+                      top: '-220px',
+                      width: '272px',
+                      height: '475.685px',
+                      opacity: 0.1,
+                    }}
+                  >
+                    <Image
+                      src={getGcbioImageUrl('deco_c.png')}
+                      alt=""
+                      width={272}
+                      height={475.685}
+                      className="object-contain w-full h-full"
+                      unoptimized
+                    />
+                  </div>
+                </div>
+                <div className="relative">
+                  <div
+                    className="font-['Pretendard'] flex flex-col justify-center flex-shrink-0 w-[340px] min-w-[340px] max-w-full mx-auto md:w-[620px] md:min-w-[620px] md:mx-0 pl-4 pr-4 pt-[11px] md:pl-[88px] md:pr-[24px] min-h-[180px] md:min-h-0 md:h-[240px]"
+                    style={{
+                      borderRadius: '744.118px',
+                      background: '#F0F0F0',
+                    }}
+                  >
                   <div
                     className="text-sm md:text-2xl"
                     style={{
@@ -102,6 +162,27 @@ export default function EventSessionGuidePage({ event, pathSlug }: EventSessionG
                     2026년 새로운 GCBP 리더들이 가져야 할 마음가짐과
                     <br />
                     협업을 통한 새로운 도전
+                  </div>
+                  </div>
+                  {/* deco_R.png 이미지 - 타원형 카드 오른쪽 160px, 아래로 70px */}
+                  <div
+                    className="absolute pointer-events-none hidden md:block"
+                    style={{
+                      left: 'calc(100% + 160px)',
+                      top: '70px',
+                      width: '294.233px',
+                      height: '403.555px',
+                      opacity: 0.1,
+                    }}
+                  >
+                    <Image
+                      src={getGcbioImageUrl('deco_R.png')}
+                      alt=""
+                      width={294.233}
+                      height={403.555}
+                      className="object-contain w-full h-full"
+                      unoptimized
+                    />
                   </div>
                 </div>
               </div>
@@ -150,11 +231,33 @@ export default function EventSessionGuidePage({ event, pathSlug }: EventSessionG
                 className="flex flex-col md:flex-row items-center"
                 style={{ marginTop: '42px', gap: '15px' }}
               >
-                <img
-                  src={getGcbioImageUrl('page3_person2.png')}
-                  alt="대표이사 특강"
-                  className="rounded-full object-cover flex-shrink-0 w-40 h-40 sm:w-52 sm:h-52 md:w-[216px] md:h-[216px]"
-                />
+                <div className="relative">
+                  <img
+                    src={getGcbioImageUrl('page3_person2.png')}
+                    alt="대표이사 특강"
+                    className="rounded-full object-cover flex-shrink-0 w-40 h-40 sm:w-52 sm:h-52 md:w-[216px] md:h-[216px]"
+                  />
+                  {/* deco_O.png 이미지 - page3_person2.png 왼쪽 560px, 아래로 220px */}
+                  <div
+                    className="absolute pointer-events-none hidden md:block"
+                    style={{
+                      left: '-560px',
+                      top: '220px',
+                      width: '258px',
+                      height: '392.77px',
+                      opacity: 0.1,
+                    }}
+                  >
+                    <Image
+                      src={getGcbioImageUrl('deco_O.png')}
+                      alt=""
+                      width={258}
+                      height={392.77}
+                      className="object-contain w-full h-full"
+                      unoptimized
+                    />
+                  </div>
+                </div>
                 <div
                   className="font-['Pretendard'] flex flex-col justify-center flex-shrink-0 w-[340px] min-w-[340px] max-w-full mx-auto md:w-[620px] md:min-w-[620px] md:mx-0 pl-4 pr-4 pt-[11px] md:pl-[88px] md:pr-[24px] min-h-[180px] md:min-h-0 md:h-[240px]"
                   style={{
@@ -308,10 +411,34 @@ export default function EventSessionGuidePage({ event, pathSlug }: EventSessionG
                     >
                       {row.name}
                     </div>
-                    <div
-                      className="font-['Pretendard'] flex items-center justify-center min-h-[90px] px-4 sm:px-6 py-2 sm:w-[423px] sm:min-w-[423px] w-full max-w-full rounded-full border border-[#CACACA] text-center text-sm sm:text-base font-medium leading-[140%] tracking-[-0.32px] text-[#000] sm:ml-[10px]"
-                    >
-                      {row.title}
+                    <div className={i === 2 ? 'relative' : ''}>
+                      <div
+                        className="font-['Pretendard'] flex items-center justify-center min-h-[90px] px-4 sm:px-6 py-2 sm:w-[423px] sm:min-w-[423px] w-full max-w-full rounded-full border border-[#CACACA] text-center text-sm sm:text-base font-medium leading-[140%] tracking-[-0.32px] text-[#000] sm:ml-[10px]"
+                      >
+                        {row.title}
+                      </div>
+                      {i === 2 && (
+                        /* deco_S2.png 이미지 - Title div 오른쪽 250px, 위로 60px */
+                        <div
+                          className="absolute pointer-events-none hidden md:block"
+                          style={{
+                            left: 'calc(100% + 250px)',
+                            top: '-60px',
+                            width: '278px',
+                            height: '351.294px',
+                            opacity: 0.1,
+                          }}
+                        >
+                          <Image
+                            src={getGcbioImageUrl('deco_S2.png')}
+                            alt=""
+                            width={278}
+                            height={351.294}
+                            className="object-contain w-full h-full"
+                            unoptimized
+                          />
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -324,7 +451,27 @@ export default function EventSessionGuidePage({ event, pathSlug }: EventSessionG
               </div>
 
             {/* 구분선 아래 50px — M4 협업 인사이트(특강) */}
-            <div className="flex flex-col items-center" style={{ marginTop: '50px' }}>
+            <div className="flex flex-col items-center relative" style={{ marginTop: '50px' }}>
+              {/* deco6.png 이미지 - M4 섹션 오른쪽 70px, 아래로 770px */}
+              <div
+                className="absolute pointer-events-none hidden md:block"
+                style={{
+                  left: 'calc(100% + 70px)',
+                  top: '770px',
+                  width: '241.113px',
+                  height: '251.423px',
+                  opacity: 0.1,
+                }}
+              >
+                <Image
+                  src={getGcbioImageUrl('deco6.png')}
+                  alt=""
+                  width={241.113}
+                  height={251.423}
+                  className="object-contain w-full h-full"
+                  unoptimized
+                />
+              </div>
               <h2
                 className="font-['Pretendard'] w-full max-w-full md:w-[796px] px-2"
                 style={{
@@ -347,11 +494,53 @@ export default function EventSessionGuidePage({ event, pathSlug }: EventSessionG
                 className="flex flex-col md:flex-row items-center"
                 style={{ marginTop: '42px', gap: '15px' }}
               >
-                <img
-                  src={getGcbioImageUrl('page3_person11.png')}
-                  alt="황성현 연사"
-                  className="rounded-full object-cover flex-shrink-0 w-40 h-40 sm:w-52 sm:h-52 md:w-[216px] md:h-[216px]"
-                />
+                <div className="relative">
+                  <img
+                    src={getGcbioImageUrl('page3_person11.png')}
+                    alt="황성현 연사"
+                    className="rounded-full object-cover flex-shrink-0 w-40 h-40 sm:w-52 sm:h-52 md:w-[216px] md:h-[216px]"
+                  />
+                  {/* deco_S1.png 이미지 - page3_person11.png 왼쪽 455px, 아래로 90px */}
+                  <div
+                    className="absolute pointer-events-none hidden md:block"
+                    style={{
+                      left: '-455px',
+                      top: '90px',
+                      width: '258px',
+                      height: '402px',
+                      opacity: 0.1,
+                    }}
+                  >
+                    <Image
+                      src={getGcbioImageUrl('deco_S1.png')}
+                      alt=""
+                      width={258}
+                      height={402}
+                      className="object-contain w-full h-full"
+                      unoptimized
+                    />
+                  </div>
+                  {/* deco5.png 이미지 - deco_S1 아래로 850px */}
+                  <div
+                    className="absolute pointer-events-none hidden md:block"
+                    style={{
+                      left: '-455px',
+                      top: '940px',
+                      width: '241.113px',
+                      height: '251.423px',
+                      opacity: 0.1,
+                    }}
+                  >
+                    <Image
+                      src={getGcbioImageUrl('deco5.png')}
+                      alt=""
+                      width={241.113}
+                      height={251.423}
+                      className="object-contain w-full h-full"
+                      unoptimized
+                    />
+                  </div>
+                </div>
                 <div
                   className="font-['Pretendard'] flex flex-col justify-center flex-shrink-0 w-[340px] min-w-[340px] max-w-full mx-auto md:w-[620px] md:min-w-[620px] md:mx-0 pl-4 pr-4 pt-[11px] md:pl-[88px] md:pr-[24px] min-h-[180px] md:min-h-0 md:h-[240px]"
                   style={{
@@ -438,7 +627,7 @@ export default function EventSessionGuidePage({ event, pathSlug }: EventSessionG
                 className="flex flex-col md:flex-row items-center md:items-start justify-center gap-4 mt-[60px] mb-[220px] w-full max-w-full"
               >
                 <div
-                  className="order-1 md:order-none w-[340px] h-[180px] min-h-[180px] max-w-full mx-auto md:w-[864px] md:h-[509px] md:min-h-0 rounded-lg flex justify-center items-center bg-[#D9D9D9]"
+                  className="order-1 md:order-none w-[340px] h-[180px] min-h-[180px] max-w-full mx-auto md:w-[864px] md:h-[509px] md:min-h-0 rounded-lg flex justify-center items-center bg-[#D9D9D9] relative z-10"
                 >
                   <span
                     className="font-['Bebas_Neue']"
@@ -464,23 +653,23 @@ export default function EventSessionGuidePage({ event, pathSlug }: EventSessionG
                 <div
                   className="w-full max-w-full md:w-[540px] min-h-[100px] md:min-h-[159px] rounded-lg overflow-hidden relative"
                   style={{
-                    backgroundImage: `url(${getGcbioImageUrl('page3_session1.png')})`,
+                    backgroundImage: `url(${getGcbioImageUrl('page3_session1_new.png')})`,
                     backgroundSize: 'cover',
                     backgroundPosition: 'center',
                   }}
                 >
                   <div className="absolute left-3 top-2 md:left-6 md:top-8 flex flex-col gap-0.5 md:gap-2.5 pr-16 md:pr-0">
-                    <span className="font-['Bebas_Neue'] text-[10px] md:text-base text-white font-bold leading-none">
+                    <span className="font-['Bebas_Neue'] text-[10px] md:text-base text-black font-bold leading-none">
                       Video 01
                     </span>
-                    <span className="font-['Pretendard'] text-xs md:text-base text-white font-semibold leading-tight tracking-tight md:tracking-normal">
+                    <span className="font-['Pretendard'] text-xs md:text-base text-black font-semibold leading-tight tracking-tight md:tracking-normal">
                       천 명이 한 자리에서 일하는 회사!
                     </span>
-                    <p className="font-['Pretendard'] text-[10px] md:text-[13px] text-white font-medium leading-snug tracking-tight md:tracking-normal mt-0.5 md:mt-0 max-w-full md:max-w-[492px]">
+                    <p className="font-['Pretendard'] text-[10px] md:text-[13px] text-black font-medium leading-snug tracking-tight md:tracking-normal mt-0.5 md:mt-0 max-w-full md:max-w-[492px]">
                       같은 팀 아니면 이야기 한 마디 나누기도 힘들죠? 그런데 여기 전 직원이 한 팀처럼 소통하며 일하는 회사가 있습니다. 비결이 뭘까요?
                     </p>
                   </div>
-                  <div className="absolute right-2 top-2 md:right-auto md:left-[433px] md:top-6 inline-flex py-1 px-2 md:py-1.5 md:px-3.5 items-center gap-1 md:gap-1.5 rounded-full border border-white">
+                  <div className="absolute right-2 top-2 md:right-auto md:left-[433px] md:top-6 inline-flex py-1 px-2 md:py-1.5 md:px-3.5 items-center gap-1 md:gap-1.5 rounded-full bg-black">
                     <span className="font-['Pretendard'] text-[10px] md:text-sm text-white font-medium leading-none">Play</span>
                     <svg xmlns="http://www.w3.org/2000/svg" width="8" height="6" viewBox="0 0 13 9" fill="none" className="md:w-[13px] md:h-[9px]">
                       <path d="M0.5 4.5H12M12 4.5L7 0.5M12 4.5L7 8.5" stroke="white" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" />
@@ -491,21 +680,21 @@ export default function EventSessionGuidePage({ event, pathSlug }: EventSessionG
                 <div
                   className="w-full max-w-full md:w-[540px] min-h-[100px] md:min-h-[159px] rounded-lg overflow-hidden relative"
                   style={{
-                    backgroundImage: `url(${getGcbioImageUrl('page3_session2.png')})`,
+                    backgroundImage: `url(${getGcbioImageUrl('page3_session2_new.png')})`,
                     backgroundSize: 'cover',
                     backgroundPosition: 'center',
                   }}
                 >
                   <div className="absolute left-3 top-2 md:left-6 md:top-8 flex flex-col gap-0.5 md:gap-2.5 pr-16 md:pr-0">
-                    <span className="font-['Bebas_Neue'] text-[10px] md:text-base text-white font-bold leading-none">Video 02</span>
-                    <span className="font-['Pretendard'] text-xs md:text-base text-white font-semibold leading-tight tracking-tight md:tracking-normal">
+                    <span className="font-['Bebas_Neue'] text-[10px] md:text-base text-black font-bold leading-none">Video 02</span>
+                    <span className="font-['Pretendard'] text-xs md:text-base text-black font-semibold leading-tight tracking-tight md:tracking-normal">
                       지나친 내부 경쟁이 기업을 맟니다! 지금 당장 '협업 지수'를 높여라!
                     </span>
-                    <p className="font-['Pretendard'] text-[10px] md:text-[13px] text-white font-medium leading-snug tracking-tight md:tracking-normal mt-0.5 md:mt-0 max-w-full md:max-w-[492px]">
+                    <p className="font-['Pretendard'] text-[10px] md:text-[13px] text-black font-medium leading-snug tracking-tight md:tracking-normal mt-0.5 md:mt-0 max-w-full md:max-w-[492px]">
                       경쟁이 있어야 발전이 있다! 하지만 경쟁도 지나치면 독이 되는 법이죠? 경쟁의 긍정적인 에너지를 그대로 가져 가면서도 부정적인 요소는 막는 방법, 어디 없을까요?
                     </p>
                   </div>
-                  <div className="absolute right-2 top-2 md:right-auto md:left-[433px] md:top-6 inline-flex py-1 px-2 md:py-1.5 md:px-3.5 items-center gap-1 md:gap-1.5 rounded-full border border-white">
+                  <div className="absolute right-2 top-2 md:right-auto md:left-[433px] md:top-6 inline-flex py-1 px-2 md:py-1.5 md:px-3.5 items-center gap-1 md:gap-1.5 rounded-full bg-black">
                     <span className="font-['Pretendard'] text-[10px] md:text-sm text-white font-medium leading-none">Play</span>
                     <svg xmlns="http://www.w3.org/2000/svg" width="8" height="6" viewBox="0 0 13 9" fill="none" className="md:w-[13px] md:h-[9px]">
                       <path d="M0.5 4.5H12M12 4.5L7 0.5M12 4.5L7 8.5" stroke="white" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" />
@@ -516,21 +705,21 @@ export default function EventSessionGuidePage({ event, pathSlug }: EventSessionG
                 <div
                   className="w-full max-w-full md:w-[540px] min-h-[100px] md:min-h-[159px] rounded-lg overflow-hidden relative"
                   style={{
-                    backgroundImage: `url(${getGcbioImageUrl('page3_session3.png')})`,
+                    backgroundImage: `url(${getGcbioImageUrl('page3_session3_new.png')})`,
                     backgroundSize: 'cover',
                     backgroundPosition: 'center',
                   }}
                 >
-                  <div className="absolute left-3 top-2 md:left-6 md:top-8 flex flex-col gap-0.5 md:gap-2.5 pr-16 md:pr-0">
-                    <span className="font-['Bebas_Neue'] text-[10px] md:text-base text-white font-bold leading-none">Video 03</span>
-                    <span className="font-['Pretendard'] text-xs md:text-base text-white font-semibold leading-tight tracking-tight md:tracking-normal">
+                  <div className="absolute left-3 top-1 md:left-6 md:top-6 flex flex-col gap-0.5 md:gap-2.5 pr-16 md:pr-0">
+                    <span className="font-['Bebas_Neue'] text-[10px] md:text-base text-black font-bold leading-none">Video 03</span>
+                    <span className="font-['Pretendard'] text-xs md:text-base text-black font-semibold leading-tight tracking-tight md:tracking-normal">
                       업무 협조를 잘 받아내는 것도 능력이다! 요청의 기술 3가지
                     </span>
-                    <p className="font-['Pretendard'] text-[10px] md:text-[13px] text-white font-medium leading-snug tracking-tight md:tracking-normal mt-0.5 md:mt-0 max-w-full md:max-w-[492px]">
+                    <p className="font-['Pretendard'] text-[10px] md:text-[13px] text-black font-medium leading-snug tracking-tight md:tracking-normal mt-0.5 md:mt-0 max-w-full md:max-w-[492px]">
                       업무를 하다 보면 동료나 상사게에, 또 타 부서에 협조를 요청해야 하는 일이 비일비재하죠. 그런제 누구는 매번 척척 협조를 잘 구해내는 반면 누구는 그렇지 못한데요. 왜 그럴까요? 요청의 기술 세 가지를 기억하세요.
                     </p>
                   </div>
-                  <div className="absolute right-2 top-2 md:right-auto md:left-[433px] md:top-6 inline-flex py-1 px-2 md:py-1.5 md:px-3.5 items-center gap-1 md:gap-1.5 rounded-full border border-white">
+                  <div className="absolute right-2 top-2 md:right-auto md:left-[433px] md:top-6 inline-flex py-1 px-2 md:py-1.5 md:px-3.5 items-center gap-1 md:gap-1.5 rounded-full bg-black">
                     <span className="font-['Pretendard'] text-[10px] md:text-sm text-white font-medium leading-none">Play</span>
                     <svg xmlns="http://www.w3.org/2000/svg" width="8" height="6" viewBox="0 0 13 9" fill="none" className="md:w-[13px] md:h-[9px]">
                       <path d="M0.5 4.5H12M12 4.5L7 0.5M12 4.5L7 8.5" stroke="white" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" />

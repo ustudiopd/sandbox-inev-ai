@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Image from 'next/image'
 import { Bebas_Neue } from 'next/font/google'
 import Event222152Header from '../components/Event222152Header'
 import { getGcbioImageUrl } from '../lib/gcbio-images'
@@ -54,28 +55,28 @@ export default function EventOverviewPage({ event, pathSlug }: EventOverviewPage
         <div className="w-full max-w-[1920px] max-w-full mx-auto flex flex-col flex-1 min-w-0 box-border">
           {/* 본문 레이아웃: width 1920px, padding 50px 250px 145px 250px (상단 100px 축소), 가운데 정렬 */}
           <main className="w-full max-w-full flex justify-center items-center box-border flex-1 px-4 sm:px-6 md:px-8 lg:px-16 xl:px-[250px] pt-0 sm:pt-0 md:pt-[50px] pb-12 md:pb-[145px] overflow-x-hidden overflow-y-visible min-h-0 min-w-0">
-          <div className="relative flex flex-col justify-center items-start w-full max-w-[1420px] max-w-full mx-auto min-w-0 min-h-0">
-          {/* 배경 블록: #F2F2F2 — 모바일에서 높이 350px 축소(1240→890) */}
-          <div className="absolute z-0 top-[550px] bottom-0 h-[890px] md:h-[1240px] min-h-0 bg-[#F2F2F2] w-full left-0 right-0 min-w-0" aria-hidden />
+          <div className="relative flex flex-col justify-center items-start w-full max-w-full md:max-w-[1920px] mx-auto min-w-0 min-h-0">
+          {/* 배경 블록: #F2F2F2 — 모바일에서 높이 350px 축소(1240→890), 300px 아래로 이동, PC에서 width 1920px */}
+          <div className="absolute z-0 top-[850px] md:top-[850px] bottom-0 h-[890px] md:h-[1240px] min-h-0 bg-[#F2F2F2] w-full md:w-[1920px] left-0 md:left-1/2 md:-translate-x-1/2 min-w-0" aria-hidden />
 
           <div className="relative z-10 overflow-visible min-h-0 min-w-0 w-full max-w-full mt-[50px] md:mt-0">
-          {/* 1. 초대의 글 + 본문 — 모바일에서만 50px 위 여백 */}
-          <div className="flex flex-col items-start gap-2 mb-10 overflow-visible min-h-0 shrink-0">
+          {/* 1. 초대의 글 + 본문 — 모바일에서만 50px 위 여백, 페이지 가운데 정렬 */}
+          <div className="flex flex-col items-center gap-2 mb-10 overflow-visible min-h-0 shrink-0">
             <h1
-              className="font-['Pretendard']"
+              className="font-['Pretendard'] text-center"
               style={{
                 color: '#111',
-                fontSize: '17px',
+                fontSize: '44px',
                 fontStyle: 'normal',
-                fontWeight: 500,
-                lineHeight: '150%',
-                letterSpacing: '-0.48px',
+                fontWeight: 600,
+                lineHeight: '140%',
+                letterSpacing: '-0.88px',
               }}
             >
               초대의 글
             </h1>
             <p
-              className="font-['Pretendard'] w-full max-w-full md:max-w-[640px] text-base font-medium overflow-visible shrink-0 break-words"
+              className="font-['Pretendard'] w-full max-w-full md:max-w-[640px] text-base font-medium overflow-visible shrink-0 break-words text-center"
               style={{
                 color: '#111',
                 lineHeight: '150%',
@@ -89,10 +90,10 @@ export default function EventOverviewPage({ event, pathSlug }: EventOverviewPage
             </p>
           </div>
 
-          {/* 장식 요소: 모바일에서 숨김 */}
+          {/* 장식 요소: 모바일에서 숨김 - 문의 | 운영사무국 위치에 맞게 조정 */}
           <div
             className="hidden md:block absolute z-10 flex-shrink-0"
-            style={{ left: 852, top: 0 }}
+            style={{ left: 852, top: 290 }}
             aria-hidden
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="144" height="144" viewBox="0 0 144 144" fill="none">
@@ -100,15 +101,22 @@ export default function EventOverviewPage({ event, pathSlug }: EventOverviewPage
             </svg>
           </div>
           <div
-            className="hidden md:flex absolute z-0 flex-shrink-0 items-center justify-center rounded-full"
-            style={{ left: 916, top: 60, width: 294, height: 294, background: '#5E5E5E' }}
+            className="hidden md:flex absolute z-0 flex-shrink-0 items-center justify-center rounded-full overflow-hidden"
+            style={{ left: 916, top: 350, width: 294, height: 294 }}
             aria-hidden
           >
-            <span className="font-['Pretendard'] text-white text-xl font-medium leading-[150%] tracking-[-0.48px]">Photo</span>
+            <Image
+              src={getGcbioImageUrl('page1_photo2.png')}
+              alt=""
+              width={294}
+              height={294}
+              className="w-full h-full object-cover rounded-full"
+              unoptimized
+            />
           </div>
           <div
             className="hidden md:block absolute z-10 flex-shrink-0"
-            style={{ left: 1210 + 40, top: 40 }}
+            style={{ left: 1210 + 40, top: 330 }}
             aria-hidden
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="144" height="144" viewBox="0 0 144 144" fill="none">
@@ -117,7 +125,7 @@ export default function EventOverviewPage({ event, pathSlug }: EventOverviewPage
           </div>
           <div
             className="hidden md:block absolute z-0 flex-shrink-0"
-            style={{ left: 1015, top: 435 }}
+            style={{ left: 1015, top: 725 }}
             aria-hidden
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="62" height="62" viewBox="0 0 62 62" fill="none">
@@ -126,7 +134,7 @@ export default function EventOverviewPage({ event, pathSlug }: EventOverviewPage
           </div>
           <div
             className="hidden md:block absolute z-10 flex-shrink-0"
-            style={{ left: 1207 - 42 - 108, top: 60 + 294 + 25 }}
+            style={{ left: 1207 - 42 - 108, top: 669 }}
             aria-hidden
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="108" height="108" viewBox="0 0 108 108" fill="none">
@@ -137,12 +145,14 @@ export default function EventOverviewPage({ event, pathSlug }: EventOverviewPage
             className="hidden md:block absolute flex-shrink-0 rounded-full w-[210px] h-[210px]"
             style={{
               left: 1207,
-              top: 40 + 144 + 64,
+              top: 538,
               background: `url(${getGcbioImageUrl('page1_photo1.png')}) lightgray -32.243px 0px / 125% 100% no-repeat`,
             }}
             aria-hidden
           />
 
+          {/* 초대의 글 이후 모든 요소를 감싸는 wrapper - 300px 아래로 이동 */}
+          <div style={{ marginTop: '300px' }}>
           {/* 2. 워크샵 타이틀 */}
           <h2
             className={`${bebasNeue.className} w-full max-w-full text-[#111] font-bold leading-[130%] tracking-[-0.7px] mb-8 md:mb-12 text-4xl sm:text-4xl md:text-5xl lg:text-[70px] break-words`}
@@ -152,7 +162,7 @@ export default function EventOverviewPage({ event, pathSlug }: EventOverviewPage
 
           {/* 3. 행사 정보 */}
           <div
-            className="font-['Pretendard'] flex flex-col gap-0 text-base sm:text-lg md:text-2xl font-medium text-[#111] leading-[140%] tracking-[-0.48px] w-full max-w-full break-words"
+            className="font-['Pretendard'] flex flex-col gap-0 text-base sm:text-lg md:text-2xl font-medium text-[#111] leading-[140%] tracking-[-0.48px] w-full max-w-full break-words relative"
           >
             <span>DATE | 2026.03.05. (목)</span>
             <span>LOCATION | 노보텔 앰배서더 서울 용산 한라홀(3F)</span>
@@ -165,6 +175,20 @@ export default function EventOverviewPage({ event, pathSlug }: EventOverviewPage
               </a>
               )
             </span>
+            {/* 문의 | 운영사무국 뒷부분 배경 - PC 버전에서만, 맨 뒤로 배치 */}
+            <div
+              className="hidden md:block absolute"
+              style={{
+                left: '50%',
+                top: 'calc(100% - 470px + 10px)',
+                transform: 'translateX(-50%)',
+                width: '1920px',
+                height: '622px',
+                background: '#F9F9F9',
+                zIndex: -1,
+              }}
+              aria-hidden
+            />
           </div>
 
           {/* 4. TIME TABLE 섹션 제목 — 모바일에서 폰트 약간 확대, PC에서만 30px 오른쪽 */}
@@ -176,8 +200,8 @@ export default function EventOverviewPage({ event, pathSlug }: EventOverviewPage
             <span className="block font-light text-[#444]">TIME TABLE</span>
           </div>
 
-          {/* 타임테이블: 모바일에서 컴팩트(축소), 가로 스크롤 */}
-          <div className="w-full max-w-[1420px] max-w-full min-w-0 mt-6 md:mt-[41px] overflow-x-auto">
+          {/* 타임테이블: 모바일에서 컴팩트(축소), 가로 스크롤, PC에서는 한 번에 모두 표시 */}
+          <div className="w-full max-w-[1420px] max-w-full min-w-0 mt-6 md:mt-[41px] overflow-x-auto md:overflow-x-visible">
             {(() => {
               const colWidths = timetableCompact ? COLS_MOBILE : COLS_DESKTOP
               const rowH = timetableCompact ? ROW_H_MOBILE : ROW_H_DESKTOP
@@ -309,9 +333,9 @@ export default function EventOverviewPage({ event, pathSlug }: EventOverviewPage
                   10: '-',
                   11: '외부 강사 & 퍼실리테이터',
                   12: '-',
-                  13: '-',
+                  13: '사회자',
                   14: '외부 MC',
-                  15: '사회자',
+                  15: '-',
                 }
                 const durationLabels: Record<number, string> = {
                   0: '-',
@@ -345,9 +369,9 @@ export default function EventOverviewPage({ event, pathSlug }: EventOverviewPage
                   10: '15:20-15:40',
                   11: '15:40-17:40',
                   12: '17:50-18:50',
-                  13: '17:50-18:50',
-                  14: '17:50-18:50',
-                  15: '17:50-18:50',
+                  13: '18:50-19:30',
+                  14: '19:30-19:50',
+                  15: '19:50-20:00',
                 }
                 const renderCell = (
                   key: string,
@@ -1089,6 +1113,7 @@ export default function EventOverviewPage({ event, pathSlug }: EventOverviewPage
             </div>
           </div>
           )}
+          </div>
           </div>
         </div>
         </main>

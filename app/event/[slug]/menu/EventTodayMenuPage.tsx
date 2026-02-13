@@ -81,32 +81,57 @@ export default function EventTodayMenuPage({ event, pathSlug }: EventTodayMenuPa
 
   return (
     <>
-      <div className="sticky top-0 z-50 w-full bg-[#F9F9F9]">
-        <Event222152Header slug={slug} variant="today-menu" />
-      </div>
-      <div className="w-full relative flex flex-col min-h-screen bg-[#F9F9F9] overflow-x-hidden">
-        <div className="w-full max-w-[1920px] mx-auto flex flex-col flex-1 min-w-0">
-          <main className="w-full flex-1 flex flex-col items-center justify-center" style={{ marginTop: 30 }}>
-          <div className="relative w-full max-w-[1420px] flex justify-center items-center rounded-2xl sm:rounded-[32px] overflow-hidden h-[270px] sm:h-[320px]">
-            <Image
-              src={getGcbioImageUrl('page6_session.png')}
-              alt=""
-              width={1420}
-              height={320}
-              className="w-full h-full object-cover object-center"
-              unoptimized
-            />
+      <div className="relative w-full">
+        {/* 배너 이미지 */}
+        <div className="relative w-full flex justify-center items-center overflow-hidden" style={{ width: '100%', height: '360px' }}>
+          <Image
+            src={getGcbioImageUrl('banner3.png')}
+            alt=""
+            width={1927}
+            height={360}
+            className="w-full h-full object-cover object-center"
+            unoptimized
+          />
+          <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none" style={{ paddingTop: '70px' }}>
             <span
-              className="absolute inset-0 flex items-center justify-center pointer-events-none text-white font-semibold leading-[140%] text-2xl sm:text-3xl md:text-[44px] px-2"
               style={{
+                color: '#FFF',
+                textAlign: 'center',
                 fontFamily: 'Pretendard, sans-serif',
+                fontSize: '44px',
                 fontStyle: 'normal',
-                letterSpacing: -1.1,
+                fontWeight: 600,
+                lineHeight: '140%',
+                letterSpacing: '-0.88px',
               }}
             >
               오늘의 메뉴
             </span>
+            <span
+              style={{
+                color: '#FFF',
+                textAlign: 'center',
+                fontFamily: 'Pretendard, sans-serif',
+                fontSize: '24px',
+                fontStyle: 'normal',
+                fontWeight: 500,
+                lineHeight: '140%',
+                letterSpacing: '-0.48px',
+                marginTop: 24,
+              }}
+            >
+              Today's menu
+            </span>
           </div>
+        </div>
+        {/* 헤더 - 배너 위에 오버레이 */}
+        <div className="absolute top-0 left-0 right-0 z-50 w-full">
+          <Event222152Header slug={slug} variant="today-menu" />
+        </div>
+      </div>
+      <div className="w-full relative flex flex-col min-h-screen bg-[#F9F9F9] overflow-x-hidden">
+        <div className="w-full max-w-[1920px] mx-auto flex flex-col flex-1 min-w-0">
+          <main className="w-full flex-1 flex flex-col items-center justify-center" style={{ marginTop: 0 }}>
           <div className="flex flex-col sm:flex-row justify-center items-stretch sm:items-center gap-2 sm:gap-0 w-full max-w-[1420px] px-4" style={{ marginTop: 80 }}>
             <button
               type="button"
@@ -139,9 +164,89 @@ export default function EventTodayMenuPage({ event, pathSlug }: EventTodayMenuPa
           </div>
           {selected === 'lunch' && (
             <div
-              className="flex flex-col items-center w-full max-w-full px-4"
+              className="flex flex-col items-center w-full max-w-full px-4 relative overflow-visible"
               style={{ marginTop: 40 }}
             >
+              {/* deco_c.png 이미지 */}
+              <div
+                className="absolute pointer-events-none hidden md:block"
+                style={{
+                  left: '20px',
+                  top: '80px',
+                  width: '272px',
+                  height: '475.685px',
+                  opacity: 0.1,
+                }}
+              >
+                <Image
+                  src={getGcbioImageUrl('deco_c.png')}
+                  alt=""
+                  width={272}
+                  height={475.685}
+                  className="object-contain w-full h-full"
+                  unoptimized
+                />
+              </div>
+              {/* deco_R.png 이미지 */}
+              <div
+                className="absolute pointer-events-none hidden md:block"
+                style={{
+                  left: 'calc(100% - 370px)',
+                  top: '470px',
+                  width: '294.233px',
+                  height: '403.555px',
+                  opacity: 0.1,
+                }}
+              >
+                <Image
+                  src={getGcbioImageUrl('deco_R.png')}
+                  alt=""
+                  width={294.233}
+                  height={403.555}
+                  className="object-contain w-full h-full"
+                  unoptimized
+                />
+              </div>
+              {/* deco_O.png 이미지 */}
+              <div
+                className="absolute pointer-events-none hidden md:block"
+                style={{
+                  left: '-50px',
+                  top: '1090px',
+                  width: '258px',
+                  height: '392.77px',
+                  opacity: 0.1,
+                }}
+              >
+                <Image
+                  src={getGcbioImageUrl('deco_O.png')}
+                  alt=""
+                  width={258}
+                  height={392.77}
+                  className="object-contain w-full h-full"
+                  unoptimized
+                />
+              </div>
+              {/* deco_S2.png 이미지 */}
+              <div
+                className="absolute pointer-events-none hidden md:block"
+                style={{
+                  left: 'calc(100% - 230px)',
+                  top: '1710px',
+                  width: '278px',
+                  height: '351.294px',
+                  opacity: 0.1,
+                }}
+              >
+                <Image
+                  src={getGcbioImageUrl('deco_S2.png')}
+                  alt=""
+                  width={278}
+                  height={351.294}
+                  className="object-contain w-full h-full"
+                  unoptimized
+                />
+              </div>
               <p
                 className="text-[#111] text-center font-bold leading-[140%] text-xl sm:text-2xl md:text-[32px] break-words max-w-full"
                 style={{ fontFamily: 'Pretendard, sans-serif', fontStyle: 'normal' }}
@@ -178,14 +283,154 @@ export default function EventTodayMenuPage({ event, pathSlug }: EventTodayMenuPa
                 style={{ marginTop: 106 }}
                 unoptimized
               />
-              <div style={{ height: 192 }} />
+              <div style={{ height: 96 }} />
             </div>
           )}
           {selected === 'dinner' && (
             <div
-              className="flex flex-col items-center w-full"
+              className="flex flex-col items-center w-full max-w-full px-4 relative overflow-visible"
               style={{ marginTop: 40 }}
             >
+              {/* deco_c.png 이미지 */}
+              <div
+                className="absolute pointer-events-none hidden md:block"
+                style={{
+                  left: '20px',
+                  top: '100px',
+                  width: '272px',
+                  height: '475.685px',
+                  opacity: 0.1,
+                }}
+              >
+                <Image
+                  src={getGcbioImageUrl('deco_c.png')}
+                  alt=""
+                  width={272}
+                  height={475.685}
+                  className="object-contain w-full h-full"
+                  unoptimized
+                />
+              </div>
+              {/* deco_R.png 이미지 */}
+              <div
+                className="absolute pointer-events-none hidden md:block"
+                style={{
+                  left: 'calc(100% - 370px)',
+                  top: '490px',
+                  width: '294.233px',
+                  height: '403.555px',
+                  opacity: 0.1,
+                }}
+              >
+                <Image
+                  src={getGcbioImageUrl('deco_R.png')}
+                  alt=""
+                  width={294.233}
+                  height={403.555}
+                  className="object-contain w-full h-full"
+                  unoptimized
+                />
+              </div>
+              {/* deco_O.png 이미지 */}
+              <div
+                className="absolute pointer-events-none hidden md:block"
+                style={{
+                  left: '-50px',
+                  top: '1110px',
+                  width: '258px',
+                  height: '392.77px',
+                  opacity: 0.1,
+                }}
+              >
+                <Image
+                  src={getGcbioImageUrl('deco_O.png')}
+                  alt=""
+                  width={258}
+                  height={392.77}
+                  className="object-contain w-full h-full"
+                  unoptimized
+                />
+              </div>
+              {/* deco_S2.png 이미지 */}
+              <div
+                className="absolute pointer-events-none hidden md:block"
+                style={{
+                  left: 'calc(100% - 230px)',
+                  top: '1730px',
+                  width: '278px',
+                  height: '351.294px',
+                  opacity: 0.1,
+                }}
+              >
+                <Image
+                  src={getGcbioImageUrl('deco_S2.png')}
+                  alt=""
+                  width={278}
+                  height={351.294}
+                  className="object-contain w-full h-full"
+                  unoptimized
+                />
+              </div>
+              {/* deco6.png 이미지 */}
+              <div
+                className="absolute pointer-events-none hidden md:block"
+                style={{
+                  left: 'calc(100% - 230px)',
+                  top: '2670px',
+                  width: '241.113px',
+                  height: '251.423px',
+                  opacity: 0.1,
+                }}
+              >
+                <Image
+                  src={getGcbioImageUrl('deco6.png')}
+                  alt=""
+                  width={241.113}
+                  height={251.423}
+                  className="object-contain w-full h-full"
+                  unoptimized
+                />
+              </div>
+              {/* deco_S1.png 이미지 */}
+              <div
+                className="absolute pointer-events-none hidden md:block"
+                style={{
+                  left: '145px',
+                  top: '2590px',
+                  width: '258px',
+                  height: '402px',
+                  opacity: 0.1,
+                }}
+              >
+                <Image
+                  src={getGcbioImageUrl('deco_S1.png')}
+                  alt=""
+                  width={258}
+                  height={402}
+                  className="object-contain w-full h-full"
+                  unoptimized
+                />
+              </div>
+              {/* deco5.png 이미지 */}
+              <div
+                className="absolute pointer-events-none hidden md:block"
+                style={{
+                  left: '65px',
+                  top: '3220px',
+                  width: '241.113px',
+                  height: '251.423px',
+                  opacity: 0.1,
+                }}
+              >
+                <Image
+                  src={getGcbioImageUrl('deco5.png')}
+                  alt=""
+                  width={241.113}
+                  height={251.423}
+                  className="object-contain w-full h-full"
+                  unoptimized
+                />
+              </div>
               <div
                 className="flex flex-col items-stretch w-full max-w-full px-4"
               >

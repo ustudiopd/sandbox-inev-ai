@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
+import { getGcbioImageUrl } from '../lib/gcbio-images'
 
 interface Event222152HeaderProps {
   slug: string
@@ -31,28 +32,79 @@ export default function Event222152Header({ slug, variant = 'default' }: Event22
   const isGallery = variant === 'gallery'
   const isProfile = variant === 'profile'
   const isSubPage = isOverview || isCollaborationStyle || isSessionGuide || isExperienceProgram || isTodayMenu || isGallery || isProfile
+  const hideDecoImages = isOverview || isSessionGuide || isExperienceProgram || isTodayMenu || isGallery
 
   const headerWrapperClass = isSubPage
-    ? 'sticky top-0 h-[80px] w-full max-w-[1920px] mx-auto border-b border-black z-20 bg-[rgba(249,249,249,0.60)]'
-    : `w-full h-[80px] left-0 top-0 absolute border-b border-black bg-[rgba(249,249,249,0.6)] z-40 ${mobileMenuOpen ? 'overflow-visible' : 'overflow-hidden'}`
+    ? 'sticky top-0 h-[80px] w-[1920px] max-w-[1920px] mx-auto border-b border-black z-20'
+    : `w-[1920px] max-w-[1920px] h-[80px] left-0 top-0 absolute border-b border-black z-40 ${mobileMenuOpen ? 'overflow-visible' : 'overflow-hidden'}`
 
-  const headerBgStyle = isSubPage ? { background: 'rgba(249, 249, 249, 0.60)' } : undefined
+  const headerBgStyle = { 
+    borderBottom: '1px solid #000',
+    background: 'rgba(249, 249, 249, 0.90)'
+  }
   const innerBorderClass = isSubPage ? '' : ''
 
   return (
     <div className={headerWrapperClass} style={headerBgStyle}>
-      <div className={`w-full max-w-[1920px] h-full mx-auto px-4 sm:px-8 md:px-16 lg:px-[250px] relative flex items-center justify-between ${innerBorderClass}`}>
+      <div className={`w-[1920px] max-w-[1920px] h-full mx-auto px-4 sm:px-8 md:px-16 lg:px-[250px] relative flex items-center justify-between ${innerBorderClass}`}>
         {/* 홈 버튼 - 메인으로 링크 */}
-        <Link href={`/event/${slug}`} className="w-12 h-12 sm:w-14 sm:h-14 relative overflow-hidden flex-shrink-0 block" aria-label="메인으로">
-          <Image
-            src="/img/gcbio/Home_button.png"
-            alt="메인으로"
-            className="object-contain"
-            fill
-            sizes="56px"
-            priority
-          />
-        </Link>
+        <div className="relative flex-shrink-0 -ml-4 sm:-ml-6 md:-ml-8 lg:-ml-12">
+          <Link href={`/event/${slug}`} className="w-[168px] h-[168px] sm:w-[196px] sm:h-[196px] relative overflow-hidden flex-shrink-0 block" aria-label="메인으로">
+            <Image
+              src={getGcbioImageUrl('Homebutton_new.png')}
+              alt="메인으로"
+              className="object-contain"
+              fill
+              sizes="196px"
+              priority
+              unoptimized
+            />
+          </Link>
+          {/* deco3.png 이미지 - 로고 아래쪽에 배치 */}
+          {!hideDecoImages && (
+            <div
+              className="absolute pointer-events-none"
+              style={{
+                left: '50%',
+                top: '100%',
+                transform: 'translateX(-50%)',
+                width: '349px',
+                height: '353.15px',
+              }}
+            >
+              <Image
+                src={getGcbioImageUrl('deco3.png')}
+                alt=""
+                width={349}
+                height={353.15}
+                className="object-contain w-full h-full"
+                unoptimized
+              />
+            </div>
+          )}
+          {/* deco1.png 이미지 - 로고 아래쪽에 배치 */}
+          {!hideDecoImages && (
+            <div
+              className="absolute pointer-events-none"
+              style={{
+                left: 'calc(50% + 950px)',
+                top: 'calc(100% - 10px)',
+                transform: 'translateX(-50%)',
+                width: '240.193px',
+                height: '91.15px',
+              }}
+            >
+              <Image
+                src={getGcbioImageUrl('deco1.png')}
+                alt=""
+                width={240.193}
+                height={91.15}
+                className="object-contain w-full h-full"
+                unoptimized
+              />
+            </div>
+          )}
+        </div>
 
         {/* 데스크톱 메뉴 - 가운데 정렬 */}
         <div className="hidden md:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 items-center justify-center gap-4 lg:gap-8 xl:gap-12">
@@ -139,7 +191,11 @@ export default function Event222152Header({ slug, variant = 'default' }: Event22
       {/* 모바일 메뉴 패널 */}
       {mobileMenuOpen && (
         <div
-          className="md:hidden absolute top-full left-0 right-0 z-30 border-b border-black bg-[rgba(249,249,249,0.98)] shadow-lg"
+          className="md:hidden absolute top-full left-0 right-0 z-30 border-b border-black shadow-lg"
+          style={{
+            borderBottom: '1px solid #000',
+            background: 'rgba(249, 249, 249, 0.90)',
+          }}
           aria-label="메뉴"
         >
           <nav className="flex flex-col py-4 px-4">

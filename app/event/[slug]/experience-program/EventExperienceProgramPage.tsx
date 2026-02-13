@@ -42,42 +42,140 @@ export default function EventExperienceProgramPage({ event, pathSlug }: EventExp
 
   return (
     <>
-      <div className="sticky top-0 z-50 w-full bg-[#F9F9F9]">
-        <Event222152Header slug={slug} variant="experience-program" />
-      </div>
-      <div className="w-full relative flex flex-col min-h-screen bg-[#F9F9F9] overflow-x-hidden">
-        <div className="w-full max-w-[1920px] mx-auto flex flex-col flex-1 min-w-0">
-          {/* 헤더와 오른쪽 끝 맞춤: 헤더와 동일한 패딩 */}
-          <div className="w-full max-w-[1920px] mx-auto px-4 sm:px-8 md:px-16 lg:px-[250px] flex justify-center" style={{ marginTop: 30 }}>
-          <div className="relative w-full max-w-[1420px] flex justify-center rounded-2xl sm:rounded-[32px] overflow-hidden h-[320px]">
-            <Image
-              src={getGcbioImageUrl('page4_top.png')}
-              alt=""
-              width={1420}
-              height={320}
-              className="w-full h-full object-cover object-center"
-              unoptimized
-            />
-            <div
-              className="absolute inset-0 flex flex-col items-center justify-center text-center"
-              style={{ left: 0, right: 0, width: '100%' }}
+      <div className="relative w-full">
+        {/* 배너 이미지 */}
+        <div className="relative w-full flex justify-center items-center overflow-hidden" style={{ width: '100%', height: '360px' }}>
+          <Image
+            src={getGcbioImageUrl('banner2.png')}
+            alt=""
+            width={1927}
+            height={360}
+            className="w-full h-full object-cover object-center"
+            unoptimized
+          />
+          <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none" style={{ paddingTop: '70px' }}>
+            <span
+              style={{
+                alignSelf: 'stretch',
+                color: '#FFF',
+                textAlign: 'center',
+                fontFamily: 'Pretendard, sans-serif',
+                fontSize: '44px',
+                fontStyle: 'normal',
+                fontWeight: 600,
+                lineHeight: '140%',
+                letterSpacing: '-0.88px',
+              }}
             >
-              <h1
-                className="font-['Pretendard'] self-stretch text-2xl sm:text-3xl md:text-[44px] text-center font-semibold leading-[140%] tracking-[-0.88px] text-white px-2"
-              >
-                체험 이벤트
-              </h1>
-              <p
-                className="font-['Pretendard'] self-stretch mt-4 md:mt-6 text-sm sm:text-base md:text-2xl text-center font-medium leading-[140%] tracking-[-0.48px] text-white px-2"
-              >
-                체험 이벤트에 모두 참여하시면 럭키드로우 추첨권 1장을 더 드립니다! 확률을 높여보세요!
-              </p>
-            </div>
+              체험 이벤트
+            </span>
+            <span
+              style={{
+                color: '#FFF',
+                textAlign: 'center',
+                fontFamily: 'Pretendard, sans-serif',
+                fontSize: '24px',
+                fontStyle: 'normal',
+                fontWeight: 500,
+                lineHeight: '140%',
+                letterSpacing: '-0.48px',
+                marginTop: 24,
+              }}
+            >
+              체험 이벤트에 모두 참여하시면 럭키드로우 추첨권 1장을 더 드립니다! 확률을 높여보세요!
+            </span>
           </div>
         </div>
+        {/* 헤더 - 배너 위에 오버레이 */}
+        <div className="absolute top-0 left-0 right-0 z-50 w-full">
+          <Event222152Header slug={slug} variant="experience-program" />
+        </div>
+      </div>
+      <div className="w-full relative flex flex-col min-h-screen bg-[#F9F9F9] overflow-x-hidden">
+        <div className="w-full max-w-[1920px] mx-auto flex flex-col flex-1 min-w-0 relative overflow-visible">
 
         {/* 체험 프로그램 5개: 원+구분선 일직선 가운데 정렬, 블록 간 17px */}
-        <section className="w-full flex flex-col items-center" style={{ marginTop: 170 }}>
+        <section className="w-full flex flex-col items-center relative overflow-visible" style={{ marginTop: 170 }}>
+          {/* deco_c.png 이미지 */}
+          <div
+            className="absolute pointer-events-none hidden md:block"
+            style={{
+              left: '20px',
+              top: '-120px',
+              width: '272px',
+              height: '475.685px',
+              opacity: 0.1,
+            }}
+          >
+            <Image
+              src={getGcbioImageUrl('deco_c.png')}
+              alt=""
+              width={272}
+              height={475.685}
+              className="object-contain w-full h-full"
+              unoptimized
+            />
+          </div>
+          {/* deco_R.png 이미지 */}
+          <div
+            className="absolute pointer-events-none hidden md:block"
+            style={{
+              left: 'calc(100% - 370px)',
+              top: '270px',
+              width: '294.233px',
+              height: '403.555px',
+              opacity: 0.1,
+            }}
+          >
+            <Image
+              src={getGcbioImageUrl('deco_R.png')}
+              alt=""
+              width={294.233}
+              height={403.555}
+              className="object-contain w-full h-full"
+              unoptimized
+            />
+          </div>
+          {/* deco_O.png 이미지 */}
+          <div
+            className="absolute pointer-events-none hidden md:block"
+            style={{
+              left: '-50px',
+              top: '890px',
+              width: '258px',
+              height: '392.77px',
+              opacity: 0.1,
+            }}
+          >
+            <Image
+              src={getGcbioImageUrl('deco_O.png')}
+              alt=""
+              width={258}
+              height={392.77}
+              className="object-contain w-full h-full"
+              unoptimized
+            />
+          </div>
+          {/* deco_S2.png 이미지 */}
+          <div
+            className="absolute pointer-events-none hidden md:block"
+            style={{
+              left: 'calc(100% - 230px)',
+              top: '1510px',
+              width: '278px',
+              height: '351.294px',
+              opacity: 0.1,
+            }}
+          >
+            <Image
+              src={getGcbioImageUrl('deco_S2.png')}
+              alt=""
+              width={278}
+              height={351.294}
+              className="object-contain w-full h-full"
+              unoptimized
+            />
+          </div>
           <div className="w-full flex flex-col items-center mx-auto" style={{ width: 64 + 79 + 420 + 80 + 565, maxWidth: '100%' }}>
             {PROGRAM_ITEMS.map((item, index) => (
               <div
@@ -145,7 +243,7 @@ export default function EventExperienceProgramPage({ event, pathSlug }: EventExp
                 </div>
 
                 {/* 이미지: 모바일 텍스트 아래, PC 텍스트 오른쪽 */}
-                <div className="flex-shrink-0 flex items-center justify-center w-full max-w-full md:max-w-[565px] mt-4 md:mt-0 md:ml-[80px] md:-mt-[60px] aspect-[565/270] md:w-[565px] md:h-[270px] order-3">
+                <div className={`flex-shrink-0 flex items-center justify-center w-full max-w-full md:max-w-[565px] mt-4 md:mt-0 md:ml-[80px] md:-mt-[60px] aspect-[565/270] md:w-[565px] md:h-[270px] order-3 ${item.image === 'page4_program3.png' ? 'relative z-10' : ''}`}>
                   <Image
                     src={getGcbioImageUrl(item.image)}
                     alt=""
