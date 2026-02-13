@@ -57,7 +57,7 @@ export default function EventOverviewPage({ event, pathSlug }: EventOverviewPage
           <main className="w-full max-w-full flex justify-center items-center box-border flex-1 px-4 sm:px-6 md:px-8 lg:px-16 xl:px-[250px] pt-0 sm:pt-0 md:pt-[50px] pb-12 md:pb-[145px] overflow-x-hidden overflow-y-visible min-h-0 min-w-0">
           <div className="relative flex flex-col justify-center items-start w-full max-w-full md:max-w-[1920px] mx-auto min-w-0 min-h-0">
           {/* 배경 블록: #F2F2F2 — 모바일에서 높이 350px 축소(1240→890), 300px 아래로 이동, PC에서 width 1920px */}
-          <div className="absolute z-0 top-[850px] md:top-[850px] bottom-0 h-[890px] md:h-[1240px] min-h-0 bg-[#F2F2F2] w-full md:w-[1920px] left-0 md:left-1/2 md:-translate-x-1/2 min-w-0" aria-hidden />
+          <div className="absolute z-0 top-[780px] md:top-[780px] bottom-0 h-[890px] md:h-[1240px] min-h-0 bg-[#F2F2F2] w-full md:w-[1920px] left-0 md:left-1/2 md:-translate-x-1/2 min-w-0" aria-hidden />
 
           <div className="relative z-10 overflow-visible min-h-0 min-w-0 w-full max-w-full mt-[50px] md:mt-0">
           {/* 1. 초대의 글 + 본문 — 모바일에서만 50px 위 여백, 페이지 가운데 정렬 */}
@@ -186,7 +186,7 @@ export default function EventOverviewPage({ event, pathSlug }: EventOverviewPage
               className="hidden md:block absolute"
               style={{
                 left: '50%',
-                top: 'calc(100% - 470px + 10px)',
+                top: 'calc(100% - 340px + 10px)',
                 transform: 'translateX(-50%)',
                 width: '1920px',
                 height: '622px',
@@ -225,7 +225,7 @@ export default function EventOverviewPage({ event, pathSlug }: EventOverviewPage
 
           {/* 4. TIME TABLE 섹션 제목 — 모바일에서 폰트 약간 확대, PC에서만 30px 오른쪽 */}
           <div
-            className={`${bebasNeue.className} mt-16 md:mt-[210px] md:ml-[30px] text-[#111] text-3xl sm:text-4xl md:text-5xl leading-[120%] w-full max-w-full break-words`}
+            className={`${bebasNeue.className} mt-16 md:mt-[410px] md:ml-[30px] text-[#111] text-3xl sm:text-4xl md:text-5xl leading-[120%] w-full max-w-full break-words`}
           >
             <span className="block font-bold">2026 GCBP</span>
             <span className="block font-light text-[#444]">LEADERSHIP WORKSHOP</span>

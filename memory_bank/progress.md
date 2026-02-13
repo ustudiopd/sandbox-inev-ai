@@ -1,5 +1,10 @@
 # 완료된 작업 내역 (Progress)
 
+## [2026-02-13] 이벤트 222152 행사개요 페이지 PC 레이아웃 조정·빌드·메모리뱅크·푸시
+- ✅ **행사개요(EventOverviewPage)**: PC 버전에서 회색 배경 네모(#F9F9F9) 위치 조정(top: calc(100% - 340px + 10px)). TIME TABLE 섹션 제목("2026 GCBP", "LEADERSHIP WORKSHOP", "TIME TABLE") PC에서만 200px 하향(md:mt-[410px]). 회색 배경 블록(#F2F2F2) PC에서 70px 상향(md:top-[780px]).
+- ✅ Next.js 프로덕션 빌드 성공.
+- ✅ memory_bank/progress.md 반영, Git 푸시.
+
 ## [2026-02-13] 이벤트 222152 전 페이지 모바일 반응형 UI 개선·빌드·메모리뱅크·푸시
 - ✅ **행사개요(EventOverviewPage)**: 모바일에서 초대글 아래 콘텐츠 100px 하향(mt-[100px]). 헤더 로고 모바일에서만 오른쪽 10px 이동(ml-[10px]). 파란 동그라미 모바일에서만 텍스트 뒤에 배치(크기 80px, left-[200px], top-1/2, z-0). 빨간 동그라미 모바일에서도 보이도록(left-[1300px]). page1_photo1, page1_photo2 모바일에서만 "2026 GCBP" 텍스트 위에 배치(크기 축소, 위치 조정).
 - ✅ **협업스타일 진단(CollaborationStylePage)**: 모바일에서만 deco1, deco2, deco3, deco4 이미지 크기 축소하여 page2_photo2 옆에 배치. deco1 왼쪽 300px 위로 500px, deco3 왼쪽 250px 위로 120px(크기 2배), deco4 왼쪽 150px 아래로 350px(크기 2배, z-index 0).
