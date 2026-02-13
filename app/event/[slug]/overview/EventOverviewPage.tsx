@@ -115,8 +115,8 @@ export default function EventOverviewPage({ event, pathSlug }: EventOverviewPage
             />
           </div>
           <div
-            className="hidden md:block absolute z-10 flex-shrink-0"
-            style={{ left: 1210 + 40, top: 330 }}
+            className="absolute z-10 flex-shrink-0 left-[1300px] md:left-[1300px]"
+            style={{ top: 330 }}
             aria-hidden
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="144" height="144" viewBox="0 0 144 144" fill="none">
@@ -151,12 +151,18 @@ export default function EventOverviewPage({ event, pathSlug }: EventOverviewPage
             aria-hidden
           />
 
-          {/* 초대의 글 이후 모든 요소를 감싸는 wrapper - 300px 아래로 이동 */}
-          <div style={{ marginTop: '300px' }}>
+          {/* 초대의 글 이후 모든 요소를 감싸는 wrapper - 모바일에서 위로 200px 이동 */}
+          <div className="mt-[100px] md:mt-[300px]" style={{ marginTop: 'clamp(100px, calc(-25vw + 200px), 300px)' }}>
           {/* 2. 워크샵 타이틀 */}
           <h2
-            className={`${bebasNeue.className} w-full max-w-full text-[#111] font-bold leading-[130%] tracking-[-0.7px] mb-8 md:mb-12 text-4xl sm:text-4xl md:text-5xl lg:text-[70px] break-words`}
+            className={`${bebasNeue.className} relative w-full max-w-full text-[#111] font-bold leading-[130%] tracking-[-0.7px] mb-8 md:mb-12 text-4xl sm:text-4xl md:text-5xl lg:text-[70px] break-words`}
           >
+            {/* 모바일에서만 보이는 파란 동그라미 - 텍스트 뒤에 배치 */}
+            <div className="md:hidden absolute left-[200px] top-1/2 -translate-y-1/2 -z-10" style={{ width: '80px', height: '80px' }}>
+              <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 144 144" fill="none">
+                <circle cx="72" cy="72" r="72" fill="#006FB7" />
+              </svg>
+            </div>
             2026 GCBP LEADERSHIP WORKSHOP
           </h2>
 
@@ -189,6 +195,32 @@ export default function EventOverviewPage({ event, pathSlug }: EventOverviewPage
               }}
               aria-hidden
             />
+          </div>
+
+          {/* 모바일에서만 보이는 사진들 - 2026 GCBP 위에 배치 */}
+          <div className="md:hidden relative w-full mb-4">
+            <div className="flex items-center justify-center gap-4">
+              <div className="relative flex-shrink-0 rounded-full overflow-hidden" style={{ width: 120, height: 120, marginLeft: '100px', marginTop: '80px' }}>
+                <Image
+                  src={getGcbioImageUrl('page1_photo2.png')}
+                  alt=""
+                  width={120}
+                  height={120}
+                  className="w-full h-full object-cover rounded-full"
+                  unoptimized
+                />
+              </div>
+              <div
+                className="relative flex-shrink-0 rounded-full"
+                style={{
+                  width: 100,
+                  height: 100,
+                  marginTop: '-140px',
+                  background: `url(${getGcbioImageUrl('page1_photo1.png')}) lightgray -32.243px 0px / 125% 100% no-repeat`,
+                }}
+                aria-hidden
+              />
+            </div>
           </div>
 
           {/* 4. TIME TABLE 섹션 제목 — 모바일에서 폰트 약간 확대, PC에서만 30px 오른쪽 */}

@@ -472,8 +472,7 @@ export default function EventTodayMenuPage({ event, pathSlug }: EventTodayMenuPa
                 alt=""
                 width={1420}
                 height={674}
-                className="object-contain w-full max-w-full h-auto md:w-[1420px] md:h-[674px] md:max-w-[1420px]"
-                style={{ marginTop: 192 }}
+                className="object-contain w-full max-w-full h-auto md:w-[1420px] md:h-[674px] md:max-w-[1420px] mt-[112px] md:mt-[192px]"
                 unoptimized
               />
               <div style={{ height: 192 }} />

@@ -70,7 +70,7 @@ export default function Event222152Landing({ event, pathSlug }: Event222152Landi
       
       {/* main_deco3.png 이미지 - 오른쪽 상단 */}
       <div
-        className="absolute pointer-events-none z-10"
+        className="absolute pointer-events-none z-10 hidden md:block"
         style={{
           top: '0px',
           right: 0,
@@ -90,7 +90,7 @@ export default function Event222152Landing({ event, pathSlug }: Event222152Landi
       
       {/* main_deco4.png 이미지 - main_deco3 아래 40px */}
       <div
-        className="absolute pointer-events-none z-10"
+        className="absolute pointer-events-none z-10 hidden md:block"
         style={{
           top: '608px',
           right: '-50px',
@@ -109,7 +109,7 @@ export default function Event222152Landing({ event, pathSlug }: Event222152Landi
       </div>
 
       {/* 메인 콘텐츠 — 반응형: 모바일 세로 스택, 데스크톱 가로 배치 */}
-      <div className="w-full min-h-screen flex flex-col lg:flex-row items-center justify-center pt-[150px] lg:pt-[80px] px-4 sm:px-6 md:px-8 pb-12 relative z-20">
+      <div className="w-full min-h-screen flex flex-col lg:flex-row items-center justify-center pt-[100px] md:pt-[150px] lg:pt-[80px] px-4 sm:px-6 md:px-8 pb-12 relative z-20">
         {/* 왼쪽: Main_name + DATE/LOCATION + 행사개요 버튼 — 모바일에서 먼저, 데스크톱 왼쪽 */}
         <div className="w-full max-w-[560px] flex flex-col items-center lg:items-start text-center lg:text-left order-1 lg:order-1">
           <div className="w-full max-w-[377px] aspect-[377/406.575] relative">
@@ -121,13 +121,13 @@ export default function Event222152Landing({ event, pathSlug }: Event222152Landi
               className="object-contain w-full h-full"
             />
             {/* 첫 번째 SVG: Main_name 이미지 왼쪽 끝에서 154px 왼쪽, 위로 12.5px, 왼쪽으로 70px 추가 이동 */}
-            <div className="absolute" style={{ left: '-424px', top: '-12.5px', width: '220px', height: '350px', pointerEvents: 'none' }}>
+            <div className="absolute hidden md:block" style={{ left: '-424px', top: '-12.5px', width: '220px', height: '350px', pointerEvents: 'none' }}>
               <svg xmlns="http://www.w3.org/2000/svg" width="197" height="355" viewBox="0 0 197 355" fill="none" style={{ width: '220px', height: '350px' }}>
                 <path d="M196.429 4.70653C196.633 4.19357 196.384 3.61181 195.871 3.40714L187.511 0.0718436C186.998 -0.132827 186.417 0.117092 186.212 0.630052C186.007 1.14301 186.257 1.72477 186.77 1.92944L194.201 4.89415L191.236 12.3245C191.031 12.8375 191.281 13.4192 191.794 13.6239C192.307 13.8286 192.889 13.5787 193.094 13.0657L196.429 4.70653ZM-24.5 354.336L-23.5008 354.376C-21.756 311.171 -8.68631 241.81 24.8581 174.281C58.3978 106.761 112.372 41.1357 195.895 5.25474L195.5 4.33594L195.105 3.41713C111.028 39.5362 56.7522 105.578 23.0669 173.391C-10.6137 241.195 -23.744 310.835 -25.4992 354.296L-24.5 354.336Z" fill="black" stroke="#000" strokeWidth="2"/>
               </svg>
             </div>
             {/* 두 번째 SVG: 첫 번째 SVG 기준 위에서 64.5px, 오른쪽에서 95.23px, 왼쪽으로 70px 추가 이동, 아래로 10px 추가 이동 */}
-            <div className="absolute" style={{ left: 'calc(-424px + 220px - 95.23px - 30.266px)', top: 'calc(-12.5px + 64.5px - 20px + 10px)', width: '30.266px', height: '30.22px', pointerEvents: 'none' }}>
+            <div className="absolute hidden md:block" style={{ left: 'calc(-424px + 220px - 95.23px - 30.266px)', top: 'calc(-12.5px + 64.5px - 20px + 10px)', width: '30.266px', height: '30.22px', pointerEvents: 'none' }}>
               <svg xmlns="http://www.w3.org/2000/svg" width="31" height="31" viewBox="0 0 31 31" fill="none" style={{ width: '30.266px', height: '30.22px' }}>
                 <path d="M15.133 30.2204C23.4908 30.2204 30.2661 23.4554 30.2661 15.1102C30.2661 6.76508 23.4908 0 15.133 0C6.77529 0 0 6.76508 0 15.1102C0 23.4554 6.77529 30.2204 15.133 30.2204Z" fill="#F5D327"/>
               </svg>
@@ -148,7 +148,7 @@ export default function Event222152Landing({ event, pathSlug }: Event222152Landi
             2026 GCBP Leadership Workshop
             {/* main_deco1.png 이미지 */}
             <div
-              className="absolute pointer-events-none"
+              className="absolute pointer-events-none hidden md:block"
               style={{
                 left: '-385px',
                 top: '-15px',
@@ -167,7 +167,7 @@ export default function Event222152Landing({ event, pathSlug }: Event222152Landi
             </div>
             {/* main_deco2.png 이미지 */}
             <div
-              className="absolute pointer-events-none"
+              className="absolute pointer-events-none hidden md:block"
               style={{
                 left: '560px',
                 top: '-5px',
@@ -187,7 +187,7 @@ export default function Event222152Landing({ event, pathSlug }: Event222152Landi
           </p>
           <div className="w-full max-w-[545px] text-[#111] font-['Pretendard'] text-lg sm:text-xl md:text-2xl font-medium leading-[140%]" style={{ letterSpacing: '-0.48px', marginTop: 10 }}>
             <span className="block">DATE  |  {eventDate}</span>
-            <span className="block">LOCATION  |  {location}</span>
+            <span className="block md:block whitespace-nowrap md:whitespace-normal">LOCATION  |  {location}</span>
           </div>
           <Link
             ref={buttonRef}
@@ -202,8 +202,8 @@ export default function Event222152Landing({ event, pathSlug }: Event222152Landi
             </svg>
           </Link>
         </div>
-        {/* 오른쪽: Main_poster — 모바일에서는 행사개요 버튼 아래, 데스크톱에서는 옆 */}
-        <div className="w-full max-w-[552px] flex-shrink-0 mt-8 lg:mt-0 lg:ml-8 xl:ml-16 order-2 lg:order-2">
+        {/* 오른쪽: Main_poster — 모바일에서는 숨김, 데스크톱에서는 옆 */}
+        <div className="hidden lg:block w-full max-w-[552px] flex-shrink-0 lg:ml-8 xl:ml-16 order-2 lg:order-2">
           <div className="w-full aspect-[552/769] relative">
             <Image
               src="/img/gcbio/Main_poster.png"

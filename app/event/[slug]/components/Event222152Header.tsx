@@ -35,8 +35,8 @@ export default function Event222152Header({ slug, variant = 'default' }: Event22
   const hideDecoImages = isOverview || isSessionGuide || isExperienceProgram || isTodayMenu || isGallery
 
   const headerWrapperClass = isSubPage
-    ? 'sticky top-0 h-[80px] w-[1920px] max-w-[1920px] mx-auto border-b border-black z-20'
-    : `w-[1920px] max-w-[1920px] h-[80px] left-0 top-0 absolute border-b border-black z-40 ${mobileMenuOpen ? 'overflow-visible' : 'overflow-hidden'}`
+    ? 'sticky top-0 h-[80px] w-full md:w-[1920px] max-w-[1920px] mx-auto border-b border-black z-20'
+    : `w-full md:w-[1920px] max-w-[1920px] h-[80px] left-0 top-0 absolute border-b border-black z-40 ${mobileMenuOpen ? 'overflow-visible' : 'overflow-hidden'}`
 
   const headerBgStyle = { 
     borderBottom: '1px solid #000',
@@ -46,9 +46,9 @@ export default function Event222152Header({ slug, variant = 'default' }: Event22
 
   return (
     <div className={headerWrapperClass} style={headerBgStyle}>
-      <div className={`w-[1920px] max-w-[1920px] h-full mx-auto px-4 sm:px-8 md:px-16 lg:px-[250px] relative flex items-center justify-between ${innerBorderClass}`}>
+      <div className={`w-full md:w-[1920px] max-w-[1920px] h-full mx-auto px-4 sm:px-8 md:px-16 lg:px-[250px] relative flex items-center justify-between ${innerBorderClass}`}>
         {/* 홈 버튼 - 메인으로 링크 */}
-        <div className="relative flex-shrink-0 -ml-4 sm:-ml-6 md:-ml-8 lg:-ml-12">
+        <div className="relative flex-shrink-0 ml-[10px] md:ml-[-2rem] lg:ml-[-3rem]">
           <Link href={`/event/${slug}`} className="w-[168px] h-[168px] sm:w-[196px] sm:h-[196px] relative overflow-hidden flex-shrink-0 block" aria-label="메인으로">
             <Image
               src={getGcbioImageUrl('Homebutton_new.png')}
@@ -63,7 +63,7 @@ export default function Event222152Header({ slug, variant = 'default' }: Event22
           {/* deco3.png 이미지 - 로고 아래쪽에 배치 */}
           {!hideDecoImages && (
             <div
-              className="absolute pointer-events-none"
+              className="absolute pointer-events-none hidden md:block"
               style={{
                 left: '50%',
                 top: '100%',
@@ -85,7 +85,7 @@ export default function Event222152Header({ slug, variant = 'default' }: Event22
           {/* deco1.png 이미지 - 로고 아래쪽에 배치 */}
           {!hideDecoImages && (
             <div
-              className="absolute pointer-events-none"
+              className="absolute pointer-events-none hidden md:block"
               style={{
                 left: 'calc(50% + 950px)',
                 top: 'calc(100% - 10px)',

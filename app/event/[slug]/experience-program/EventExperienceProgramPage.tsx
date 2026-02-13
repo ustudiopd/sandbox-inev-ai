@@ -69,12 +69,13 @@ export default function EventExperienceProgramPage({ event, pathSlug }: EventExp
             >
               체험 이벤트
             </span>
-            <span
+            <div
+              className="px-4 flex flex-col md:flex-row md:items-center md:justify-center md:gap-1"
               style={{
                 color: '#FFF',
                 textAlign: 'center',
                 fontFamily: 'Pretendard, sans-serif',
-                fontSize: '24px',
+                fontSize: 'clamp(12px, 3vw, 22px)',
                 fontStyle: 'normal',
                 fontWeight: 500,
                 lineHeight: '140%',
@@ -82,8 +83,9 @@ export default function EventExperienceProgramPage({ event, pathSlug }: EventExp
                 marginTop: 24,
               }}
             >
-              체험 이벤트에 모두 참여하시면 럭키드로우 추첨권 1장을 더 드립니다! 확률을 높여보세요!
-            </span>
+              <span>체험 이벤트에 모두 참여하시면 럭키드로우 추첨권 1장을 더 드립니다!</span>
+              <span>확률을 높여보세요!</span>
+            </div>
           </div>
         </div>
         {/* 헤더 - 배너 위에 오버레이 */}
@@ -95,7 +97,7 @@ export default function EventExperienceProgramPage({ event, pathSlug }: EventExp
         <div className="w-full max-w-[1920px] mx-auto flex flex-col flex-1 min-w-0 relative overflow-visible">
 
         {/* 체험 프로그램 5개: 원+구분선 일직선 가운데 정렬, 블록 간 17px */}
-        <section className="w-full flex flex-col items-center relative overflow-visible" style={{ marginTop: 170 }}>
+        <section className="w-full flex flex-col items-center relative overflow-visible mt-[70px] md:mt-[170px]">
           {/* deco_c.png 이미지 */}
           <div
             className="absolute pointer-events-none hidden md:block"

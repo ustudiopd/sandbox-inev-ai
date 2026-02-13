@@ -234,13 +234,6 @@ export default function EventGalleryPage({ event, pathSlug }: EventGalleryPagePr
                 }}
               />
             </div>
-            {/* 그라데이션: 데스크톱만 절대위치, 모바일 숨김 */}
-            <div
-              className="hidden md:block absolute left-1/2 -translate-x-1/2 top-[1159px] w-[1920px] h-[495px] z-0"
-              style={{
-                background: 'linear-gradient(180deg, #ffffff 0%, rgba(255, 255, 255, 0) 100%), linear-gradient(90deg, #36C618 0%, #FFDF00 50%, #FF4606 100%)',
-              }}
-            />
             {/* Video 슬라이드 */}
             <div className="w-full overflow-x-auto md:overflow-x-hidden px-4 mt-4 md:px-0 md:absolute md:left-[-35px] md:top-[841px] md:w-[min(1682px,calc(50%+722px))] z-[2]">
               <div
@@ -270,6 +263,13 @@ export default function EventGalleryPage({ event, pathSlug }: EventGalleryPagePr
                 </div>
               </div>
             </div>
+            {/* 그라데이션: 모바일에서도 보이되 크기만 줄어듦, Video 섹션 뒤에 배치 */}
+            <div
+              className="block md:absolute left-1/2 -translate-x-1/2 w-full h-[200px] -mt-[38px] ml-[330px] md:mt-0 md:ml-0 md:w-[1920px] md:h-[495px] md:top-[1159px] z-0"
+              style={{
+                background: 'linear-gradient(180deg, #ffffff 0%, rgba(255, 255, 255, 0) 100%), linear-gradient(90deg, #36C618 0%, #FFDF00 50%, #FF4606 100%)',
+              }}
+            />
           </div>
         </main>
       </div>

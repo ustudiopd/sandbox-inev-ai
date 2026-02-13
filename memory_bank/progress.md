@@ -1,5 +1,16 @@
 # 완료된 작업 내역 (Progress)
 
+## [2026-02-13] 이벤트 222152 전 페이지 모바일 반응형 UI 개선·빌드·메모리뱅크·푸시
+- ✅ **행사개요(EventOverviewPage)**: 모바일에서 초대글 아래 콘텐츠 100px 하향(mt-[100px]). 헤더 로고 모바일에서만 오른쪽 10px 이동(ml-[10px]). 파란 동그라미 모바일에서만 텍스트 뒤에 배치(크기 80px, left-[200px], top-1/2, z-0). 빨간 동그라미 모바일에서도 보이도록(left-[1300px]). page1_photo1, page1_photo2 모바일에서만 "2026 GCBP" 텍스트 위에 배치(크기 축소, 위치 조정).
+- ✅ **협업스타일 진단(CollaborationStylePage)**: 모바일에서만 deco1, deco2, deco3, deco4 이미지 크기 축소하여 page2_photo2 옆에 배치. deco1 왼쪽 300px 위로 500px, deco3 왼쪽 250px 위로 120px(크기 2배), deco4 왼쪽 150px 아래로 350px(크기 2배, z-index 0).
+- ✅ **프로필(EventProfilePage)**: 모바일에서만 deco3, deco4 배치(CollaborationStylePage와 동일한 위치). 프로필 표 z-index 10으로 앞에 표시. deco3, deco4 위치 조정(왼쪽 330px, 위로 520px / 왼쪽 50px, 위로 50px).
+- ✅ **체험 프로그램(EventExperienceProgramPage)**: 모바일에서만 배너 텍스트 "드립니다!" 다음 줄바꿈, 폰트 크기 2px 축소(clamp(12px, 3vw, 22px)). 모바일에서 체험 프로그램 섹션 100px 상향(mt-[70px]).
+- ✅ **오늘의 메뉴(EventTodayMenuPage)**: 모바일에서만 page6_menu2.png 이미지 위로 200px 이동 후 120px 하향(mt-[112px]).
+- ✅ **갤러리(EventGalleryPage)**: 모바일에서도 그라데이션 배경 표시(크기 w-full h-[200px], Video 섹션 뒤에 배치). 모바일에서 위치 조정(위로 70px, 왼쪽 200px → 오른쪽 400px → 왼쪽 400px → 오른쪽 200px → 왼쪽 70px, 최종 ml-[330px], -mt-[38px]).
+- ✅ **헤더(Event222152Header)**: 모바일에서만 로고 오른쪽 10px 이동(ml-[10px]).
+- ✅ Next.js 프로덕션 빌드 성공.
+- ✅ memory_bank/progress.md 반영, Git 푸시.
+
 ## [2026-02-13] 이벤트 222152 전 페이지 이미지 버킷 업로드·빌드·메모리뱅크·푸시
 - ✅ **이미지 버킷 업로드**: img/gcbio 폴더의 모든 이미지(95개) Supabase Storage(gcbio 버킷) 업로드 완료 (`npx tsx scripts/upload-gcbio-all-222152.ts`). 메인 홈·로그인·행사개요·협업스타일 진단·세션 안내·체험 프로그램·오늘의 메뉴·갤러리·프로필 페이지 등 전 페이지 이미지 반영.
 - ✅ **Next.js 프로덕션 빌드**: 성공적으로 완료.

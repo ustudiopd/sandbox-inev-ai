@@ -33,6 +33,53 @@ export default function CollaborationStylePage({ event, pathSlug }: Collaboratio
                   background: `lightgray url(${getGcbioImageUrl('page2_photo2.png')}) -87.32px -0.334px / 151.381% 100.12% no-repeat`,
                 }}
               />
+              {/* 모바일에서만 보이는 데코 이미지 4개 - page2_photo2 옆에 배치 */}
+              <div className="md:hidden absolute top-0 left-full ml-4 flex flex-col gap-2">
+                {/* deco1.png */}
+                <div className="absolute" style={{ width: '60px', height: '23px', left: '-300px', top: '-500px' }}>
+                  <Image
+                    src={getGcbioImageUrl('deco1.png')}
+                    alt=""
+                    width={240.193}
+                    height={91.15}
+                    className="object-contain w-full h-full"
+                    unoptimized
+                  />
+                </div>
+                {/* deco2.png */}
+                <div className="relative" style={{ width: '76px', height: '42px' }}>
+                  <Image
+                    src={getGcbioImageUrl('deco2.png')}
+                    alt=""
+                    width={303.654}
+                    height={167.3}
+                    className="object-contain w-full h-full"
+                    unoptimized
+                  />
+                </div>
+                {/* deco3.png */}
+                <div className="absolute" style={{ width: '174px', height: '176px', left: '-250px', top: '-120px' }}>
+                  <Image
+                    src={getGcbioImageUrl('deco3.png')}
+                    alt=""
+                    width={349}
+                    height={353.15}
+                    className="object-contain w-full h-full"
+                    unoptimized
+                  />
+                </div>
+                {/* deco4.png */}
+                <div className="absolute" style={{ width: '172px', height: '260px', left: '-150px', top: '350px', zIndex: 0 }}>
+                  <Image
+                    src={getGcbioImageUrl('deco4.png')}
+                    alt=""
+                    width={344}
+                    height={521}
+                    className="object-contain w-full h-full"
+                    unoptimized
+                  />
+                </div>
+              </div>
             </div>
             <div className="relative flex flex-col justify-center items-start flex-1 min-w-0 w-full max-w-full md:min-w-[280px] md:max-w-[437px] px-2 md:px-0 md:pt-[18px]">
             <h1
@@ -77,7 +124,7 @@ export default function CollaborationStylePage({ event, pathSlug }: Collaboratio
               </div>
               {/* deco2.png 이미지 - Click 버튼 왼쪽 아래에 배치 */}
               <div
-                className="absolute pointer-events-none"
+                className="absolute pointer-events-none hidden md:block"
                 style={{
                   left: '-413.654px',
                   top: 'calc(100% + 70px)',
@@ -96,7 +143,7 @@ export default function CollaborationStylePage({ event, pathSlug }: Collaboratio
               </div>
               {/* deco4.png 이미지 - Click 버튼 오른쪽 위에 배치 */}
               <div
-                className="absolute pointer-events-none"
+                className="absolute pointer-events-none hidden md:block"
                 style={{
                   left: 'calc(100% + 210px)',
                   top: '-280px',
